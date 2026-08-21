@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="SISIP — katalog look fashion all-gender yang dikurasi untuk memudahkan menemukan potongan yang tepat."
+    />
+    <title>SISIP — Temukan look. Pilih potongannya.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,100..900&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #171614;
+        --ink-soft: #3f3b37;
+        --paper: #e7e1da;
+        --paper-deep: #d9d0c7;
+        --white: #f8f6f2;
+        --taupe: #9b8d80;
+        --clay: #a9553c;
+        --clay-dark: #813d2b;
+        --line: rgba(23, 22, 20, 0.16);
+        --line-light: rgba(248, 246, 242, 0.2);
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Archivo", Arial, sans-serif;
+        --mono: "DM Mono", "Courier New", monospace;
+        --shadow: 0 20px 50px rgba(23, 22, 20, 0.13);
+        --radius: 2px;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      button, input, select, textarea { font: inherit; }
+      button { color: inherit; }
+      a { color: inherit; text-decoration: none; }
+      img { display: block; max-width: 100%; }
+      ::selection { color: var(--white); background: var(--clay); }
+
+      .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+      }
+
+      .eyebrow, .meta, .section-number, .tag, .filter-label, .microcopy {
+        font-family: var(--mono);
+        font-size: 0.64rem;
+        line-height: 1.35;
+        letter-spacing: 0.075em;
+        text-transform: uppercase;
+      }
+
+      .utility-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        min-height: 31px; padding: 0 3.2vw;
+        color: var(--white); background: var(--ink);
+        font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.075em;
+        text-transform: uppercase;
+      }
+      .utility-bar span:last-child { color: #cdc3b9; }
+
+      .site-header {
+        position: sticky; top: 0; z-index: 40;
+        background: rgba(231, 225, 218, 0.94);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--line);
+      }
+      .header-inner {
+        height: 75px; display: grid; grid-template-columns: 1fr auto 1fr;
+        align-items: center; padding: 0 3.2vw;
+      }
+      .brand {
+        width: fit-content; font-size: 1.7rem; font-weight: 900; letter-spacing: -0.095em;
+        line-height: 1; text-transform: uppercase;
+      }
+      .brand:hover { color: var(--clay); }
+      .desktop-nav { display: flex; gap: clamp(1rem, 2.3vw, 2.6rem); }
+      .desktop-nav a {
+        font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.04em;
+        text-transform: uppercase; transition: color 180ms ease;
+      }
+      .desktop-nav a:hover { color: var(--clay); }
+      .header-actions { display: flex; justify-content: flex-end; gap: 0.3rem; }
+      .icon-button, .nav-toggle {
+        width: 40px; height: 40px; display: inline-grid; place-items: center;
+        border: 1px solid transparent; background: transparent; cursor: pointer;
+        border-radius: 50%; transition: border-color 180ms ease, background 180ms ease;
+      }
+      .icon-button:hover, .nav-toggle:hover { border-color: var(--ink); background: var(--white); }
+      .icon-button svg, .nav-toggle svg { width: 16px; height: 16px; stroke-width: 1.65; }
+      .nav-toggle { display: none; }
+      .mobile-nav {
+        display: none; padding: 0 5vw 1.5rem; border-top: 1px solid var(--line);
+      }
+      .mobile-nav.is-open { display: grid; }
+      .mobile-nav a { padding: 0.85rem 0; border-bottom: 1px solid var(--line); font-weight: 700; }
+
+      .hero { display: grid; grid-template-columns: minmax(0, 0.94fr) minmax(360px, 1.06fr); min-height: min(750px, calc(100vh - 106px)); }
+      .hero-copy {
+        display: flex; flex-direction: column; justify-content: space-between;
+        padding: clamp(2.4rem, 6.8vw, 7.5rem) 3.2vw clamp(2rem, 4.2vw, 4rem);
+        background: var(--paper);
+      }
+      .hero-copy .eyebrow { color: var(--clay); }
+      .hero-copy h1 {
+        max-width: 750px; margin: 0.8rem 0 1.7rem; font-size: clamp(4.5rem, 11vw, 11rem);
+        font-weight: 900; letter-spacing: -0.12em; line-height: 0.73; text-transform: uppercase;
+      }
+      .hero-copy h1 span { display: block; color: var(--clay); }
+      .hero-copy p {
+        max-width: 390px; margin: 0; color: var(--ink-soft); font-size: clamp(0.94rem, 1.25vw, 1.1rem);
+        line-height: 1.55;
+      }
+      .hero-bottom { display: flex; align-items: end; justify-content: space-between; gap: 1.2rem; }
+      .hero-count { color: var(--taupe); text-align: right; }
+      .hero-count strong { display: block; color: var(--ink); font-family: var(--sans); font-size: 1.8rem; letter-spacing: -0.075em; }
+      .button, .button-outline {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.65rem;
+        min-height: 48px; width: fit-content; padding: 0 1.1rem; border: 1px solid var(--ink);
+        color: var(--white); background: var(--ink); cursor: pointer; font-weight: 750; font-size: 0.78rem;
+        letter-spacing: 0.012em; transition: transform 180ms ease, color 180ms ease, background 180ms ease;
+      }
+      .button:hover { transform: translateY(-2px); color: var(--ink); background: var(--clay); border-color: var(--clay); }
+      .button svg, .button-outline svg { width: 15px; height: 15px; }
+      .button-outline { color: var(--ink); background: transparent; }
+      .button-outline:hover { color: var(--white); background: var(--ink); }
+
+      .hero-visual {
+        position: relative; min-height: 520px; overflow: hidden; background: #2b2825;
+      }
+      .hero-visual::after {
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(115deg, rgba(0,0,0,.28), transparent 48%, rgba(0,0,0,.25));
+      }
+      .hero-label, .hero-stamp { position: absolute; z-index: 2; color: var(--white); }
+      .hero-label { top: 2rem; left: 2rem; }
+      .hero-stamp { right: 2rem; bottom: 2rem; max-width: 130px; color: #e9dfd4; text-align: right; }
+      .hero-stamp b { display: block; margin-bottom: 0.25rem; color: var(--clay); font-size: 0.8rem; }
+      .hero-stamp em { font-style: normal; opacity: .7; }
+      .hero-figure {
+        position: absolute; bottom: -1px; width: 44%; height: 91%; z-index: 1;
+      }
+      .hero-figure.one { left: 13%; }
+      .hero-figure.two { right: 9%; transform: scale(.91); transform-origin: bottom; }
+      .hero-figure .head, .look-art .head {
+        position: absolute; top: 0; left: 50%; width: 17%; aspect-ratio: 1; transform: translateX(-50%);
+        border-radius: 48% 52% 45% 49%; background: #9c725a;
+      }
+      .hero-figure .hair, .look-art .hair {
+        position: absolute; z-index: 2; top: -2%; left: 50%; width: 19%; aspect-ratio: 1.08;
+        transform: translateX(-50%); border-radius: 54% 46% 28% 32%; background: #121110;
+      }
+      .hero-figure .neck, .look-art .neck { position:absolute; top: 14%; left: 46.5%; width: 7%; height: 8%; background:#8d624c; }
+      .hero-figure .body, .look-art .body {
+        position: absolute; top: 19%; left: 24%; width: 53%; height: 42%; border-radius: 8% 8% 2% 2%;
+        background: #141312;
+      }
+      .hero-figure .body::after, .look-art .body::after {
+        content:""; position:absolute; left:49%; top:0; bottom:0; width:1px; background:rgba(248,246,242,.18);
+      }
+      .hero-figure .arm, .look-art .arm { position:absolute; top: 23%; width: 17%; height: 39%; border-radius: 50px 50px 7px 7px; background:#151412; }
+      .hero-figure .arm.left, .look-art .arm.left { left: 13%; transform: rotate(5deg); }
+      .hero-figure .arm.right, .look-art .arm.right { right: 13%; transform: rotate(-5deg); }
+      .hero-figure .leg, .look-art .leg { position: absolute; top: 58%; width: 22%; height: 41%; background:#23211f; }
+      .hero-figure .leg.left, .look-art .leg.left { left: 28%; transform: skew(-4deg); }
+      .hero-figure .leg.right, .look-art .leg.right { right: 28%; transform: skew(4deg); }
+      .hero-figure.two .body, .hero-figure.two .arm { background: #c9b29d; }
+      .hero-figure.two .leg { background:#827164; }
+      .hero-figure.two .head { background:#ad7b61; }
+      .hero-figure.two .hair { background:#372b27; border-radius: 48% 52% 60% 35%; }
+      .hero-figure.two .body::after { background: rgba(23,22,20,.25); }
+      .hero-figure.two .arm { background:#c9b29d; }
+      .hero-orb { position:absolute; width: 46%; aspect-ratio:1; top:10%; left:28%; border-radius:50%; background:#9f4e39; opacity:.74; filter: blur(.2px); }
+      .hero-gridlines { position:absolute; inset: 0; opacity:.22; background-image: linear-gradient(90deg, rgba(255,255,255,.2) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.2) 1px, transparent 1px); background-size: 68px 68px; mix-blend-mode:overlay; }
+
+      .ticker { display:flex; overflow:hidden; color:var(--white); background:var(--clay); border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
+      .ticker-track { display:flex; flex:none; min-width:max-content; animation:ticker 26s linear infinite; }
+      .ticker span { padding: 0.78rem 1.25rem; font-family:var(--mono); font-size:.62rem; letter-spacing:.075em; text-transform:uppercase; }
+      .ticker span::before { content:"✦"; margin-right:1.25rem; }
+      @keyframes ticker { to { transform: translateX(-50%); } }
+
+      .section { padding: clamp(4.5rem, 8vw, 8rem) 3.2vw; border-bottom: 1px solid var(--line); }
+      .section.dark { color:var(--white); background:var(--ink); border-color:rgba(255,255,255,.14); }
+      .section-heading { display:flex; align-items:end; justify-content:space-between; gap:2rem; margin-bottom:2.3rem; }
+      .section-title { max-width:760px; margin:0; font-size:clamp(2.4rem,5.4vw,5.7rem); font-weight:850; letter-spacing:-.09em; line-height:.88; text-transform:uppercase; }
+      .section-title .accent { color:var(--clay); }
+      .section-description { max-width:340px; margin:0; color:var(--ink-soft); font-size:.9rem; line-height:1.55; }
+      .dark .section-description { color:#c6bdb4; }
+      .text-link { display:inline-flex; align-items:center; gap:.5rem; padding-bottom:.2rem; border-bottom:1px solid currentColor; font-family:var(--mono); font-size:.64rem; letter-spacing:.06em; text-transform:uppercase; }
+      .text-link:hover { color:var(--clay); }
+
+      .mood-list { display:grid; grid-template-columns:repeat(5, 1fr); border:1px solid var(--line); }
+      .mood-button { min-height:118px; padding:1rem; display:flex; align-items:end; justify-content:space-between; gap:.7rem; border:0; border-right:1px solid var(--line); background:transparent; cursor:pointer; text-align:left; transition:background .18s ease,color .18s ease; }
+      .mood-button:last-child { border-right:0; }
+      .mood-button strong { max-width:105px; font-size:clamp(1.05rem,1.65vw,1.45rem); letter-spacing:-.065em; line-height:.95; }
+      .mood-button span { color:var(--clay); font-family:var(--mono); font-size:.72rem; }
+      .mood-button:hover { color:var(--white); background:var(--ink); }
+      .mood-button:hover span { color:var(--clay); }
+
+      .popular-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+      .popular-card { min-width:0; padding:1.05rem; color:var(--ink); background:var(--white); }
+      .popular-card .product-art { margin-bottom:1rem; }
+      .product-art { position:relative; height:clamp(175px,20vw,265px); overflow:hidden; background:var(--product-bg,#d5ccc3); }
+      .product-art::before { content:""; position:absolute; inset:auto 14% 6%; height:8%; border-radius:50%; background:rgba(23,22,20,.13); filter:blur(5px); }
+      .product-art .garment { position:absolute; left:50%; top:14%; width:52%; height:66%; transform:translateX(-50%); background:var(--product-ink,#242220); border-radius:12% 12% 5% 5%; }
+      .product-art .garment::before { content:""; position:absolute; width:50%; height:20%; top:-7%; left:25%; border:1px solid rgba(255,255,255,.25); border-bottom:0; border-radius:40% 40% 0 0; }
+      .product-art .garment::after { content:""; position:absolute; width:27%; height:100%; left:-26%; top:3%; border-radius:30px 0 15px 15px; background:inherit; transform:rotate(7deg); box-shadow:calc(370% + 4px) 0 0 var(--product-ink,#242220); }
+      .product-art .product-code { position:absolute; right:.6rem; top:.65rem; color:rgba(23,22,20,.55); }
+      .product-art img { width:100%; height:100%; object-fit:cover; }
+      .product-name { margin:.1rem 0 .25rem; font-size:.92rem; font-weight:750; letter-spacing:-.035em; line-height:1.1; }
+      .product-price { margin:0; color:var(--clay-dark); font-family:var(--mono); font-size:.68rem; }
+      .product-meta { display:flex; justify-content:space-between; align-items:center; gap:.6rem; margin-top:.7rem; }
+      .swatch { width:10px; height:10px; flex:0 0 10px; display:inline-block; border:1px solid rgba(23,22,20,.25); border-radius:50%; background:var(--swatch); }
+      .product-link { display:inline-flex; align-items:center; gap:.3rem; font-family:var(--mono); font-size:.6rem; letter-spacing:.035em; text-transform:uppercase; }
+      .product-link:hover { color:var(--clay); }
+
+      .lookbook-section { background:var(--white); }
+      .filter-toolbar { display:grid; grid-template-columns:minmax(180px,1.35fr) repeat(3,minmax(126px,.45fr)); gap:.55rem; margin-bottom:1.25rem; }
+      .field, .field select, .field input, .field textarea { width:100%; }
+      .field { position:relative; }
+      .field input, .field select, .field textarea {
+        min-height:48px; padding:.76rem .85rem; color:var(--ink); border:1px solid var(--line); border-radius:0; outline:0; background:var(--white); font-size:.77rem;
+      }
+      .field textarea { min-height:96px; resize:vertical; }
+      .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--clay); box-shadow:0 0 0 2px rgba(169,85,60,.14); }
+      .field.has-icon input { padding-left:2.55rem; }
+      .field.has-icon svg { position:absolute; pointer-events:none; left:.85rem; top:50%; width:15px; height:15px; transform:translateY(-50%); }
+      .field label { display:block; margin-bottom:.38rem; font-family:var(--mono); font-size:.58rem; letter-spacing:.05em; text-transform:uppercase; }
+      .filter-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; min-height:40px; margin-bottom:1.5rem; }
+      .active-filter { display:flex; flex-wrap:wrap; gap:.35rem; }
+      .filter-chip { padding:.5rem .7rem; border:1px solid var(--line); color:var(--ink-soft); background:transparent; cursor:pointer; font-family:var(--mono); font-size:.59rem; letter-spacing:.04em; text-transform:uppercase; transition:.15s ease; }
+      .filter-chip:hover, .filter-chip.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
+      .result-count { color:var(--taupe); white-space:nowrap; }
+      .look-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.25rem; }
+      .look-card { min-width:0; background:var(--paper); }
+      .look-card-image { position:relative; width:100%; aspect-ratio:.87; padding:0; overflow:hidden; border:0; cursor:pointer; background:var(--ink); text-align:left; }
+      .look-card-image:hover .look-art, .look-card-image:hover .look-uploaded-image { transform:scale(1.035); }
+      .look-card-image:hover .open-look { opacity:1; transform:translateY(0); }
+      .look-card-body { padding:1rem 1rem 1.15rem; }
+      .look-card-meta { display:flex; align-items:center; justify-content:space-between; gap:.6rem; color:var(--taupe); }
+      .look-card-title { margin:.56rem 0 .78rem; font-size:clamp(1.25rem,1.8vw,1.7rem); font-weight:800; letter-spacing:-.07em; line-height:.93; }
+      .look-card-tags { display:flex; flex-wrap:wrap; gap:.35rem; }
+      .tag { display:inline-flex; align-items:center; min-height:20px; padding:0 .35rem; color:var(--ink-soft); border:1px solid var(--line); background:rgba(248,246,242,.45); font-size:.55rem; letter-spacing:.035em; }
+      .open-look { position:absolute; right:.8rem; bottom:.8rem; opacity:0; transform:translateY(7px); transition:.18s ease; }
+      .look-uploaded-image { width:100%; height:100%; object-fit:cover; transition:transform .35s ease; }
+      .look-art { position:relative; width:100%; height:100%; overflow:hidden; color:var(--figure); background:var(--art-bg); transition:transform .35s ease; }
+      .look-art::before { content:""; position:absolute; width:68%; aspect-ratio:1; top:-17%; right:-16%; border-radius:50%; background:var(--art-accent); opacity:.9; }
+      .look-art::after { content:""; position:absolute; inset:0; background:linear-gradient(115deg,rgba(0,0,0,.12),transparent 42%,rgba(255,255,255,.1)); mix-blend-mode:soft-light; }
+      .look-art .art-index { position:absolute; z-index:4; top:.8rem; left:.8rem; color:var(--art-label); }
+      .look-art .art-caption { position:absolute; z-index:4; right:.75rem; bottom:.72rem; max-width:72px; color:var(--art-label); text-align:right; opacity:.85; }
+      .look-art .figure { position:absolute; z-index:2; bottom:-1%; left:50%; width:55%; height:83%; transform:translateX(-50%); }
+      .look-art .figure.secondary { z-index:1; left:24%; height:64%; width:42%; opacity:.86; transform:translateX(-50%) scale(.86); transform-origin:bottom; }
+      .look-art .head { width:20%; background:var(--skin); }
+      .look-art .hair { width:22%; background:var(--hair); }
+      .look-art .neck { background:var(--skin-dark); }
+      .look-art .body { background:var(--garment); }
+      .look-art .arm { background:var(--garment); }
+      .look-art .leg { background:var(--bottom); }
+      .look-art.flip .figure { left:56%; }
+      .look-art.flip .figure.secondary { left:77%; }
+      .look-art .stripe { position:absolute; z-index:3; width:1px; height:100%; left:22%; background:rgba(248,246,242,.25); transform:rotate(17deg); }
+      .look-art.light .body, .look-art.light .arm { background:#d9d0c5; }
+      .look-art.light .leg { background:#4f4a45; }
+      .look-art.light .hair { background:#2d251f; }
+      .look-art.light .head { background:#a97256; }
+      .look-art.light .neck { background:#98654d; }
+      .empty-state { grid-column:1/-1; padding:4rem 1rem; border:1px solid var(--line); text-align:center; }
+      .empty-state h3 { margin:0 0 .55rem; font-size:1.45rem; letter-spacing:-.06em; }
+      .empty-state p { margin:0; color:var(--ink-soft); font-size:.86rem; }
+
+      .journal-grid { display:grid; grid-template-columns:1.3fr repeat(2,1fr); gap:1px; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.16); }
+      .journal-card { display:flex; flex-direction:column; min-height:300px; padding:1.25rem; color:var(--white); background:#242220; }
+      .journal-card:nth-child(2) { background:#4b433d; }
+      .journal-card:nth-child(3) { background:#8d5041; }
+      .journal-card .article-number { color:#d8c3b3; }
+      .journal-card h3 { max-width:430px; margin:auto 0 1rem; font-size:clamp(1.65rem,3vw,3.25rem); font-weight:780; letter-spacing:-.075em; line-height:.93; }
+      .journal-card button { padding:0; width:fit-content; border:0; color:inherit; background:none; cursor:pointer; }
+      .journal-card button:hover { color:var(--clay); }
+
+      .request-grid { display:grid; grid-template-columns:minmax(0,.9fr) minmax(360px,1.1fr); border:1px solid var(--line); background:var(--paper); }
+      .request-copy { padding:clamp(2rem,4.3vw,4.5rem); background:var(--ink); color:var(--white); }
+      .request-copy .section-title { font-size:clamp(3.1rem,6vw,6.5rem); }
+      .request-copy p { max-width:330px; color:#c6bdb4; line-height:1.55; }
+      .request-note { display:flex; gap:.65rem; align-items:flex-start; margin-top:2rem; color:#dacdc2; }
+      .request-note svg { width:16px; flex:0 0 16px; margin-top:.1rem; color:var(--clay); }
+      .request-form { padding:clamp(1.4rem,3.3vw,3rem); }
+      .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:.85rem; }
+      .form-grid .full { grid-column:1/-1; }
+      .form-status { min-height:22px; margin:.8rem 0 0; color:var(--clay-dark); font-size:.78rem; }
+
+      .about-section { display:grid; grid-template-columns:.55fr 1.45fr; gap:2rem; align-items:start; }
+      .about-section h2 { max-width:820px; margin:0; font-size:clamp(2.5rem,5.2vw,6.1rem); font-weight:830; letter-spacing:-.1em; line-height:.88; text-transform:uppercase; }
+      .about-section h2 em { color:var(--clay); font-style:normal; }
+      .about-section .about-copy { max-width:560px; font-size:1rem; line-height:1.6; }
+      .about-points { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; margin-top:2.4rem; background:var(--line); border:1px solid var(--line); }
+      .about-points div { min-height:130px; padding:1rem; background:var(--white); }
+      .about-points strong { display:block; margin:.7rem 0 .35rem; font-size:.92rem; letter-spacing:-.035em; }
+      .about-points p { margin:0; color:var(--ink-soft); font-size:.76rem; line-height:1.45; }
+
+      .footer { padding:2.2rem 3.2vw; color:var(--white); background:var(--ink); }
+      .footer-top { display:flex; align-items:flex-end; justify-content:space-between; gap:2rem; padding-bottom:2.1rem; border-bottom:1px solid var(--line-light); }
+      .footer-brand { font-size:clamp(3.5rem,8vw,8rem); font-weight:900; letter-spacing:-.12em; line-height:.68; }
+      .footer-top p { max-width:290px; margin:0; color:#c5bbb0; line-height:1.45; }
+      .footer-bottom { display:flex; justify-content:space-between; gap:1rem; padding-top:1rem; color:#a69c93; font-family:var(--mono); font-size:.56rem; letter-spacing:.045em; text-transform:uppercase; }
+      .footer-links { display:flex; gap:1rem; }
+      .footer a:hover { color:var(--clay); }
+
+      dialog { max-width:none; max-height:none; width:100%; height:100%; margin:0; padding:0; border:0; background:rgba(23,22,20,.68); }
+      dialog::backdrop { background:rgba(23,22,20,.68); backdrop-filter:blur(4px); }
+      .modal-shell { position:relative; width:min(1060px,calc(100vw - 2rem)); max-height:calc(100vh - 2rem); margin:1rem auto; overflow:auto; color:var(--ink); background:var(--white); box-shadow:var(--shadow); }
+      .modal-close { position:sticky; z-index:4; top:1rem; float:right; margin:1rem; background:var(--white); border-color:var(--line); }
+      .look-detail { display:grid; grid-template-columns:minmax(0,1.06fr) minmax(355px,.94fr); min-height:630px; }
+      .detail-visual { min-height:570px; }
+      .detail-visual .look-art, .detail-visual .look-uploaded-image { height:100%; min-height:570px; }
+      .detail-content { padding:clamp(1.5rem,3.8vw,3.6rem); }
+      .detail-heading { padding-right:2rem; }
+      .detail-heading h2 { margin:.75rem 0 1.2rem; font-size:clamp(2.6rem,5vw,5.4rem); font-weight:850; letter-spacing:-.1em; line-height:.83; text-transform:uppercase; }
+      .detail-description { margin:0 0 1.25rem; color:var(--ink-soft); line-height:1.55; }
+      .detail-actions { display:flex; gap:.6rem; margin-bottom:2rem; }
+      .detail-actions .button-outline { min-height:42px; }
+      .item-list { border-top:1px solid var(--line); }
+      .look-item { display:grid; grid-template-columns:47px 1fr auto; gap:.8rem; align-items:center; padding:.85rem 0; border-bottom:1px solid var(--line); }
+      .look-item-art { width:47px; aspect-ratio:1; overflow:hidden; }
+      .look-item-art .product-art { height:100%; }
+      .look-item-title { margin:0 0 .3rem; font-size:.86rem; font-weight:750; letter-spacing:-.03em; }
+      .look-item-info { display:flex; align-items:center; gap:.4rem; color:var(--taupe); font-family:var(--mono); font-size:.58rem; text-transform:uppercase; }
+      .item-link { padding:.55rem .62rem; border:1px solid var(--line); font-family:var(--mono); font-size:.55rem; letter-spacing:.035em; text-transform:uppercase; transition:.15s; }
+      .item-link:hover { color:var(--white); border-color:var(--ink); background:var(--ink); }
+      .price-note { margin:1rem 0 0; color:var(--taupe); font-family:var(--mono); font-size:.58rem; line-height:1.5; }
+
+      .article-shell { width:min(720px,calc(100vw - 2rem)); height:auto; max-height:calc(100vh - 2rem); padding:clamp(1.5rem,4vw,4rem); overflow:auto; color:var(--ink); background:var(--white); }
+      .article-shell h2 { margin:.8rem 0 1.2rem; font-size:clamp(2.3rem,5.2vw,4.8rem); letter-spacing:-.09em; line-height:.86; }
+      .article-shell p { max-width:620px; color:var(--ink-soft); line-height:1.7; }
+      .auth-shell { width:min(440px,calc(100vw - 2rem)); }
+      .auth-shell h2 { margin:.8rem 0 .65rem; font-size:clamp(2rem,4vw,3.5rem); letter-spacing:-.08em; line-height:.9; text-transform:uppercase; }
+      .auth-shell > p { margin:0 0 1.4rem; color:var(--ink-soft); line-height:1.55; }
+
+      .studio-scrim { position:fixed; z-index:70; inset:0; visibility:hidden; opacity:0; background:rgba(23,22,20,.43); transition:.2s; }
+      .studio-scrim.is-open { visibility:visible; opacity:1; }
+      .studio-drawer { position:fixed; z-index:80; top:0; right:0; width:min(600px,100vw); height:100dvh; overflow:auto; transform:translateX(102%); color:var(--ink); background:var(--white); box-shadow:-20px 0 50px rgba(0,0,0,.18); transition:transform .28s cubic-bezier(.2,.7,.2,1); }
+      .studio-drawer.is-open { transform:translateX(0); }
+      .studio-top { position:sticky; z-index:3; top:0; display:flex; align-items:center; justify-content:space-between; padding:1.05rem 1.15rem; border-bottom:1px solid var(--line); background:rgba(248,246,242,.95); backdrop-filter:blur(12px); }
+      .studio-title { margin:0; font-size:1.25rem; font-weight:850; letter-spacing:-.07em; }
+      .studio-top-actions { display:flex; align-items:center; gap:.35rem; }
+      .studio-content { padding:1.15rem; }
+      .prototype-note { margin:0 0 1.3rem; padding:.85rem; border-left:3px solid var(--clay); background:#f1e8df; color:var(--ink-soft); font-size:.76rem; line-height:1.5; }
+      .studio-tabs { display:flex; gap:.4rem; margin-bottom:1rem; }
+      .studio-tab { padding:.65rem .8rem; border:1px solid var(--line); background:transparent; cursor:pointer; font-family:var(--mono); font-size:.6rem; letter-spacing:.035em; text-transform:uppercase; }
+      .studio-tab.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
+      .studio-panel { display:none; }
+      .studio-panel.is-active { display:block; }
+      .studio-section { margin-bottom:2rem; padding-bottom:1.7rem; border-bottom:1px solid var(--line); }
+      .studio-section h3 { margin:0 0 .35rem; font-size:1.35rem; letter-spacing:-.06em; }
+      .studio-section > p { margin:.1rem 0 1rem; color:var(--ink-soft); font-size:.78rem; line-height:1.45; }
+      .form-stack { display:grid; gap:.75rem; }
+      .compact-row { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
+      .editor-product-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.5rem; }
+      .small-button { min-height:38px; padding:0 .7rem; border:1px solid var(--ink); color:var(--white); background:var(--ink); cursor:pointer; font-size:.7rem; font-weight:700; }
+      .small-button:hover { color:var(--ink); background:var(--clay); border-color:var(--clay); }
+      .small-button.muted { color:var(--ink); border-color:var(--line); background:transparent; }
+      .small-button.muted:hover { color:var(--white); background:var(--ink); border-color:var(--ink); }
+      .small-button.danger { color:#8e2e2e; border-color:#d3aaa3; background:#fff7f5; }
+      .small-button.danger:hover { color:var(--white); border-color:#8e2e2e; background:#8e2e2e; }
+      .draft-items, .studio-list { display:grid; gap:.45rem; }
+      .draft-item, .studio-row { display:flex; align-items:center; justify-content:space-between; gap:.65rem; padding:.65rem; border:1px solid var(--line); background:var(--paper); }
+      .draft-item p, .studio-row p { min-width:0; margin:0; font-size:.72rem; line-height:1.3; }
+      .draft-item span, .studio-row span { display:block; overflow:hidden; color:var(--taupe); font-family:var(--mono); font-size:.56rem; text-overflow:ellipsis; white-space:nowrap; }
+      .studio-row-actions { display:flex; gap:.35rem; flex:0 0 auto; }
+      .form-error { min-height:18px; margin:0; color:#9f3831; font-size:.72rem; }
+      .reset-row { display:flex; flex-wrap:wrap; gap:.55rem; align-items:center; }
+      body.drawer-open { overflow:hidden; }
+
+      .toast { position:fixed; z-index:100; right:1rem; bottom:1rem; max-width:min(400px,calc(100vw - 2rem)); padding:.85rem 1rem; opacity:0; transform:translateY(15px); pointer-events:none; color:var(--white); background:var(--ink); box-shadow:var(--shadow); font-size:.78rem; line-height:1.4; transition:.2s; }
+      .toast.show { opacity:1; transform:translateY(0); }
+
+      @media (max-width: 980px) {
+        .desktop-nav { gap:1rem; }
+        .hero { grid-template-columns:1fr .9fr; }
+        .look-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .popular-grid { grid-template-columns:repeat(2,1fr); }
+        .mood-list { grid-template-columns:repeat(5, minmax(115px, 1fr)); overflow:auto; }
+        .mood-button { min-width:130px; }
+        .journal-grid { grid-template-columns:1fr 1fr; }
+        .journal-card:first-child { grid-column:1/-1; min-height:260px; }
+      }
+      @media (max-width: 760px) {
+        .utility-bar { padding:0 5vw; }
+        .utility-bar span:last-child { display:none; }
+        .header-inner { height:64px; padding:0 5vw; grid-template-columns:1fr auto; }
+        .desktop-nav, .header-actions .studio-trigger { display:none; }
+        .nav-toggle { display:inline-grid; }
+        .hero { display:block; min-height:0; }
+        .hero-copy { min-height:500px; padding:3rem 5vw 2rem; }
+        .hero-copy h1 { font-size:clamp(4.7rem,22vw,8.2rem); }
+        .hero-visual { min-height:480px; }
+        .hero-figure.one { left:12%; }
+        .hero-figure.two { right:8%; }
+        .section { padding-left:5vw; padding-right:5vw; }
+        .section-heading { display:block; }
+        .section-description { margin-top:1rem; }
+        .section-heading .text-link { margin-top:1rem; }
+        .filter-toolbar { grid-template-columns:1fr 1fr; }
+        .filter-toolbar .field:first-child { grid-column:1/-1; }
+        .filter-row { align-items:flex-start; flex-direction:column; }
+        .result-count { align-self:flex-end; }
+        .look-grid { gap:.75rem; }
+        .look-card-body { padding:.75rem; }
+        .look-card-title { font-size:1.23rem; }
+        .journal-grid { display:block; background:transparent; border:0; }
+        .journal-card { min-height:245px; margin-bottom:.7rem; }
+        .request-grid, .about-section, .look-detail { grid-template-columns:1fr; }
+        .about-section { gap:1rem; }
+        .about-points { grid-template-columns:1fr; }
+        .footer { padding-left:5vw; padding-right:5vw; }
+        .footer-top { display:block; }
+        .footer-top p { margin-top:1.8rem; }
+        .footer-bottom { flex-direction:column; }
+        .detail-visual, .detail-visual .look-art, .detail-visual .look-uploaded-image { min-height:410px; height:410px; }
+        .modal-shell { width:100%; max-height:100vh; margin:0; }
+        .modal-close { top:.5rem; }
+      }
+      @media (max-width: 480px) {
+        .brand { font-size:1.5rem; }
+        .hero-copy { min-height:470px; }
+        .hero-copy h1 { letter-spacing:-.125em; }
+        .hero-bottom { align-items:flex-start; flex-direction:column; }
+        .hero-count { display:none; }
+        .popular-grid { grid-template-columns:1fr 1fr; }
+        .product-art { height:155px; }
+        .look-grid { grid-template-columns:1fr; }
+        .look-card-image { aspect-ratio:1.05; }
+        .filter-toolbar { grid-template-columns:1fr; }
+        .filter-toolbar .field:first-child { grid-column:auto; }
+        .form-grid, .compact-row { grid-template-columns:1fr; }
+        .form-grid .full { grid-column:auto; }
+        .look-item { grid-template-columns:42px 1fr; }
+        .item-link { grid-column:2; width:fit-content; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="utility-bar" aria-label="Informasi prototype">
+      <span>Editorial affiliate catalogue · Indonesia</span>
+      <span>Prototype data · bisa ditambah &amp; dihapus</span>
+    </div>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#home" aria-label="SISIP, kembali ke beranda">SISIP</a>
+        <nav class="desktop-nav" aria-label="Navigasi utama">
+          <a href="#lookbook">Looks</a>
+          <a href="#styles">Styles</a>
+          <a href="#journal">Journal</a>
+          <a href="#request">Request</a>
+        </nav>
+        <div class="header-actions">
+          <button class="icon-button" id="searchButton" type="button" aria-label="Cari look">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4.2 4.2"></path></svg>
+          </button>
+          <button class="icon-button studio-trigger" id="studioButton" type="button" aria-label="Buka SISIP Studio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 5.5h16v13H4z"></path><path d="M8 9h8M8 12h4M8 15h6"></path></svg>
+          </button>
+          <button class="nav-toggle" id="menuButton" type="button" aria-label="Buka menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+          </button>
+        </div>
+      </div>
+      <nav class="mobile-nav" id="mobileNav" aria-label="Navigasi mobile">
+        <a href="#lookbook">Looks</a>
+        <a href="#styles">Styles</a>
+        <a href="#journal">Journal</a>
+        <a href="#request">Request outfit</a>
+        <a href="#about">Tentang SISIP</a>
+        <button class="button-outline" id="mobileStudioButton" type="button">Buka SISIP Studio</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="home" aria-labelledby="heroTitle">
+        <div class="hero-copy">
+          <div>
+            <p class="eyebrow">Katalog look / 01</p>
+            <h1 id="heroTitle">TEMUKAN<span>LOOK.</span></h1>
+            <p>Referensi outfit all-gender yang dikurasi untuk hari-hari yang perlu terasa lebih tepat.</p>
+          </div>
+          <div class="hero-bottom">
+            <a class="button" href="#lookbook">Jelajahi 12 look <span aria-hidden="true">↘</span></a>
+            <div class="hero-count meta"><strong id="heroLookCount">12</strong>look dikurasi</div>
+          </div>
+        </div>
+        <div class="hero-visual" aria-label="Ilustrasi editorial fashion dua sosok dengan outfit netral">
+          <div class="hero-gridlines"></div>
+          <div class="hero-orb"></div>
+          <p class="hero-label eyebrow">SISIP / NEW SERIES</p>
+          <div class="hero-figure one" aria-hidden="true">
+            <span class="hair"></span><span class="head"></span><span class="neck"></span><span class="body"></span>
+            <span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span>
+          </div>
+          <div class="hero-figure two" aria-hidden="true">
+            <span class="hair"></span><span class="head"></span><span class="neck"></span><span class="body"></span>
+            <span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span>
+          </div>
+          <p class="hero-stamp meta"><b>01—12</b><em>Clean objects for real days.</em></p>
+        </div>
+      </section>
+
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>Temukan look</span><span>Pilih potongannya</span><span>Untuk semua gaya</span><span>Kurasi SISIP</span><span>Temukan look</span><span>Pilih potongannya</span><span>Untuk semua gaya</span><span>Kurasi SISIP</span>
+        </div>
+      </div>
+
+      <section class="section" id="styles" aria-labelledby="stylesTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-number eyebrow">01 / Browse by mood</p>
+            <h2 class="section-title" id="stylesTitle">Pilih arah.<br /><span class="accent">Mulai padu.</span></h2>
+          </div>
+          <p class="section-description">Mulai dari mood yang terasa paling dekat; filter akan langsung membawa kamu ke look yang relevan.</p>
+        </div>
+        <div class="mood-list" id="moodList"></div>
+      </section>
+
+      <section class="section" aria-labelledby="popularTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-number eyebrow">02 / Paling disisipkan</p>
+            <h2 class="section-title" id="popularTitle">Pieces yang<br />sering <span class="accent">kembali.</span></h2>
+          </div>
+          <a class="text-link" href="#lookbook">Lihat semua looks <span aria-hidden="true">↘</span></a>
+        </div>
+        <div class="popular-grid" id="popularGrid"></div>
+      </section>
+
+      <section class="section lookbook-section" id="lookbook" aria-labelledby="lookbookTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-number eyebrow">03 / Look catalogue</p>
+            <h2 class="section-title" id="lookbookTitle">Cari yang<br /><span class="accent">terasa kamu.</span></h2>
+          </div>
+          <p class="section-description">Setiap look berisi 2–5 item yang bisa kamu buka satu per satu di Shopee.</p>
+        </div>
+        <div class="filter-toolbar" aria-label="Filter katalog look">
+          <div class="field has-icon">
+            <label for="searchInput">Cari look atau produk</label>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4.2 4.2"></path></svg>
+            <input id="searchInput" type="search" placeholder="Contoh: linen, formal, olive" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="genderFilter">Gender</label>
+            <select id="genderFilter"><option value="all">Semua gender</option><option value="Pria">Pria</option><option value="Wanita">Wanita</option><option value="Uniseks">Uniseks</option></select>
+          </div>
+          <div class="field">
+            <label for="styleFilter">Style</label>
+            <select id="styleFilter"><option value="all">Semua style</option></select>
+          </div>
+          <div class="field">
+            <label for="sortFilter">Urutkan</label>
+            <select id="sortFilter"><option value="popular">Paling populer</option><option value="newest">Terbaru</option><option value="low">Harga terendah</option><option value="high">Harga tertinggi</option></select>
+          </div>
+        </div>
+        <div class="filter-row">
+          <div class="active-filter" id="styleChips" aria-label="Filter style cepat"></div>
+          <span class="result-count microcopy" id="resultCount">12 look ditemukan</span>
+        </div>
+        <div class="look-grid" id="lookGrid" aria-live="polite"></div>
+      </section>
+
+      <section class="section dark" id="journal" aria-labelledby="journalTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-number eyebrow">04 / Journal</p>
+            <h2 class="section-title" id="journalTitle">Bukan cuma<br />apa yang <span class="accent">dipakai.</span></h2>
+          </div>
+          <p class="section-description">Catatan pendek tentang rasa, proporsi, warna, dan cara membuat satu look bekerja lebih keras.</p>
+        </div>
+        <div class="journal-grid" id="journalGrid"></div>
+      </section>
+
+      <section class="section" id="request" aria-labelledby="requestTitle">
+        <div class="request-grid">
+          <div class="request-copy">
+            <p class="eyebrow">05 / Need a look?</p>
+            <h2 class="section-title" id="requestTitle">CERITAKAN<br />HARI<span>MU.</span></h2>
+            <p>Butuh look untuk acara tertentu? Tinggalkan brief singkatmu. Form ini sudah dapat diuji; pengiriman publik akan diaktifkan setelah email dan perlindungan anti-spam disiapkan.</p>
+            <div class="request-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 8v4l2.5 1.5"></path><circle cx="12" cy="12" r="8.5"></circle></svg>
+              <span class="microcopy">Saat ini request disimpan sebagai draft lokal untuk mencegah spam.</span>
+            </div>
+          </div>
+          <form class="request-form" id="requestForm">
+            <div class="form-grid">
+              <div class="field full"><label for="requestNeed">Untuk acara apa?</label><input id="requestNeed" name="need" required placeholder="Contoh: bukber kantor, wisuda, date malam" /></div>
+              <div class="field"><label for="requestGender">Gender</label><select id="requestGender" name="gender"><option>Uniseks</option><option>Pria</option><option>Wanita</option><option>Prefer tidak menyebutkan</option></select></div>
+              <div class="field"><label for="requestBudget">Budget (opsional)</label><input id="requestBudget" name="budget" placeholder="Contoh: di bawah Rp500.000" /></div>
+              <div class="field"><label for="requestStyle">Arah gaya</label><input id="requestStyle" name="style" placeholder="Contoh: clean, playful, modest" /></div>
+              <div class="field"><label for="requestColor">Warna yang disukai</label><input id="requestColor" name="color" placeholder="Contoh: olive, hitam, earth tone" /></div>
+              <div class="field full"><label for="requestNotes">Catatan tambahan</label><textarea id="requestNotes" name="notes" placeholder="Proporsi tubuh, ukuran, item yang ingin dihindari, atau referensi suasana."></textarea></div>
+            </div>
+            <button class="button" type="submit">Simpan request prototype <span aria-hidden="true">↗</span></button>
+            <p class="form-status" id="requestStatus" role="status"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="section about-section" id="about" aria-labelledby="aboutTitle">
+        <p class="section-number eyebrow">06 / About SISIP</p>
+        <div>
+          <h2 id="aboutTitle">SATU LOOK.<br /><em>BANYAK</em> KEMUNGKINAN.</h2>
+          <p class="about-copy">SISIP adalah ruang kurasi fashion untuk membantu orang menemukan item yang bekerja bersama—tanpa harus terasa seragam. Semua look ditata manual, lalu dipecah menjadi potongan yang bisa kamu lihat sendiri.</p>
+          <div class="about-points">
+            <div><span class="meta">01</span><strong>All-gender by default</strong><p>Filter membantu, bukan membatasi cara berpakaian.</p></div>
+            <div><span class="meta">02</span><strong>Curated, not crowded</strong><p>Setiap kartu punya alasan untuk masuk ke satu look.</p></div>
+            <div><span class="meta">03</span><strong>Ready to grow</strong><p>Prototype ini siap dikembangkan menjadi dashboard mandiri.</p></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-top">
+        <div class="footer-brand">SISIP</div>
+        <p>Temukan look. Pilih potongannya.<br />Katalog prototype untuk kurasi fashion Indonesia.</p>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="currentYear"></span> SISIP / Prototype</span>
+        <div class="footer-links"><a href="#about">Tentang</a><a href="#request">Request</a><a href="#home">Kembali ke atas ↑</a></div>
+      </div>
+    </footer>
+
+    <dialog id="lookModal" aria-label="Detail look">
+      <div class="modal-shell">
+        <button class="icon-button modal-close" id="closeLookModal" type="button" aria-label="Tutup detail look">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+        <div id="lookDetail"></div>
+      </div>
+    </dialog>
+
+    <dialog id="articleModal" aria-label="Artikel SISIP">
+      <div class="article-shell">
+        <button class="icon-button modal-close" id="closeArticleModal" type="button" aria-label="Tutup artikel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+        <div id="articleDetail"></div>
+      </div>
+    </dialog>
+
+    <dialog id="authModal" aria-label="Masuk ke SISIP Studio">
+      <div class="article-shell auth-shell">
+        <button class="icon-button modal-close" id="closeAuthModal" type="button" aria-label="Tutup form masuk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+        <p class="eyebrow" style="color:var(--clay)">SISIP STUDIO / ADMIN</p>
+        <h2>Masuk untuk mengelola katalog.</h2>
+        <p>Hanya akun admin SISIP yang dapat menambah, mengubah, atau menghapus data cloud.</p>
+        <form class="form-stack" id="authForm">
+          <div class="field"><label for="authEmail">Email</label><input id="authEmail" name="email" type="email" autocomplete="email" required /></div>
+          <div class="field"><label for="authPassword">Password</label><input id="authPassword" name="password" type="password" autocomplete="current-password" required /></div>
+          <p class="form-error" id="authFormError" role="alert"></p>
+          <button class="button" type="submit">Masuk ke Studio <span aria-hidden="true">↗</span></button>
+        </form>
+      </div>
+    </dialog>
+
+    <div class="studio-scrim" id="studioScrim"></div>
+    <aside class="studio-drawer" id="studioDrawer" aria-label="SISIP Studio" aria-hidden="true">
+      <div class="studio-top">
+        <div><p class="eyebrow" id="studioModeLabel" style="margin:0;color:var(--clay)">Local prototype</p><h2 class="studio-title">SISIP Studio</h2></div>
+        <div class="studio-top-actions"><button class="small-button muted" id="logoutStudioButton" type="button" hidden>Keluar</button><button class="icon-button" id="closeStudioButton" type="button" aria-label="Tutup SISIP Studio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></div>
+      </div>
+      <div class="studio-content">
+        <p class="prototype-note" id="studioModeNote">Semua perubahan di panel ini tersimpan di browser perangkatmu saja. Ini sengaja dibuat supaya sample look dapat ditambah, dihapus, dan di-reset tanpa memengaruhi file asli.</p>
+        <div class="studio-tabs" role="tablist" aria-label="Menu studio">
+          <button class="studio-tab is-active" type="button" data-studio-tab="looks" role="tab">Looks</button>
+          <button class="studio-tab" type="button" data-studio-tab="products" role="tab">Produk</button>
+        </div>
+
+        <div class="studio-panel is-active" id="studioLooksPanel" data-studio-panel="looks">
+          <section class="studio-section">
+            <h3>Tambah look</h3>
+            <p>Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link Shopee-nya sama.</p>
+            <form class="form-stack" id="lookForm">
+              <div class="compact-row">
+                <div class="field"><label for="lookTitleInput">Nama look</label><input id="lookTitleInput" name="title" required placeholder="Contoh: Kota Setelah Hujan" /></div>
+                <div class="field"><label for="lookGenderInput">Gender</label><select id="lookGenderInput" name="gender"><option>Uniseks</option><option>Pria</option><option>Wanita</option></select></div>
+              </div>
+              <div class="compact-row">
+                <div class="field"><label for="lookStylesInput">Style (pisahkan koma)</label><input id="lookStylesInput" name="styles" required placeholder="Clean, Casual" /></div>
+                <div class="field"><label for="lookToneInput">Arah visual</label><select id="lookToneInput" name="tone"><option value="carbon">Carbon</option><option value="clay">Clay</option><option value="mineral">Mineral</option><option value="olive">Olive</option><option value="midnight">Midnight</option></select></div>
+              </div>
+              <div class="field"><label for="lookCoverInput">Foto cover (opsional)</label><input id="lookCoverInput" type="file" accept="image/jpeg,image/png,image/webp" /></div>
+              <div class="editor-product-row">
+                <div class="field"><label for="lookProductInput">Tambahkan produk</label><select id="lookProductInput"></select></div>
+                <div class="field"><label for="lookVariantInput">Warna pilihan</label><select id="lookVariantInput"></select></div>
+              </div>
+              <button class="small-button muted" id="addLookItemButton" type="button">+ Masukkan item ke look</button>
+              <div class="draft-items" id="lookDraftItems"></div>
+              <p class="form-error" id="lookFormError" role="alert"></p>
+              <button class="small-button" type="submit">Publikasikan look</button>
+            </form>
+          </section>
+          <section class="studio-section">
+            <h3>Look yang tersimpan</h3>
+            <p>Hapus prototype yang tidak ingin dipakai. Kamu selalu bisa mengembalikan data contoh lewat reset.</p>
+            <div class="studio-list" id="studioLooksList"></div>
+          </section>
+          <section class="studio-section" id="sampleControls">
+            <h3>Kontrol sample</h3>
+            <div class="reset-row"><button class="small-button muted" type="button" id="resetSampleButton">Reset 12 look contoh</button><button class="small-button danger" type="button" id="clearLooksButton">Hapus semua look</button></div>
+          </section>
+          <section class="studio-section" id="cloudSampleControls" hidden>
+            <h3>Mulai dengan 12 sample</h3>
+            <p>Tambahkan seluruh look contoh dan library produknya ke cloud. Semua sample tetap bisa dihapus nanti dari Studio.</p>
+            <button class="small-button muted" id="importSampleButton" type="button">Impor 12 sample ke cloud</button>
+          </section>
+        </div>
+
+        <div class="studio-panel" id="studioProductsPanel" data-studio-panel="products">
+          <section class="studio-section">
+            <h3>Tambah produk</h3>
+            <p>Satu produk induk dapat memiliki beberapa pilihan warna tetapi tetap menggunakan satu affiliate link.</p>
+            <form class="form-stack" id="productForm">
+              <div class="field"><label for="productTitleInput">Nama produk</label><input id="productTitleInput" name="title" required placeholder="Contoh: Relaxed Oxford Shirt" /></div>
+              <div class="compact-row">
+                <div class="field"><label for="productPriceInput">Harga referensi (manual)</label><input id="productPriceInput" name="price" required inputmode="numeric" placeholder="229000" /></div>
+                <div class="field"><label for="productBadgeInput">Badge (opsional)</label><input id="productBadgeInput" name="badge" placeholder="Pilihan SISIP" /></div>
+              </div>
+              <div class="field"><label for="productLinkInput">Link affiliate Shopee</label><input id="productLinkInput" name="link" required type="url" placeholder="https://shopee.co.id/..." /></div>
+              <div class="field"><label for="productStylesInput">Tag style (pisahkan koma)</label><input id="productStylesInput" name="styles" placeholder="Clean, Formal" /></div>
+              <div class="field"><label for="productVariantsInput">Varian warna (Nama|#HEX, pisahkan koma)</label><input id="productVariantsInput" name="variants" required placeholder="Putih|#F1F0EC, Biru|#AAB7C7" /></div>
+              <div class="field"><label for="productImageInput">Foto produk (opsional)</label><input id="productImageInput" type="file" accept="image/jpeg,image/png,image/webp" /></div>
+              <p class="form-error" id="productFormError" role="alert"></p>
+              <button class="small-button" type="submit">Simpan produk</button>
+            </form>
+          </section>
+          <section class="studio-section">
+            <h3>Library produk</h3>
+            <p>Produk yang dipakai look akan memberi peringatan sebelum dihapus.</p>
+            <div class="studio-list" id="studioProductsList"></div>
+          </section>
+        </div>
+      </div>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+    <script src="./assets/supabase-adapter.js"></script>
+    <script>
+      (() => {
+        "use strict";
+
+        const STORAGE_KEY = "sisip-prototype-v1";
+        const TONES = {
+          carbon: { bg: "#393430", accent: "#a9553c", garment: "#171614", bottom: "#292522", figure: "#d7c6b7", skin: "#9a6a52", skinDark: "#825542", hair: "#1b1816", label: "#f7f3ed", light: false },
+          clay: { bg: "#b9674e", accent: "#e5d3c0", garment: "#3a2924", bottom: "#28211e", figure: "#ead8c7", skin: "#a66e50", skinDark: "#8a543e", hair: "#37221b", label: "#fff9f0", light: false },
+          mineral: { bg: "#d5cdc4", accent: "#81746b", garment: "#332f2b", bottom: "#77716b", figure: "#1f1d1b", skin: "#b37d60", skinDark: "#966047", hair: "#161514", label: "#221f1c", light: false },
+          olive: { bg: "#747466", accent: "#d4b48b", garment: "#30382b", bottom: "#1f261e", figure: "#d7c6b7", skin: "#8e6049", skinDark: "#744734", hair: "#191714", label: "#f7f3ed", light: false },
+          midnight: { bg: "#263038", accent: "#b66c59", garment: "#d7d4cc", bottom: "#3e454a", figure: "#e8ddcf", skin: "#9d694f", skinDark: "#81503d", hair: "#211b19", label: "#f8f6f2", light: true }
+        };
+        const STYLE_ORDER = ["Clean", "Casual", "Formal", "Streetwear", "Modest", "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party"];
+        const ARTICLES = [
+          { id: "a1", number: "01", title: "Cara membuat outfit clean tanpa terlihat kosong.", excerpt: "Outfit clean bukan berarti semua harus putih atau tanpa detail. Mulai dari bentuk, tekstur, dan satu aksen yang menahan seluruh look.", body: "Pilih satu potongan dengan struktur yang jelas—misalnya kemeja oxford, blazer rileks, atau celana berlipit. Setelah itu, buat sisanya lebih tenang. Kontras kecil antara tekstur halus dan tekstur matte sering lebih efektif daripada menambah banyak warna.\n\nSatu aksen yang punya bobot, seperti sepatu kulit gelap atau tas dengan bentuk kuat, cukup untuk memberi look sebuah titik akhir." },
+          { id: "a2", number: "02", title: "Warna netral yang tetap punya arah.", excerpt: "Netral tidak selalu berarti aman. Perhatikan suhu warna, kedalaman, dan hubungan antar material.", body: "Abu hangat, olive kusam, cokelat espresso, dan hitam arang punya karakter yang berbeda dari hitam-putih murni. Gunakan dua warna netral yang suhu warnanya serupa, lalu sisipkan satu warna dengan bobot lebih pekat.\n\nDi SISIP, warna tidak dibaca sebagai aturan. Ia hanya alat untuk membuat potongan yang berbeda terasa berbicara satu bahasa." },
+          { id: "a3", number: "03", title: "Mulai dari satu item, selesai jadi satu look.", excerpt: "Tidak perlu membeli semua hal sekaligus. Biarkan satu item yang kamu suka menentukan arah berikutnya.", body: "Satu cardigan cokelat bisa bergerak ke arah santai bersama denim, atau menjadi lebih rapi ketika dipasangkan dengan rok satin dan Mary Jane. Satu produk yang baik seharusnya membuka beberapa kemungkinan.\n\nKarena itu setiap look di katalog ini dipecah menjadi item. Kamu bisa mengambil keseluruhan arahnya, atau hanya membawa pulang satu idenya." }
+        ];
+
+        const SEED_PRODUCTS = [
+          product("oxford", "Relaxed Oxford Shirt", 229000, "Pilihan SISIP", ["Clean", "Formal"], [["Putih kertas", "#F1F0EC"], ["Biru kabut", "#AAB7C7"], ["Charcoal", "#45423F"]], "#d9d4cd", "#f1f0ec"),
+          product("trouser", "Relaxed Pleat Trousers", 259000, "Populer", ["Clean", "Formal"], [["Charcoal", "#3F3C39"], ["Olive gelap", "#52583F"], ["Stone", "#B8AEA1"]], "#bfb5aa", "#3f3c39"),
+          product("loafer", "Soft Leather Loafer", 349000, "", ["Clean", "Formal"], [["Hitam", "#1A1918"], ["Cokelat tua", "#563B2C"]], "#cfc4b8", "#1a1918"),
+          product("tote", "Soft Structure Tote", 189000, "", ["Clean", "Casual"], [["Cognac", "#86533A"], ["Hitam", "#1D1B19"]], "#d6c5b3", "#86533a"),
+          product("blazer", "Relaxed Tailored Blazer", 379000, "Pilihan SISIP", ["Formal", "Clean"], [["Taupe", "#918173"], ["Stone", "#B6AAA0"], ["Hitam", "#242220"]], "#d4c9bf", "#918173"),
+          product("fine-knit", "Fine Knit Crewneck", 159000, "", ["Clean", "Formal"], [["Ivory", "#E8E1D6"], ["Ink", "#20201E"], ["Mocha", "#896B5B"]], "#d7d1c9", "#e8e1d6"),
+          product("pointed-flats", "Pointed Soft Flats", 179000, "", ["Formal", "Korean-inspired"], [["Hitam", "#1B1A19"], ["Burgundy", "#713A37"]], "#d7d0c9", "#1b1a19"),
+          product("shoulder-bag", "Compact Shoulder Bag", 219000, "", ["Formal", "Korean-inspired"], [["Espresso", "#4C3328"], ["Wine", "#70363B"]], "#d5c4b7", "#4c3328"),
+          product("overshirt", "Boxy Overshirt", 269000, "", ["Casual", "Streetwear", "Workwear"], [["Charcoal", "#403E3B"], ["Olive", "#59604A"], ["Sand", "#B9AA94"]], "#bbb5ad", "#403e3b"),
+          product("heavy-tee", "Heavyweight Plain Tee", 99000, "", ["Casual", "Streetwear"], [["Graphite", "#343434"], ["Ecru", "#DDD7CD"], ["Ash", "#99958E"]], "#d5d0c8", "#343434"),
+          product("cargo", "Relaxed Cargo Pants", 239000, "", ["Casual", "Streetwear", "Workwear"], [["Olive", "#58614C"], ["Black", "#22211F"], ["Stone", "#AEA599"]], "#c9c2b8", "#58614c"),
+          product("retro-sneaker", "Retro Panel Sneakers", 329000, "Populer", ["Casual", "Streetwear"], [["White / Grey", "#E0DFDA"], ["Gum", "#A87850"]], "#d8d4ce", "#e0dfda"),
+          product("denim-jacket", "Faded Denim Trucker", 289000, "", ["Casual", "Vintage"], [["Faded blue", "#72879A"], ["Black wash", "#3C3D40"]], "#cad0d2", "#72879a"),
+          product("straight-denim", "Straight Denim Jeans", 249000, "", ["Casual", "Vintage"], [["Black wash", "#353638"], ["Indigo", "#3C5368"]], "#c7c5c0", "#353638"),
+          product("canvas-sneaker", "Canvas Low Sneakers", 179000, "", ["Casual", "Vintage"], [["Milk", "#EAE5DD"], ["Black", "#22211F"]], "#d8d1c8", "#eae5dd"),
+          product("long-outer", "Longline Soft Outer", 319000, "Pilihan SISIP", ["Modest", "Clean"], [["Taupe", "#9E8B7D"], ["Black", "#262422"]], "#d7cbbf", "#9e8b7d"),
+          product("flowy-skirt", "Flowy Column Skirt", 229000, "", ["Modest", "Clean"], [["Ink", "#20201E"], ["Mushroom", "#9D8D82"]], "#cbc5bd", "#20201e"),
+          product("pashmina", "Textured Pashmina", 89000, "", ["Modest", "Clean"], [["Oat", "#C7B8A6"], ["Black", "#252321"], ["Dusty blue", "#687985"]], "#d8cfc4", "#c7b8a6"),
+          product("slingback", "Rounded Slingback", 249000, "", ["Modest", "Formal"], [["Black", "#201F1E"], ["Nude", "#B68B72"]], "#d6c8bc", "#201f1e"),
+          product("knit-polo", "Fine Knit Polo", 189000, "", ["Formal", "Party"], [["Black", "#201F1D"], ["Mocha", "#735B50"]], "#cdc4bc", "#201f1d"),
+          product("derby", "Polished Derby Shoes", 369000, "", ["Formal", "Party"], [["Black", "#181716"], ["Oxblood", "#542C2B"]], "#cec4ba", "#181716"),
+          product("crossbody", "Slim Crossbody Bag", 159000, "", ["Formal", "Streetwear"], [["Black", "#1E1C1B"], ["Chrome", "#919192"]], "#d0c7bd", "#1e1c1b"),
+          product("cardigan", "Soft Button Cardigan", 219000, "", ["Korean-inspired", "Casual"], [["Navy", "#344251"], ["Cocoa", "#755545"], ["Mist", "#C7C8C4"]], "#ced0cc", "#344251"),
+          product("wide-trouser", "Wide Drape Trousers", 239000, "", ["Korean-inspired", "Formal"], [["Warm grey", "#817C76"], ["Black", "#252321"]], "#cfc9c1", "#817c76"),
+          product("mary-jane", "Soft Mary Jane", 199000, "", ["Korean-inspired", "Casual"], [["Black", "#1D1C1A"], ["Cherry", "#883B3A"]], "#d5c9be", "#1d1c1a"),
+          product("utility-jacket", "Utility Field Jacket", 299000, "", ["Workwear", "Casual"], [["Olive", "#536047"], ["Sand", "#AA9A82"]], "#c3c3ac", "#536047"),
+          product("parachute", "Nylon Parachute Pants", 229000, "", ["Workwear", "Sporty"], [["Sand", "#B4A58E"], ["Black", "#252421"]], "#d3c8bc", "#b4a58e"),
+          product("gum-sneaker", "Gum Sole Sneakers", 279000, "", ["Workwear", "Casual"], [["White / Gum", "#E2DED4"], ["Black / Gum", "#2A2825"]], "#d8d1c3", "#e2ded4"),
+          product("satin-skirt", "Satin Midi Skirt", 249000, "", ["Casual", "Party"], [["Espresso", "#5C3F34"], ["Black", "#242220"]], "#d0c2b5", "#5c3f34"),
+          product("mini-bag", "Mini Frame Bag", 199000, "", ["Casual", "Party"], [["Cocoa", "#704837"], ["Silver", "#A7A5A1"]], "#cfbdaf", "#704837"),
+          product("track-jacket", "Retro Track Jacket", 239000, "", ["Sporty", "Casual"], [["Navy", "#283B53"], ["Burgundy", "#6D3334"]], "#c2c7cd", "#283b53"),
+          product("nylon-pants", "Easy Nylon Pants", 219000, "", ["Sporty", "Casual"], [["Black", "#232220"], ["Slate", "#58626A"]], "#c4c5c2", "#232220"),
+          product("silver-sneaker", "Silver Runner Sneakers", 349000, "Populer", ["Sporty", "Streetwear"], [["Silver", "#A6A7AA"], ["White", "#E3E1DC"]], "#d4d4d3", "#a6a7aa"),
+          product("satin-shirt", "Fluid Satin Shirt", 259000, "", ["Party", "Formal"], [["Black", "#1C1B1A"], ["Steel", "#596166"]], "#c9c8c4", "#1c1b1a"),
+          product("tank", "Ribbed Tank Top", 89000, "", ["Party", "Casual"], [["Black", "#22211F"], ["Bone", "#DDD5CA"]], "#d3cbc1", "#22211f"),
+          product("leather-boots", "Sleek Leather Boots", 399000, "", ["Party", "Formal"], [["Black", "#191817"], ["Brown", "#4D352B"]], "#cfc2b6", "#191817"),
+          product("metal-bag", "Metallic Mini Bag", 239000, "", ["Party", "Korean-inspired"], [["Metal", "#A5A5A1"], ["Black", "#242220"]], "#cfcdca", "#a5a5a1"),
+          product("cap", "Soft Panel Cap", 79000, "", ["Streetwear", "Sporty"], [["Black", "#20201E"], ["Olive", "#5B604C"]], "#cbc7c0", "#20201e")
+        ];
+
+        const SEED_LOOKS = [
+          look("l01", "Putih yang Tepat", "Uniseks", ["Clean", "Formal"], "carbon", 98, 12, [["oxford", "Putih kertas"], ["trouser", "Charcoal"], ["loafer", "Hitam"], ["tote", "Cognac"]]),
+          look("l02", "Hari Kerja, Ringan", "Wanita", ["Formal", "Clean"], "mineral", 92, 11, [["blazer", "Taupe"], ["fine-knit", "Ivory"], ["trouser", "Charcoal"], ["pointed-flats", "Hitam"], ["shoulder-bag", "Espresso"]]),
+          look("l03", "Layer Kota", "Pria", ["Casual", "Streetwear"], "carbon", 89, 10, [["overshirt", "Charcoal"], ["heavy-tee", "Graphite"], ["cargo", "Olive"], ["retro-sneaker", "White / Grey"], ["cap", "Black"]]),
+          look("l04", "Sunday Denim", "Uniseks", ["Casual", "Vintage"], "clay", 86, 9, [["denim-jacket", "Faded blue"], ["heavy-tee", "Ecru"], ["straight-denim", "Black wash"], ["canvas-sneaker", "Milk"]]),
+          look("l05", "Modest Line", "Wanita", ["Modest", "Clean"], "mineral", 95, 8, [["long-outer", "Taupe"], ["fine-knit", "Ink"], ["flowy-skirt", "Ink"], ["pashmina", "Oat"], ["slingback", "Black"]]),
+          look("l06", "Sharp After Six", "Pria", ["Formal", "Party"], "midnight", 82, 7, [["knit-polo", "Black"], ["trouser", "Charcoal"], ["derby", "Black"], ["crossbody", "Black"]]),
+          look("l07", "Soft Contrast", "Wanita", ["Korean-inspired", "Formal"], "midnight", 91, 6, [["cardigan", "Navy"], ["fine-knit", "Ivory"], ["wide-trouser", "Warm grey"], ["mary-jane", "Black"], ["shoulder-bag", "Wine"]]),
+          look("l08", "Olive Utility", "Uniseks", ["Workwear", "Casual"], "olive", 88, 5, [["utility-jacket", "Olive"], ["heavy-tee", "Ecru"], ["parachute", "Sand"], ["gum-sneaker", "White / Gum"], ["cap", "Olive"]]),
+          look("l09", "Espresso Date", "Wanita", ["Casual", "Party"], "clay", 90, 4, [["cardigan", "Cocoa"], ["satin-skirt", "Espresso"], ["mary-jane", "Black"], ["mini-bag", "Cocoa"]]),
+          look("l10", "Track, Then Coffee", "Uniseks", ["Sporty", "Casual"], "midnight", 84, 3, [["track-jacket", "Navy"], ["heavy-tee", "Ash"], ["nylon-pants", "Black"], ["silver-sneaker", "Silver"], ["cap", "Black"]]),
+          look("l11", "Blackout Texture", "Uniseks", ["Party", "Streetwear"], "carbon", 87, 2, [["satin-shirt", "Black"], ["tank", "Black"], ["trouser", "Charcoal"], ["leather-boots", "Black"], ["metal-bag", "Metal"]]),
+          look("l12", "Polished Ease", "Pria", ["Formal", "Clean"], "mineral", 80, 1, [["blazer", "Stone"], ["fine-knit", "Ivory"], ["trouser", "Olive gelap"], ["retro-sneaker", "White / Grey"], ["tote", "Hitam"]])
+        ];
+
+        function product(id, name, price, badge, styles, variants, artBg, artInk) {
+          return { id, name, price, badge, styles, affiliateUrl: "https://shopee.co.id/", artBg, artInk, image: "", variants: variants.map(([name, hex]) => ({ id: slugify(name), name, hex })) };
+        }
+        function look(id, title, gender, styles, tone, popularity, createdOrder, items) {
+          return { id, title, gender, styles, tone, popularity, createdOrder, coverImage: "", items: items.map(([productId, variantName]) => ({ productId, variantName })) };
+        }
+        function slugify(value) { return String(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+        function clone(value) { return JSON.parse(JSON.stringify(value)); }
+        function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;"); }
+        function safeImage(value) { return /^(data:image\/(png|jpe?g|webp|gif);base64,|https?:\/\/)/i.test(String(value || "")) ? String(value) : ""; }
+        function money(value) { return new Intl.NumberFormat("id-ID", { style:"currency", currency:"IDR", maximumFractionDigits:0 }).format(Number(value || 0)); }
+        function uid(prefix) { return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`; }
+        const cloud = window.SISIPCloud;
+        const cloudEnabled = () => Boolean(cloud?.isConfigured?.());
+
+        let state = loadState();
+        let activeStyle = "all";
+        let lookDraftItems = [];
+        let toastTimer;
+        let cloudAdmin = false;
+
+        const els = {
+          moodList: document.getElementById("moodList"), popularGrid: document.getElementById("popularGrid"), lookGrid: document.getElementById("lookGrid"),
+          search: document.getElementById("searchInput"), gender: document.getElementById("genderFilter"), style: document.getElementById("styleFilter"), sort: document.getElementById("sortFilter"), styleChips: document.getElementById("styleChips"), resultCount: document.getElementById("resultCount"), heroCount: document.getElementById("heroLookCount"),
+          lookModal: document.getElementById("lookModal"), lookDetail: document.getElementById("lookDetail"), articleModal: document.getElementById("articleModal"), articleDetail: document.getElementById("articleDetail"),
+          authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
+          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), toast: document.getElementById("toast")
+        };
+
+        function loadState() {
+          try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES) };
+          } catch (error) { console.warn("Unable to load SISIP prototype", error); }
+          return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES) };
+        }
+        function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES) }; lookDraftItems = []; saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
+        async function refreshCloudState({ admin = false, quiet = false } = {}) {
+          if (!cloudEnabled()) return false;
+          try {
+            const remoteState = await cloud.loadState({ admin });
+            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [] };
+            renderAll();
+            updateStudioMode();
+            return true;
+          } catch (error) {
+            console.warn("Unable to load SISIP cloud data", error);
+            if (!quiet) showToast("Data cloud belum dapat dimuat. Coba lagi sesaat lagi.");
+            return false;
+          }
+        }
+        function updateStudioMode() {
+          const cloudMode = cloudEnabled();
+          els.studioModeLabel.textContent = cloudMode ? "Supabase cloud" : "Local prototype";
+          els.studioModeNote.textContent = cloudMode
+            ? "Perubahan di Studio disimpan ke database cloud SISIP. Hanya akun admin yang bisa mengelola katalog; data cloud tidak di-reset dari prototype ini."
+            : "Semua perubahan di panel ini tersimpan di browser perangkatmu saja. Ini sengaja dibuat supaya sample look dapat ditambah, dihapus, dan di-reset tanpa memengaruhi file asli.";
+          els.sampleControls.hidden = cloudMode;
+          els.cloudSampleControls.hidden = !cloudMode;
+          els.logoutStudioButton.hidden = !(cloudMode && cloudAdmin);
+        }
+        function getProduct(id) { return state.products.find((item) => item.id === id); }
+        function getVariant(productItem, name) { return productItem?.variants?.find((variant) => variant.name === name) || productItem?.variants?.[0]; }
+        function getLookTotal(lookItem) { return lookItem.items.reduce((sum, item) => sum + Number(getProduct(item.productId)?.price || 0), 0); }
+        function getAllStyles() { return [...new Set([...STYLE_ORDER, ...state.looks.flatMap((item) => item.styles)])]; }
+        function getProductUsage(id) { return state.looks.filter((entry) => entry.items.some((item) => item.productId === id)); }
+
+        function productArt(productItem, variant, small = false) {
+          const img = safeImage(productItem?.image);
+          if (img) return `<div class="product-art ${small ? "is-small" : ""}"><img src="${esc(img)}" alt="${esc(productItem.name)}" /></div>`;
+          const bg = variant?.hex ? blendHex(variant.hex, "#e7e1da", .55) : productItem?.artBg || "#d5ccc3";
+          const ink = variant?.hex || productItem?.artInk || "#242220";
+          return `<div class="product-art ${small ? "is-small" : ""}" style="--product-bg:${esc(bg)};--product-ink:${esc(ink)}"><span class="product-code meta">${esc(productItem?.category || "SISIP")}</span><span class="garment"></span></div>`;
+        }
+        function blendHex(a, b, weight) {
+          const toRgb = (hex) => { const raw = hex.replace("#", ""); const full = raw.length === 3 ? raw.split("").map((c) => c+c).join("") : raw; return [0,2,4].map((i) => parseInt(full.slice(i,i+2),16)); };
+          try { const x=toRgb(a), y=toRgb(b); const rgb=x.map((n,i)=>Math.round(n*(1-weight)+y[i]*weight)); return `#${rgb.map((n)=>n.toString(16).padStart(2,"0")).join("")}`; } catch { return "#d5ccc3"; }
+        }
+        function lookVisual(lookItem, detail = false) {
+          const image = safeImage(lookItem.coverImage);
+          if (image) return `<img class="look-uploaded-image" src="${esc(image)}" alt="Foto look ${esc(lookItem.title)}" />`;
+          const tone = TONES[lookItem.tone] || TONES.carbon;
+          return `<div class="look-art ${lookItem.createdOrder % 2 === 0 ? "flip" : ""} ${tone.light ? "light" : ""}" style="--art-bg:${tone.bg};--art-accent:${tone.accent};--garment:${tone.garment};--bottom:${tone.bottom};--figure:${tone.figure};--skin:${tone.skin};--skin-dark:${tone.skinDark};--hair:${tone.hair};--art-label:${tone.label};">
+            <span class="art-index meta">LOOK ${String(lookItem.createdOrder || 0).padStart(2,"0")}</span><span class="stripe"></span>
+            <div class="figure secondary" aria-hidden="true"><span class="hair"></span><span class="head"></span><span class="neck"></span><span class="body"></span><span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span></div>
+            <div class="figure" aria-hidden="true"><span class="hair"></span><span class="head"></span><span class="neck"></span><span class="body"></span><span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span></div>
+            <span class="art-caption meta">${detail ? "CURATED BY SISIP" : esc(lookItem.gender)}</span>
+          </div>`;
+        }
+        function lookSearchText(entry) {
+          const itemText = entry.items.map((item) => { const p=getProduct(item.productId); return `${p?.name||""} ${item.variantName||""} ${p?.styles?.join(" ")||""}`; }).join(" ");
+          return `${entry.title} ${entry.gender} ${entry.styles.join(" ")} ${itemText}`.toLowerCase();
+        }
+        function filteredLooks() {
+          const search = els.search.value.trim().toLowerCase();
+          const gender = els.gender.value;
+          const style = activeStyle !== "all" ? activeStyle : els.style.value;
+          const sort = els.sort.value;
+          const items = state.looks.filter((entry) => {
+            const bySearch = !search || lookSearchText(entry).includes(search);
+            const byGender = gender === "all" || entry.gender === gender || entry.gender === "Uniseks";
+            const byStyle = style === "all" || entry.styles.includes(style);
+            return bySearch && byGender && byStyle;
+          });
+          return items.sort((a,b) => {
+            if (sort === "newest") return Number(b.createdOrder || 0) - Number(a.createdOrder || 0);
+            if (sort === "low") return getLookTotal(a) - getLookTotal(b);
+            if (sort === "high") return getLookTotal(b) - getLookTotal(a);
+            return Number(b.popularity || 0) - Number(a.popularity || 0);
+          });
+        }
+
+        function renderMoodList() {
+          const moods = ["Clean", "Casual", "Formal", "Streetwear", "Modest"];
+          els.moodList.innerHTML = moods.map((mood, index) => `<button class="mood-button" type="button" data-style-jump="${esc(mood)}"><strong>${esc(mood)}</strong><span>0${index+1} ↘</span></button>`).join("");
+        }
+        function renderPopular() {
+          const counts = new Map();
+          state.looks.forEach((entry) => entry.items.forEach((item) => counts.set(item.productId, (counts.get(item.productId)||0)+1)));
+          const popular = [...state.products].sort((a,b) => (counts.get(b.id)||0)-(counts.get(a.id)||0)).slice(0,4);
+          els.popularGrid.innerHTML = popular.map((item) => {
+            const variant = item.variants[0];
+            return `<article class="popular-card">${productArt(item, variant)}<p class="eyebrow" style="color:var(--taupe);margin:.1rem 0 .45rem">${esc(item.badge || "SISIP PICK")}</p><h3 class="product-name">${esc(item.name)}</h3><p class="product-price">${money(item.price)}</p><div class="product-meta"><span class="swatch" style="--swatch:${esc(variant?.hex || "#ccc")}" title="${esc(variant?.name || "")}"></span><a class="product-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></div></article>`;
+          }).join("") || `<div class="empty-state"><h3>Belum ada produk</h3><p>Tambahkan dari SISIP Studio.</p></div>`;
+        }
+        function renderStyleControls() {
+          const styles = getAllStyles();
+          const previous = els.style.value;
+          els.style.innerHTML = `<option value="all">Semua style</option>${styles.map((style)=>`<option value="${esc(style)}">${esc(style)}</option>`).join("")}`;
+          if (styles.includes(previous)) els.style.value = previous;
+          els.styleChips.innerHTML = [`<button class="filter-chip ${activeStyle === "all" ? "is-active" : ""}" type="button" data-style="all">Semua</button>`, ...styles.map((style)=>`<button class="filter-chip ${activeStyle === style ? "is-active" : ""}" type="button" data-style="${esc(style)}">${esc(style)}</button>`)].join("");
+        }
+        function renderLooks() {
+          const entries = filteredLooks();
+          els.heroCount.textContent = state.looks.length;
+          els.resultCount.textContent = `${entries.length} look ditemukan`;
+          if (!entries.length) {
+            els.lookGrid.innerHTML = `<div class="empty-state"><h3>Belum ada look yang cocok.</h3><p>Coba ubah kata kunci atau reset filter untuk melihat seluruh kurasi.</p><button class="button-outline" id="clearFilterButton" type="button" style="margin-top:1rem">Reset filter</button></div>`;
+            return;
+          }
+          els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}<span class="open-look button">Lihat look ↗</span></button><div class="look-card-body"><div class="look-card-meta meta"><span>LOOK ${String(entry.createdOrder||0).padStart(2,"0")}</span><span>${esc(entry.gender)}</span></div><h3 class="look-card-title">${esc(entry.title)}</h3><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div></div></article>`).join("");
+        }
+        function renderJournal() {
+          document.getElementById("journalGrid").innerHTML = state.articles.length ? state.articles.map((article) => `<article class="journal-card"><span class="article-number eyebrow">Journal / ${article.number}</span><h3>${esc(article.title)}</h3><button class="text-link" type="button" data-open-article="${esc(article.id)}">Baca catatan ↗</button></article>`).join("") : `<div class="empty-state"><h3>Journal segera hadir.</h3><p>Catatan fashion berikutnya sedang disiapkan.</p></div>`;
+        }
+        function renderStudio() {
+          const currentProduct = els.lookProduct.value;
+          els.lookProduct.innerHTML = state.products.length ? state.products.map((item)=>`<option value="${esc(item.id)}">${esc(item.name)}</option>`).join("") : `<option value="">Tambah produk terlebih dahulu</option>`;
+          if (state.products.some((item)=>item.id===currentProduct)) els.lookProduct.value=currentProduct;
+          renderVariantSelect();
+          renderDraftItems();
+          els.studioLooksList.innerHTML = state.looks.length ? [...state.looks].sort((a,b)=>Number(b.createdOrder||0)-Number(a.createdOrder||0)).map((entry)=>`<div class="studio-row"><p><strong>${esc(entry.title)}</strong><span>${esc(entry.gender)} · ${esc(entry.styles.join(", "))} · ${entry.items.length} item</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-look="${esc(entry.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada look tersimpan.</p>`;
+          els.studioProductsList.innerHTML = state.products.length ? state.products.map((item)=>{ const usage=getProductUsage(item.id).length; return `<div class="studio-row"><p><strong>${esc(item.name)}</strong><span>${money(item.price)} · ${item.variants.length} warna · dipakai ${usage} look</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-product="${esc(item.id)}" type="button">Hapus</button></div></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada produk.</p>`;
+        }
+        function renderVariantSelect() {
+          const chosen = getProduct(els.lookProduct.value) || state.products[0];
+          els.lookVariant.innerHTML = chosen?.variants?.map((variant)=>`<option value="${esc(variant.name)}">${esc(variant.name)}</option>`).join("") || `<option value="">—</option>`;
+        }
+        function renderDraftItems() {
+          els.lookDraftItems.innerHTML = lookDraftItems.length ? lookDraftItems.map((item,index)=>{ const productItem=getProduct(item.productId); return `<div class="draft-item"><p><strong>${esc(productItem?.name || "Produk dihapus")}</strong><span>Warna pilihan: ${esc(item.variantName)}</span></p><button class="small-button danger" type="button" data-remove-draft="${index}">×</button></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe);margin:0">Masukkan 2–5 item untuk mempublikasikan look.</p>`;
+        }
+        function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderJournal(); renderStudio(); }
+
+        function affiliateUrl(value) {
+          const parsed = new URL(String(value || ""));
+          const host = parsed.hostname.toLowerCase();
+          const isShopee = host === "shopee.co.id" || host.endsWith(".shopee.co.id");
+          if (parsed.protocol !== "https:" || !isShopee) throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://.");
+          return parsed.href;
+        }
+        function safeUrl(value) { try { return affiliateUrl(value); } catch { return "https://shopee.co.id/"; } }
+        function openLook(id) {
+          const entry = state.looks.find((lookItem)=>lookItem.id===id);
+          if (!entry) return;
+          const itemsHtml = entry.items.map((item)=>{
+            const productItem=getProduct(item.productId); if (!productItem) return "";
+            const variant=getVariant(productItem,item.variantName);
+            return `<li class="look-item"><div class="look-item-art">${productArt(productItem,variant,true)}</div><div><p class="look-item-title">${esc(productItem.name)}</p><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div><a class="item-link" href="${esc(safeUrl(productItem.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></li>`;
+          }).join("");
+          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">LOOK ${String(entry.createdOrder||0).padStart(2,"0")} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2><div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.</p></div><div class="detail-actions"><button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
+          if (!els.lookModal.open) els.lookModal.showModal();
+        }
+        function openArticle(id) {
+          const article=state.articles.find((entry)=>entry.id===id); if (!article) return;
+          els.articleDetail.innerHTML=`<p class="eyebrow" style="color:var(--clay)">SISIP JOURNAL / ${article.number}</p><h2>${esc(article.title)}</h2>${article.body.split("\n\n").map((p)=>`<p>${esc(p)}</p>`).join("")}<button class="button-outline" type="button" onclick="document.getElementById('articleModal').close()">Tutup catatan</button>`;
+          if (!els.articleModal.open) els.articleModal.showModal();
+        }
+        function showToast(message) { clearTimeout(toastTimer); els.toast.textContent=message; els.toast.classList.add("show"); toastTimer=setTimeout(()=>els.toast.classList.remove("show"),3200); }
+        function closeStudio() { els.studioDrawer.classList.remove("is-open"); els.studioScrim.classList.remove("is-open"); els.studioDrawer.setAttribute("aria-hidden","true"); document.body.classList.remove("drawer-open"); }
+        function openStudioDrawer() { els.studioDrawer.classList.add("is-open"); els.studioScrim.classList.add("is-open"); els.studioDrawer.setAttribute("aria-hidden","false"); document.body.classList.add("drawer-open"); document.getElementById("mobileNav").classList.remove("is-open"); }
+        function openAuth() {
+          els.authFormError.textContent = "";
+          els.authEmail.value = cloud?.config?.adminEmail || "";
+          els.authPassword.value = "";
+          if (!els.authModal.open) els.authModal.showModal();
+          setTimeout(() => els.authPassword.focus(), 0);
+        }
+        async function openStudio() {
+          if (!cloudEnabled()) { updateStudioMode(); openStudioDrawer(); return; }
+          try {
+            cloudAdmin = await cloud.isAdmin();
+            if (!cloudAdmin) { openAuth(); return; }
+            await refreshCloudState({ admin: true });
+            updateStudioMode();
+            openStudioDrawer();
+          } catch (error) {
+            console.warn("Unable to open SISIP Studio", error);
+            showToast("Studio belum dapat dibuka. Coba masuk kembali.");
+          }
+        }
+        function switchStudioTab(tab) {
+          document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.classList.toggle("is-active",button.dataset.studioTab===tab));
+          document.querySelectorAll("[data-studio-panel]").forEach((panel)=>panel.classList.toggle("is-active",panel.dataset.studioPanel===tab));
+        }
+        function addDraftItem() {
+          const productId=els.lookProduct.value; const variantName=els.lookVariant.value; const productItem=getProduct(productId);
+          if (!productItem || !variantName) return;
+          if (lookDraftItems.length >= 5) { els.lookFormError.textContent="Satu look maksimal memiliki 5 item."; return; }
+          const variant = getVariant(productItem,variantName);
+          lookDraftItems.push({productId,variantId:variant?.id,variantName}); els.lookFormError.textContent=""; renderDraftItems();
+        }
+        async function readImage(input) {
+          const file=input.files?.[0]; if (!file) return "";
+          if (file.size > 1.6 * 1024 * 1024) throw new Error("Ukuran gambar maksimal 1.6 MB agar muat di prototype browser.");
+          return new Promise((resolve,reject)=>{ const reader=new FileReader(); reader.onload=()=>resolve(String(reader.result)); reader.onerror=()=>reject(new Error("Gambar tidak dapat dibaca.")); reader.readAsDataURL(file); });
+        }
+        function parseVariants(value) {
+          return String(value).split(",").map((raw)=>raw.trim()).filter(Boolean).map((raw,index)=>{ const [name,hexInput] = raw.split("|").map((piece)=>piece.trim()); const hex=/^#[0-9a-fA-F]{3,8}$/.test(hexInput||"") ? hexInput : ["#DAD4CA","#514A44","#A9553C","#68736B"][index%4]; return {id:uid("variant"),name:name||`Warna ${index+1}`,hex}; });
+        }
+        function parseTags(value) { return String(value).split(",").map((tag)=>tag.trim()).filter(Boolean).slice(0,6); }
+
+        document.getElementById("currentYear").textContent=new Date().getFullYear();
+        updateStudioMode();
+        renderAll();
+        if (cloudEnabled()) void refreshCloudState({ quiet: true });
+
+        els.search.addEventListener("input",()=>{ activeStyle="all"; renderStyleControls(); renderLooks(); });
+        els.gender.addEventListener("change",renderLooks);
+        els.style.addEventListener("change",()=>{ activeStyle="all"; renderStyleControls(); renderLooks(); });
+        els.sort.addEventListener("change",renderLooks);
+        els.lookGrid.addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-look]"); if(button) openLook(button.dataset.openLook); const clear=event.target.closest("#clearFilterButton"); if(clear){ els.search.value="";els.gender.value="all";els.style.value="all";activeStyle="all";renderStyleControls();renderLooks(); } });
+        els.styleChips.addEventListener("click",(event)=>{ const button=event.target.closest("[data-style]"); if(!button)return; activeStyle=button.dataset.style; els.style.value="all"; renderStyleControls();renderLooks(); });
+        els.moodList.addEventListener("click",(event)=>{ const button=event.target.closest("[data-style-jump]"); if(!button)return; activeStyle=button.dataset.styleJump; els.style.value="all";renderStyleControls();renderLooks();document.getElementById("lookbook").scrollIntoView({behavior:"smooth",block:"start"}); });
+        document.getElementById("searchButton").addEventListener("click",()=>{ document.getElementById("lookbook").scrollIntoView({behavior:"smooth",block:"start"}); setTimeout(()=>els.search.focus(),500); });
+        document.getElementById("menuButton").addEventListener("click",(event)=>{ const nav=document.getElementById("mobileNav"); const open=nav.classList.toggle("is-open"); event.currentTarget.setAttribute("aria-expanded",String(open)); });
+        document.getElementById("mobileNav").addEventListener("click",(event)=>{ if(event.target.matches("a")){ event.currentTarget.classList.remove("is-open"); document.getElementById("menuButton").setAttribute("aria-expanded","false"); } });
+        [document.getElementById("studioButton"),document.getElementById("mobileStudioButton")].forEach((button)=>button.addEventListener("click",openStudio));
+        document.getElementById("closeStudioButton").addEventListener("click",closeStudio); els.studioScrim.addEventListener("click",closeStudio);
+        document.getElementById("closeLookModal").addEventListener("click",()=>els.lookModal.close());
+        document.getElementById("closeArticleModal").addEventListener("click",()=>els.articleModal.close());
+        document.getElementById("closeAuthModal").addEventListener("click",()=>els.authModal.close());
+        els.authModal.addEventListener("click",(event)=>{ if(event.target===els.authModal)els.authModal.close(); });
+        els.authForm.addEventListener("submit",async(event)=>{
+          event.preventDefault();
+          els.authFormError.textContent="";
+          try {
+            const form = new FormData(event.currentTarget);
+            await cloud.signIn(String(form.get("email")||"").trim(),String(form.get("password")||""));
+            cloudAdmin=true;
+            els.authModal.close();
+            await openStudio();
+            showToast("Masuk sebagai admin SISIP.");
+          } catch(error) {
+            els.authFormError.textContent=error.message||"Email atau password belum sesuai.";
+          }
+        });
+        els.logoutStudioButton.addEventListener("click",async()=>{
+          try {
+            await cloud.signOut();
+            cloudAdmin=false;
+            closeStudio();
+            updateStudioMode();
+            await refreshCloudState({ quiet: true });
+            showToast("Kamu sudah keluar dari SISIP Studio.");
+          } catch(error) { showToast("Sesi belum dapat diakhiri. Coba lagi."); }
+        });
+        els.lookModal.addEventListener("click",(event)=>{ if(event.target===els.lookModal)els.lookModal.close(); const share=event.target.closest("[data-share-look]"); if(share) shareLook(share.dataset.shareLook); });
+        els.articleModal.addEventListener("click",(event)=>{ if(event.target===els.articleModal)els.articleModal.close(); });
+        document.getElementById("journalGrid").addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-article]"); if(button)openArticle(button.dataset.openArticle); });
+        document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.addEventListener("click",()=>switchStudioTab(button.dataset.studioTab)));
+        els.lookProduct.addEventListener("change",renderVariantSelect);
+        document.getElementById("addLookItemButton").addEventListener("click",addDraftItem);
+        els.lookDraftItems.addEventListener("click",(event)=>{ const button=event.target.closest("[data-remove-draft]");if(!button)return;lookDraftItems.splice(Number(button.dataset.removeDraft),1);renderDraftItems(); });
+        els.studioLooksList.addEventListener("click",async(event)=>{
+          const button=event.target.closest("[data-delete-look]"); if(!button)return;
+          const entry=state.looks.find((item)=>item.id===button.dataset.deleteLook); if(!entry)return;
+          const location=cloudEnabled()?"cloud SISIP":"prototype ini";
+          if(!confirm(`Hapus look “${entry.title}” dari ${location}?`))return;
+          try {
+            if(cloudEnabled()) { await cloud.deleteLook(entry.id); await refreshCloudState({admin:true}); showToast("Look dihapus dari cloud."); return; }
+            state.looks=state.looks.filter((item)=>item.id!==entry.id); saveState(); renderAll(); showToast("Look dihapus dari prototype.");
+          } catch(error) { showToast(error.message||"Look belum dapat dihapus."); }
+        });
+        els.studioProductsList.addEventListener("click",async(event)=>{
+          const button=event.target.closest("[data-delete-product]"); if(!button)return;
+          const item=getProduct(button.dataset.deleteProduct); if(!item)return;
+          const usedIn=getProductUsage(item.id);
+          if(cloudEnabled()) {
+            if(!confirm(`Hapus produk “${item.name}” dari cloud? Produk yang masih dipakai di look akan ditolak demi menjaga katalog.`))return;
+            try { await cloud.deleteProduct(item.id); await refreshCloudState({admin:true}); showToast("Produk dihapus dari cloud."); }
+            catch(error) { showToast("Produk ini masih dipakai oleh look, atau belum dapat dihapus."); }
+            return;
+          }
+          const detail=usedIn.length?` Produk ini dipakai di ${usedIn.length} look; item terkait juga akan hilang dari look tersebut.`:"";
+          if(confirm(`Hapus produk “${item.name}”?${detail}`)){state.products=state.products.filter((productItem)=>productItem.id!==item.id);state.looks=state.looks.map((entry)=>({...entry,items:entry.items.filter((lookItem)=>lookItem.productId!==item.id)})).filter((entry)=>entry.items.length>=2);saveState();renderAll();showToast("Produk dan referensi terkait berhasil dihapus.");}
+        });
+        document.getElementById("resetSampleButton").addEventListener("click",()=>{if(cloudEnabled()){showToast("Data cloud tidak di-reset dari prototype.");return;}if(confirm("Kembalikan seluruh data ke 12 look contoh awal? Perubahan lokal akan terganti."))resetState();});
+        document.getElementById("clearLooksButton").addEventListener("click",()=>{if(cloudEnabled()){showToast("Data cloud tidak dihapus massal dari prototype.");return;}if(confirm("Hapus seluruh look dari browser ini? Product library tetap ada.")){state.looks=[];lookDraftItems=[];saveState();renderAll();showToast("Semua look prototype telah dihapus.");}});
+        els.importSampleButton.addEventListener("click",async(event)=>{
+          if(!cloudEnabled())return;
+          if(!confirm("Impor 12 look dan produk contoh ke cloud? Sample yang sama akan diperbarui; data contoh ini tetap dapat dihapus nanti."))return;
+          const button=event.currentTarget;
+          const originalLabel=button.textContent;
+          button.disabled=true;
+          button.textContent="Mengimpor sample…";
+          try {
+            const result=await cloud.importDemoCatalogue({products:clone(SEED_PRODUCTS),looks:clone(SEED_LOOKS)});
+            await refreshCloudState({admin:true});
+            showToast(`${result.lookCount} look dan ${result.productCount} produk sample tersimpan ke cloud.`);
+          } catch(error) { showToast(error.message||"Sample belum dapat diimpor."); }
+          finally { button.disabled=false; button.textContent=originalLabel; }
+        });
+
+        document.getElementById("productForm").addEventListener("submit",async(event)=>{
+          event.preventDefault();
+          els.productFormError.textContent="";
+          const form=new FormData(event.currentTarget);
+          const title=String(form.get("title")||"").trim();
+          const price=Number(String(form.get("price")||"").replace(/[^0-9]/g,""));
+          const variants=parseVariants(form.get("variants"));
+          let link;
+          try { link=affiliateUrl(form.get("link")); } catch(error) { els.productFormError.textContent=error.message; return; }
+          if(!title || !price || variants.length===0){els.productFormError.textContent="Nama, harga, link, dan minimal satu varian warna wajib diisi.";return;}
+          try {
+            const badge=String(form.get("badge")||"").trim();
+            const styles=parseTags(form.get("styles"));
+            if(cloudEnabled()) {
+              await cloud.createProduct({ title, price, badge, styles, link, variants, imageFile:document.getElementById("productImageInput").files?.[0] });
+              event.currentTarget.reset();
+              await refreshCloudState({admin:true});
+              switchStudioTab("products");
+              showToast("Produk baru tersimpan ke cloud.");
+              return;
+            }
+            const image=await readImage(document.getElementById("productImageInput"));
+            const created={id:uid("product"),name:title,price,badge,styles,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,variants};
+            state.products.push(created);saveState();event.currentTarget.reset();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
+          } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
+        });
+        document.getElementById("lookForm").addEventListener("submit",async(event)=>{
+          event.preventDefault();els.lookFormError.textContent="";const form=new FormData(event.currentTarget);const title=String(form.get("title")||"").trim();const styles=parseTags(form.get("styles"));
+          if(lookDraftItems.length<2||lookDraftItems.length>5){els.lookFormError.textContent="Satu look harus berisi 2–5 item.";return;} if(!title||!styles.length){els.lookFormError.textContent="Nama look dan minimal satu style wajib diisi.";return;}
+          try {
+            if(cloudEnabled()) {
+              await cloud.createLook({title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),items:clone(lookDraftItems),coverFile:document.getElementById("lookCoverInput").files?.[0]});
+              lookDraftItems=[];
+              event.currentTarget.reset();
+              await refreshCloudState({admin:true});
+              switchStudioTab("looks");
+              showToast("Look baru dipublikasikan ke cloud.");
+              return;
+            }
+            const coverImage=await readImage(document.getElementById("lookCoverInput"));
+            const created={id:uid("look"),title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),popularity:0,createdOrder:Math.max(0,...state.looks.map((item)=>Number(item.createdOrder)||0))+1,coverImage,items:clone(lookDraftItems)};
+            state.looks.push(created);lookDraftItems=[];saveState();event.currentTarget.reset();renderAll();switchStudioTab("looks");showToast("Look baru dipublikasikan di prototype.");
+          } catch(error){els.lookFormError.textContent=error.message||"Look belum dapat disimpan.";}
+        });
+        document.getElementById("requestForm").addEventListener("submit",(event)=>{event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries());try{const current=JSON.parse(localStorage.getItem("sisip-request-drafts")||"[]");current.push({...data,createdAt:new Date().toISOString()});localStorage.setItem("sisip-request-drafts",JSON.stringify(current));}catch(error){console.warn(error);}document.getElementById("requestStatus").textContent="Request tersimpan sebagai draft di perangkat ini. Form publik akan diaktifkan lewat endpoint aman setelah anti-spam dan email siap.";event.currentTarget.reset();showToast("Request outfit tersimpan sebagai draft lokal.");});
+
+        async function shareLook(id) {
+          const entry=state.looks.find((item)=>item.id===id);const text=`${entry?.title||"Look"} — temukan potongannya di SISIP.`;
+          try { if(navigator.share){await navigator.share({title:"SISIP",text,url:window.location.href});showToast("Look siap dibagikan.");}else if(navigator.clipboard){await navigator.clipboard.writeText(text);showToast("Deskripsi look disalin ke clipboard.");}else{showToast(text);} }catch(error){if(error.name!=="AbortError")showToast("Bagikan dari browser setelah website dipublikasikan.");}
+        }
+      })();
+    </script>
+  </body>
+</html>
+
