@@ -378,6 +378,14 @@
       .draft-item span, .studio-row span { display:block; overflow:hidden; color:var(--taupe); font-family:var(--mono); font-size:.56rem; text-overflow:ellipsis; white-space:nowrap; }
       .studio-row-actions { display:flex; gap:.35rem; flex:0 0 auto; }
       .form-error { min-height:18px; margin:0; color:#9f3831; font-size:.72rem; }
+      .bulk-import-actions { display:flex; flex-wrap:wrap; gap:.55rem; align-items:center; }
+      .bulk-import-status { min-height:18px; margin:0; color:var(--ink-soft); font-size:.72rem; line-height:1.45; }
+      .bulk-preview { margin-top:.1rem; border:1px solid var(--line); background:var(--paper); }
+      .bulk-preview summary { padding:.7rem .75rem; cursor:pointer; color:var(--ink); font-size:.72rem; font-weight:700; }
+      .bulk-preview-list { max-height:180px; margin:0; padding:.1rem .75rem .75rem 1.8rem; overflow:auto; color:var(--ink-soft); font-size:.68rem; line-height:1.55; }
+      .bulk-preview-list li + li { margin-top:.2rem; }
+      .bulk-preview-list .warning { color:#806149; }
+      .bulk-preview-list .invalid { color:#9f3831; }
       .reset-row { display:flex; flex-wrap:wrap; gap:.55rem; align-items:center; }
       body.drawer-open { overflow:hidden; }
 
@@ -741,6 +749,17 @@
         </div>
 
         <div class="studio-panel" id="studioProductsPanel" data-studio-panel="products">
+          <section class="studio-section" id="bulkImportSection">
+            <h3>Import produk banyak</h3>
+            <p>Gunakan CSV atau Excel. Satu baris mewakili satu warna; baris dengan <code>product_key</code> yang sama akan menjadi satu produk dengan satu link affiliate.</p>
+            <div class="form-stack">
+              <div class="field"><label for="bulkProductFile">File katalog (.csv, .xlsx, .xls)</label><input id="bulkProductFile" type="file" accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" /></div>
+              <div class="bulk-import-actions"><button class="small-button muted" id="downloadBulkTemplateButton" type="button">Unduh template CSV</button><button class="small-button" id="bulkImportButton" type="button" disabled>Import produk</button></div>
+              <p class="bulk-import-status" id="bulkImportStatus">Template memakai <code>product_key</code> agar upload ulang memperbarui produk yang sama, bukan menduplikasi.</p>
+              <details class="bulk-preview" id="bulkImportPreview" hidden><summary id="bulkImportPreviewSummary">Preview</summary><ul class="bulk-preview-list" id="bulkImportPreviewList"></ul></details>
+              <p class="form-error" id="bulkImportError" role="alert"></p>
+            </div>
+          </section>
           <section class="studio-section">
             <h3>Tambah produk</h3>
             <p>Satu produk induk dapat memiliki beberapa pilihan warna tetapi tetap menggunakan satu affiliate link.</p>
@@ -753,7 +772,9 @@
               <div class="field"><label for="productLinkInput">Link affiliate Shopee</label><input id="productLinkInput" name="link" required type="url" placeholder="https://shopee.co.id/..." /></div>
               <div class="field"><label for="productStylesInput">Tag style (pisahkan koma)</label><input id="productStylesInput" name="styles" placeholder="Clean, Formal" /></div>
               <div class="field"><label for="productVariantsInput">Varian warna (Nama|#HEX, pisahkan koma)</label><input id="productVariantsInput" name="variants" required placeholder="Putih|#F1F0EC, Biru|#AAB7C7" /></div>
-              <div class="field"><label for="productImageInput">Foto produk (opsional)</label><input id="productImageInput" type="file" accept="image/jpeg,image/png,image/webp" /></div>
+              <div class="field"><label for="productImageUrlInput">URL foto cover (opsional)</label><input id="productImageUrlInput" name="imageUrl" type="url" placeholder="https://cdn.example.com/foto-produk.jpg" /></div>
+              <p class="microcopy" style="margin:-.2rem 0 0;color:var(--taupe)">Link affiliate tidak diekstrak otomatis. Pakai URL gambar resmi dari Product Feed atau upload foto sendiri.</p>
+              <div class="field"><label for="productImageInput">Upload foto produk (opsional)</label><input id="productImageInput" type="file" accept="image/jpeg,image/png,image/webp" /></div>
               <p class="form-error" id="productFormError" role="alert"></p>
               <button class="small-button" type="submit">Simpan produk</button>
             </form>
@@ -770,6 +791,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="./config.js"></script>
     <script src="./assets/supabase-adapter.js"></script>
     <script>
@@ -785,6 +807,13 @@
           midnight: { bg: "#263038", accent: "#b66c59", garment: "#d7d4cc", bottom: "#3e454a", figure: "#e8ddcf", skin: "#9d694f", skinDark: "#81503d", hair: "#211b19", label: "#f8f6f2", light: true }
         };
         const STYLE_ORDER = ["Clean", "Casual", "Formal", "Streetwear", "Modest", "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party"];
+        const BULK_IMPORT_HEADERS = ["product_key", "name", "affiliate_url", "price_idr", "badge", "style_tags", "gender_target", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
+        const BULK_IMPORT_TEMPLATE_ROWS = [
+          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "Pilihan SISIP", "Clean|Formal", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
+          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "Pilihan SISIP", "Clean|Formal", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Biru kabut", "#AAB7C7", "https://cdn.contoh.com/oxford-biru.jpg"]
+        ];
+        const BULK_IMPORT_MAX_ROWS = 1000;
+        const BULK_IMPORT_MAX_PRODUCTS = 200;
         const ARTICLES = [
           { id: "a1", number: "01", title: "Cara membuat outfit clean tanpa terlihat kosong.", excerpt: "Outfit clean bukan berarti semua harus putih atau tanpa detail. Mulai dari bentuk, tekstur, dan satu aksen yang menahan seluruh look.", body: "Pilih satu potongan dengan struktur yang jelas—misalnya kemeja oxford, blazer rileks, atau celana berlipit. Setelah itu, buat sisanya lebih tenang. Kontras kecil antara tekstur halus dan tekstur matte sering lebih efektif daripada menambah banyak warna.\n\nSatu aksen yang punya bobot, seperti sepatu kulit gelap atau tas dengan bentuk kuat, cukup untuk memberi look sebuah titik akhir." },
           { id: "a2", number: "02", title: "Warna netral yang tetap punya arah.", excerpt: "Netral tidak selalu berarti aman. Perhatikan suhu warna, kedalaman, dan hubungan antar material.", body: "Abu hangat, olive kusam, cokelat espresso, dan hitam arang punya karakter yang berbeda dari hitam-putih murni. Gunakan dua warna netral yang suhu warnanya serupa, lalu sisipkan satu warna dengan bobot lebih pekat.\n\nDi SISIP, warna tidak dibaca sebagai aturan. Ia hanya alat untuk membuat potongan yang berbeda terasa berbicara satu bahasa." },
@@ -867,13 +896,16 @@
         let lookDraftItems = [];
         let toastTimer;
         let cloudAdmin = false;
+        let bulkImportGroups = [];
+        let bulkImportErrors = [];
+        let bulkImportWarnings = [];
 
         const els = {
           moodList: document.getElementById("moodList"), popularGrid: document.getElementById("popularGrid"), lookGrid: document.getElementById("lookGrid"),
           search: document.getElementById("searchInput"), gender: document.getElementById("genderFilter"), style: document.getElementById("styleFilter"), sort: document.getElementById("sortFilter"), styleChips: document.getElementById("styleChips"), resultCount: document.getElementById("resultCount"), heroCount: document.getElementById("heroLookCount"),
           lookModal: document.getElementById("lookModal"), lookDetail: document.getElementById("lookDetail"), articleModal: document.getElementById("articleModal"), articleDetail: document.getElementById("articleDetail"),
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
-          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), toast: document.getElementById("toast")
+          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), toast: document.getElementById("toast")
         };
 
         function loadState() {
@@ -908,6 +940,7 @@
           els.sampleControls.hidden = cloudMode;
           els.cloudSampleControls.hidden = !cloudMode;
           els.logoutStudioButton.hidden = !(cloudMode && cloudAdmin);
+          els.bulkImportButton.disabled = !cloudMode || !bulkImportGroups.length || bulkImportErrors.length > 0;
         }
         function getProduct(id) { return state.products.find((item) => item.id === id); }
         function getVariant(productItem, name) { return productItem?.variants?.find((variant) => variant.name === name) || productItem?.variants?.[0]; }
@@ -916,8 +949,8 @@
         function getProductUsage(id) { return state.looks.filter((entry) => entry.items.some((item) => item.productId === id)); }
 
         function productArt(productItem, variant, small = false) {
-          const img = safeImage(productItem?.image);
-          if (img) return `<div class="product-art ${small ? "is-small" : ""}"><img src="${esc(img)}" alt="${esc(productItem.name)}" /></div>`;
+          const img = safeImage(variant?.image || productItem?.image);
+          if (img) return `<div class="product-art ${small ? "is-small" : ""}"><img src="${esc(img)}" alt="${esc(`${productItem?.name || "Produk"} ${variant?.name || ""}`.trim())}" /></div>`;
           const bg = variant?.hex ? blendHex(variant.hex, "#e7e1da", .55) : productItem?.artBg || "#d5ccc3";
           const ink = variant?.hex || productItem?.artInk || "#242220";
           return `<div class="product-art ${small ? "is-small" : ""}" style="--product-bg:${esc(bg)};--product-ink:${esc(ink)}"><span class="product-code meta">${esc(productItem?.category || "SISIP")}</span><span class="garment"></span></div>`;
@@ -1012,9 +1045,11 @@
         function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderJournal(); renderStudio(); }
 
         function affiliateUrl(value) {
-          const parsed = new URL(String(value || ""));
+          let parsed;
+          try { parsed = new URL(String(value || "")); }
+          catch { throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://."); }
           const host = parsed.hostname.toLowerCase();
-          const isShopee = host === "shopee.co.id" || host.endsWith(".shopee.co.id");
+          const isShopee = host === "shopee.co.id" || host.endsWith(".shopee.co.id") || host === "shope.ee";
           if (parsed.protocol !== "https:" || !isShopee) throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://.");
           return parsed.href;
         }
@@ -1078,6 +1113,207 @@
           return String(value).split(",").map((raw)=>raw.trim()).filter(Boolean).map((raw,index)=>{ const [name,hexInput] = raw.split("|").map((piece)=>piece.trim()); const hex=/^#[0-9a-fA-F]{3,8}$/.test(hexInput||"") ? hexInput : ["#DAD4CA","#514A44","#A9553C","#68736B"][index%4]; return {id:uid("variant"),name:name||`Warna ${index+1}`,hex}; });
         }
         function parseTags(value) { return String(value).split(",").map((tag)=>tag.trim()).filter(Boolean).slice(0,6); }
+        function normalizeBulkHeader(value) { return String(value || "").replace(/^\uFEFF/, "").trim().toLowerCase().replace(/[\s-]+/g, "_"); }
+        function parseCsvMatrix(text) {
+          const source = String(text || "");
+          const firstLine = source.split(/\r?\n/, 1)[0] || "";
+          const commaCount = (firstLine.match(/,/g) || []).length;
+          const semicolonCount = (firstLine.match(/;/g) || []).length;
+          const delimiter = semicolonCount > commaCount ? ";" : ",";
+          const rows = [];
+          let row = [];
+          let value = "";
+          let quoted = false;
+          for (let index = 0; index < source.length; index += 1) {
+            const character = source[index];
+            if (quoted) {
+              if (character === '"') {
+                if (source[index + 1] === '"') { value += '"'; index += 1; }
+                else quoted = false;
+              } else value += character;
+              continue;
+            }
+            if (character === '"') { quoted = true; continue; }
+            if (character === delimiter) { row.push(value); value = ""; continue; }
+            if (character === "\n") { row.push(value); rows.push(row); row = []; value = ""; continue; }
+            if (character !== "\r") value += character;
+          }
+          if (quoted) throw new Error("CSV memiliki tanda petik yang belum ditutup.");
+          if (value || row.length) { row.push(value); rows.push(row); }
+          return rows;
+        }
+        function matrixToBulkRows(matrix) {
+          const meaningfulRows = (matrix || []).filter((row) => Array.isArray(row) && row.some((cell) => String(cell ?? "").trim()));
+          if (!meaningfulRows.length) throw new Error("File belum memiliki isi.");
+          const headers = meaningfulRows[0].map(normalizeBulkHeader);
+          const nonEmptyHeaders = headers.filter(Boolean);
+          if (new Set(nonEmptyHeaders).size !== nonEmptyHeaders.length) throw new Error("Nama kolom pada file tidak boleh duplikat.");
+          const required = ["product_key", "name", "affiliate_url", "price_idr", "color_name"];
+          const missing = required.filter((header) => !headers.includes(header));
+          if (missing.length) throw new Error("Kolom wajib belum ditemukan: " + missing.join(", ") + ".");
+          return meaningfulRows.slice(1).map((cells, index) => {
+            const row = { rowNumber: index + 2 };
+            headers.forEach((header, column) => { if (header) row[header] = String(cells[column] ?? "").trim(); });
+            return row;
+          });
+        }
+        function normalizeBulkImageUrl(value) {
+          const raw = String(value || "").trim();
+          if (!raw) return "";
+          const parsed = new URL(raw);
+          if (parsed.protocol !== "https:") throw new Error("URL foto harus memakai https://.");
+          return parsed.href;
+        }
+        function normalizeBulkColorHex(value) {
+          let hex = String(value || "").trim();
+          if (!hex) return "";
+          if (/^#[0-9a-f]{3}$/i.test(hex)) hex = "#" + hex.slice(1).split("").map((part) => part + part).join("");
+          if (!/^#[0-9a-f]{6}$/i.test(hex)) throw new Error("color_hex harus memakai format #RRGGBB.");
+          return hex.toUpperCase();
+        }
+        function normalizeBulkGender(value) {
+          const gender = String(value || "unisex").trim().toLowerCase();
+          if (!gender || gender === "unisex" || gender === "uniseks") return "unisex";
+          if (gender === "pria" || gender === "wanita") return gender;
+          throw new Error("gender_target harus pria, wanita, atau unisex.");
+        }
+        function parseBulkPrice(value) {
+          const digits = String(value || "").replace(/[^0-9]/g, "");
+          const price = Number(digits);
+          if (!Number.isSafeInteger(price) || price <= 0) throw new Error("price_idr harus berupa harga IDR lebih dari nol.");
+          return price;
+        }
+        function parseBulkTags(value) { return String(value || "").split(/[|,;]/).map((tag) => tag.trim()).filter(Boolean).slice(0, 12); }
+        function validateBulkRows(rows) {
+          const errors = [];
+          const warnings = [];
+          const groups = new Map();
+          if (!rows.length) errors.push("File tidak memiliki baris produk.");
+          if (rows.length > BULK_IMPORT_MAX_ROWS) errors.push("Maksimal " + BULK_IMPORT_MAX_ROWS + " baris warna dalam satu import.");
+          rows.slice(0, BULK_IMPORT_MAX_ROWS).forEach((row) => {
+            const problems = [];
+            const key = String(row.product_key || "").trim().toUpperCase();
+            const name = String(row.name || "").trim();
+            const colorName = String(row.color_name || "").trim();
+            if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(key)) problems.push("product_key tidak valid.");
+            if (!name) problems.push("name wajib diisi.");
+            if (!colorName) problems.push("color_name wajib diisi.");
+            let affiliateUrl = "";
+            let price = 0;
+            let genderTarget = "unisex";
+            let colorHex = "#B8AEA1";
+            let coverImageUrl = "";
+            let variantImageUrl = "";
+            try { affiliateUrl = affiliateUrlFromBulk(row.affiliate_url); } catch (error) { problems.push(error.message); }
+            try { price = parseBulkPrice(row.price_idr); } catch (error) { problems.push(error.message); }
+            try { genderTarget = normalizeBulkGender(row.gender_target); } catch (error) { problems.push(error.message); }
+            try { colorHex = normalizeBulkColorHex(row.color_hex) || "#B8AEA1"; if (!String(row.color_hex || "").trim()) warnings.push("Baris " + row.rowNumber + ": color_hex kosong, memakai #B8AEA1."); } catch (error) { problems.push(error.message); }
+            try { coverImageUrl = normalizeBulkImageUrl(row.cover_image_url); } catch (error) { problems.push("cover_image_url: " + error.message); }
+            try { variantImageUrl = normalizeBulkImageUrl(row.variant_image_url); } catch (error) { problems.push("variant_image_url: " + error.message); }
+            if (problems.length) { errors.push("Baris " + row.rowNumber + ": " + problems.join(" ")); return; }
+            const candidate = {
+              key,
+              name,
+              affiliateUrl,
+              price,
+              badge: String(row.badge || "").trim(),
+              styles: parseBulkTags(row.style_tags),
+              genderTarget,
+              coverImageUrl,
+              variants: [{ name: colorName, hex: colorHex, imageUrl: variantImageUrl }],
+              variantNames: new Set([colorName.toLowerCase()])
+            };
+            const existing = groups.get(key);
+            if (!existing) {
+              if (groups.size >= BULK_IMPORT_MAX_PRODUCTS) { errors.push("Maksimal " + BULK_IMPORT_MAX_PRODUCTS + " produk dalam satu import."); return; }
+              groups.set(key, candidate);
+              return;
+            }
+            const sameMetadata = existing.name === candidate.name && existing.affiliateUrl === candidate.affiliateUrl && existing.price === candidate.price && existing.badge === candidate.badge && existing.styles.join("|") === candidate.styles.join("|") && existing.genderTarget === candidate.genderTarget && existing.coverImageUrl === candidate.coverImageUrl;
+            if (!sameMetadata) { errors.push("Baris " + row.rowNumber + ": data produk untuk product_key " + key + " harus sama di setiap warna."); return; }
+            if (existing.variantNames.has(colorName.toLowerCase())) { errors.push("Baris " + row.rowNumber + ": warna " + colorName + " tercatat dua kali untuk " + key + "."); return; }
+            existing.variantNames.add(colorName.toLowerCase());
+            existing.variants.push(candidate.variants[0]);
+          });
+          return {
+            groups: Array.from(groups.values()).map((group) => ({ key: group.key, name: group.name, affiliateUrl: group.affiliateUrl, price: group.price, badge: group.badge, styles: group.styles, genderTarget: group.genderTarget, coverImageUrl: group.coverImageUrl, variants: group.variants })),
+            errors,
+            warnings
+          };
+        }
+        function affiliateUrlFromBulk(value) { return affiliateUrl(value); }
+        async function readBulkMatrix(file) {
+          const extension = String(file?.name || "").split(".").pop().toLowerCase();
+          if (extension === "csv" || file?.type === "text/csv") return parseCsvMatrix(await file.text());
+          if (extension === "xlsx" || extension === "xls") {
+            if (!window.XLSX || typeof window.XLSX.read !== "function") throw new Error("Parser Excel belum dimuat. Muat ulang halaman atau gunakan CSV.");
+            const workbook = window.XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: false });
+            const sheetName = workbook.SheetNames.find((name) => normalizeBulkHeader(name) === "produk") || workbook.SheetNames[0];
+            if (!sheetName) throw new Error("Sheet Excel tidak ditemukan.");
+            return window.XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: "", raw: false });
+          }
+          throw new Error("Gunakan file CSV, XLSX, atau XLS.");
+        }
+        function updateBulkImportButton() {
+          const ready = cloudEnabled() && bulkImportGroups.length > 0 && bulkImportErrors.length === 0;
+          els.bulkImportButton.disabled = !ready;
+          els.bulkImportButton.textContent = bulkImportGroups.length ? "Import " + bulkImportGroups.length + " produk" : "Import produk";
+        }
+        function renderBulkImportPreview() {
+          const variantCount = bulkImportGroups.reduce((total, group) => total + group.variants.length, 0);
+          const messages = [];
+          if (bulkImportGroups.length) messages.push({ className: "", text: bulkImportGroups.length + " produk / " + variantCount + " warna siap ditinjau." });
+          bulkImportWarnings.slice(0, 8).forEach((message) => messages.push({ className: "warning", text: message }));
+          bulkImportErrors.slice(0, 8).forEach((message) => messages.push({ className: "invalid", text: message }));
+          els.bulkImportPreview.hidden = !messages.length;
+          els.bulkImportPreviewSummary.textContent = bulkImportErrors.length ? "Preview: ada " + bulkImportErrors.length + " masalah yang perlu diperbaiki" : "Preview: " + bulkImportGroups.length + " produk / " + variantCount + " warna";
+          els.bulkImportPreviewList.innerHTML = messages.map((message) => "<li class=\"" + message.className + "\">" + esc(message.text) + "</li>").join("");
+          els.bulkImportError.textContent = bulkImportErrors[0] || "";
+          updateBulkImportButton();
+        }
+        async function inspectBulkProductFile() {
+          const file = els.bulkProductFile.files?.[0];
+          bulkImportGroups = [];
+          bulkImportErrors = [];
+          bulkImportWarnings = [];
+          if (!file) {
+            els.bulkImportStatus.textContent = "Pilih file CSV atau Excel untuk melihat preview.";
+            renderBulkImportPreview();
+            return;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            bulkImportErrors = ["Ukuran file maksimal 5 MB."];
+            els.bulkImportStatus.textContent = "File terlalu besar untuk diproses di browser.";
+            renderBulkImportPreview();
+            return;
+          }
+          els.bulkImportStatus.textContent = "Membaca " + file.name + "…";
+          try {
+            const rows = matrixToBulkRows(await readBulkMatrix(file));
+            const result = validateBulkRows(rows);
+            bulkImportGroups = result.groups;
+            bulkImportErrors = result.errors;
+            bulkImportWarnings = result.warnings;
+            els.bulkImportStatus.textContent = bulkImportErrors.length ? "Perbaiki baris yang ditandai, lalu upload ulang file." : file.name + " siap diimpor. Produk dengan product_key sama akan diperbarui.";
+          } catch (error) {
+            bulkImportErrors = [error.message || "File belum dapat dibaca."];
+            els.bulkImportStatus.textContent = "File belum dapat diproses.";
+          }
+          renderBulkImportPreview();
+        }
+        function downloadBulkTemplate() {
+          const csvCell = (value) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+          const content = [BULK_IMPORT_HEADERS, ...BULK_IMPORT_TEMPLATE_ROWS].map((row) => row.map(csvCell).join(",")).join("\r\n");
+          const blob = new Blob(["\uFEFF" + content], { type: "text/csv;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement("a");
+          anchor.href = url;
+          anchor.download = "sisip-template-produk.csv";
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          URL.revokeObjectURL(url);
+        }
 
         document.getElementById("currentYear").textContent=new Date().getFullYear();
         updateStudioMode();
@@ -1170,6 +1406,43 @@
           } catch(error) { showToast(error.message||"Sample belum dapat diimpor."); }
           finally { button.disabled=false; button.textContent=originalLabel; }
         });
+        els.downloadBulkTemplateButton.addEventListener("click", downloadBulkTemplate);
+        els.bulkProductFile.addEventListener("change", () => { void inspectBulkProductFile(); });
+        els.bulkImportButton.addEventListener("click", async (event) => {
+          if (!cloudEnabled()) { els.bulkImportError.textContent = "Import banyak hanya tersedia setelah Supabase cloud aktif."; return; }
+          if (!bulkImportGroups.length || bulkImportErrors.length) return;
+          if (typeof cloud?.importProducts !== "function") { els.bulkImportError.textContent = "Fitur import belum termuat. Muat ulang halaman lalu coba lagi."; return; }
+          if (!confirm("Import " + bulkImportGroups.length + " produk ke cloud? product_key yang sudah ada akan diperbarui; warna yang tidak ada di file tidak akan dihapus.")) return;
+          const button = event.currentTarget;
+          button.disabled = true;
+          els.bulkImportError.textContent = "";
+          try {
+            const result = await cloud.importProducts(bulkImportGroups, (progress) => {
+              els.bulkImportStatus.textContent = "Mengimpor " + progress.index + " dari " + progress.total + ": " + progress.name + "…";
+            });
+            await refreshCloudState({ admin: true });
+            if (result.failedCount) {
+              bulkImportErrors = result.results.filter((item) => !item.ok).map((item) => item.name + ": " + item.error);
+              els.bulkImportStatus.textContent = result.createdCount + " produk baru dan " + result.updatedCount + " produk diperbarui. " + result.failedCount + " produk perlu dicek.";
+              renderBulkImportPreview();
+              showToast("Sebagian import selesai; cek pesan error pada file.");
+              return;
+            }
+            els.bulkProductFile.value = "";
+            bulkImportGroups = [];
+            bulkImportErrors = [];
+            bulkImportWarnings = [];
+            els.bulkImportPreview.hidden = true;
+            els.bulkImportStatus.textContent = result.createdCount + " produk baru dan " + result.updatedCount + " produk diperbarui di cloud.";
+            updateBulkImportButton();
+            showToast("Import produk ke cloud selesai.");
+          } catch (error) {
+            els.bulkImportError.textContent = error.message || "Import produk belum dapat dijalankan.";
+            els.bulkImportStatus.textContent = "Import belum selesai. File tetap tersimpan untuk dicoba ulang.";
+          } finally {
+            updateBulkImportButton();
+          }
+        });
 
         document.getElementById("productForm").addEventListener("submit",async(event)=>{
           event.preventDefault();
@@ -1178,22 +1451,23 @@
           const title=String(form.get("title")||"").trim();
           const price=Number(String(form.get("price")||"").replace(/[^0-9]/g,""));
           const variants=parseVariants(form.get("variants"));
-          let link;
-          try { link=affiliateUrl(form.get("link")); } catch(error) { els.productFormError.textContent=error.message; return; }
+          let link, imageUrl;
+          try { link=affiliateUrl(form.get("link")); imageUrl=normalizeBulkImageUrl(form.get("imageUrl")); } catch(error) { els.productFormError.textContent=error.message; return; }
           if(!title || !price || variants.length===0){els.productFormError.textContent="Nama, harga, link, dan minimal satu varian warna wajib diisi.";return;}
           try {
             const badge=String(form.get("badge")||"").trim();
             const styles=parseTags(form.get("styles"));
             if(cloudEnabled()) {
-              await cloud.createProduct({ title, price, badge, styles, link, variants, imageFile:document.getElementById("productImageInput").files?.[0] });
+              await cloud.createProduct({ title, price, badge, styles, link, variants, imageUrl, imageFile:document.getElementById("productImageInput").files?.[0] });
               event.currentTarget.reset();
               await refreshCloudState({admin:true});
               switchStudioTab("products");
               showToast("Produk baru tersimpan ke cloud.");
               return;
             }
-            const image=await readImage(document.getElementById("productImageInput"));
-            const created={id:uid("product"),name:title,price,badge,styles,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,variants};
+            const image=imageUrl || await readImage(document.getElementById("productImageInput"));
+            const localVariants=variants.map((variant)=>({...variant,image}));
+            const created={id:uid("product"),name:title,price,badge,styles,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,variants:localVariants};
             state.products.push(created);saveState();event.currentTarget.reset();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
           } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
         });
