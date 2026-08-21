@@ -1447,7 +1447,10 @@
         document.getElementById("productForm").addEventListener("submit",async(event)=>{
           event.preventDefault();
           els.productFormError.textContent="";
-          const form=new FormData(event.currentTarget);
+          // `event.currentTarget` is cleared by the browser after an async boundary.
+          // Preserve the form before any await so it can safely be reset on success.
+          const productForm=event.currentTarget;
+          const form=new FormData(productForm);
           const title=String(form.get("title")||"").trim();
           const price=Number(String(form.get("price")||"").replace(/[^0-9]/g,""));
           const variants=parseVariants(form.get("variants"));
@@ -1459,7 +1462,7 @@
             const styles=parseTags(form.get("styles"));
             if(cloudEnabled()) {
               await cloud.createProduct({ title, price, badge, styles, link, variants, imageUrl, imageFile:document.getElementById("productImageInput").files?.[0] });
-              event.currentTarget.reset();
+              productForm.reset();
               await refreshCloudState({admin:true});
               switchStudioTab("products");
               showToast("Produk baru tersimpan ke cloud.");
@@ -1468,17 +1471,17 @@
             const image=imageUrl || await readImage(document.getElementById("productImageInput"));
             const localVariants=variants.map((variant)=>({...variant,image}));
             const created={id:uid("product"),name:title,price,badge,styles,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,variants:localVariants};
-            state.products.push(created);saveState();event.currentTarget.reset();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
+            state.products.push(created);saveState();productForm.reset();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
           } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
         });
         document.getElementById("lookForm").addEventListener("submit",async(event)=>{
-          event.preventDefault();els.lookFormError.textContent="";const form=new FormData(event.currentTarget);const title=String(form.get("title")||"").trim();const styles=parseTags(form.get("styles"));
+          event.preventDefault();els.lookFormError.textContent="";const lookForm=event.currentTarget;const form=new FormData(lookForm);const title=String(form.get("title")||"").trim();const styles=parseTags(form.get("styles"));
           if(lookDraftItems.length<2||lookDraftItems.length>5){els.lookFormError.textContent="Satu look harus berisi 2–5 item.";return;} if(!title||!styles.length){els.lookFormError.textContent="Nama look dan minimal satu style wajib diisi.";return;}
           try {
             if(cloudEnabled()) {
               await cloud.createLook({title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),items:clone(lookDraftItems),coverFile:document.getElementById("lookCoverInput").files?.[0]});
               lookDraftItems=[];
-              event.currentTarget.reset();
+              lookForm.reset();
               await refreshCloudState({admin:true});
               switchStudioTab("looks");
               showToast("Look baru dipublikasikan ke cloud.");
@@ -1486,7 +1489,7 @@
             }
             const coverImage=await readImage(document.getElementById("lookCoverInput"));
             const created={id:uid("look"),title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),popularity:0,createdOrder:Math.max(0,...state.looks.map((item)=>Number(item.createdOrder)||0))+1,coverImage,items:clone(lookDraftItems)};
-            state.looks.push(created);lookDraftItems=[];saveState();event.currentTarget.reset();renderAll();switchStudioTab("looks");showToast("Look baru dipublikasikan di prototype.");
+            state.looks.push(created);lookDraftItems=[];saveState();lookForm.reset();renderAll();switchStudioTab("looks");showToast("Look baru dipublikasikan di prototype.");
           } catch(error){els.lookFormError.textContent=error.message||"Look belum dapat disimpan.";}
         });
         document.getElementById("requestForm").addEventListener("submit",(event)=>{event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries());try{const current=JSON.parse(localStorage.getItem("sisip-request-drafts")||"[]");current.push({...data,createdAt:new Date().toISOString()});localStorage.setItem("sisip-request-drafts",JSON.stringify(current));}catch(error){console.warn(error);}document.getElementById("requestStatus").textContent="Request tersimpan sebagai draft di perangkat ini. Form publik akan diaktifkan lewat endpoint aman setelah anti-spam dan email siap.";event.currentTarget.reset();showToast("Request outfit tersimpan sebagai draft lokal.");});
