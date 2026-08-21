@@ -1,0 +1,7 @@
+# config.js intentionally remains tracked. It contains only the public Supabase
+# URL and publishable browser key; never add service_role, database, or Shopee secrets.
+
+# Local editor and OS files
+.DS_Store
+Thumbs.db
+
