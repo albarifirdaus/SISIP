@@ -34,9 +34,9 @@
       }
 
       * { box-sizing: border-box; }
-      html { scroll-behavior: smooth; }
+      html { scroll-behavior: smooth; overflow-x: hidden; }
       body {
-        margin: 0;
+        margin: 0; overflow-x: hidden;
         color: var(--ink);
         background: var(--paper);
         font-family: var(--sans);
@@ -394,16 +394,27 @@
         .journal-grid { grid-template-columns:1fr 1fr; }
         .journal-card:first-child { grid-column:1/-1; min-height:260px; }
       }
+      /* Stack the hero before tablet widths so phone landscape never squeezes the title. */
+      @media (max-width: 900px) {
+        .hero { display:block; min-height:0; }
+        .hero-copy {
+          min-height:auto; justify-content:flex-start; gap:clamp(2rem,7vw,3.5rem);
+          padding:clamp(2rem,8vw,3.25rem) 5vw clamp(2rem,6vw,2.75rem);
+        }
+        .hero-copy h1 {
+          max-inline-size:100%; margin:.65rem 0 1.25rem; font-size:clamp(3.6rem,16vw,6.5rem);
+          letter-spacing:-.1em; line-height:.84;
+        }
+        .hero-visual { min-height:clamp(360px,70vw,520px); }
+        .hero-label { top:1.25rem; left:1.25rem; }
+        .hero-stamp { right:1.25rem; bottom:1.25rem; }
+      }
       @media (max-width: 760px) {
         .utility-bar { padding:0 5vw; }
         .utility-bar span:last-child { display:none; }
         .header-inner { height:64px; padding:0 5vw; grid-template-columns:1fr auto; }
         .desktop-nav, .header-actions .studio-trigger { display:none; }
         .nav-toggle { display:inline-grid; }
-        .hero { display:block; min-height:0; }
-        .hero-copy { min-height:500px; padding:3rem 5vw 2rem; }
-        .hero-copy h1 { font-size:clamp(4.7rem,22vw,8.2rem); }
-        .hero-visual { min-height:480px; }
         .hero-figure.one { left:12%; }
         .hero-figure.two { right:8%; }
         .section { padding-left:5vw; padding-right:5vw; }
@@ -432,8 +443,7 @@
       }
       @media (max-width: 480px) {
         .brand { font-size:1.5rem; }
-        .hero-copy { min-height:470px; }
-        .hero-copy h1 { letter-spacing:-.125em; }
+        .hero-copy h1 { font-size:clamp(3.35rem,17vw,4.9rem); letter-spacing:-.095em; line-height:.86; }
         .hero-bottom { align-items:flex-start; flex-direction:column; }
         .hero-count { display:none; }
         .popular-grid { grid-template-columns:1fr 1fr; }
