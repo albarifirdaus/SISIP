@@ -212,64 +212,225 @@
   }
 
   function assertShopeeAffiliateUrl(value) {
-    const parsed = new URL(String(value || ""));
+    let parsed;
+    try {
+      parsed = new URL(String(value || ""));
+    } catch {
+      throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://.");
+    }
     const host = parsed.hostname.toLowerCase();
-    if (parsed.protocol !== "https:" || !(host === "shopee.co.id" || host.endsWith(".shopee.co.id"))) {
+    const isShopeeIndonesia = host === "shopee.co.id" || host.endsWith(".shopee.co.id") || host === "shope.ee";
+    if (parsed.protocol !== "https:" || !isShopeeIndonesia) {
       throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://.");
     }
     return parsed.href;
   }
 
-  async function createProduct({ title, price, badge, styles, link, variants, imageFile }) {
-    const db = getClient();
-    const affiliateUrl = assertShopeeAffiliateUrl(link);
-    const { data: product, error: productError } = await db
-      .from("products")
-      .insert({
-        slug: uniqueSlug(title),
-        name: title,
-        affiliate_url: affiliateUrl,
-        price_idr: price,
-        badges: badge ? [badge] : [],
-        style_tags: styles,
-        status: "draft",
-        price_checked_at: new Date().toISOString()
-      })
-      .select("id")
-      .single();
-    if (productError) throw productError;
-
-    let imagePath = "";
+  function assertImageUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    let parsed;
     try {
-      imagePath = await uploadImage(imageFile, "products", product.id);
-      if (imagePath) {
-        const { error } = await db.from("products").update({ cover_image_path: imagePath }).eq("id", product.id);
+      parsed = new URL(raw);
+    } catch {
+      throw new Error("URL foto harus berupa alamat https yang lengkap.");
+    }
+    if (parsed.protocol !== "https:") throw new Error("URL foto harus menggunakan https://.");
+    return parsed.href;
+  }
+
+  function normalizeImportKey(value) {
+    const key = String(value || "").trim().toUpperCase();
+    if (!key) return "";
+    if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(key)) {
+      throw new Error("Kode import hanya boleh berisi huruf, angka, tanda minus, atau garis bawah.");
+    }
+    return key;
+  }
+
+  function normalizeColorHex(value) {
+    let hex = String(value || "").trim();
+    if (!hex) return "#B8AEA1";
+    if (/^#[0-9a-f]{3}$/i.test(hex)) hex = `#${hex.slice(1).split("").map((part) => part + part).join("")}`;
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) throw new Error("Kode warna harus memakai format #RRGGBB.");
+    return hex.toUpperCase();
+  }
+
+  function normalizeGenderTarget(value) {
+    const gender = String(value || "unisex").trim().toLowerCase();
+    if (["pria", "wanita", "unisex"].includes(gender)) return gender;
+    throw new Error("Gender produk harus pria, wanita, atau unisex.");
+  }
+
+  function normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, importKey }) {
+    const name = String(title || "").trim();
+    const amount = Number(price);
+    const preparedVariants = Array.isArray(variants) ? variants.map((variant) => {
+      const label = String(variant?.name || "").trim();
+      if (!label) throw new Error("Setiap produk membutuhkan nama varian warna.");
+      return {
+        name: label,
+        hex: normalizeColorHex(variant?.hex),
+        imageUrl: assertImageUrl(variant?.imageUrl)
+      };
+    }) : [];
+
+    if (!name) throw new Error("Nama produk wajib diisi.");
+    if (!Number.isInteger(amount) || amount <= 0) throw new Error("Harga referensi harus berupa angka IDR yang lebih dari nol.");
+    if (!preparedVariants.length) throw new Error("Produk memerlukan minimal satu varian warna.");
+
+    return {
+      title: name,
+      price: amount,
+      badge: String(badge || "").trim(),
+      styles: Array.isArray(styles) ? styles.map((style) => String(style || "").trim()).filter(Boolean).slice(0, 12) : [],
+      link: assertShopeeAffiliateUrl(link),
+      variants: preparedVariants,
+      imageUrl: assertImageUrl(imageUrl),
+      genderTarget: normalizeGenderTarget(genderTarget),
+      importKey: normalizeImportKey(importKey)
+    };
+  }
+
+  async function readExistingVariantImages(db, productId) {
+    const { data, error } = await db
+      .from("product_variants")
+      .select("label,image_path")
+      .eq("product_id", productId);
+    if (error) throw error;
+    return new Map((data || []).map((variant) => [variant.label, variant.image_path || ""]));
+  }
+
+  async function saveProduct({ title, price, badge, styles, link, variants, imageFile, imageUrl, genderTarget, importKey }) {
+    const db = getClient();
+    const payload = normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, importKey });
+    let existing = null;
+    if (payload.importKey) {
+      const { data, error } = await db
+        .from("products")
+        .select("id,status,cover_image_path")
+        .eq("import_key", payload.importKey)
+        .maybeSingle();
+      if (error) throw error;
+      existing = data;
+    }
+
+    let product = existing;
+    const created = !product;
+    if (created) {
+      const { data, error } = await db
+        .from("products")
+        .insert({
+          slug: uniqueSlug(payload.title),
+          name: payload.title,
+          affiliate_url: payload.link,
+          price_idr: payload.price,
+          badges: payload.badge ? [payload.badge] : [],
+          style_tags: payload.styles,
+          gender_target: payload.genderTarget,
+          import_key: payload.importKey || null,
+          cover_image_path: payload.imageUrl || null,
+          status: "draft",
+          price_checked_at: new Date().toISOString()
+        })
+        .select("id,status,cover_image_path")
+        .single();
+      if (error) throw error;
+      product = data;
+    }
+
+    let uploadedImagePath = "";
+    try {
+      uploadedImagePath = await uploadImage(imageFile, "products", product.id);
+      const suppliedCoverPath = uploadedImagePath || payload.imageUrl;
+      const coverImagePath = suppliedCoverPath || product.cover_image_path || "";
+
+      if (!created) {
+        const updatePayload = {
+          name: payload.title,
+          affiliate_url: payload.link,
+          price_idr: payload.price,
+          badges: payload.badge ? [payload.badge] : [],
+          style_tags: payload.styles,
+          gender_target: payload.genderTarget,
+          price_checked_at: new Date().toISOString()
+        };
+        if (suppliedCoverPath) updatePayload.cover_image_path = suppliedCoverPath;
+        const { error } = await db.from("products").update(updatePayload).eq("id", product.id);
+        if (error) throw error;
+      } else if (uploadedImagePath) {
+        const { error } = await db.from("products").update({ cover_image_path: uploadedImagePath }).eq("id", product.id);
         if (error) throw error;
       }
 
-      const variantRows = variants.map((variant, index) => ({
+      const existingVariantImages = created ? new Map() : await readExistingVariantImages(db, product.id);
+      const variantRows = payload.variants.map((variant, index) => ({
         product_id: product.id,
         label: variant.name,
         color_name: variant.name,
         color_hex: variant.hex,
-        image_path: imagePath || null,
+        image_path: variant.imageUrl || coverImagePath || existingVariantImages.get(variant.name) || null,
         sort_order: index
       }));
-      const { error: variantError } = await db.from("product_variants").insert(variantRows);
+      const variantRequest = created
+        ? db.from("product_variants").insert(variantRows)
+        : db.from("product_variants").upsert(variantRows, { onConflict: "product_id,label" });
+      const { error: variantError } = await variantRequest;
       if (variantError) throw variantError;
 
-      const { error: publishError } = await db
-        .from("products")
-        .update({ status: "published", published_at: new Date().toISOString() })
-        .eq("id", product.id);
-      if (publishError) throw publishError;
-      return product.id;
+      if (created || product.status === "draft") {
+        const { error: publishError } = await db
+          .from("products")
+          .update({ status: "published", published_at: new Date().toISOString() })
+          .eq("id", product.id);
+        if (publishError) throw publishError;
+      }
+      return { id: product.id, created };
     } catch (error) {
-      if (imagePath) await getClient().storage.from(bucket).remove([imagePath]);
-      await db.from("product_variants").delete().eq("product_id", product.id);
-      await db.from("products").delete().eq("id", product.id);
+      if (created) {
+        if (uploadedImagePath) await getClient().storage.from(bucket).remove([uploadedImagePath]);
+        await db.from("product_variants").delete().eq("product_id", product.id);
+        await db.from("products").delete().eq("id", product.id);
+      }
       throw error;
     }
+  }
+
+  async function createProduct(input) {
+    const result = await saveProduct(input);
+    return result.id;
+  }
+
+  async function importProducts(groups, onProgress) {
+    if (!Array.isArray(groups) || !groups.length) throw new Error("Belum ada produk untuk diimpor.");
+    const results = [];
+    for (let index = 0; index < groups.length; index += 1) {
+      const group = groups[index];
+      try {
+        const result = await saveProduct({
+          title: group.name,
+          price: group.price,
+          badge: group.badge,
+          styles: group.styles,
+          link: group.affiliateUrl,
+          variants: group.variants,
+          imageUrl: group.coverImageUrl,
+          genderTarget: group.genderTarget,
+          importKey: group.key
+        });
+        const item = { key: group.key, name: group.name, ok: true, created: result.created };
+        results.push(item);
+        if (typeof onProgress === "function") onProgress({ index: index + 1, total: groups.length, ...item });
+      } catch (error) {
+        const item = { key: group.key, name: group.name, ok: false, error: error?.message || "Produk belum dapat diimpor." };
+        results.push(item);
+        if (typeof onProgress === "function") onProgress({ index: index + 1, total: groups.length, ...item });
+      }
+    }
+    const createdCount = results.filter((item) => item.ok && item.created).length;
+    const updatedCount = results.filter((item) => item.ok && !item.created).length;
+    const failedCount = results.filter((item) => !item.ok).length;
+    return { createdCount, updatedCount, failedCount, results };
   }
 
   async function createLook({ title, gender, styles, tone, items, coverFile, popularity = 0 }) {
@@ -441,6 +602,7 @@
     signIn,
     signOut,
     createProduct,
+    importProducts,
     createLook,
     importDemoCatalogue,
     deleteLook,
