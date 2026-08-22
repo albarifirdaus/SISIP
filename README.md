@@ -6,6 +6,7 @@ SISIP adalah katalog fashion all-gender untuk Indonesia: satu look berisi 2–5 
 
 - Katalog responsive: pencarian, filter style/gender, urutan, detail look, link Shopee, dan Journal.
 - **SISIP Studio**: login admin, tambah produk + varian warna, tambah look, unggah gambar hingga 5 MB ke Supabase Storage, serta hapus data yang tidak dipakai look lain.
+- **New Series**: carousel beranda hingga lima look, lengkap dengan urutan yang dapat dipilih dari tab **New Series** di SISIP Studio.
 - Data cloud Supabase dengan Row Level Security: publik hanya dapat membaca konten published; hanya `albarifirdaus209@gmail.com` yang dapat mengelola data.
 - Tombol untuk mengimpor 12 look/produk sample ke cloud. Data sample ini dapat dihapus lagi dari Studio.
 - Prototype lokal tetap tersedia bila konfigurasi cloud dihapus/dikosongkan.
@@ -38,6 +39,14 @@ products (1 affiliate link Shopee)
 ```
 
 Harga adalah harga referensi yang dapat diedit saat kurasi. Mengambil harga/nama otomatis dari halaman Shopee tidak diaktifkan karena harus memakai API/feed affiliate resmi, bukan scraping browser.
+
+## Mengatur New Series
+
+1. Pastikan sedikitnya lima look sudah berstatus published dan terlihat di katalog.
+2. Masuk ke **SISIP Studio → New Series**.
+3. Pilih lima look yang berbeda untuk slot 01–05, lalu pilih **Simpan 5 look**.
+
+Pengaturan tersimpan di Supabase dan langsung mengubah carousel beranda. Jika belum ada lima look published, beranda tetap menampilkan look yang tersedia; tombol simpan akan aktif setelah lima look siap.
 
 ## Request outfit publik
 
