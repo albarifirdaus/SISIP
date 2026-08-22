@@ -510,6 +510,7 @@
         .look-card-title { font-size:1.23rem; }
         .journal-grid { display:block; background:transparent; border:0; }
         .journal-card { min-height:245px; margin-bottom:.7rem; }
+        .journal-cta-grid { grid-template-columns:1fr; }
         .request-grid, .about-section, .look-detail { grid-template-columns:1fr; }
         .about-section { gap:1rem; }
         .about-points { grid-template-columns:1fr; }
@@ -538,6 +539,8 @@
         .filter-toolbar .field:first-child { grid-column:auto; }
         .form-grid, .compact-row { grid-template-columns:1fr; }
         .form-grid .full { grid-column:auto; }
+        .journal-cta-item { grid-template-columns:minmax(0,1fr) auto; }
+        .journal-cta-item input { grid-column:1/-1; }
         .look-item { grid-template-columns:42px 1fr; }
         .item-link { grid-column:2; width:fit-content; }
       }
