@@ -302,11 +302,16 @@
       .empty-state p { margin:0; color:var(--ink-soft); font-size:.86rem; }
 
       .journal-grid { display:grid; grid-template-columns:1.3fr repeat(2,1fr); gap:1px; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.16); }
-      .journal-card { display:flex; flex-direction:column; min-height:300px; padding:1.25rem; color:var(--white); background:#242220; }
+      .journal-card { position:relative; display:flex; flex-direction:column; min-height:300px; padding:1.25rem; overflow:hidden; color:var(--white); background:#242220; }
       .journal-card:nth-child(2) { background:#4b433d; }
       .journal-card:nth-child(3) { background:#8d5041; }
+      .journal-card-cover { position:absolute; inset:0; z-index:0; opacity:.34; }
+      .journal-card-cover::after { content:""; position:absolute; inset:0; background:linear-gradient(120deg,rgba(17,16,15,.82),rgba(17,16,15,.28)); }
+      .journal-card-cover img { width:100%; height:100%; object-fit:cover; }
+      .journal-card > :not(.journal-card-cover) { position:relative; z-index:1; }
       .journal-card .article-number { color:#d8c3b3; }
       .journal-card h3 { max-width:430px; margin:auto 0 1rem; font-size:clamp(1.65rem,3vw,3.25rem); font-weight:780; letter-spacing:-.075em; line-height:.93; }
+      .journal-card-excerpt { max-width:430px; margin:-.15rem 0 1rem; color:rgba(255,255,255,.75); font-size:.82rem; line-height:1.55; }
       .journal-card button { padding:0; width:fit-content; border:0; color:inherit; background:none; cursor:pointer; }
       .journal-card button:hover { color:var(--clay); }
 
@@ -361,9 +366,33 @@
       .item-link:hover { color:var(--white); border-color:var(--ink); background:var(--ink); }
       .price-note { margin:1rem 0 0; color:var(--taupe); font-family:var(--mono); font-size:.58rem; line-height:1.5; }
 
-      .article-shell { width:min(720px,calc(100vw - 2rem)); height:auto; max-height:calc(100vh - 2rem); padding:clamp(1.5rem,4vw,4rem); overflow:auto; color:var(--ink); background:var(--white); }
+      .article-shell { width:min(760px,calc(100vw - 2rem)); height:auto; max-height:calc(100vh - 2rem); padding:clamp(1.5rem,4vw,4rem); overflow:auto; color:var(--ink); background:var(--white); }
       .article-shell h2 { margin:.8rem 0 1.2rem; font-size:clamp(2.3rem,5.2vw,4.8rem); letter-spacing:-.09em; line-height:.86; }
       .article-shell p { max-width:620px; color:var(--ink-soft); line-height:1.7; }
+      .article-lede { margin:-.2rem 0 1.65rem; font-size:1rem; }
+      .article-cover { width:100%; aspect-ratio:16/9; margin:1.5rem 0 1.75rem; overflow:hidden; background:var(--sand); }
+      .article-cover img { width:100%; height:100%; object-fit:cover; }
+      .article-content { display:grid; gap:1.15rem; }
+      .article-block { max-width:620px; }
+      .article-block h3 { margin:0; font-size:clamp(1.3rem,2.6vw,2rem); letter-spacing:-.055em; line-height:1; }
+      .article-block p { margin:0; white-space:pre-wrap; }
+      .article-block blockquote { margin:0; padding:.15rem 0 .15rem 1rem; border-left:2px solid var(--clay); color:var(--ink); font-size:clamp(1.1rem,2.2vw,1.45rem); font-weight:650; line-height:1.38; }
+      .article-figure { margin:0; }
+      .article-figure img { display:block; width:100%; max-height:640px; object-fit:cover; background:var(--sand); }
+      .article-figure figcaption { margin-top:.5rem; color:var(--taupe); font-family:var(--mono); font-size:.58rem; line-height:1.45; }
+      .article-curation { display:grid; gap:1rem; margin:2rem 0 0; padding-top:1.3rem; border-top:1px solid var(--line); }
+      .article-curation h3 { margin:0; font-size:1rem; letter-spacing:-.035em; }
+      .article-related-looks { display:grid; gap:.55rem; }
+      .article-related-look { display:flex; align-items:center; justify-content:space-between; gap:.9rem; width:100%; padding:.75rem .85rem; border:1px solid var(--line); color:var(--ink); background:transparent; text-align:left; cursor:pointer; }
+      .article-related-look:hover { border-color:var(--ink); background:var(--paper); }
+      .article-related-look span { color:var(--taupe); font-family:var(--mono); font-size:.58rem; }
+      .article-related-products { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.65rem; }
+      .article-related-product { display:grid; gap:.6rem; padding:.7rem; border:1px solid var(--line); }
+      .article-related-product h4 { margin:0; font-size:.94rem; letter-spacing:-.035em; }
+      .article-related-product .product-art { min-height:140px; }
+      .article-related-product a { width:fit-content; color:var(--ink); font-family:var(--mono); font-size:.6rem; text-decoration:none; }
+      .article-related-product a:hover { color:var(--clay); }
+      .affiliate-disclosure { margin:0; color:var(--taupe); font-family:var(--mono); font-size:.58rem; line-height:1.5; }
       .auth-shell { width:min(440px,calc(100vw - 2rem)); }
       .auth-shell h2 { margin:.8rem 0 .65rem; font-size:clamp(2rem,4vw,3.5rem); letter-spacing:-.08em; line-height:.9; text-transform:uppercase; }
       .auth-shell > p { margin:0 0 1.4rem; color:var(--ink-soft); line-height:1.55; }
@@ -382,6 +411,19 @@
       .studio-tab.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
       .studio-panel { display:none; }
       .studio-panel.is-active { display:block; }
+      .journal-block-list { display:grid; gap:.65rem; margin:.7rem 0; }
+      .journal-block { padding:.75rem; border:1px solid var(--line); background:var(--paper); }
+      .journal-block-head, .journal-cta-head { display:flex; align-items:center; justify-content:space-between; gap:.7rem; margin-bottom:.65rem; }
+      .journal-block-type { color:var(--taupe); font-family:var(--mono); font-size:.58rem; letter-spacing:.05em; text-transform:uppercase; }
+      .journal-block textarea { min-height:118px; resize:vertical; }
+      .journal-block-controls { display:flex; flex-wrap:wrap; gap:.4rem; }
+      .journal-block-image-note { margin:.55rem 0 0; color:var(--taupe); font-family:var(--mono); font-size:.58rem; line-height:1.45; }
+      .journal-cta-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; margin-top:.25rem; }
+      .journal-cta-list { display:grid; gap:.45rem; margin-top:.55rem; }
+      .journal-cta-item { display:grid; grid-template-columns:minmax(0,1fr) 1.1fr auto; align-items:center; gap:.5rem; padding:.55rem; border:1px solid var(--line); background:var(--paper); }
+      .journal-cta-item strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.75rem; }
+      .journal-cta-item input { min-width:0; padding:.52rem; font-size:.7rem; }
+      .journal-editor-hint { margin:.5rem 0 0; color:var(--taupe); font-size:.7rem; line-height:1.45; }
       .studio-section { margin-bottom:2rem; padding-bottom:1.7rem; border-bottom:1px solid var(--line); }
       .studio-section h3 { margin:0 0 .35rem; font-size:1.35rem; letter-spacing:-.06em; }
       .studio-section > p { margin:.1rem 0 1rem; color:var(--ink-soft); font-size:.78rem; line-height:1.45; }
@@ -468,6 +510,7 @@
         .look-card-title { font-size:1.23rem; }
         .journal-grid { display:block; background:transparent; border:0; }
         .journal-card { min-height:245px; margin-bottom:.7rem; }
+        .journal-cta-grid { grid-template-columns:1fr; }
         .request-grid, .about-section, .look-detail { grid-template-columns:1fr; }
         .about-section { gap:1rem; }
         .about-points { grid-template-columns:1fr; }
@@ -496,6 +539,8 @@
         .filter-toolbar .field:first-child { grid-column:auto; }
         .form-grid, .compact-row { grid-template-columns:1fr; }
         .form-grid .full { grid-column:auto; }
+        .journal-cta-item { grid-template-columns:minmax(0,1fr) auto; }
+        .journal-cta-item input { grid-column:1/-1; }
         .look-item { grid-template-columns:42px 1fr; }
         .item-link { grid-column:2; width:fit-content; }
       }
@@ -736,6 +781,7 @@
         <div class="studio-tabs" role="tablist" aria-label="Menu studio">
           <button class="studio-tab is-active" type="button" data-studio-tab="looks" role="tab">Looks</button>
           <button class="studio-tab" type="button" data-studio-tab="series" role="tab">New Series</button>
+          <button class="studio-tab" type="button" data-studio-tab="journal" role="tab">Journal</button>
           <button class="studio-tab" type="button" data-studio-tab="products" role="tab">Produk</button>
         </div>
 
@@ -787,6 +833,56 @@
             <p class="new-series-status" id="newSeriesStatus" aria-live="polite"></p>
             <p class="form-error" id="newSeriesError" role="alert"></p>
             <button class="small-button" id="saveNewSeriesButton" type="button">Simpan 5 look</button>
+          </section>
+        </div>
+
+        <div class="studio-panel" id="studioJournalPanel" data-studio-panel="journal">
+          <section class="studio-section">
+            <h3>Tulis Journal</h3>
+            <p>Bangun artikel dari blok teks, heading, kutipan, dan foto. Foto-foto tetap tersusun rapi dalam satu cerita.</p>
+            <form class="form-stack" id="journalForm">
+              <div class="compact-row">
+                <div class="field"><label for="journalTitleInput">Judul artikel</label><input id="journalTitleInput" name="title" maxlength="180" required placeholder="Contoh: 5 formula look untuk undangan siang" /></div>
+                <div class="field"><label for="journalCategoryInput">Jenis artikel</label><select id="journalCategoryInput" name="category"><option value="style-guide">Style guide</option><option value="occasion-guide">Occasion guide</option><option value="trend-watch">Trend watch</option><option value="editorial">Editorial</option><option value="shopping-guide">Shopping guide</option><option value="wardrobe-notes">Wardrobe notes</option></select></div>
+              </div>
+              <div class="field"><label for="journalExcerptInput">Ringkasan</label><textarea id="journalExcerptInput" name="excerpt" maxlength="420" required placeholder="Satu sampai dua kalimat yang mengundang pembaca membuka artikel."></textarea></div>
+              <div class="field"><label for="journalStylesInput">Tag style (pisahkan koma)</label><input id="journalStylesInput" name="styles" placeholder="Clean, Formal, Lebaran" /></div>
+              <div class="compact-row">
+                <div class="field"><label for="journalCoverInput">Foto cover (opsional)</label><input id="journalCoverInput" type="file" accept="image/jpeg,image/png,image/webp" /></div>
+                <div class="field"><label for="journalCoverAltInput">Deskripsi foto cover</label><input id="journalCoverAltInput" name="coverAlt" maxlength="240" placeholder="Contoh: Look serba cokelat di cahaya sore" /></div>
+              </div>
+              <div class="field">
+                <label>Isi artikel</label>
+                <div class="journal-block-controls" aria-label="Tambah blok artikel">
+                  <button class="small-button muted" type="button" data-add-journal-block="paragraph">+ Paragraf</button>
+                  <button class="small-button muted" type="button" data-add-journal-block="heading">+ Heading</button>
+                  <button class="small-button muted" type="button" data-add-journal-block="quote">+ Kutipan</button>
+                  <button class="small-button muted" type="button" data-add-journal-block="image">+ Foto</button>
+                </div>
+                <div class="journal-block-list" id="journalBlocks"></div>
+                <p class="journal-editor-hint">Gunakan minimal satu blok teks. Setiap foto wajib memiliki deskripsi agar tetap aksesibel.</p>
+              </div>
+              <div class="journal-cta-grid">
+                <div class="field">
+                  <label for="journalLookCtaInput">Kurasi look terkait</label>
+                  <div class="editor-product-row"><select id="journalLookCtaInput"></select><button class="small-button muted" id="addJournalLookCtaButton" type="button">+ Look</button></div>
+                  <div class="journal-cta-list" id="journalLookCtas"></div>
+                </div>
+                <div class="field">
+                  <label for="journalProductCtaInput">Produk terkait</label>
+                  <div class="editor-product-row"><select id="journalProductCtaInput"></select><button class="small-button muted" id="addJournalProductCtaButton" type="button">+ Produk</button></div>
+                  <div class="journal-cta-list" id="journalProductCtas"></div>
+                </div>
+              </div>
+              <p class="microcopy" style="margin:0;color:var(--taupe)">CTA menggunakan data katalog SISIP: harga dan link Shopee selalu mengikuti produk yang dipilih.</p>
+              <p class="form-error" id="journalFormError" role="alert"></p>
+              <button class="small-button" data-journal-submit type="submit">Publikasikan artikel</button>
+            </form>
+          </section>
+          <section class="studio-section">
+            <h3>Artikel yang tersimpan</h3>
+            <p>Artikel yang dihapus juga akan melepaskan kurasi CTA terkait. File gambar artikel ikut dibersihkan dari media SISIP.</p>
+            <div class="studio-list" id="studioArticlesList"></div>
           </section>
         </div>
 
@@ -849,6 +945,16 @@
           midnight: { bg: "#263038", accent: "#b66c59", garment: "#d7d4cc", bottom: "#3e454a", figure: "#e8ddcf", skin: "#9d694f", skinDark: "#81503d", hair: "#211b19", label: "#f8f6f2", light: true }
         };
         const STYLE_ORDER = ["Clean", "Casual", "Formal", "Streetwear", "Modest", "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party"];
+        const ARTICLE_CATEGORIES = {
+          "style-guide": "Style guide",
+          "occasion-guide": "Occasion guide",
+          "trend-watch": "Trend watch",
+          editorial: "Editorial",
+          "shopping-guide": "Shopping guide",
+          "wardrobe-notes": "Wardrobe notes"
+        };
+        const JOURNAL_BLOCK_LIMIT = 20;
+        const JOURNAL_CTA_LIMIT = 3;
         const BULK_IMPORT_HEADERS = ["product_key", "name", "affiliate_url", "price_idr", "badge", "style_tags", "gender_target", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
         const BULK_IMPORT_TEMPLATE_ROWS = [
           ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "Pilihan SISIP", "Clean|Formal", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
@@ -943,6 +1049,9 @@
         let bulkImportWarnings = [];
         let newSeriesIndex = 0;
         let newSeriesTimer;
+        let journalDraftBlocks = [makeJournalBlock("paragraph")];
+        let journalDraftLookCtas = [];
+        let journalDraftProductCtas = [];
 
         const els = {
           moodList: document.getElementById("moodList"), popularGrid: document.getElementById("popularGrid"), lookGrid: document.getElementById("lookGrid"),
@@ -950,7 +1059,7 @@
           newSeriesCarousel: document.getElementById("newSeriesCarousel"), newSeriesStage: document.getElementById("newSeriesStage"), newSeriesPrev: document.getElementById("newSeriesPrev"), newSeriesNext: document.getElementById("newSeriesNext"), newSeriesDots: document.getElementById("newSeriesDots"),
           lookModal: document.getElementById("lookModal"), lookDetail: document.getElementById("lookDetail"), articleModal: document.getElementById("articleModal"), articleDetail: document.getElementById("articleDetail"),
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
-          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), toast: document.getElementById("toast")
+          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), toast: document.getElementById("toast")
         };
 
         function loadState() {
@@ -1132,8 +1241,64 @@
           }
           els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}<span class="open-look button">Lihat look ↗</span></button><div class="look-card-body"><div class="look-card-meta meta"><span>LOOK ${String(entry.createdOrder||0).padStart(2,"0")}</span><span>${esc(entry.gender)}</span></div><h3 class="look-card-title">${esc(entry.title)}</h3><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div></div></article>`).join("");
         }
+        function articleCategoryLabel(category) { return ARTICLE_CATEGORIES[category] || ARTICLE_CATEGORIES.editorial; }
+        function makeJournalBlock(type) {
+          return { id:uid("journal-block"), type, content:"", level:type === "heading" ? 2 : null, file:null, fileName:"", alt:"", caption:"" };
+        }
+        function isPublishedCatalogueEntry(entry) {
+          if (!entry) return false;
+          if (!cloudEnabled()) return true;
+          return entry.status === "published" && Boolean(entry.publishedAt) && new Date(entry.publishedAt).getTime() <= Date.now();
+        }
+        function journalLookCandidates() { return state.looks.filter(isPublishedCatalogueEntry); }
+        function journalProductCandidates() { return state.products.filter(isPublishedCatalogueEntry); }
+        function defaultJournalCtaLabel(type) { return type === "look" ? "Lihat look lengkap" : "Lihat di Shopee"; }
+        function renderJournalBlockEditor() {
+          els.journalBlocks.innerHTML = journalDraftBlocks.length ? journalDraftBlocks.map((block,index) => {
+            const typeLabel = block.type === "paragraph" ? "Paragraf" : block.type === "heading" ? "Heading" : block.type === "quote" ? "Kutipan" : "Foto";
+            const remove = `<button class="small-button danger" type="button" data-remove-journal-block="${index}" aria-label="Hapus blok ${typeLabel}">×</button>`;
+            if (block.type === "image") {
+              const fileNote = block.fileName ? `Dipilih: ${block.fileName}` : "Belum ada foto dipilih.";
+              return `<div class="journal-block" data-journal-block="${index}"><div class="journal-block-head"><span class="journal-block-type">${typeLabel}</span>${remove}</div><div class="field"><label>Foto artikel</label><input type="file" accept="image/jpeg,image/png,image/webp" data-journal-block-file="${index}" /></div><div class="compact-row"><div class="field"><label>Deskripsi foto</label><input maxlength="240" data-journal-block-alt="${index}" value="${esc(block.alt)}" placeholder="Jelaskan isi foto" /></div><div class="field"><label>Caption (opsional)</label><input maxlength="500" data-journal-block-caption="${index}" value="${esc(block.caption)}" placeholder="Keterangan kecil di bawah foto" /></div></div><p class="journal-block-image-note">${esc(fileNote)} · JPEG, PNG, atau WebP, maksimal 5 MB di cloud.</p></div>`;
+            }
+            const maxlength = block.type === "heading" ? 240 : block.type === "quote" ? 800 : 6000;
+            const placeholder = block.type === "heading" ? "Subjudul yang memberi arah" : block.type === "quote" ? "Kalimat yang ingin diberi penekanan" : "Tulis bagian cerita di sini…";
+            const level = block.type === "heading" ? `<div class="field"><label>Ukuran heading</label><select data-journal-block-level="${index}"><option value="2" ${Number(block.level) === 2 ? "selected" : ""}>Heading besar</option><option value="3" ${Number(block.level) === 3 ? "selected" : ""}>Heading kecil</option></select></div>` : "";
+            return `<div class="journal-block" data-journal-block="${index}"><div class="journal-block-head"><span class="journal-block-type">${typeLabel}</span>${remove}</div>${level}<div class="field"><label>${block.type === "heading" ? "Teks heading" : block.type === "quote" ? "Isi kutipan" : "Isi paragraf"}</label><textarea maxlength="${maxlength}" data-journal-block-content="${index}" placeholder="${placeholder}">${esc(block.content)}</textarea></div></div>`;
+          }).join("") : `<p class="microcopy" style="color:var(--taupe);margin:0">Tambahkan blok pertama untuk mulai menulis.</p>`;
+        }
+        function renderJournalCtaList(type) {
+          const entries = type === "look" ? journalDraftLookCtas : journalDraftProductCtas;
+          const target = type === "look" ? els.journalLookCtas : els.journalProductCtas;
+          const source = type === "look" ? state.looks : state.products;
+          const removeKey = type === "look" ? "data-remove-journal-look-cta" : "data-remove-journal-product-cta";
+          target.innerHTML = entries.length ? entries.map((entry,index) => {
+            const item = source.find((candidate) => candidate.id === entry.id);
+            return `<div class="journal-cta-item"><strong title="${esc(item?.title || item?.name || "Kurasi")}">${esc(item?.title || item?.name || "Kurasi")}</strong><input maxlength="80" data-journal-${type}-cta-label="${index}" value="${esc(entry.label || defaultJournalCtaLabel(type))}" aria-label="Label CTA ${type}" /><button class="small-button danger" type="button" ${removeKey}="${index}" aria-label="Hapus CTA">×</button></div>`;
+          }).join("") : `<p class="microcopy" style="color:var(--taupe);margin:0">Belum ada ${type === "look" ? "look" : "produk"} terkait.</p>`;
+        }
+        function renderJournalCuration() {
+          const looks = journalLookCandidates();
+          const products = journalProductCandidates();
+          const selectedLookIds = new Set(journalDraftLookCtas.map((entry) => entry.id));
+          const selectedProductIds = new Set(journalDraftProductCtas.map((entry) => entry.id));
+          const previousLook = els.journalLookCtaInput.value;
+          const previousProduct = els.journalProductCtaInput.value;
+          els.journalLookCtaInput.innerHTML = `<option value="">Pilih look published</option>${looks.filter((entry) => !selectedLookIds.has(entry.id)).map((entry) => `<option value="${esc(entry.id)}">${esc(entry.title)} · ${esc(entry.gender)}</option>`).join("")}`;
+          els.journalProductCtaInput.innerHTML = `<option value="">Pilih produk published</option>${products.filter((entry) => !selectedProductIds.has(entry.id)).map((entry) => `<option value="${esc(entry.id)}">${esc(entry.name)} · ${money(entry.price)}</option>`).join("")}`;
+          if (Array.from(els.journalLookCtaInput.options || []).some((option) => option.value === previousLook)) els.journalLookCtaInput.value = previousLook;
+          if (Array.from(els.journalProductCtaInput.options || []).some((option) => option.value === previousProduct)) els.journalProductCtaInput.value = previousProduct;
+          els.addJournalLookCtaButton.disabled = journalDraftLookCtas.length >= JOURNAL_CTA_LIMIT || !looks.length;
+          els.addJournalProductCtaButton.disabled = journalDraftProductCtas.length >= JOURNAL_CTA_LIMIT || !products.length;
+          renderJournalCtaList("look");
+          renderJournalCtaList("product");
+        }
+        function renderJournalStudio() { renderJournalBlockEditor(); renderJournalCuration(); }
         function renderJournal() {
-          document.getElementById("journalGrid").innerHTML = state.articles.length ? state.articles.map((article) => `<article class="journal-card"><span class="article-number eyebrow">Journal / ${article.number}</span><h3>${esc(article.title)}</h3><button class="text-link" type="button" data-open-article="${esc(article.id)}">Baca catatan ↗</button></article>`).join("") : `<div class="empty-state"><h3>Journal segera hadir.</h3><p>Catatan fashion berikutnya sedang disiapkan.</p></div>`;
+          document.getElementById("journalGrid").innerHTML = state.articles.length ? state.articles.map((article) => {
+            const cover = safeImage(article.coverImage);
+            return `<article class="journal-card">${cover ? `<div class="journal-card-cover" aria-hidden="true"><img src="${esc(cover)}" alt="" /></div>` : ""}<span class="article-number eyebrow">${esc(articleCategoryLabel(article.category))} / ${esc(article.number)}</span><h3>${esc(article.title)}</h3>${article.excerpt ? `<p class="journal-card-excerpt">${esc(article.excerpt)}</p>` : ""}<button class="text-link" type="button" data-open-article="${esc(article.id)}">Baca catatan ↗</button></article>`;
+          }).join("") : `<div class="empty-state"><h3>Journal segera hadir.</h3><p>Catatan fashion berikutnya sedang disiapkan.</p></div>`;
         }
         function renderNewSeriesStudio() {
           const candidates = getNewSeriesCandidates();
@@ -1162,8 +1327,10 @@
           renderVariantSelect();
           renderDraftItems();
           renderNewSeriesStudio();
+          renderJournalStudio();
           els.studioLooksList.innerHTML = state.looks.length ? [...state.looks].sort((a,b)=>Number(b.createdOrder||0)-Number(a.createdOrder||0)).map((entry)=>`<div class="studio-row"><p><strong>${esc(entry.title)}</strong><span>${esc(entry.gender)} · ${esc(entry.styles.join(", "))} · ${entry.items.length} item</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-look="${esc(entry.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada look tersimpan.</p>`;
           els.studioProductsList.innerHTML = state.products.length ? state.products.map((item)=>{ const usage=getProductUsage(item.id).length; return `<div class="studio-row"><p><strong>${esc(item.name)}</strong><span>${money(item.price)} · ${item.variants.length} warna · dipakai ${usage} look</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-product="${esc(item.id)}" type="button">Hapus</button></div></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada produk.</p>`;
+          els.studioArticlesList.innerHTML = state.articles.length ? [...state.articles].map((article)=>`<div class="studio-row"><p><strong>${esc(article.title)}</strong><span>${esc(articleCategoryLabel(article.category))} · ${(article.blocks || []).length || "teks"} blok · ${(article.ctas || []).length} CTA</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-article="${esc(article.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada artikel tersimpan.</p>`;
         }
         function renderVariantSelect() {
           const chosen = getProduct(els.lookProduct.value) || state.products[0];
@@ -1195,9 +1362,51 @@
           els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">LOOK ${String(entry.createdOrder||0).padStart(2,"0")} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2><div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.</p></div><div class="detail-actions"><button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
           if (!els.lookModal.open) els.lookModal.showModal();
         }
+        function articlePlainText(blocks) {
+          return (blocks || []).filter((block) => block.type !== "image").map((block) => String(block.content || "").trim()).filter(Boolean).join("\n\n");
+        }
+        function articleBlockMarkup(block) {
+          const type = String(block?.type || "paragraph");
+          if (type === "image") {
+            const image = safeImage(block.image || block.imageUrl);
+            if (!image) return "";
+            return `<figure class="article-block article-figure"><img src="${esc(image)}" alt="${esc(block.alt || "Foto artikel SISIP")}" />${block.caption ? `<figcaption>${esc(block.caption)}</figcaption>` : ""}</figure>`;
+          }
+          const content = String(block?.content || "").trim();
+          if (!content) return "";
+          if (type === "heading") {
+            const tag = Number(block.level) === 3 ? "h4" : "h3";
+            return `<section class="article-block"><${tag}>${esc(content)}</${tag}></section>`;
+          }
+          if (type === "quote") return `<blockquote class="article-block">${esc(content)}</blockquote>`;
+          return `<p class="article-block">${esc(content)}</p>`;
+        }
+        function resolveArticleCta(cta) {
+          if (!cta) return null;
+          if (cta.type === "look") {
+            const look = cta.look || state.looks.find((entry) => entry.id === cta.lookId);
+            return look ? { ...cta, look } : null;
+          }
+          if (cta.type === "product") {
+            const product = cta.product || state.products.find((entry) => entry.id === cta.productId);
+            return product ? { ...cta, product } : null;
+          }
+          return null;
+        }
+        function articleCurationMarkup(article) {
+          const ctas = (article.ctas || []).map(resolveArticleCta).filter(Boolean);
+          if (!ctas.length) return "";
+          const looks = ctas.filter((cta) => cta.type === "look");
+          const products = ctas.filter((cta) => cta.type === "product");
+          const lookMarkup = looks.length ? `<div class="article-related-looks">${looks.map((cta) => `<button class="article-related-look" type="button" data-open-article-look="${esc(cta.look.id)}"><strong>${esc(cta.label || defaultJournalCtaLabel("look"))}</strong><span>${esc(cta.look.title)} ↗</span></button>`).join("")}</div>` : "";
+          const productMarkup = products.length ? `<div class="article-related-products">${products.map((cta) => { const product = cta.product; return `<article class="article-related-product">${productArt(product, product.variants?.[0], true)}<div><h4>${esc(product.name)}</h4><p class="microcopy" style="margin:.25rem 0 0;color:var(--taupe)">${money(product.price)}</p></div><a href="${esc(safeUrl(product.affiliateUrl))}" target="_blank" rel="sponsored noopener">${esc(cta.label || defaultJournalCtaLabel("product"))} ↗</a></article>`; }).join("")}</div>` : "";
+          return `<section class="article-curation"><h3>Temukan kurasinya</h3>${lookMarkup}${productMarkup}<p class="affiliate-disclosure">Sebagian tautan pada kurasi ini merupakan tautan affiliate. Harga dan stok dapat berubah di Shopee.</p></section>`;
+        }
         function openArticle(id) {
           const article=state.articles.find((entry)=>entry.id===id); if (!article) return;
-          els.articleDetail.innerHTML=`<p class="eyebrow" style="color:var(--clay)">SISIP JOURNAL / ${article.number}</p><h2>${esc(article.title)}</h2>${article.body.split("\n\n").map((p)=>`<p>${esc(p)}</p>`).join("")}<button class="button-outline" type="button" onclick="document.getElementById('articleModal').close()">Tutup catatan</button>`;
+          const cover = safeImage(article.coverImage);
+          const blocks = Array.isArray(article.blocks) && article.blocks.length ? article.blocks.map(articleBlockMarkup).join("") : String(article.body || article.excerpt || "").split("\n\n").filter(Boolean).map((p)=>`<p class="article-block">${esc(p)}</p>`).join("");
+          els.articleDetail.innerHTML=`<p class="eyebrow" style="color:var(--clay)">${esc(articleCategoryLabel(article.category))} / ${esc(article.number)}</p><h2>${esc(article.title)}</h2>${article.excerpt ? `<p class="article-lede">${esc(article.excerpt)}</p>` : ""}${cover ? `<figure class="article-cover"><img src="${esc(cover)}" alt="${esc(article.coverAlt || article.title)}" /></figure>` : ""}<div class="article-content">${blocks}</div>${articleCurationMarkup(article)}<button class="button-outline" type="button" data-close-article>Tutup catatan</button>`;
           if (!els.articleModal.open) els.articleModal.showModal();
         }
         function showToast(message) { clearTimeout(toastTimer); els.toast.textContent=message; els.toast.classList.add("show"); toastTimer=setTimeout(()=>els.toast.classList.remove("show"),3200); }
@@ -1268,8 +1477,59 @@
           const variant = getVariant(productItem,variantName);
           lookDraftItems.push({productId,variantId:variant?.id,variantName}); els.lookFormError.textContent=""; renderDraftItems();
         }
+        function addJournalCta(type) {
+          const input = type === "look" ? els.journalLookCtaInput : els.journalProductCtaInput;
+          const entries = type === "look" ? journalDraftLookCtas : journalDraftProductCtas;
+          const source = type === "look" ? state.looks : state.products;
+          const id = String(input.value || "").trim();
+          if (!id || !source.some((entry) => entry.id === id)) return;
+          if (entries.length >= JOURNAL_CTA_LIMIT) { els.journalFormError.textContent = `Maksimal ${JOURNAL_CTA_LIMIT} ${type === "look" ? "look" : "produk"} terkait.`; return; }
+          if (entries.some((entry) => entry.id === id)) return;
+          entries.push({ id, label:defaultJournalCtaLabel(type) });
+          els.journalFormError.textContent = "";
+          input.value = "";
+          renderJournalCuration();
+        }
+        function resetJournalDraft() {
+          journalDraftBlocks = [makeJournalBlock("paragraph")];
+          journalDraftLookCtas = [];
+          journalDraftProductCtas = [];
+          renderJournalStudio();
+        }
+        function validateJournalBlocks() {
+          if (!journalDraftBlocks.length || journalDraftBlocks.length > JOURNAL_BLOCK_LIMIT) throw new Error(`Artikel dapat memiliki 1–${JOURNAL_BLOCK_LIMIT} blok.`);
+          const limits = { paragraph:6000, heading:240, quote:800 };
+          const prepared = journalDraftBlocks.map((block) => {
+            const type = String(block.type || "");
+            if (!["paragraph","heading","quote","image"].includes(type)) throw new Error("Jenis blok artikel belum sesuai.");
+            if (type === "image") {
+              const alt = String(block.alt || "").trim();
+              if (!block.file) throw new Error("Pilih file untuk setiap blok foto.");
+              if (!alt) throw new Error("Setiap foto artikel membutuhkan deskripsi.");
+              return { type, file:block.file, alt:alt.slice(0,240), caption:String(block.caption || "").trim().slice(0,500) };
+            }
+            const content = String(block.content || "").trim();
+            if (!content) throw new Error("Lengkapi atau hapus blok teks yang kosong.");
+            if (content.length > limits[type]) throw new Error("Salah satu blok artikel melebihi batas karakter.");
+            return { type, content, level:type === "heading" ? (Number(block.level) === 3 ? 3 : 2) : null };
+          });
+          if (!prepared.some((block) => block.type !== "image")) throw new Error("Tambahkan minimal satu blok teks agar artikel memiliki konteks.");
+          return prepared;
+        }
+        function validateJournalCtas(type, entries) {
+          const source = type === "look" ? state.looks : state.products;
+          if (entries.length > JOURNAL_CTA_LIMIT) throw new Error(`Maksimal ${JOURNAL_CTA_LIMIT} ${type === "look" ? "look" : "produk"} terkait.`);
+          return entries.map((entry) => {
+            const item = source.find((candidate) => candidate.id === entry.id);
+            if (!item || !isPublishedCatalogueEntry(item)) throw new Error(`Salah satu ${type === "look" ? "look" : "produk"} terkait belum published.`);
+            return { id:item.id, label:(String(entry.label || "").trim() || defaultJournalCtaLabel(type)).slice(0,80) };
+          });
+        }
         async function readImage(input) {
-          const file=input.files?.[0]; if (!file) return "";
+          return readImageFile(input.files?.[0]);
+        }
+        async function readImageFile(file) {
+          if (!file) return "";
           if (file.size > 1.6 * 1024 * 1024) throw new Error("Ukuran gambar maksimal 1.6 MB agar muat di prototype browser.");
           return new Promise((resolve,reject)=>{ const reader=new FileReader(); reader.onload=()=>resolve(String(reader.result)); reader.onerror=()=>reject(new Error("Gambar tidak dapat dibaca.")); reader.readAsDataURL(file); });
         }
@@ -1531,13 +1791,32 @@
           } catch(error) { showToast("Sesi belum dapat diakhiri. Coba lagi."); }
         });
         els.lookModal.addEventListener("click",(event)=>{ if(event.target===els.lookModal)els.lookModal.close(); const share=event.target.closest("[data-share-look]"); if(share) shareLook(share.dataset.shareLook); });
-        els.articleModal.addEventListener("click",(event)=>{ if(event.target===els.articleModal)els.articleModal.close(); });
+        els.articleModal.addEventListener("click",(event)=>{ if(event.target===els.articleModal){els.articleModal.close();return;} const close=event.target.closest("[data-close-article]"); if(close){els.articleModal.close();return;} const look=event.target.closest("[data-open-article-look]"); if(look){els.articleModal.close();openLook(look.dataset.openArticleLook);} });
         document.getElementById("journalGrid").addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-article]"); if(button)openArticle(button.dataset.openArticle); });
         document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.addEventListener("click",()=>switchStudioTab(button.dataset.studioTab)));
+        document.querySelectorAll("[data-add-journal-block]").forEach((button)=>button.addEventListener("click",()=>{ if(journalDraftBlocks.length>=JOURNAL_BLOCK_LIMIT){els.journalFormError.textContent=`Artikel maksimal memiliki ${JOURNAL_BLOCK_LIMIT} blok.`;return;} journalDraftBlocks.push(makeJournalBlock(button.dataset.addJournalBlock));els.journalFormError.textContent="";renderJournalBlockEditor(); }));
         els.saveNewSeriesButton.addEventListener("click",saveNewSeries);
         els.lookProduct.addEventListener("change",renderVariantSelect);
         document.getElementById("addLookItemButton").addEventListener("click",addDraftItem);
         els.lookDraftItems.addEventListener("click",(event)=>{ const button=event.target.closest("[data-remove-draft]");if(!button)return;lookDraftItems.splice(Number(button.dataset.removeDraft),1);renderDraftItems(); });
+        els.journalBlocks.addEventListener("click",(event)=>{ const button=event.target.closest("[data-remove-journal-block]"); if(!button)return; journalDraftBlocks.splice(Number(button.dataset.removeJournalBlock),1); renderJournalBlockEditor(); });
+        els.journalBlocks.addEventListener("input",(event)=>{
+          const target=event.target; const contentIndex=Number(target.dataset?.journalBlockContent); const altIndex=Number(target.dataset?.journalBlockAlt); const captionIndex=Number(target.dataset?.journalBlockCaption);
+          if(Number.isInteger(contentIndex) && journalDraftBlocks[contentIndex]) journalDraftBlocks[contentIndex].content=target.value;
+          if(Number.isInteger(altIndex) && journalDraftBlocks[altIndex]) journalDraftBlocks[altIndex].alt=target.value;
+          if(Number.isInteger(captionIndex) && journalDraftBlocks[captionIndex]) journalDraftBlocks[captionIndex].caption=target.value;
+        });
+        els.journalBlocks.addEventListener("change",(event)=>{
+          const target=event.target; const levelIndex=Number(target.dataset?.journalBlockLevel); const fileIndex=Number(target.dataset?.journalBlockFile);
+          if(Number.isInteger(levelIndex) && journalDraftBlocks[levelIndex]) journalDraftBlocks[levelIndex].level=Number(target.value)===3?3:2;
+          if(Number.isInteger(fileIndex) && journalDraftBlocks[fileIndex]) { const file=target.files?.[0] || null; journalDraftBlocks[fileIndex].file=file; journalDraftBlocks[fileIndex].fileName=file?.name || ""; renderJournalBlockEditor(); }
+        });
+        els.addJournalLookCtaButton.addEventListener("click",()=>addJournalCta("look"));
+        els.addJournalProductCtaButton.addEventListener("click",()=>addJournalCta("product"));
+        els.journalLookCtas.addEventListener("click",(event)=>{const button=event.target.closest("[data-remove-journal-look-cta]");if(!button)return;journalDraftLookCtas.splice(Number(button.dataset.removeJournalLookCta),1);renderJournalCuration();});
+        els.journalProductCtas.addEventListener("click",(event)=>{const button=event.target.closest("[data-remove-journal-product-cta]");if(!button)return;journalDraftProductCtas.splice(Number(button.dataset.removeJournalProductCta),1);renderJournalCuration();});
+        els.journalLookCtas.addEventListener("input",(event)=>{const index=Number(event.target.dataset?.journalLookCtaLabel);if(Number.isInteger(index)&&journalDraftLookCtas[index])journalDraftLookCtas[index].label=event.target.value;});
+        els.journalProductCtas.addEventListener("input",(event)=>{const index=Number(event.target.dataset?.journalProductCtaLabel);if(Number.isInteger(index)&&journalDraftProductCtas[index])journalDraftProductCtas[index].label=event.target.value;});
         els.studioLooksList.addEventListener("click",async(event)=>{
           const button=event.target.closest("[data-delete-look]"); if(!button)return;
           const entry=state.looks.find((item)=>item.id===button.dataset.deleteLook); if(!entry)return;
@@ -1560,6 +1839,16 @@
           }
           const detail=usedIn.length?` Produk ini dipakai di ${usedIn.length} look; item terkait juga akan hilang dari look tersebut.`:"";
           if(confirm(`Hapus produk “${item.name}”?${detail}`)){state.products=state.products.filter((productItem)=>productItem.id!==item.id);state.looks=state.looks.map((entry)=>({...entry,items:entry.items.filter((lookItem)=>lookItem.productId!==item.id)})).filter((entry)=>entry.items.length>=2);state.newSeriesLookIds=(state.newSeriesLookIds||[]).filter((id)=>state.looks.some((entry)=>entry.id===id));saveState();renderAll();showToast("Produk dan referensi terkait berhasil dihapus.");}
+        });
+        els.studioArticlesList.addEventListener("click",async(event)=>{
+          const button=event.target.closest("[data-delete-article]");if(!button)return;
+          const article=state.articles.find((item)=>item.id===button.dataset.deleteArticle);if(!article)return;
+          const location=cloudEnabled()?"cloud SISIP":"prototype ini";
+          if(!confirm(`Hapus artikel “${article.title}” dari ${location}?`))return;
+          try {
+            if(cloudEnabled()) { if(typeof cloud?.deleteArticle!=="function") throw new Error("Fitur hapus artikel belum termuat. Muat ulang halaman lalu coba lagi."); const result=await cloud.deleteArticle(article.id); await refreshCloudState({admin:true}); showToast(result?.mediaCleanupWarning ? "Artikel sudah dihapus; satu file media perlu dibersihkan ulang nanti." : "Artikel dihapus dari cloud."); return; }
+            state.articles=state.articles.filter((item)=>item.id!==article.id);saveState();renderAll();showToast("Artikel dihapus dari prototype.");
+          } catch(error) { showToast(error.message||"Artikel belum dapat dihapus."); }
         });
         document.getElementById("resetSampleButton").addEventListener("click",()=>{if(cloudEnabled()){showToast("Data cloud tidak di-reset dari prototype.");return;}if(confirm("Kembalikan seluruh data ke 12 look contoh awal? Perubahan lokal akan terganti."))resetState();});
         document.getElementById("clearLooksButton").addEventListener("click",()=>{if(cloudEnabled()){showToast("Data cloud tidak dihapus massal dari prototype.");return;}if(confirm("Hapus seluruh look dari browser ini? Product library tetap ada.")){state.looks=[];state.newSeriesLookIds=[];lookDraftItems=[];saveState();renderAll();showToast("Semua look prototype telah dihapus.");}});
@@ -1615,6 +1904,50 @@
           }
         });
 
+        els.journalForm.addEventListener("submit",async(event)=>{
+          event.preventDefault();
+          els.journalFormError.textContent="";
+          const journalForm=event.currentTarget;
+          const form=new FormData(journalForm);
+          const title=String(form.get("title")||"").trim();
+          const excerpt=String(form.get("excerpt")||"").trim();
+          const category=String(form.get("category")||"editorial").trim();
+          const styles=parseTags(form.get("styles"));
+          const coverFile=document.getElementById("journalCoverInput").files?.[0];
+          const coverAlt=String(form.get("coverAlt")||"").trim();
+          const submitButton=typeof journalForm.querySelector === "function" ? journalForm.querySelector("[data-journal-submit]") : null;
+          const originalLabel=submitButton?.textContent || "Publikasikan artikel";
+          try {
+            if(!title || title.length>180 || !excerpt || excerpt.length>420) throw new Error("Isi judul dan ringkasan artikel terlebih dahulu.");
+            if(!Object.prototype.hasOwnProperty.call(ARTICLE_CATEGORIES,category)) throw new Error("Pilih jenis artikel yang tersedia.");
+            if(coverFile && !coverAlt) throw new Error("Tambahkan deskripsi foto cover agar tetap aksesibel.");
+            const blocks=validateJournalBlocks();
+            const lookCtas=validateJournalCtas("look",journalDraftLookCtas);
+            const productCtas=validateJournalCtas("product",journalDraftProductCtas);
+            if(submitButton){submitButton.disabled=true;submitButton.textContent="Mempublikasikan…";}
+            if(cloudEnabled()) {
+              if(typeof cloud?.createArticle!=="function") throw new Error("Fitur Journal belum termuat. Muat ulang halaman lalu coba lagi.");
+              await cloud.createArticle({title,excerpt,category,styles,coverFile,coverAlt,blocks,lookCtas,productCtas});
+              journalForm.reset();
+              resetJournalDraft();
+              await refreshCloudState({admin:true});
+              switchStudioTab("journal");
+              showToast("Artikel Journal dipublikasikan ke cloud.");
+              return;
+            }
+            const coverImage=await readImageFile(coverFile);
+            const localBlocks=[];
+            for(const block of blocks){
+              if(block.type==="image") localBlocks.push({type:block.type,image:await readImageFile(block.file),alt:block.alt,caption:block.caption});
+              else localBlocks.push({type:block.type,content:block.content,level:block.level});
+            }
+            const localLookCtas=lookCtas.map((cta,index)=>({id:uid("article-cta"),type:"look",lookId:cta.id,label:cta.label,position:index+1,look:state.looks.find((entry)=>entry.id===cta.id)}));
+            const localProductCtas=productCtas.map((cta,index)=>({id:uid("article-cta"),type:"product",productId:cta.id,label:cta.label,position:localLookCtas.length+index+1,product:state.products.find((entry)=>entry.id===cta.id)}));
+            const created={id:uid("article"),number:String(state.articles.length+1).padStart(2,"0"),title,excerpt,category,styles,coverImage,coverAlt,body:articlePlainText(localBlocks),blocks:localBlocks,ctas:[...localLookCtas,...localProductCtas],status:"published",publishedAt:new Date().toISOString()};
+            state.articles.unshift(created);saveState();journalForm.reset();resetJournalDraft();renderAll();switchStudioTab("journal");showToast("Artikel Journal tersimpan di browser ini.");
+          } catch(error){els.journalFormError.textContent=error.message||"Artikel belum dapat dipublikasikan.";}
+          finally {if(submitButton){submitButton.disabled=false;submitButton.textContent=originalLabel;}}
+        });
         document.getElementById("productForm").addEventListener("submit",async(event)=>{
           event.preventDefault();
           els.productFormError.textContent="";
