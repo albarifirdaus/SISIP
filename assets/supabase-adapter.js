@@ -877,8 +877,9 @@
     ]);
     if (paths.length) {
       const { error: storageError } = await getClient().storage.from(bucket).remove(paths);
-      if (storageError) throw storageError;
+      if (storageError) return { deleted: true, mediaCleanupWarning: true };
     }
+    return { deleted: true, mediaCleanupWarning: false };
   }
 
   async function deleteLook(id) {
