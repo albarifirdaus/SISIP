@@ -78,6 +78,8 @@
       artBg: "#D8D0C6",
       artInk: variants[0]?.hex || "#242220",
       image: publicUrl(row.cover_image_path),
+      status: row.status || "draft",
+      publishedAt: row.published_at || "",
       variants
     };
   }
@@ -112,13 +114,56 @@
     };
   }
 
-  function mapArticle(row, index) {
+  function mapArticle(row, index, productMap, lookMap) {
+    const blocks = (row.article_blocks || [])
+      .sort((a, b) => Number(a.position || 0) - Number(b.position || 0))
+      .map((block) => ({
+        id: block.id,
+        position: Number(block.position || 0),
+        type: block.block_type,
+        content: block.text_content || "",
+        level: block.heading_level || null,
+        image: publicUrl(block.image_path),
+        imagePath: block.image_path || "",
+        alt: block.image_alt_text || "",
+        caption: block.caption || ""
+      }));
+    const ctas = (row.article_ctas || [])
+      .sort((a, b) => Number(a.position || 0) - Number(b.position || 0))
+      .map((cta) => {
+        const type = cta.target_type;
+        const targetId = type === "look" ? cta.look_id : cta.product_id;
+        const target = type === "look" ? lookMap.get(targetId) : productMap.get(targetId);
+        if (!target) return null;
+        return {
+          id: cta.id,
+          position: Number(cta.position || 0),
+          type,
+          targetType: type,
+          targetId,
+          lookId: type === "look" ? targetId : "",
+          productId: type === "product" ? targetId : "",
+          label: cta.label,
+          look: type === "look" ? target : null,
+          product: type === "product" ? target : null
+        };
+      })
+      .filter(Boolean);
     return {
       id: row.id,
       number: String(index + 1).padStart(2, "0"),
       title: row.title,
       excerpt: row.excerpt || "",
-      body: row.body_markdown || row.excerpt || ""
+      body: row.body_markdown || row.excerpt || "",
+      category: row.category || "editorial",
+      styles: row.style_tags || [],
+      tags: row.style_tags || [],
+      coverImage: publicUrl(row.cover_image_path),
+      coverAlt: row.cover_alt_text || "",
+      blocks,
+      ctas,
+      lookCtas: ctas.filter((cta) => cta.type === "look"),
+      productCtas: ctas.filter((cta) => cta.type === "product")
     };
   }
 
@@ -144,7 +189,7 @@
       .order("created_at", { ascending: false });
     let articlesQuery = db
       .from("articles")
-      .select("id, slug, title, excerpt, body_markdown, published_at, status, created_at")
+      .select("id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)")
       .order("published_at", { ascending: false });
     const newSeriesSlotsQuery = db
       .from("new_series_slots")
@@ -167,7 +212,8 @@
     const products = productRows.map(mapProduct);
     const productMap = new Map(products.map((product) => [product.id, product]));
     const looks = lookRows.map((row, index) => mapLook(row, productMap, lookRows.length - index));
-    const articles = articleRows.map(mapArticle);
+    const lookMap = new Map(looks.map((look) => [look.id, look]));
+    const articles = articleRows.map((row, index) => mapArticle(row, index, productMap, lookMap));
     const newSeriesSlots = newSeriesSlotRows.map((row) => ({
       slot: Number(row.slot),
       lookId: row.look_id || ""
@@ -224,6 +270,130 @@
     });
     if (error) throw error;
     return path;
+  }
+
+  const articleCategories = new Set([
+    "style-guide",
+    "occasion-guide",
+    "trend-watch",
+    "editorial",
+    "shopping-guide",
+    "wardrobe-notes"
+  ]);
+  const articleBlockTypes = new Set(["paragraph", "heading", "quote", "image"]);
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  function normalizeArticleText(value, label, { min = 0, max, required = false } = {}) {
+    const text = String(value || "").trim();
+    if ((required || min > 0) && text.length < min) throw new Error(`${label} wajib diisi.`);
+    if (max && text.length > max) throw new Error(`${label} maksimal ${max} karakter.`);
+    return text;
+  }
+
+  function normalizeArticleCategory(value) {
+    const category = String(value || "editorial").trim().toLowerCase();
+    if (!articleCategories.has(category)) throw new Error("Kategori Journal belum valid.");
+    return category;
+  }
+
+  function normalizeArticleStyles(styles) {
+    return Array.isArray(styles)
+      ? styles.map((style) => String(style || "").trim()).filter(Boolean).slice(0, 12)
+      : [];
+  }
+
+  function normalizeArticleBlocks(blocks) {
+    if (!Array.isArray(blocks) || !blocks.length) throw new Error("Tambahkan minimal satu blok isi artikel.");
+    if (blocks.length > 20) throw new Error("Artikel maksimal memiliki 20 blok isi.");
+
+    return blocks.map((rawBlock, index) => {
+      const type = String(rawBlock?.type || rawBlock?.blockType || "").trim().toLowerCase();
+      if (!articleBlockTypes.has(type)) throw new Error(`Tipe blok ke-${index + 1} belum valid.`);
+
+      if (type === "image") {
+        const file = rawBlock?.file || rawBlock?.imageFile || null;
+        if (!file) throw new Error(`Pilih foto untuk blok gambar ke-${index + 1}.`);
+        const alt = normalizeArticleText(rawBlock?.alt || rawBlock?.imageAlt || rawBlock?.imageAltText, `Alt text gambar ke-${index + 1}`, { min: 1, max: 240, required: true });
+        const caption = normalizeArticleText(rawBlock?.caption, `Caption gambar ke-${index + 1}`, { max: 500 });
+        return { type, file, alt, caption };
+      }
+
+      const limits = type === "heading" ? 240 : type === "quote" ? 800 : 6000;
+      const content = normalizeArticleText(rawBlock?.content || rawBlock?.textContent, `Isi blok ke-${index + 1}`, { min: 1, max: limits, required: true });
+      const level = type === "heading" ? Number(rawBlock?.level || rawBlock?.headingLevel || 2) : null;
+      if (type === "heading" && ![2, 3].includes(level)) throw new Error("Heading artikel hanya dapat memakai level H2 atau H3.");
+      return { type, content, level };
+    });
+  }
+
+  function normalizeArticleCtaEntry(value, type, index) {
+    const source = typeof value === "object" && value !== null ? value : { id: value };
+    const targetId = String(source.id || source.targetId || (type === "look" ? source.lookId : source.productId) || "").trim();
+    if (!uuidPattern.test(targetId)) throw new Error(`Target CTA ${type === "look" ? "look" : "produk"} ke-${index + 1} belum valid.`);
+    const defaultLabel = type === "look" ? "Lihat look" : "Lihat produk";
+    const label = normalizeArticleText(source.label || defaultLabel, `Label CTA ke-${index + 1}`, { min: 1, max: 80, required: true });
+    return { type, targetId, label };
+  }
+
+  function normalizeArticleCtas(lookCtas, productCtas) {
+    const sourceLooks = Array.isArray(lookCtas) ? lookCtas : [];
+    const sourceProducts = Array.isArray(productCtas) ? productCtas : [];
+    if (sourceLooks.length > 3 || sourceProducts.length > 3) throw new Error("Maksimal tiga CTA look dan tiga CTA produk per artikel.");
+
+    const ctas = [
+      ...sourceLooks.map((value, index) => normalizeArticleCtaEntry(value, "look", index)),
+      ...sourceProducts.map((value, index) => normalizeArticleCtaEntry(value, "product", index))
+    ];
+    if (ctas.length > 6) throw new Error("Artikel maksimal memiliki enam CTA.");
+    const duplicateKey = new Set();
+    for (const cta of ctas) {
+      const key = `${cta.type}:${cta.targetId}`;
+      if (duplicateKey.has(key)) throw new Error("Target CTA tidak boleh dipilih lebih dari sekali.");
+      duplicateKey.add(key);
+    }
+    return ctas;
+  }
+
+  function articleFallbackBody(title, excerpt, blocks) {
+    const pieces = [excerpt, ...blocks.map((block) => block.content || block.alt || block.caption || "")]
+      .map((piece) => String(piece || "").trim())
+      .filter(Boolean);
+    return (pieces.join("\n\n") || `${title} — SISIP Journal`).slice(0, 16000);
+  }
+
+  async function assertPublishedArticleTargets(db, ctas, publishedAt) {
+    const targetIds = {
+      look: ctas.filter((cta) => cta.type === "look").map((cta) => cta.targetId),
+      product: ctas.filter((cta) => cta.type === "product").map((cta) => cta.targetId)
+    };
+    const requests = [];
+    if (targetIds.look.length) {
+      requests.push(queryRows(db.from("looks").select("id,status,published_at").in("id", targetIds.look)));
+    } else {
+      requests.push(Promise.resolve([]));
+    }
+    if (targetIds.product.length) {
+      requests.push(queryRows(db.from("products").select("id,status,published_at").in("id", targetIds.product)));
+    } else {
+      requests.push(Promise.resolve([]));
+    }
+    const [lookRows, productRows] = await Promise.all(requests);
+    const validAt = new Date(publishedAt).getTime();
+    const targets = {
+      look: new Map(lookRows.map((row) => [row.id, row])),
+      product: new Map(productRows.map((row) => [row.id, row]))
+    };
+    for (const cta of ctas) {
+      const target = targets[cta.type].get(cta.targetId);
+      if (!target || target.status !== "published" || !target.published_at || new Date(target.published_at).getTime() > validAt) {
+        throw new Error(`CTA hanya dapat menunjuk ${cta.type === "look" ? "look" : "produk"} yang sudah published.`);
+      }
+    }
+  }
+
+  function ownArticleStoragePaths(articleId, paths) {
+    const prefix = `articles/${articleId}/`;
+    return [...new Set((paths || []).filter((path) => typeof path === "string" && path.startsWith(prefix)))];
   }
 
   function assertShopeeAffiliateUrl(value) {
@@ -598,6 +768,119 @@
     return { productCount: sourceProducts.length, lookCount: sourceLooks.length };
   }
 
+  async function createArticle({ title, excerpt, category, styles, coverFile, coverAlt, blocks, lookCtas, productCtas }) {
+    const db = getClient();
+    const articleTitle = normalizeArticleText(title, "Judul artikel", { min: 1, max: 180, required: true });
+    const articleExcerpt = normalizeArticleText(excerpt, "Ringkasan artikel", { max: 600 });
+    const articleCategory = normalizeArticleCategory(category);
+    const articleStyles = normalizeArticleStyles(styles);
+    const articleBlocks = normalizeArticleBlocks(blocks);
+    const articleCtas = normalizeArticleCtas(lookCtas, productCtas);
+    const articleCoverAlt = normalizeArticleText(coverAlt, "Alt text cover", { max: 240 });
+    if (coverFile && !articleCoverAlt) throw new Error("Alt text cover wajib diisi saat mengunggah cover artikel.");
+
+    const publishedAt = new Date().toISOString();
+    await assertPublishedArticleTargets(db, articleCtas, publishedAt);
+    const fallbackBody = articleFallbackBody(articleTitle, articleExcerpt, articleBlocks);
+    const { data: article, error: articleError } = await db
+      .from("articles")
+      .insert({
+        slug: uniqueSlug(articleTitle),
+        title: articleTitle,
+        excerpt: articleExcerpt || null,
+        body_markdown: fallbackBody,
+        category: articleCategory,
+        style_tags: articleStyles,
+        cover_alt_text: articleCoverAlt || null,
+        status: "draft"
+      })
+      .select("id")
+      .single();
+    if (articleError) throw articleError;
+
+    const uploadedPaths = [];
+    try {
+      const coverPath = await uploadImage(coverFile, "articles", article.id);
+      if (coverPath) uploadedPaths.push(coverPath);
+
+      const blockRows = [];
+      for (let index = 0; index < articleBlocks.length; index += 1) {
+        const block = articleBlocks[index];
+        let imagePath = null;
+        if (block.type === "image") {
+          imagePath = await uploadImage(block.file, "articles", article.id);
+          uploadedPaths.push(imagePath);
+        }
+        blockRows.push({
+          article_id: article.id,
+          position: index + 1,
+          block_type: block.type,
+          text_content: block.type === "image" ? null : block.content,
+          heading_level: block.type === "heading" ? block.level : null,
+          image_path: imagePath,
+          image_alt_text: block.type === "image" ? block.alt : null,
+          caption: block.type === "image" ? block.caption || null : null
+        });
+      }
+      const { error: blocksError } = await db.from("article_blocks").insert(blockRows);
+      if (blocksError) throw blocksError;
+
+      const articleUpdate = { body_markdown: fallbackBody, cover_alt_text: articleCoverAlt || null };
+      if (coverPath) articleUpdate.cover_image_path = coverPath;
+      const { error: updateError } = await db.from("articles").update(articleUpdate).eq("id", article.id);
+      if (updateError) throw updateError;
+
+      if (articleCtas.length) {
+        const ctaRows = articleCtas.map((cta, index) => ({
+          article_id: article.id,
+          position: index + 1,
+          target_type: cta.type,
+          look_id: cta.type === "look" ? cta.targetId : null,
+          product_id: cta.type === "product" ? cta.targetId : null,
+          label: cta.label
+        }));
+        const { error: ctasError } = await db.from("article_ctas").insert(ctaRows);
+        if (ctasError) throw ctasError;
+      }
+
+      const { error: publishError } = await db
+        .from("articles")
+        .update({ status: "published", published_at: publishedAt })
+        .eq("id", article.id);
+      if (publishError) throw publishError;
+      return article.id;
+    } catch (error) {
+      const { error: deleteError } = await db.from("articles").delete().eq("id", article.id);
+      if (!deleteError && uploadedPaths.length) {
+        await getClient().storage.from(bucket).remove(ownArticleStoragePaths(article.id, uploadedPaths));
+      }
+      throw error;
+    }
+  }
+
+  async function deleteArticle(id) {
+    const articleId = String(id || "").trim();
+    if (!uuidPattern.test(articleId)) throw new Error("Artikel yang akan dihapus belum valid.");
+    const db = getClient();
+    const { data: article, error: readError } = await db
+      .from("articles")
+      .select("id, cover_image_path, article_blocks(image_path)")
+      .eq("id", articleId)
+      .maybeSingle();
+    if (readError) throw readError;
+
+    const { error: deleteError } = await db.from("articles").delete().eq("id", articleId);
+    if (deleteError) throw deleteError;
+    const paths = ownArticleStoragePaths(articleId, [
+      article?.cover_image_path,
+      ...(article?.article_blocks || []).map((block) => block.image_path)
+    ]);
+    if (paths.length) {
+      const { error: storageError } = await getClient().storage.from(bucket).remove(paths);
+      if (storageError) throw storageError;
+    }
+  }
+
   async function deleteLook(id) {
     const { error } = await getClient().from("looks").delete().eq("id", id);
     if (error) throw error;
@@ -628,9 +911,11 @@
     createProduct,
     importProducts,
     createLook,
+    createArticle,
     importDemoCatalogue,
     deleteLook,
     deleteProduct,
+    deleteArticle,
     setNewSeries,
     publicUrl
   };
