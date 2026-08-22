@@ -1846,7 +1846,7 @@
           const location=cloudEnabled()?"cloud SISIP":"prototype ini";
           if(!confirm(`Hapus artikel “${article.title}” dari ${location}?`))return;
           try {
-            if(cloudEnabled()) { if(typeof cloud?.deleteArticle!=="function") throw new Error("Fitur hapus artikel belum termuat. Muat ulang halaman lalu coba lagi."); await cloud.deleteArticle(article.id); await refreshCloudState({admin:true}); showToast("Artikel dihapus dari cloud."); return; }
+            if(cloudEnabled()) { if(typeof cloud?.deleteArticle!=="function") throw new Error("Fitur hapus artikel belum termuat. Muat ulang halaman lalu coba lagi."); const result=await cloud.deleteArticle(article.id); await refreshCloudState({admin:true}); showToast(result?.mediaCleanupWarning ? "Artikel sudah dihapus; satu file media perlu dibersihkan ulang nanti." : "Artikel dihapus dari cloud."); return; }
             state.articles=state.articles.filter((item)=>item.id!==article.id);saveState();renderAll();showToast("Artikel dihapus dari prototype.");
           } catch(error) { showToast(error.message||"Artikel belum dapat dihapus."); }
         });
