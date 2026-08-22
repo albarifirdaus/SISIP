@@ -7,6 +7,11 @@ The following migrations have already been applied to that project:
 1. `20260821_sisip_initial.sql`
 2. `20260821_sisip_hardening.sql`
 3. `20260821_sisip_function_permissions.sql`
+4. `20260821_sisip_admin_email.sql`
+5. `20260821_sisip_bulk_import_and_trigger_fix.sql`
+6. `20260822122107_sisip_new_series_slots.sql`
+7. `20260822132500_sisip_new_series_atomic_update.sql`
+8. `20260822134500_sisip_new_series_lock_candidates.sql`
 
 For a fresh Supabase project, apply every file in `migrations/` in name order. The initial migration creates the schema, RLS policies, and public-read `sisip-media` bucket; later migrations enforce Shopee-only URLs and additional catalogue consistency/security rules.
 
@@ -24,6 +29,8 @@ Uploads to `sisip-media` are restricted to the signed-in admin. The user profile
 ## Data model
 
 `products` owns a single Shopee affiliate link. `product_variants` stores each colour/image. A `look` uses variants through `look_items`, so one product can appear in many different looks without duplicating its link.
+
+`new_series_slots` stores exactly five ordered homepage positions. It is publicly readable only when its associated look is published; the admin replaces all five positions through the `set_sisip_new_series` RPC so a reorder is atomic and cannot produce duplicate slots.
 
 ## Before production
 

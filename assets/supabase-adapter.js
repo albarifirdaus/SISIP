@@ -103,6 +103,8 @@
       gender: genderToUi[row.gender_target] || "Uniseks",
       styles: row.style_tags || [],
       tone: row.tone || "carbon",
+      status: row.status || "draft",
+      publishedAt: row.published_at || "",
       popularity: Number(row.popularity || 0),
       createdOrder: Number(row.sort_order || fallbackOrder),
       coverImage: publicUrl(row.cover_image_path),
@@ -144,6 +146,10 @@
       .from("articles")
       .select("id, slug, title, excerpt, body_markdown, published_at, status, created_at")
       .order("published_at", { ascending: false });
+    const newSeriesSlotsQuery = db
+      .from("new_series_slots")
+      .select("slot, look_id")
+      .order("slot", { ascending: true });
 
     if (!admin) {
       productsQuery = productsQuery.eq("status", "published").lte("published_at", now);
@@ -151,17 +157,26 @@
       articlesQuery = articlesQuery.eq("status", "published").lte("published_at", now);
     }
 
-    const [productRows, lookRows, articleRows] = await Promise.all([
+    const [productRows, lookRows, articleRows, newSeriesSlotRows] = await Promise.all([
       queryRows(productsQuery),
       queryRows(looksQuery),
-      queryRows(articlesQuery)
+      queryRows(articlesQuery),
+      queryRows(newSeriesSlotsQuery)
     ]);
 
     const products = productRows.map(mapProduct);
     const productMap = new Map(products.map((product) => [product.id, product]));
     const looks = lookRows.map((row, index) => mapLook(row, productMap, lookRows.length - index));
     const articles = articleRows.map(mapArticle);
-    return { products, looks, articles };
+    const newSeriesSlots = newSeriesSlotRows.map((row) => ({
+      slot: Number(row.slot),
+      lookId: row.look_id || ""
+    }));
+    const newSeriesLookIds = newSeriesSlots
+      .filter((slot) => slot.lookId)
+      .sort((a, b) => a.slot - b.slot)
+      .map((slot) => slot.lookId);
+    return { products, looks, articles, newSeriesSlots, newSeriesLookIds };
   }
 
   async function getSession() {
@@ -593,6 +608,15 @@
     if (error) throw error;
   }
 
+  async function setNewSeries(lookIds) {
+    const ids = Array.isArray(lookIds) ? lookIds.map((id) => String(id || "").trim()) : [];
+    if (ids.length !== 5 || ids.some((id) => !id) || new Set(ids).size !== 5) {
+      throw new Error("Pilih lima look berbeda untuk New Series.");
+    }
+    const { error } = await getClient().rpc("set_sisip_new_series", { p_look_ids: ids });
+    if (error) throw error;
+  }
+
   window.SISIPCloud = {
     isConfigured: validConfig,
     config,
@@ -607,6 +631,7 @@
     importDemoCatalogue,
     deleteLook,
     deleteProduct,
+    setNewSeries,
     publicUrl
   };
 })();

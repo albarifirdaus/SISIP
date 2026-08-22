@@ -141,9 +141,9 @@
       }
       .hero-visual::after {
         content: ""; position: absolute; inset: 0; pointer-events: none;
-        background: linear-gradient(115deg, rgba(0,0,0,.28), transparent 48%, rgba(0,0,0,.25));
+        z-index: 1; background: linear-gradient(115deg, rgba(0,0,0,.28), transparent 48%, rgba(0,0,0,.25));
       }
-      .hero-label, .hero-stamp { position: absolute; z-index: 2; color: var(--white); }
+      .hero-label, .hero-stamp { position: absolute; z-index: 5; color: var(--white); }
       .hero-label { top: 2rem; left: 2rem; }
       .hero-stamp { right: 2rem; bottom: 2rem; max-width: 130px; color: #e9dfd4; text-align: right; }
       .hero-stamp b { display: block; margin-bottom: 0.25rem; color: var(--clay); font-size: 0.8rem; }
@@ -182,7 +182,29 @@
       .hero-figure.two .body::after { background: rgba(23,22,20,.25); }
       .hero-figure.two .arm { background:#c9b29d; }
       .hero-orb { position:absolute; width: 46%; aspect-ratio:1; top:10%; left:28%; border-radius:50%; background:#9f4e39; opacity:.74; filter: blur(.2px); }
-      .hero-gridlines { position:absolute; inset: 0; opacity:.22; background-image: linear-gradient(90deg, rgba(255,255,255,.2) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.2) 1px, transparent 1px); background-size: 68px 68px; mix-blend-mode:overlay; }
+      .hero-gridlines { position:absolute; z-index:2; inset: 0; pointer-events:none; opacity:.22; background-image: linear-gradient(90deg, rgba(255,255,255,.2) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.2) 1px, transparent 1px); background-size: 68px 68px; mix-blend-mode:overlay; }
+
+      .new-series-stage { position:absolute; z-index:3; inset:0; }
+      .new-series-slide { position:relative; display:block; width:100%; height:100%; border:0; padding:0; overflow:hidden; color:var(--white); background:#2b2825; cursor:pointer; text-align:left; }
+      .new-series-visual { position:absolute; inset:0; display:block; }
+      .new-series-visual::after { content:""; position:absolute; z-index:1; inset:0; pointer-events:none; background:linear-gradient(180deg,rgba(8,8,8,.08) 22%,rgba(8,8,8,.06) 46%,rgba(8,8,8,.72) 100%); }
+      .new-series-visual .look-art, .new-series-visual .look-uploaded-image { display:block; width:100%; height:100%; }
+      .new-series-visual .look-uploaded-image { object-fit:cover; transition:transform .7s cubic-bezier(.2,.7,.2,1); }
+      .new-series-slide:hover .new-series-visual .look-uploaded-image { transform:scale(1.025); }
+      .new-series-overlay { position:absolute; z-index:2; right:2rem; bottom:4.45rem; left:2rem; display:grid; gap:.38rem; max-width:440px; }
+      .new-series-count { color:#f1e8df; }
+      .new-series-overlay strong { max-width:400px; font-size:clamp(2rem,4vw,4.15rem); font-weight:850; letter-spacing:-.095em; line-height:.85; text-transform:uppercase; }
+      .new-series-meta { color:#f1e8df; font-family:var(--mono); font-size:.6rem; letter-spacing:.06em; line-height:1.45; text-transform:uppercase; }
+      .new-series-open { width:fit-content; margin-top:.3rem; padding-bottom:.18rem; border-bottom:1px solid currentColor; font-family:var(--mono); font-size:.58rem; letter-spacing:.07em; text-transform:uppercase; }
+      .new-series-controls { position:absolute; z-index:6; right:2rem; bottom:1.35rem; left:2rem; display:flex; align-items:center; justify-content:space-between; gap:.8rem; }
+      .new-series-arrow { display:inline-grid; width:36px; height:36px; place-items:center; border:1px solid rgba(255,255,255,.58); border-radius:50%; padding:0; color:var(--white); background:rgba(15,14,13,.16); cursor:pointer; font-size:1.25rem; line-height:1; transition:background .18s ease,color .18s ease,border-color .18s ease; }
+      .new-series-arrow:hover:not(:disabled) { color:var(--ink); border-color:var(--white); background:var(--white); }
+      .new-series-arrow:disabled { cursor:default; opacity:.42; }
+      .new-series-dots { display:flex; align-items:center; justify-content:center; gap:.38rem; }
+      .new-series-dot { width:7px; height:7px; border:1px solid rgba(255,255,255,.85); border-radius:50%; padding:0; background:transparent; cursor:pointer; transition:width .18s ease,border-radius .18s ease,background .18s ease; }
+      .new-series-dot.is-active { width:25px; border-radius:99px; background:var(--white); }
+      .new-series-empty { position:absolute; inset:0; display:grid; place-items:center; padding:4rem 2rem 2rem; color:var(--white); text-align:center; }
+      .new-series-empty p { max-width:260px; margin:0; color:#e9dfd4; font-family:var(--mono); font-size:.65rem; line-height:1.55; letter-spacing:.04em; text-transform:uppercase; }
 
       .ticker { display:flex; overflow:hidden; color:var(--white); background:var(--clay); border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
       .ticker-track { display:flex; flex:none; min-width:max-content; animation:ticker 26s linear infinite; }
@@ -355,7 +377,7 @@
       .studio-top-actions { display:flex; align-items:center; gap:.35rem; }
       .studio-content { padding:1.15rem; }
       .prototype-note { margin:0 0 1.3rem; padding:.85rem; border-left:3px solid var(--clay); background:#f1e8df; color:var(--ink-soft); font-size:.76rem; line-height:1.5; }
-      .studio-tabs { display:flex; gap:.4rem; margin-bottom:1rem; }
+      .studio-tabs { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1rem; }
       .studio-tab { padding:.65rem .8rem; border:1px solid var(--line); background:transparent; cursor:pointer; font-family:var(--mono); font-size:.6rem; letter-spacing:.035em; text-transform:uppercase; }
       .studio-tab.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
       .studio-panel { display:none; }
@@ -387,6 +409,12 @@
       .bulk-preview-list .warning { color:#806149; }
       .bulk-preview-list .invalid { color:#9f3831; }
       .reset-row { display:flex; flex-wrap:wrap; gap:.55rem; align-items:center; }
+      .new-series-slots { display:grid; gap:.48rem; }
+      .new-series-slot { display:grid; grid-template-columns:2.5rem minmax(0,1fr); gap:.55rem; align-items:center; padding:.5rem; border:1px solid var(--line); background:var(--paper); }
+      .new-series-slot-number { color:var(--clay); font-family:var(--mono); font-size:.65rem; letter-spacing:.06em; }
+      .new-series-slot select { min-width:0; width:100%; }
+      .new-series-status { min-height:18px; margin:.75rem 0 0; color:var(--ink-soft); font-size:.72rem; line-height:1.45; }
+      .new-series-status.is-warning { color:#806149; }
       body.drawer-open { overflow:hidden; }
 
       .toast { position:fixed; z-index:100; right:1rem; bottom:1rem; max-width:min(400px,calc(100vw - 2rem)); padding:.85rem 1rem; opacity:0; transform:translateY(15px); pointer-events:none; color:var(--white); background:var(--ink); box-shadow:var(--shadow); font-size:.78rem; line-height:1.4; transition:.2s; }
@@ -416,6 +444,8 @@
         .hero-visual { min-height:clamp(360px,70vw,520px); }
         .hero-label { top:1.25rem; left:1.25rem; }
         .hero-stamp { right:1.25rem; bottom:1.25rem; }
+        .new-series-overlay { right:1.25rem; bottom:4.1rem; left:1.25rem; }
+        .new-series-controls { right:1.25rem; bottom:1rem; left:1.25rem; }
       }
       @media (max-width: 760px) {
         .utility-bar { padding:0 5vw; }
@@ -454,6 +484,10 @@
         .hero-copy h1 { font-size:clamp(3.35rem,17vw,4.9rem); letter-spacing:-.095em; line-height:.86; }
         .hero-bottom { align-items:flex-start; flex-direction:column; }
         .hero-count { display:none; }
+        .new-series-overlay { bottom:4rem; }
+        .new-series-overlay strong { font-size:clamp(2rem,10vw,3.25rem); }
+        .new-series-meta { max-width:260px; }
+        .new-series-arrow { width:34px; height:34px; }
         .popular-grid { grid-template-columns:1fr 1fr; }
         .product-art { height:155px; }
         .look-grid { grid-template-columns:1fr; }
@@ -520,19 +554,15 @@
             <div class="hero-count meta"><strong id="heroLookCount">12</strong>look dikurasi</div>
           </div>
         </div>
-        <div class="hero-visual" aria-label="Ilustrasi editorial fashion dua sosok dengan outfit netral">
+        <div class="hero-visual" id="newSeriesCarousel" role="region" aria-roledescription="carousel" aria-label="SISIP New Series">
           <div class="hero-gridlines"></div>
-          <div class="hero-orb"></div>
           <p class="hero-label eyebrow">SISIP / NEW SERIES</p>
-          <div class="hero-figure one" aria-hidden="true">
-            <span class="hair"></span><span class="head"></span><span class="neck"></span><span class="body"></span>
-            <span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span>
+          <div class="new-series-stage" id="newSeriesStage" aria-live="off"></div>
+          <div class="new-series-controls" aria-label="Kontrol New Series">
+            <button class="new-series-arrow" id="newSeriesPrev" type="button" aria-label="Look sebelumnya">←</button>
+            <div class="new-series-dots" id="newSeriesDots" aria-label="Pilih look New Series"></div>
+            <button class="new-series-arrow" id="newSeriesNext" type="button" aria-label="Look berikutnya">→</button>
           </div>
-          <div class="hero-figure two" aria-hidden="true">
-            <span class="hair"></span><span class="head"></span><span class="neck"></span><span class="body"></span>
-            <span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span>
-          </div>
-          <p class="hero-stamp meta"><b>01—12</b><em>Clean objects for real days.</em></p>
         </div>
       </section>
 
@@ -705,6 +735,7 @@
         <p class="prototype-note" id="studioModeNote">Semua perubahan di panel ini tersimpan di browser perangkatmu saja. Ini sengaja dibuat supaya sample look dapat ditambah, dihapus, dan di-reset tanpa memengaruhi file asli.</p>
         <div class="studio-tabs" role="tablist" aria-label="Menu studio">
           <button class="studio-tab is-active" type="button" data-studio-tab="looks" role="tab">Looks</button>
+          <button class="studio-tab" type="button" data-studio-tab="series" role="tab">New Series</button>
           <button class="studio-tab" type="button" data-studio-tab="products" role="tab">Produk</button>
         </div>
 
@@ -745,6 +776,17 @@
             <h3>Mulai dengan 12 sample</h3>
             <p>Tambahkan seluruh look contoh dan library produknya ke cloud. Semua sample tetap bisa dihapus nanti dari Studio.</p>
             <button class="small-button muted" id="importSampleButton" type="button">Impor 12 sample ke cloud</button>
+          </section>
+        </div>
+
+        <div class="studio-panel" id="studioSeriesPanel" data-studio-panel="series">
+          <section class="studio-section">
+            <h3>New Series di beranda</h3>
+            <p>Pilih lima look yang tampil di carousel beranda, lalu tentukan urutannya dari kiri ke kanan.</p>
+            <div class="new-series-slots" id="newSeriesSlots"></div>
+            <p class="new-series-status" id="newSeriesStatus" aria-live="polite"></p>
+            <p class="form-error" id="newSeriesError" role="alert"></p>
+            <button class="small-button" id="saveNewSeriesButton" type="button">Simpan 5 look</button>
           </section>
         </div>
 
@@ -899,29 +941,32 @@
         let bulkImportGroups = [];
         let bulkImportErrors = [];
         let bulkImportWarnings = [];
+        let newSeriesIndex = 0;
+        let newSeriesTimer;
 
         const els = {
           moodList: document.getElementById("moodList"), popularGrid: document.getElementById("popularGrid"), lookGrid: document.getElementById("lookGrid"),
           search: document.getElementById("searchInput"), gender: document.getElementById("genderFilter"), style: document.getElementById("styleFilter"), sort: document.getElementById("sortFilter"), styleChips: document.getElementById("styleChips"), resultCount: document.getElementById("resultCount"), heroCount: document.getElementById("heroLookCount"),
+          newSeriesCarousel: document.getElementById("newSeriesCarousel"), newSeriesStage: document.getElementById("newSeriesStage"), newSeriesPrev: document.getElementById("newSeriesPrev"), newSeriesNext: document.getElementById("newSeriesNext"), newSeriesDots: document.getElementById("newSeriesDots"),
           lookModal: document.getElementById("lookModal"), lookDetail: document.getElementById("lookDetail"), articleModal: document.getElementById("articleModal"), articleDetail: document.getElementById("articleDetail"),
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
-          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), toast: document.getElementById("toast")
+          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), toast: document.getElementById("toast")
         };
 
         function loadState() {
           try {
             const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES) };
+            if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES), newSeriesLookIds: Array.isArray(saved.newSeriesLookIds) ? saved.newSeriesLookIds : [] };
           } catch (error) { console.warn("Unable to load SISIP prototype", error); }
-          return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES) };
+          return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), newSeriesLookIds: [] };
         }
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES) }; lookDraftItems = []; saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
+        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), newSeriesLookIds: [] }; lookDraftItems = []; saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
         async function refreshCloudState({ admin = false, quiet = false } = {}) {
           if (!cloudEnabled()) return false;
           try {
             const remoteState = await cloud.loadState({ admin });
-            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [] };
+            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [] };
             renderAll();
             updateStudioMode();
             return true;
@@ -993,6 +1038,70 @@
           });
         }
 
+        function isNewSeriesEligible(entry) {
+          if (!entry) return false;
+          if (!cloudEnabled()) return true;
+          return entry.status === "published" && Boolean(entry.publishedAt) && new Date(entry.publishedAt).getTime() <= Date.now();
+        }
+        function getNewSeriesCandidates() {
+          return [...state.looks]
+            .filter(isNewSeriesEligible)
+            .sort((a,b) => Number(b.createdOrder || 0) - Number(a.createdOrder || 0) || Number(b.popularity || 0) - Number(a.popularity || 0));
+        }
+        function getNewSeriesLookIds() {
+          const candidates = getNewSeriesCandidates();
+          const candidateIds = new Set(candidates.map((entry) => entry.id));
+          const selected = [];
+          (state.newSeriesLookIds || []).forEach((id) => {
+            if (candidateIds.has(id) && !selected.includes(id)) selected.push(id);
+          });
+          candidates.forEach((entry) => {
+            if (!selected.includes(entry.id)) selected.push(entry.id);
+          });
+          return selected.slice(0,5);
+        }
+        function getNewSeriesLooks() {
+          const lookMap = new Map(state.looks.map((entry) => [entry.id, entry]));
+          return getNewSeriesLookIds().map((id) => lookMap.get(id)).filter(Boolean);
+        }
+        function stopNewSeriesAutoplay() {
+          if (newSeriesTimer) clearInterval(newSeriesTimer);
+          newSeriesTimer = undefined;
+        }
+        function startNewSeriesAutoplay() {
+          stopNewSeriesAutoplay();
+          const reducedMotion = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          if (typeof window.matchMedia !== "function" || reducedMotion || getNewSeriesLooks().length < 2) return;
+          newSeriesTimer = setInterval(() => moveNewSeries(1), 6200);
+        }
+        function moveNewSeries(direction) {
+          const entries = getNewSeriesLooks();
+          if (entries.length < 2) return;
+          newSeriesIndex = (newSeriesIndex + direction + entries.length) % entries.length;
+          renderNewSeries();
+        }
+        function renderNewSeries() {
+          const entries = getNewSeriesLooks();
+          stopNewSeriesAutoplay();
+          if (!entries.length) {
+            els.newSeriesStage.innerHTML = `<div class="new-series-empty"><p>New Series akan hadir setelah look pertama dipublikasikan.</p></div>`;
+            els.newSeriesDots.innerHTML = "";
+            els.newSeriesPrev.disabled = true;
+            els.newSeriesNext.disabled = true;
+            return;
+          }
+          newSeriesIndex = Math.min(Math.max(newSeriesIndex, 0), entries.length - 1);
+          const entry = entries[newSeriesIndex];
+          const styles = entry.styles?.slice(0,2).join(" / ") || "Kurasi SISIP";
+          const count = String(newSeriesIndex + 1).padStart(2,"0") + " / " + String(entries.length).padStart(2,"0");
+          els.newSeriesStage.innerHTML = `<button class="new-series-slide" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka look ${esc(entry.title)}"><span class="new-series-visual">${lookVisual(entry)}</span><span class="new-series-overlay"><span class="new-series-count meta">${count}</span><strong>${esc(entry.title)}</strong><span class="new-series-meta">${esc(entry.gender)} · ${esc(styles)}</span><span class="new-series-open">Buka look ↗</span></span></button>`;
+          els.newSeriesDots.innerHTML = entries.map((item,index) => `<button class="new-series-dot ${index === newSeriesIndex ? "is-active" : ""}" type="button" data-new-series-index="${index}" aria-label="Tampilkan look ${index + 1}: ${esc(item.title)}" aria-current="${index === newSeriesIndex ? "true" : "false"}"></button>`).join("");
+          const canMove = entries.length > 1;
+          els.newSeriesPrev.disabled = !canMove;
+          els.newSeriesNext.disabled = !canMove;
+          startNewSeriesAutoplay();
+        }
+
         function renderMoodList() {
           const moods = ["Clean", "Casual", "Formal", "Streetwear", "Modest"];
           els.moodList.innerHTML = moods.map((mood, index) => `<button class="mood-button" type="button" data-style-jump="${esc(mood)}"><strong>${esc(mood)}</strong><span>0${index+1} ↘</span></button>`).join("");
@@ -1026,12 +1135,33 @@
         function renderJournal() {
           document.getElementById("journalGrid").innerHTML = state.articles.length ? state.articles.map((article) => `<article class="journal-card"><span class="article-number eyebrow">Journal / ${article.number}</span><h3>${esc(article.title)}</h3><button class="text-link" type="button" data-open-article="${esc(article.id)}">Baca catatan ↗</button></article>`).join("") : `<div class="empty-state"><h3>Journal segera hadir.</h3><p>Catatan fashion berikutnya sedang disiapkan.</p></div>`;
         }
+        function renderNewSeriesStudio() {
+          const candidates = getNewSeriesCandidates();
+          const candidateIds = new Set(candidates.map((entry) => entry.id));
+          const configuredIds = (state.newSeriesLookIds || []).filter((id, index, ids) => candidateIds.has(id) && ids.indexOf(id) === index).slice(0,5);
+          const selectedIds = getNewSeriesLookIds();
+          els.newSeriesSlots.innerHTML = Array.from({ length: 5 }, (_, index) => {
+            const selectedId = selectedIds[index] || "";
+            const options = [`<option value="">Pilih look</option>`, ...candidates.map((entry) => `<option value="${esc(entry.id)}" ${entry.id === selectedId ? "selected" : ""}>${esc(entry.title)} · ${esc(entry.gender)}</option>`)].join("");
+            return `<label class="new-series-slot"><span class="new-series-slot-number">${String(index + 1).padStart(2,"0")}</span><select data-new-series-slot="${index + 1}" aria-label="Look New Series nomor ${index + 1}">${options}</select></label>`;
+          }).join("");
+          const missing = Math.max(0,5 - candidates.length);
+          const ready = candidates.length >= 5;
+          els.newSeriesStatus.classList.toggle("is-warning", !ready);
+          els.newSeriesStatus.textContent = !ready
+            ? `${candidates.length} look terbit tersedia. Terbitkan ${missing} look lagi agar carousel dapat diatur lengkap.`
+            : configuredIds.length === 5
+              ? "Lima look tersimpan untuk carousel beranda."
+              : "Lima look siap dipilih. Atur urutannya lalu simpan ke beranda.";
+          els.saveNewSeriesButton.disabled = !ready;
+        }
         function renderStudio() {
           const currentProduct = els.lookProduct.value;
           els.lookProduct.innerHTML = state.products.length ? state.products.map((item)=>`<option value="${esc(item.id)}">${esc(item.name)}</option>`).join("") : `<option value="">Tambah produk terlebih dahulu</option>`;
           if (state.products.some((item)=>item.id===currentProduct)) els.lookProduct.value=currentProduct;
           renderVariantSelect();
           renderDraftItems();
+          renderNewSeriesStudio();
           els.studioLooksList.innerHTML = state.looks.length ? [...state.looks].sort((a,b)=>Number(b.createdOrder||0)-Number(a.createdOrder||0)).map((entry)=>`<div class="studio-row"><p><strong>${esc(entry.title)}</strong><span>${esc(entry.gender)} · ${esc(entry.styles.join(", "))} · ${entry.items.length} item</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-look="${esc(entry.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada look tersimpan.</p>`;
           els.studioProductsList.innerHTML = state.products.length ? state.products.map((item)=>{ const usage=getProductUsage(item.id).length; return `<div class="studio-row"><p><strong>${esc(item.name)}</strong><span>${money(item.price)} · ${item.variants.length} warna · dipakai ${usage} look</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-product="${esc(item.id)}" type="button">Hapus</button></div></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada produk.</p>`;
         }
@@ -1042,7 +1172,7 @@
         function renderDraftItems() {
           els.lookDraftItems.innerHTML = lookDraftItems.length ? lookDraftItems.map((item,index)=>{ const productItem=getProduct(item.productId); return `<div class="draft-item"><p><strong>${esc(productItem?.name || "Produk dihapus")}</strong><span>Warna pilihan: ${esc(item.variantName)}</span></p><button class="small-button danger" type="button" data-remove-draft="${index}">×</button></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe);margin:0">Masukkan 2–5 item untuk mempublikasikan look.</p>`;
         }
-        function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderJournal(); renderStudio(); }
+        function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderNewSeries(); renderJournal(); renderStudio(); }
 
         function affiliateUrl(value) {
           let parsed;
@@ -1096,6 +1226,40 @@
         function switchStudioTab(tab) {
           document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.classList.toggle("is-active",button.dataset.studioTab===tab));
           document.querySelectorAll("[data-studio-panel]").forEach((panel)=>panel.classList.toggle("is-active",panel.dataset.studioPanel===tab));
+        }
+        async function saveNewSeries() {
+          els.newSeriesError.textContent = "";
+          const slotInputs = Array.from(els.newSeriesSlots.querySelectorAll("[data-new-series-slot]"));
+          const lookIds = slotInputs.map((input) => String(input.value || "").trim());
+          if (lookIds.length !== 5 || lookIds.some((id) => !id)) {
+            els.newSeriesError.textContent = "Isi semua lima slot New Series terlebih dahulu.";
+            return;
+          }
+          if (new Set(lookIds).size !== 5) {
+            els.newSeriesError.textContent = "Satu look hanya boleh dipakai sekali di New Series.";
+            return;
+          }
+          const buttonLabel = els.saveNewSeriesButton.textContent;
+          els.saveNewSeriesButton.disabled = true;
+          els.saveNewSeriesButton.textContent = "Menyimpan…";
+          try {
+            if (cloudEnabled()) {
+              await cloud.setNewSeries(lookIds);
+              await refreshCloudState({ admin: true });
+              showToast("New Series beranda telah diperbarui.");
+              return;
+            }
+            state.newSeriesLookIds = lookIds;
+            newSeriesIndex = 0;
+            saveState();
+            renderAll();
+            showToast("New Series prototype telah diperbarui.");
+          } catch (error) {
+            els.newSeriesError.textContent = error.message || "New Series belum dapat disimpan.";
+          } finally {
+            els.saveNewSeriesButton.textContent = buttonLabel;
+            els.saveNewSeriesButton.disabled = getNewSeriesCandidates().length < 5;
+          }
         }
         function addDraftItem() {
           const productId=els.lookProduct.value; const variantName=els.lookVariant.value; const productItem=getProduct(productId);
@@ -1324,6 +1488,12 @@
         els.gender.addEventListener("change",renderLooks);
         els.style.addEventListener("change",()=>{ activeStyle="all"; renderStyleControls(); renderLooks(); });
         els.sort.addEventListener("change",renderLooks);
+        els.newSeriesStage.addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-look]"); if(button) openLook(button.dataset.openLook); });
+        els.newSeriesPrev.addEventListener("click",()=>moveNewSeries(-1));
+        els.newSeriesNext.addEventListener("click",()=>moveNewSeries(1));
+        els.newSeriesDots.addEventListener("click",(event)=>{ const button=event.target.closest("[data-new-series-index]"); if(!button)return; newSeriesIndex=Number(button.dataset.newSeriesIndex)||0; renderNewSeries(); });
+        els.newSeriesCarousel.addEventListener("pointerenter",stopNewSeriesAutoplay);
+        els.newSeriesCarousel.addEventListener("pointerleave",startNewSeriesAutoplay);
         els.lookGrid.addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-look]"); if(button) openLook(button.dataset.openLook); const clear=event.target.closest("#clearFilterButton"); if(clear){ els.search.value="";els.gender.value="all";els.style.value="all";activeStyle="all";renderStyleControls();renderLooks(); } });
         els.styleChips.addEventListener("click",(event)=>{ const button=event.target.closest("[data-style]"); if(!button)return; activeStyle=button.dataset.style; els.style.value="all"; renderStyleControls();renderLooks(); });
         els.moodList.addEventListener("click",(event)=>{ const button=event.target.closest("[data-style-jump]"); if(!button)return; activeStyle=button.dataset.styleJump; els.style.value="all";renderStyleControls();renderLooks();document.getElementById("lookbook").scrollIntoView({behavior:"smooth",block:"start"}); });
@@ -1364,6 +1534,7 @@
         els.articleModal.addEventListener("click",(event)=>{ if(event.target===els.articleModal)els.articleModal.close(); });
         document.getElementById("journalGrid").addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-article]"); if(button)openArticle(button.dataset.openArticle); });
         document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.addEventListener("click",()=>switchStudioTab(button.dataset.studioTab)));
+        els.saveNewSeriesButton.addEventListener("click",saveNewSeries);
         els.lookProduct.addEventListener("change",renderVariantSelect);
         document.getElementById("addLookItemButton").addEventListener("click",addDraftItem);
         els.lookDraftItems.addEventListener("click",(event)=>{ const button=event.target.closest("[data-remove-draft]");if(!button)return;lookDraftItems.splice(Number(button.dataset.removeDraft),1);renderDraftItems(); });
@@ -1374,7 +1545,7 @@
           if(!confirm(`Hapus look “${entry.title}” dari ${location}?`))return;
           try {
             if(cloudEnabled()) { await cloud.deleteLook(entry.id); await refreshCloudState({admin:true}); showToast("Look dihapus dari cloud."); return; }
-            state.looks=state.looks.filter((item)=>item.id!==entry.id); saveState(); renderAll(); showToast("Look dihapus dari prototype.");
+            state.looks=state.looks.filter((item)=>item.id!==entry.id); state.newSeriesLookIds=(state.newSeriesLookIds||[]).filter((id)=>id!==entry.id); saveState(); renderAll(); showToast("Look dihapus dari prototype.");
           } catch(error) { showToast(error.message||"Look belum dapat dihapus."); }
         });
         els.studioProductsList.addEventListener("click",async(event)=>{
@@ -1388,10 +1559,10 @@
             return;
           }
           const detail=usedIn.length?` Produk ini dipakai di ${usedIn.length} look; item terkait juga akan hilang dari look tersebut.`:"";
-          if(confirm(`Hapus produk “${item.name}”?${detail}`)){state.products=state.products.filter((productItem)=>productItem.id!==item.id);state.looks=state.looks.map((entry)=>({...entry,items:entry.items.filter((lookItem)=>lookItem.productId!==item.id)})).filter((entry)=>entry.items.length>=2);saveState();renderAll();showToast("Produk dan referensi terkait berhasil dihapus.");}
+          if(confirm(`Hapus produk “${item.name}”?${detail}`)){state.products=state.products.filter((productItem)=>productItem.id!==item.id);state.looks=state.looks.map((entry)=>({...entry,items:entry.items.filter((lookItem)=>lookItem.productId!==item.id)})).filter((entry)=>entry.items.length>=2);state.newSeriesLookIds=(state.newSeriesLookIds||[]).filter((id)=>state.looks.some((entry)=>entry.id===id));saveState();renderAll();showToast("Produk dan referensi terkait berhasil dihapus.");}
         });
         document.getElementById("resetSampleButton").addEventListener("click",()=>{if(cloudEnabled()){showToast("Data cloud tidak di-reset dari prototype.");return;}if(confirm("Kembalikan seluruh data ke 12 look contoh awal? Perubahan lokal akan terganti."))resetState();});
-        document.getElementById("clearLooksButton").addEventListener("click",()=>{if(cloudEnabled()){showToast("Data cloud tidak dihapus massal dari prototype.");return;}if(confirm("Hapus seluruh look dari browser ini? Product library tetap ada.")){state.looks=[];lookDraftItems=[];saveState();renderAll();showToast("Semua look prototype telah dihapus.");}});
+        document.getElementById("clearLooksButton").addEventListener("click",()=>{if(cloudEnabled()){showToast("Data cloud tidak dihapus massal dari prototype.");return;}if(confirm("Hapus seluruh look dari browser ini? Product library tetap ada.")){state.looks=[];state.newSeriesLookIds=[];lookDraftItems=[];saveState();renderAll();showToast("Semua look prototype telah dihapus.");}});
         els.importSampleButton.addEventListener("click",async(event)=>{
           if(!cloudEnabled())return;
           if(!confirm("Impor 12 look dan produk contoh ke cloud? Sample yang sama akan diperbarui; data contoh ini tetap dapat dihapus nanti."))return;
