@@ -19,7 +19,7 @@ create table if not exists public.article_blocks (
   updated_at timestamptz not null default now(),
   constraint article_blocks_article_position_key unique (article_id, position),
   constraint article_blocks_heading_level_check check (
-    (block_type = 'heading' and heading_level in (2, 3))
+    (block_type = 'heading' and heading_level is not null and heading_level in (2, 3))
     or (block_type <> 'heading' and heading_level is null)
   ),
   constraint article_blocks_content_shape_check check (
@@ -50,6 +50,7 @@ create table if not exists public.article_blocks (
     or (
       block_type = 'image'
       and text_content is null
+      and image_path is not null
       and image_path like ('articles/' || article_id::text || '/%')
       and image_alt_text is not null
       and char_length(btrim(image_alt_text)) between 1 and 240
