@@ -27,8 +27,9 @@ Di Supabase Dashboard:
 1. Buka **Authentication → Users → Add user**.
 2. Buat user `albarifirdaus209@gmail.com` dengan password yang hanya kamu tahu.
 3. Pastikan provider **Email** aktif dan **Allow new users to sign up** diaktifkan, karena pengunjung akan membuat akun SISIP sendiri.
-4. Untuk live, aktifkan konfirmasi email dan atur Site URL/Redirect URLs ke domain Cloudflare di **Authentication → URL Configuration**.
-5. Buka website, klik ikon Studio kanan atas, lalu masuk dengan akun admin tersebut.
+4. Untuk live, aktifkan konfirmasi email. Di **Authentication → URL Configuration**, set Site URL ke `https://sisip-fashion.pages.dev` dan izinkan `https://sisip-fashion.pages.dev/**` pada Redirect URLs.
+5. Untuk mengubah nama yang terlihat di subject/isi email, buka **Authentication → Email Templates → Confirm signup** dan gunakan, misalnya, `Konfirmasi akun SISIP`. Nama pengirim branded `SISIP` memerlukan Custom SMTP serta domain email yang diverifikasi.
+6. Buka website, klik ikon Studio kanan atas, lalu masuk dengan akun admin tersebut.
 
 Profil dan baris preferensi dibuat otomatis oleh trigger saat akun Auth dibuat. Password tidak pernah tersimpan di file proyek atau GitHub.
 

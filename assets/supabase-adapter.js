@@ -35,6 +35,13 @@
     return client;
   }
 
+  function authRedirectUrl() {
+    const configuredUrl = String(config.siteUrl || "").trim();
+    if (/^https?:\/\//i.test(configuredUrl)) return configuredUrl.replace(/\/+$/, "");
+    if (window.location.protocol === "http:" || window.location.protocol === "https:") return window.location.origin;
+    return "";
+  }
+
   function slugify(value) {
     return String(value || "look")
       .toLowerCase()
@@ -457,16 +464,30 @@
   }
 
   async function signUpMember({ email, password, displayName }) {
+    const redirectUrl = authRedirectUrl();
     const { data, error } = await getClient().auth.signUp({
       email: normalizeEmail(email),
       password: normalizePassword(password),
-      options: { data: { display_name: normalizeDisplayName(displayName) } }
+      options: {
+        data: { display_name: normalizeDisplayName(displayName) },
+        ...(redirectUrl ? { emailRedirectTo: redirectUrl } : {})
+      }
     });
     if (error) throw error;
     return {
       user: mapAuthUser(data?.user || null),
       needsEmailConfirmation: !data?.session
     };
+  }
+
+  async function resendMemberConfirmation(email) {
+    const redirectUrl = authRedirectUrl();
+    const { error } = await getClient().auth.resend({
+      type: "signup",
+      email: normalizeEmail(email),
+      options: redirectUrl ? { emailRedirectTo: redirectUrl } : undefined
+    });
+    if (error) throw error;
   }
 
   function onAuthStateChange(listener) {
@@ -1444,6 +1465,7 @@
     signInAdmin,
     signInMember,
     signUpMember,
+    resendMemberConfirmation,
     signOut,
     getMemberProfile,
     saveMemberProfile,

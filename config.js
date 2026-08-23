@@ -6,6 +6,6 @@
 window.SISIP_CONFIG = {
   supabaseUrl: "https://rbvrlfmsvmwjkisbwuim.supabase.co",
   supabasePublishableKey: "sb_publishable_TmjlzoV6t2vaWCcju1e5-g_53w_Tlvj",
+  siteUrl: "https://sisip-fashion.pages.dev",
   adminEmail: "albarifirdaus209@gmail.com"
 };
-

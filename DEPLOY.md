@@ -32,10 +32,12 @@ Tidak ada environment variable rahasia yang dibutuhkan pada frontend ini. Supaba
 
 Di Supabase Dashboard, buka **Authentication → URL Configuration**:
 
-- Isi Site URL dengan URL `pages.dev` yang sudah jadi.
-- Tambahkan URL tersebut pada Redirect URLs.
+- Isi **Site URL** dengan `https://sisip-fashion.pages.dev`.
+- Tambahkan `https://sisip-fashion.pages.dev/**` pada **Redirect URLs**. Gunakan URL exact jika tidak membutuhkan path tambahan.
 - Tambahkan domain custom nanti jika sudah punya.
 - Di **Authentication → Providers → Email**, aktifkan email sign-up. Untuk website live, aktifkan juga konfirmasi email.
+
+Di **Authentication → Email Templates → Confirm signup**, subject dan isi email dapat memakai nama SISIP, misalnya subject `Konfirmasi akun SISIP`. Nama pengirim `SISIP` dengan alamat email branded memerlukan Custom SMTP dan domain email milikmu yang sudah diverifikasi.
 
 Member dapat membuat akun sendiri untuk menyimpan preferensi dan request outfit. Akun admin tetap ditentukan oleh email `albarifirdaus209@gmail.com` dan diperiksa ulang oleh RLS di database.
 

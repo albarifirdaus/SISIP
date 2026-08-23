@@ -874,6 +874,7 @@
             <button class="button" id="memberAuthSubmit" type="submit">Masuk <span aria-hidden="true">↗</span></button>
           </form>
           <button class="member-auth-switch" id="memberAuthSwitch" type="button">Belum punya akun? Daftar dengan email</button>
+          <button class="member-auth-switch" id="memberResendConfirmation" type="button" hidden>Kirim ulang email konfirmasi</button>
         </div>
         <div id="memberProfileView" hidden>
           <div class="member-profile-head">
@@ -1204,6 +1205,7 @@
         let memberViewer = null;
         let memberRequests = [];
         let memberAuthMode = "signin";
+        let pendingConfirmationEmail = "";
         const requestDrafts = new Map();
 
         const els = {
@@ -1212,7 +1214,7 @@
           newSeriesCarousel: document.getElementById("newSeriesCarousel"), newSeriesStage: document.getElementById("newSeriesStage"), newSeriesPrev: document.getElementById("newSeriesPrev"), newSeriesNext: document.getElementById("newSeriesNext"), newSeriesDots: document.getElementById("newSeriesDots"),
           lookModal: document.getElementById("lookModal"), lookDetail: document.getElementById("lookDetail"), articleModal: document.getElementById("articleModal"), articleDetail: document.getElementById("articleDetail"),
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
-          accountButton: document.getElementById("accountButton"), mobileAccountButton: document.getElementById("mobileAccountButton"), memberModal: document.getElementById("memberModal"), memberAuthView: document.getElementById("memberAuthView"), memberProfileView: document.getElementById("memberProfileView"), memberAuthTitle: document.getElementById("memberAuthTitle"), memberAuthCopy: document.getElementById("memberAuthCopy"), memberAuthForm: document.getElementById("memberAuthForm"), memberAuthError: document.getElementById("memberAuthError"), memberAuthSwitch: document.getElementById("memberAuthSwitch"), memberAuthSubmit: document.getElementById("memberAuthSubmit"), memberDisplayNameField: document.getElementById("memberDisplayNameField"), memberDisplayNameInput: document.getElementById("memberDisplayNameInput"), memberPasswordInput: document.getElementById("memberPasswordInput"), memberProfileForm: document.getElementById("memberProfileForm"), memberProfileError: document.getElementById("memberProfileError"), memberRequestList: document.getElementById("memberRequestList"), memberSignOutButton: document.getElementById("memberSignOutButton"),
+          accountButton: document.getElementById("accountButton"), mobileAccountButton: document.getElementById("mobileAccountButton"), memberModal: document.getElementById("memberModal"), memberAuthView: document.getElementById("memberAuthView"), memberProfileView: document.getElementById("memberProfileView"), memberAuthTitle: document.getElementById("memberAuthTitle"), memberAuthCopy: document.getElementById("memberAuthCopy"), memberAuthForm: document.getElementById("memberAuthForm"), memberAuthError: document.getElementById("memberAuthError"), memberAuthSwitch: document.getElementById("memberAuthSwitch"), memberResendConfirmation: document.getElementById("memberResendConfirmation"), memberAuthSubmit: document.getElementById("memberAuthSubmit"), memberDisplayNameField: document.getElementById("memberDisplayNameField"), memberDisplayNameInput: document.getElementById("memberDisplayNameInput"), memberPasswordInput: document.getElementById("memberPasswordInput"), memberProfileForm: document.getElementById("memberProfileForm"), memberProfileError: document.getElementById("memberProfileError"), memberRequestList: document.getElementById("memberRequestList"), memberSignOutButton: document.getElementById("memberSignOutButton"),
           requestForm: document.getElementById("requestForm"), requestStatus: document.getElementById("requestStatus"), requestSubmitButton: document.getElementById("requestSubmitButton"),
           studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), toast: document.getElementById("toast")
         };
@@ -1371,6 +1373,7 @@
           els.memberDisplayNameField.hidden = !signup;
           els.memberAuthSubmit.innerHTML = signup ? `Buat akun <span aria-hidden="true">↗</span>` : `Masuk <span aria-hidden="true">↗</span>`;
           els.memberAuthSwitch.textContent = signup ? "Sudah punya akun? Masuk dengan email" : "Belum punya akun? Daftar dengan email";
+          els.memberResendConfirmation.hidden = !(signup && pendingConfirmationEmail);
           els.memberDisplayNameInput.required = signup;
           els.memberPasswordInput.setAttribute("autocomplete", signup ? "new-password" : "current-password");
           els.memberAuthError.textContent = "";
@@ -2237,6 +2240,7 @@
         });
         els.memberAuthSwitch.addEventListener("click",()=>{
           memberAuthMode = memberAuthMode === "signin" ? "signup" : "signin";
+          pendingConfirmationEmail="";
           renderMemberAuth();
           els.memberPasswordInput?.setAttribute("autocomplete", memberAuthMode === "signup" ? "new-password" : "current-password");
         });
@@ -2254,7 +2258,9 @@
             if(memberAuthMode === "signup") {
               const result=await cloud.signUpMember({email,password,displayName:String(data.get("displayName")||"").trim()});
               if(result?.needsEmailConfirmation) {
-                els.memberAuthError.textContent="Akun dibuat. Cek email untuk mengonfirmasi, lalu kembali masuk ke SISIP.";
+                pendingConfirmationEmail=email;
+                renderMemberAuth();
+                els.memberAuthError.textContent="Akun dibuat. Cek email konfirmasi dari SISIP. Link hanya dapat digunakan sekali; gunakan tombol kirim ulang bila sudah kedaluwarsa.";
                 return;
               }
               showToast("Akun SISIP berhasil dibuat.");
@@ -2270,6 +2276,25 @@
           } finally {
             submit.disabled=false;
             submit.textContent=originalLabel;
+          }
+        });
+        els.memberResendConfirmation.addEventListener("click",async()=>{
+          const email=pendingConfirmationEmail||String(new FormData(els.memberAuthForm).get("email")||"").trim();
+          const button=els.memberResendConfirmation;
+          const originalLabel=button.textContent;
+          button.disabled=true;
+          button.textContent="Mengirim…";
+          try {
+            if(!email) throw new Error("Masukkan email yang dipakai saat daftar terlebih dahulu.");
+            if(typeof cloud.resendMemberConfirmation!=="function") throw new Error("Fitur kirim ulang belum siap. Muat ulang halaman lalu coba lagi.");
+            await cloud.resendMemberConfirmation(email);
+            pendingConfirmationEmail=email;
+            els.memberAuthError.textContent="Email konfirmasi baru dari SISIP sudah dikirim. Gunakan link terbaru saja.";
+          } catch(error) {
+            els.memberAuthError.textContent=error.message||"Email konfirmasi belum dapat dikirim ulang.";
+          } finally {
+            button.disabled=false;
+            button.textContent=originalLabel;
           }
         });
         els.memberProfileForm.addEventListener("submit",async(event)=>{
