@@ -1172,6 +1172,118 @@
     return { createdCount, updatedCount, failedCount, results };
   }
 
+  function normalizeLookImportPayload(group) {
+    const key = normalizeImportKey(group?.key);
+    const title = String(group?.title || "").trim();
+    const excerpt = String(group?.excerpt || "").trim();
+    const coverImageUrl = assertImageUrl(group?.coverImageUrl);
+    const coverAltText = String(group?.coverAltText || "").trim();
+    const tone = String(group?.tone || "").trim().toLowerCase();
+    const genderTarget = normalizeGenderTarget(group?.genderTarget);
+    const styles = Array.isArray(group?.styles)
+      ? [...new Set(group.styles.map((style) => String(style || "").trim()).filter(Boolean))].slice(0, 12)
+      : [];
+    const items = Array.isArray(group?.items) ? group.items.map((item) => ({
+      productKey: normalizeImportKey(item?.productKey),
+      variantLabel: String(item?.variantLabel || "").trim(),
+      position: Number(item?.position)
+    })) : [];
+
+    if (!key) throw new Error("look_key wajib diisi.");
+    if (!title || title.length > 160) throw new Error("Nama look wajib diisi dan maksimal 160 karakter.");
+    if (excerpt.length > 500) throw new Error("Excerpt maksimal 500 karakter.");
+    if (!styles.length) throw new Error("Look memerlukan minimal satu tag style.");
+    if (!["carbon", "clay", "mineral", "olive", "midnight"].includes(tone)) throw new Error("tone belum sesuai pilihan SISIP.");
+    if (coverImageUrl && !coverAltText) throw new Error("Deskripsi cover wajib diisi saat memakai cover_image_url.");
+    if (coverAltText.length > 240) throw new Error("Deskripsi cover maksimal 240 karakter.");
+    if (items.length < 2 || items.length > 5) throw new Error("Satu look harus berisi 2–5 item.");
+    const sortedItems = [...items].sort((a, b) => a.position - b.position);
+    const positions = sortedItems.map((item) => item.position);
+    if (positions.some((position, index) => !Number.isInteger(position) || position !== index + 1)) {
+      throw new Error("item_position harus berurutan dari 1 sampai jumlah item.");
+    }
+    const productVariants = new Set();
+    sortedItems.forEach((item) => {
+      if (!item.productKey || !item.variantLabel) throw new Error("product_key dan variant_label wajib diisi untuk setiap item.");
+      const identifier = `${item.productKey}:${item.variantLabel.toLowerCase()}`;
+      if (productVariants.has(identifier)) throw new Error("Satu varian produk tidak boleh dipakai dua kali pada look yang sama.");
+      productVariants.add(identifier);
+    });
+    return { key, title, excerpt, coverImageUrl, coverAltText, tone, genderTarget, styles, items: sortedItems };
+  }
+
+  async function importLooks(groups, onProgress) {
+    if (!Array.isArray(groups) || !groups.length) throw new Error("Belum ada look untuk diimpor.");
+    const preparedGroups = groups.map(normalizeLookImportPayload);
+    const lookKeys = preparedGroups.map((group) => group.key);
+    if (new Set(lookKeys).size !== lookKeys.length) throw new Error("look_key tidak boleh diulang pada satu file.");
+
+    const db = getClient();
+    const productKeys = [...new Set(preparedGroups.flatMap((group) => group.items.map((item) => item.productKey)))];
+    const [{ data: productRows, error: productError }, { data: existingLookRows, error: existingLookError }] = await Promise.all([
+      db.from("products").select("id,import_key").in("import_key", productKeys),
+      db.from("looks").select("id,import_key").in("import_key", lookKeys)
+    ]);
+    if (productError) throw productError;
+    if (existingLookError) throw existingLookError;
+
+    const productsByKey = new Map((productRows || []).map((product) => [String(product.import_key || "").toUpperCase(), product]));
+    const productIds = (productRows || []).map((product) => product.id);
+    const variantsByReference = new Map();
+    if (productIds.length) {
+      const { data: variantRows, error: variantError } = await db
+        .from("product_variants")
+        .select("id,product_id,label,is_active")
+        .in("product_id", productIds)
+        .eq("is_active", true);
+      if (variantError) throw variantError;
+      (variantRows || []).forEach((variant) => {
+        const product = (productRows || []).find((candidate) => candidate.id === variant.product_id);
+        const key = String(product?.import_key || "").toUpperCase();
+        const reference = `${key}:${String(variant.label || "").trim().toLowerCase()}`;
+        if (key && !variantsByReference.has(reference)) variantsByReference.set(reference, variant);
+      });
+    }
+
+    const existingLookKeys = new Set((existingLookRows || []).map((look) => String(look.import_key || "").toUpperCase()));
+    const results = [];
+    for (let index = 0; index < preparedGroups.length; index += 1) {
+      const group = preparedGroups[index];
+      try {
+        const variantIds = group.items.map((item) => {
+          const product = productsByKey.get(item.productKey);
+          if (!product) throw new Error(`Produk dengan product_key ${item.productKey} belum ditemukan. Import produk terlebih dahulu.`);
+          const variant = variantsByReference.get(`${item.productKey}:${item.variantLabel.toLowerCase()}`);
+          if (!variant) throw new Error(`Varian ${item.variantLabel} untuk ${item.productKey} belum ditemukan atau tidak aktif.`);
+          return variant.id;
+        });
+        const { error } = await db.rpc("import_sisip_look", {
+          p_look_key: group.key,
+          p_title: group.title,
+          p_excerpt: group.excerpt || null,
+          p_cover_image_path: group.coverImageUrl || null,
+          p_cover_alt_text: group.coverAltText || null,
+          p_tone: group.tone,
+          p_gender_target: group.genderTarget,
+          p_style_tags: group.styles,
+          p_product_variant_ids: variantIds
+        });
+        if (error) throw error;
+        const item = { key: group.key, name: group.title, ok: true, created: !existingLookKeys.has(group.key) };
+        results.push(item);
+        if (typeof onProgress === "function") onProgress({ index: index + 1, total: preparedGroups.length, ...item });
+      } catch (error) {
+        const item = { key: group.key, name: group.title, ok: false, error: error?.message || "Look belum dapat diimpor." };
+        results.push(item);
+        if (typeof onProgress === "function") onProgress({ index: index + 1, total: preparedGroups.length, ...item });
+      }
+    }
+    const createdCount = results.filter((item) => item.ok && item.created).length;
+    const updatedCount = results.filter((item) => item.ok && !item.created).length;
+    const failedCount = results.filter((item) => !item.ok).length;
+    return { createdCount, updatedCount, failedCount, results };
+  }
+
   async function createLook({ title, gender, styles, tone, items, coverFile, popularity = 0 }) {
     const db = getClient();
     const { data: look, error: lookError } = await db
@@ -1476,6 +1588,7 @@
     updateOutfitRequest,
     createProduct,
     importProducts,
+    importLooks,
     createLook,
     createArticle,
     importDemoCatalogue,
@@ -1486,4 +1599,3 @@
     publicUrl
   };
 })();
-

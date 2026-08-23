@@ -935,6 +935,17 @@
         </div>
 
         <div class="studio-panel is-active" id="studioLooksPanel" data-studio-panel="looks">
+          <section class="studio-section" id="bulkLookImportSection">
+            <h3>Import look banyak</h3>
+            <p>Gunakan CSV atau Excel. Satu baris mewakili satu item; ulangi <code>look_key</code> untuk menyusun satu look berisi 2–5 item.</p>
+            <div class="form-stack">
+              <div class="field"><label for="bulkLookFile">File look (.csv, .xlsx, .xls)</label><input id="bulkLookFile" type="file" accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" /></div>
+              <div class="bulk-import-actions"><button class="small-button muted" id="downloadBulkLookTemplateButton" type="button">Unduh CSV Looks</button><a class="small-button muted" href="./assets/templates/sisip-template-import.xlsx" download>Excel + dropdown</a><button class="small-button" id="bulkLookImportButton" type="button" disabled>Import looks</button></div>
+              <p class="bulk-import-status" id="bulkLookImportStatus">Import produk lebih dulu. Masukkan <code>product_key</code> dan <code>variant_label</code> yang sama dengan produk yang telah diimpor.</p>
+              <details class="bulk-preview" id="bulkLookImportPreview" hidden><summary id="bulkLookImportPreviewSummary">Preview</summary><ul class="bulk-preview-list" id="bulkLookImportPreviewList"></ul></details>
+              <p class="form-error" id="bulkLookImportError" role="alert"></p>
+            </div>
+          </section>
           <section class="studio-section">
             <h3>Tambah look</h3>
             <p>Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link Shopee-nya sama.</p>
@@ -1049,7 +1060,7 @@
             <p>Gunakan CSV atau Excel. Satu baris mewakili satu warna; baris dengan <code>product_key</code> yang sama akan menjadi satu produk dengan satu link affiliate.</p>
             <div class="form-stack">
               <div class="field"><label for="bulkProductFile">File katalog (.csv, .xlsx, .xls)</label><input id="bulkProductFile" type="file" accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" /></div>
-              <div class="bulk-import-actions"><button class="small-button muted" id="downloadBulkTemplateButton" type="button">Unduh template CSV</button><button class="small-button" id="bulkImportButton" type="button" disabled>Import produk</button></div>
+              <div class="bulk-import-actions"><button class="small-button muted" id="downloadBulkTemplateButton" type="button">Unduh CSV Produk</button><a class="small-button muted" href="./assets/templates/sisip-template-import.xlsx" download>Excel + dropdown</a><button class="small-button" id="bulkImportButton" type="button" disabled>Import produk</button></div>
               <p class="bulk-import-status" id="bulkImportStatus">Template memakai <code>product_key</code> agar upload ulang memperbarui produk yang sama, bukan menduplikasi.</p>
               <details class="bulk-preview" id="bulkImportPreview" hidden><summary id="bulkImportPreviewSummary">Preview</summary><ul class="bulk-preview-list" id="bulkImportPreviewList"></ul></details>
               <p class="form-error" id="bulkImportError" role="alert"></p>
@@ -1151,13 +1162,23 @@
         ];
         const JOURNAL_BLOCK_LIMIT = 20;
         const JOURNAL_CTA_LIMIT = 3;
-        const BULK_IMPORT_HEADERS = ["product_key", "name", "affiliate_url", "price_idr", "badge", "style_tags", "gender_target", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
+        const BULK_IMPORT_HEADERS = ["product_key", "name", "affiliate_url", "price_idr", "badge", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "gender_target", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
         const BULK_IMPORT_TEMPLATE_ROWS = [
-          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "Pilihan SISIP", "Clean|Formal", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
-          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "Pilihan SISIP", "Clean|Formal", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Biru kabut", "#AAB7C7", "https://cdn.contoh.com/oxford-biru.jpg"]
+          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "Pilihan SISIP", "", "Clean", "Formal", "", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
+          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "Pilihan SISIP", "", "Clean", "Formal", "", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Biru kabut", "#AAB7C7", "https://cdn.contoh.com/oxford-biru.jpg"],
+          ["TROUSER-001", "Pleated Straight Trousers", "https://shope.ee/contoh-link", "289000", "", "", "Clean", "Formal", "", "unisex", "https://cdn.contoh.com/trouser-cover.jpg", "Charcoal", "#3B3A38", ""],
+          ["LOAFER-001", "Leather Penny Loafers", "https://shope.ee/contoh-link", "319000", "Populer", "", "Formal", "Clean", "", "unisex", "https://cdn.contoh.com/loafer-cover.jpg", "Hitam", "#211F1D", ""]
+        ];
+        const BULK_LOOK_IMPORT_HEADERS = ["look_key", "title", "excerpt", "gender_target", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "tone", "cover_image_url", "cover_alt_text", "item_position", "product_key", "variant_label"];
+        const BULK_LOOK_IMPORT_TEMPLATE_ROWS = [
+          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "mineral", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "1", "OXFORD-001", "Putih"],
+          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "mineral", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "2", "TROUSER-001", "Charcoal"],
+          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "mineral", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "3", "LOAFER-001", "Hitam"]
         ];
         const BULK_IMPORT_MAX_ROWS = 1000;
         const BULK_IMPORT_MAX_PRODUCTS = 200;
+        const BULK_LOOK_IMPORT_MAX_ROWS = 1000;
+        const BULK_LOOK_IMPORT_MAX_LOOKS = 200;
         const ARTICLES = [
           { id: "a1", number: "01", title: "Cara membuat outfit clean tanpa terlihat kosong.", excerpt: "Outfit clean bukan berarti semua harus putih atau tanpa detail. Mulai dari bentuk, tekstur, dan satu aksen yang menahan seluruh look.", body: "Pilih satu potongan dengan struktur yang jelas—misalnya kemeja oxford, blazer rileks, atau celana berlipit. Setelah itu, buat sisanya lebih tenang. Kontras kecil antara tekstur halus dan tekstur matte sering lebih efektif daripada menambah banyak warna.\n\nSatu aksen yang punya bobot, seperti sepatu kulit gelap atau tas dengan bentuk kuat, cukup untuk memberi look sebuah titik akhir." },
           { id: "a2", number: "02", title: "Warna netral yang tetap punya arah.", excerpt: "Netral tidak selalu berarti aman. Perhatikan suhu warna, kedalaman, dan hubungan antar material.", body: "Abu hangat, olive kusam, cokelat espresso, dan hitam arang punya karakter yang berbeda dari hitam-putih murni. Gunakan dua warna netral yang suhu warnanya serupa, lalu sisipkan satu warna dengan bobot lebih pekat.\n\nDi SISIP, warna tidak dibaca sebagai aturan. Ia hanya alat untuk membuat potongan yang berbeda terasa berbicara satu bahasa." },
@@ -1243,6 +1264,9 @@
         let bulkImportGroups = [];
         let bulkImportErrors = [];
         let bulkImportWarnings = [];
+        let bulkLookImportGroups = [];
+        let bulkLookImportErrors = [];
+        let bulkLookImportWarnings = [];
         let newSeriesIndex = 0;
         let newSeriesTimer;
         let journalDraftBlocks = [makeJournalBlock("paragraph")];
@@ -1266,7 +1290,7 @@
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
           accountButton: document.getElementById("accountButton"), mobileAccountButton: document.getElementById("mobileAccountButton"), memberModal: document.getElementById("memberModal"), memberAuthView: document.getElementById("memberAuthView"), memberProfileView: document.getElementById("memberProfileView"), memberAuthTitle: document.getElementById("memberAuthTitle"), memberAuthCopy: document.getElementById("memberAuthCopy"), memberAuthForm: document.getElementById("memberAuthForm"), memberAuthError: document.getElementById("memberAuthError"), memberAuthSwitch: document.getElementById("memberAuthSwitch"), memberResendConfirmation: document.getElementById("memberResendConfirmation"), memberAuthSubmit: document.getElementById("memberAuthSubmit"), memberDisplayNameField: document.getElementById("memberDisplayNameField"), memberDisplayNameInput: document.getElementById("memberDisplayNameInput"), memberPasswordInput: document.getElementById("memberPasswordInput"), memberProfileForm: document.getElementById("memberProfileForm"), memberProfileError: document.getElementById("memberProfileError"), memberRequestList: document.getElementById("memberRequestList"), memberSignOutButton: document.getElementById("memberSignOutButton"),
           requestForm: document.getElementById("requestForm"), requestStatus: document.getElementById("requestStatus"), requestSubmitButton: document.getElementById("requestSubmitButton"),
-          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), toast: document.getElementById("toast")
+          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), bulkLookFile: document.getElementById("bulkLookFile"), downloadBulkLookTemplateButton: document.getElementById("downloadBulkLookTemplateButton"), bulkLookImportButton: document.getElementById("bulkLookImportButton"), bulkLookImportStatus: document.getElementById("bulkLookImportStatus"), bulkLookImportPreview: document.getElementById("bulkLookImportPreview"), bulkLookImportPreviewSummary: document.getElementById("bulkLookImportPreviewSummary"), bulkLookImportPreviewList: document.getElementById("bulkLookImportPreviewList"), bulkLookImportError: document.getElementById("bulkLookImportError"), toast: document.getElementById("toast")
         };
 
         function loadState() {
@@ -1301,7 +1325,7 @@
           els.sampleControls.hidden = cloudMode;
           els.cloudSampleControls.hidden = !cloudMode;
           els.logoutStudioButton.hidden = !(cloudMode && cloudAdmin);
-          els.bulkImportButton.disabled = !cloudMode || !bulkImportGroups.length || bulkImportErrors.length > 0;
+          updateBulkImportButtons();
         }
         function getProduct(id) { return state.products.find((item) => item.id === id); }
         function getLook(id) { return state.looks.find((item) => item.id === id); }
@@ -2116,13 +2140,12 @@
           if (value || row.length) { row.push(value); rows.push(row); }
           return rows;
         }
-        function matrixToBulkRows(matrix) {
+        function matrixToImportRows(matrix, required) {
           const meaningfulRows = (matrix || []).filter((row) => Array.isArray(row) && row.some((cell) => String(cell ?? "").trim()));
           if (!meaningfulRows.length) throw new Error("File belum memiliki isi.");
           const headers = meaningfulRows[0].map(normalizeBulkHeader);
           const nonEmptyHeaders = headers.filter(Boolean);
           if (new Set(nonEmptyHeaders).size !== nonEmptyHeaders.length) throw new Error("Nama kolom pada file tidak boleh duplikat.");
-          const required = ["product_key", "name", "affiliate_url", "price_idr", "color_name"];
           const missing = required.filter((header) => !headers.includes(header));
           if (missing.length) throw new Error("Kolom wajib belum ditemukan: " + missing.join(", ") + ".");
           return meaningfulRows.slice(1).map((cells, index) => {
@@ -2131,6 +2154,8 @@
             return row;
           });
         }
+        function matrixToBulkRows(matrix) { return matrixToImportRows(matrix, ["product_key", "name", "affiliate_url", "price_idr", "color_name"]); }
+        function matrixToBulkLookRows(matrix) { return matrixToImportRows(matrix, ["look_key", "title", "gender_target", "tone", "item_position", "product_key", "variant_label"]); }
         function normalizeBulkImageUrl(value) {
           const raw = String(value || "").trim();
           if (!raw) return "";
@@ -2157,7 +2182,16 @@
           if (!Number.isSafeInteger(price) || price <= 0) throw new Error("price_idr harus berupa harga IDR lebih dari nol.");
           return price;
         }
-        function parseBulkTags(value) { return String(value || "").split(/[|,;]/).map((tag) => tag.trim()).filter(Boolean).slice(0, 12); }
+        const BULK_STYLE_TAGS = new Map(STYLE_ORDER.map((style) => [style.toLowerCase(), style]));
+        function parseBulkTags(row) {
+          const values = [row.style_tags, row.style_tag_1, row.style_tag_2, row.style_tag_3]
+            .flatMap((value) => String(value || "").split(/[|,;]/))
+            .map((tag) => tag.trim())
+            .filter(Boolean);
+          const invalid = values.filter((tag) => !BULK_STYLE_TAGS.has(tag.toLowerCase()));
+          if (invalid.length) throw new Error("Tag style tidak sesuai pilihan SISIP: " + [...new Set(invalid)].join(", ") + ".");
+          return [...new Set(values.map((tag) => BULK_STYLE_TAGS.get(tag.toLowerCase())))].slice(0, 12);
+        }
         function validateBulkRows(rows) {
           const errors = [];
           const warnings = [];
@@ -2178,9 +2212,11 @@
             let colorHex = "#B8AEA1";
             let coverImageUrl = "";
             let variantImageUrl = "";
+            let styles = [];
             try { affiliateUrl = affiliateUrlFromBulk(row.affiliate_url); } catch (error) { problems.push(error.message); }
             try { price = parseBulkPrice(row.price_idr); } catch (error) { problems.push(error.message); }
             try { genderTarget = normalizeBulkGender(row.gender_target); } catch (error) { problems.push(error.message); }
+            try { styles = parseBulkTags(row); } catch (error) { problems.push(error.message); }
             try { colorHex = normalizeBulkColorHex(row.color_hex) || "#B8AEA1"; if (!String(row.color_hex || "").trim()) warnings.push("Baris " + row.rowNumber + ": color_hex kosong, memakai #B8AEA1."); } catch (error) { problems.push(error.message); }
             try { coverImageUrl = normalizeBulkImageUrl(row.cover_image_url); } catch (error) { problems.push("cover_image_url: " + error.message); }
             try { variantImageUrl = normalizeBulkImageUrl(row.variant_image_url); } catch (error) { problems.push("variant_image_url: " + error.message); }
@@ -2191,7 +2227,7 @@
               affiliateUrl,
               price,
               badge: String(row.badge || "").trim(),
-              styles: parseBulkTags(row.style_tags),
+              styles,
               genderTarget,
               coverImageUrl,
               variants: [{ name: colorName, hex: colorHex, imageUrl: variantImageUrl }],
@@ -2215,23 +2251,98 @@
             warnings
           };
         }
+        function validateBulkLookRows(rows) {
+          const errors = [];
+          const warnings = [];
+          const groups = new Map();
+          if (!rows.length) errors.push("File tidak memiliki baris look.");
+          if (rows.length > BULK_LOOK_IMPORT_MAX_ROWS) errors.push("Maksimal " + BULK_LOOK_IMPORT_MAX_ROWS + " baris item dalam satu import.");
+          rows.slice(0, BULK_LOOK_IMPORT_MAX_ROWS).forEach((row) => {
+            const problems = [];
+            const key = String(row.look_key || "").trim().toUpperCase();
+            const title = String(row.title || "").trim();
+            const excerpt = String(row.excerpt || "").trim();
+            const variantLabel = String(row.variant_label || "").trim();
+            const productKey = String(row.product_key || "").trim().toUpperCase();
+            const itemPosition = Number(String(row.item_position || "").trim());
+            if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(key)) problems.push("look_key tidak valid.");
+            if (!title || title.length > 160) problems.push("title wajib diisi dan maksimal 160 karakter.");
+            if (excerpt.length > 500) problems.push("excerpt maksimal 500 karakter.");
+            if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(productKey)) problems.push("product_key tidak valid.");
+            if (!variantLabel || variantLabel.length > 80) problems.push("variant_label wajib diisi dan maksimal 80 karakter.");
+            if (!Number.isInteger(itemPosition) || itemPosition < 1 || itemPosition > 5) problems.push("item_position harus angka 1 sampai 5.");
+            let genderTarget = "unisex";
+            let styles = [];
+            let tone = "carbon";
+            let coverImageUrl = "";
+            const coverAltText = String(row.cover_alt_text || "").trim();
+            try { genderTarget = normalizeBulkGender(row.gender_target); } catch (error) { problems.push(error.message); }
+            try { styles = parseBulkTags(row); if (!styles.length) problems.push("minimal satu style_tag wajib diisi."); } catch (error) { problems.push(error.message); }
+            tone = String(row.tone || "carbon").trim().toLowerCase();
+            if (!["carbon", "clay", "mineral", "olive", "midnight"].includes(tone)) problems.push("tone harus carbon, clay, mineral, olive, atau midnight.");
+            try { coverImageUrl = normalizeBulkImageUrl(row.cover_image_url); } catch (error) { problems.push("cover_image_url: " + error.message); }
+            if (coverImageUrl && !coverAltText) problems.push("cover_alt_text wajib diisi saat cover_image_url dipakai.");
+            if (coverAltText.length > 240) problems.push("cover_alt_text maksimal 240 karakter.");
+            if (problems.length) { errors.push("Baris " + row.rowNumber + ": " + problems.join(" ")); return; }
+            const candidate = {
+              key,
+              title,
+              excerpt,
+              genderTarget,
+              styles,
+              tone,
+              coverImageUrl,
+              coverAltText,
+              items: [{ productKey, variantLabel, position: itemPosition }],
+              positions: new Set([itemPosition]),
+              variants: new Set([productKey + ":" + variantLabel.toLowerCase()])
+            };
+            const existing = groups.get(key);
+            if (!existing) {
+              if (groups.size >= BULK_LOOK_IMPORT_MAX_LOOKS) { errors.push("Maksimal " + BULK_LOOK_IMPORT_MAX_LOOKS + " look dalam satu import."); return; }
+              groups.set(key, candidate);
+              return;
+            }
+            const sameMetadata = existing.title === candidate.title && existing.excerpt === candidate.excerpt && existing.genderTarget === candidate.genderTarget && existing.styles.join("|") === candidate.styles.join("|") && existing.tone === candidate.tone && existing.coverImageUrl === candidate.coverImageUrl && existing.coverAltText === candidate.coverAltText;
+            if (!sameMetadata) { errors.push("Baris " + row.rowNumber + ": metadata untuk look_key " + key + " harus sama pada setiap item."); return; }
+            if (existing.positions.has(itemPosition)) { errors.push("Baris " + row.rowNumber + ": item_position " + itemPosition + " tercatat dua kali untuk " + key + "."); return; }
+            const variantReference = productKey + ":" + variantLabel.toLowerCase();
+            if (existing.variants.has(variantReference)) { errors.push("Baris " + row.rowNumber + ": varian " + variantLabel + " tercatat dua kali untuk " + key + "."); return; }
+            existing.positions.add(itemPosition);
+            existing.variants.add(variantReference);
+            existing.items.push(candidate.items[0]);
+          });
+          const normalizedGroups = [];
+          groups.forEach((group) => {
+            const items = group.items.sort((left, right) => left.position - right.position);
+            const positions = items.map((item) => item.position);
+            if (items.length < 2 || items.length > 5) { errors.push("look_key " + group.key + " harus memiliki 2–5 item."); return; }
+            if (positions.some((position, index) => position !== index + 1)) { errors.push("look_key " + group.key + " harus memakai item_position berurutan mulai dari 1."); return; }
+            normalizedGroups.push({ key: group.key, title: group.title, excerpt: group.excerpt, genderTarget: group.genderTarget, styles: group.styles, tone: group.tone, coverImageUrl: group.coverImageUrl, coverAltText: group.coverAltText, items });
+          });
+          if (!normalizedGroups.length && groups.size && !errors.length) warnings.push("Tidak ada look yang siap diimpor.");
+          return { groups: normalizedGroups, errors, warnings };
+        }
         function affiliateUrlFromBulk(value) { return affiliateUrl(value); }
-        async function readBulkMatrix(file) {
+        async function readBulkMatrix(file, expectedSheet) {
           const extension = String(file?.name || "").split(".").pop().toLowerCase();
           if (extension === "csv" || file?.type === "text/csv") return parseCsvMatrix(await file.text());
           if (extension === "xlsx" || extension === "xls") {
             if (!window.XLSX || typeof window.XLSX.read !== "function") throw new Error("Parser Excel belum dimuat. Muat ulang halaman atau gunakan CSV.");
             const workbook = window.XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: false });
-            const sheetName = workbook.SheetNames.find((name) => normalizeBulkHeader(name) === "produk") || workbook.SheetNames[0];
+            const sheetName = workbook.SheetNames.find((name) => normalizeBulkHeader(name) === normalizeBulkHeader(expectedSheet)) || workbook.SheetNames[0];
             if (!sheetName) throw new Error("Sheet Excel tidak ditemukan.");
             return window.XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: "", raw: false });
           }
           throw new Error("Gunakan file CSV, XLSX, atau XLS.");
         }
-        function updateBulkImportButton() {
-          const ready = cloudEnabled() && bulkImportGroups.length > 0 && bulkImportErrors.length === 0;
-          els.bulkImportButton.disabled = !ready;
+        function updateBulkImportButtons() {
+          const productReady = cloudEnabled() && bulkImportGroups.length > 0 && bulkImportErrors.length === 0;
+          els.bulkImportButton.disabled = !productReady;
           els.bulkImportButton.textContent = bulkImportGroups.length ? "Import " + bulkImportGroups.length + " produk" : "Import produk";
+          const lookReady = cloudEnabled() && bulkLookImportGroups.length > 0 && bulkLookImportErrors.length === 0;
+          els.bulkLookImportButton.disabled = !lookReady;
+          els.bulkLookImportButton.textContent = bulkLookImportGroups.length ? "Import " + bulkLookImportGroups.length + " look" : "Import looks";
         }
         function renderBulkImportPreview() {
           const variantCount = bulkImportGroups.reduce((total, group) => total + group.variants.length, 0);
@@ -2243,7 +2354,7 @@
           els.bulkImportPreviewSummary.textContent = bulkImportErrors.length ? "Preview: ada " + bulkImportErrors.length + " masalah yang perlu diperbaiki" : "Preview: " + bulkImportGroups.length + " produk / " + variantCount + " warna";
           els.bulkImportPreviewList.innerHTML = messages.map((message) => "<li class=\"" + message.className + "\">" + esc(message.text) + "</li>").join("");
           els.bulkImportError.textContent = bulkImportErrors[0] || "";
-          updateBulkImportButton();
+          updateBulkImportButtons();
         }
         async function inspectBulkProductFile() {
           const file = els.bulkProductFile.files?.[0];
@@ -2263,7 +2374,7 @@
           }
           els.bulkImportStatus.textContent = "Membaca " + file.name + "…";
           try {
-            const rows = matrixToBulkRows(await readBulkMatrix(file));
+            const rows = matrixToBulkRows(await readBulkMatrix(file, "Produk"));
             const result = validateBulkRows(rows);
             bulkImportGroups = result.groups;
             bulkImportErrors = result.errors;
@@ -2275,19 +2386,63 @@
           }
           renderBulkImportPreview();
         }
-        function downloadBulkTemplate() {
+        function renderBulkLookImportPreview() {
+          const itemCount = bulkLookImportGroups.reduce((total, group) => total + group.items.length, 0);
+          const messages = [];
+          if (bulkLookImportGroups.length) messages.push({ className: "", text: bulkLookImportGroups.length + " look / " + itemCount + " item siap ditinjau." });
+          bulkLookImportWarnings.slice(0, 8).forEach((message) => messages.push({ className: "warning", text: message }));
+          bulkLookImportErrors.slice(0, 8).forEach((message) => messages.push({ className: "invalid", text: message }));
+          els.bulkLookImportPreview.hidden = !messages.length;
+          els.bulkLookImportPreviewSummary.textContent = bulkLookImportErrors.length ? "Preview: ada " + bulkLookImportErrors.length + " masalah yang perlu diperbaiki" : "Preview: " + bulkLookImportGroups.length + " look / " + itemCount + " item";
+          els.bulkLookImportPreviewList.innerHTML = messages.map((message) => "<li class=\"" + message.className + "\">" + esc(message.text) + "</li>").join("");
+          els.bulkLookImportError.textContent = bulkLookImportErrors[0] || "";
+          updateBulkImportButtons();
+        }
+        async function inspectBulkLookFile() {
+          const file = els.bulkLookFile.files?.[0];
+          bulkLookImportGroups = [];
+          bulkLookImportErrors = [];
+          bulkLookImportWarnings = [];
+          if (!file) {
+            els.bulkLookImportStatus.textContent = "Pilih file CSV atau Excel untuk melihat preview.";
+            renderBulkLookImportPreview();
+            return;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            bulkLookImportErrors = ["Ukuran file maksimal 5 MB."];
+            els.bulkLookImportStatus.textContent = "File terlalu besar untuk diproses di browser.";
+            renderBulkLookImportPreview();
+            return;
+          }
+          els.bulkLookImportStatus.textContent = "Membaca " + file.name + "…";
+          try {
+            const rows = matrixToBulkLookRows(await readBulkMatrix(file, "Looks"));
+            const result = validateBulkLookRows(rows);
+            bulkLookImportGroups = result.groups;
+            bulkLookImportErrors = result.errors;
+            bulkLookImportWarnings = result.warnings;
+            els.bulkLookImportStatus.textContent = bulkLookImportErrors.length ? "Perbaiki baris yang ditandai, lalu upload ulang file." : file.name + " siap diimpor. Upload ulang dengan look_key sama akan memperbarui look yang belum dipakai di New Series, artikel, atau request outfit.";
+          } catch (error) {
+            bulkLookImportErrors = [error.message || "File belum dapat dibaca."];
+            els.bulkLookImportStatus.textContent = "File belum dapat diproses.";
+          }
+          renderBulkLookImportPreview();
+        }
+        function downloadBulkCsvTemplate(headers, rows, filename) {
           const csvCell = (value) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
-          const content = [BULK_IMPORT_HEADERS, ...BULK_IMPORT_TEMPLATE_ROWS].map((row) => row.map(csvCell).join(",")).join("\r\n");
+          const content = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
           const blob = new Blob(["\uFEFF" + content], { type: "text/csv;charset=utf-8" });
           const url = URL.createObjectURL(blob);
           const anchor = document.createElement("a");
           anchor.href = url;
-          anchor.download = "sisip-template-produk.csv";
+          anchor.download = filename;
           document.body.appendChild(anchor);
           anchor.click();
           anchor.remove();
           URL.revokeObjectURL(url);
         }
+        function downloadBulkTemplate() { downloadBulkCsvTemplate(BULK_IMPORT_HEADERS, BULK_IMPORT_TEMPLATE_ROWS, "sisip-template-produk.csv"); }
+        function downloadBulkLookTemplate() { downloadBulkCsvTemplate(BULK_LOOK_IMPORT_HEADERS, BULK_LOOK_IMPORT_TEMPLATE_ROWS, "sisip-template-looks.csv"); }
 
         document.getElementById("currentYear").textContent=new Date().getFullYear();
         updateStudioMode();
@@ -2656,13 +2811,50 @@
             bulkImportWarnings = [];
             els.bulkImportPreview.hidden = true;
             els.bulkImportStatus.textContent = result.createdCount + " produk baru dan " + result.updatedCount + " produk diperbarui di cloud.";
-            updateBulkImportButton();
+            updateBulkImportButtons();
             showToast("Import produk ke cloud selesai.");
           } catch (error) {
             els.bulkImportError.textContent = error.message || "Import produk belum dapat dijalankan.";
             els.bulkImportStatus.textContent = "Import belum selesai. File tetap tersimpan untuk dicoba ulang.";
           } finally {
-            updateBulkImportButton();
+            updateBulkImportButtons();
+          }
+        });
+        els.downloadBulkLookTemplateButton.addEventListener("click", downloadBulkLookTemplate);
+        els.bulkLookFile.addEventListener("change", () => { void inspectBulkLookFile(); });
+        els.bulkLookImportButton.addEventListener("click", async (event) => {
+          if (!cloudEnabled()) { els.bulkLookImportError.textContent = "Import banyak hanya tersedia setelah Supabase cloud aktif."; return; }
+          if (!bulkLookImportGroups.length || bulkLookImportErrors.length) return;
+          if (typeof cloud?.importLooks !== "function") { els.bulkLookImportError.textContent = "Fitur import look belum termuat. Muat ulang halaman lalu coba lagi."; return; }
+          if (!confirm("Import " + bulkLookImportGroups.length + " look ke cloud? look_key yang sama akan diperbarui selama belum dipakai di New Series, artikel, atau request outfit.")) return;
+          const button = event.currentTarget;
+          button.disabled = true;
+          els.bulkLookImportError.textContent = "";
+          try {
+            const result = await cloud.importLooks(bulkLookImportGroups, (progress) => {
+              els.bulkLookImportStatus.textContent = "Mengimpor " + progress.index + " dari " + progress.total + ": " + progress.name + "…";
+            });
+            await refreshCloudState({ admin: true });
+            if (result.failedCount) {
+              bulkLookImportErrors = result.results.filter((item) => !item.ok).map((item) => item.name + ": " + item.error);
+              els.bulkLookImportStatus.textContent = result.createdCount + " look baru dan " + result.updatedCount + " look diperbarui. " + result.failedCount + " look perlu dicek.";
+              renderBulkLookImportPreview();
+              showToast("Sebagian import look selesai; cek pesan error pada file.");
+              return;
+            }
+            els.bulkLookFile.value = "";
+            bulkLookImportGroups = [];
+            bulkLookImportErrors = [];
+            bulkLookImportWarnings = [];
+            els.bulkLookImportPreview.hidden = true;
+            els.bulkLookImportStatus.textContent = result.createdCount + " look baru dan " + result.updatedCount + " look diperbarui di cloud.";
+            updateBulkImportButtons();
+            showToast("Import look ke cloud selesai.");
+          } catch (error) {
+            els.bulkLookImportError.textContent = error.message || "Import look belum dapat dijalankan.";
+            els.bulkLookImportStatus.textContent = "Import belum selesai. File tetap tersimpan untuk dicoba ulang.";
+          } finally {
+            updateBulkImportButtons();
           }
         });
 
@@ -2812,4 +3004,3 @@
     </script>
   </body>
 </html>
-
