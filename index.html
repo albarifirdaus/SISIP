@@ -326,6 +326,37 @@
       .form-grid .full { grid-column:1/-1; }
       .form-status { min-height:22px; margin:.8rem 0 0; color:var(--clay-dark); font-size:.78rem; }
 
+      .personal-section { color:var(--white); background:var(--ink); }
+      .personal-section .section-description { color:#c6bdb4; }
+      .personal-section .section-number { color:#d8c3b3; }
+      .personal-section .section-title .accent { color:#d5a488; }
+      .personal-grid { display:grid; grid-template-columns:minmax(220px,.74fr) minmax(0,1.26fr); gap:1px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.16); }
+      .personal-intro, .personal-results { padding:1.25rem; background:#262421; }
+      .personal-intro { display:flex; min-height:280px; flex-direction:column; justify-content:space-between; }
+      .personal-intro h3 { max-width:320px; margin:0; font-size:clamp(1.7rem,3vw,2.85rem); letter-spacing:-.075em; line-height:.92; }
+      .personal-intro p { max-width:330px; margin:1rem 0; color:#c6bdb4; font-size:.84rem; line-height:1.55; }
+      .personal-intro .button-outline { width:fit-content; color:var(--white); border-color:rgba(255,255,255,.42); }
+      .personal-intro .button-outline:hover { color:var(--ink); border-color:var(--clay); background:var(--clay); }
+      .personal-results { background:#3c3732; }
+      .personal-group + .personal-group { margin-top:1.2rem; padding-top:1.2rem; border-top:1px solid rgba(255,255,255,.16); }
+      .personal-group-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.75rem; }
+      .personal-group-head h4 { margin:0; color:#d8c3b3; font-family:var(--mono); font-size:.61rem; font-weight:500; letter-spacing:.06em; text-transform:uppercase; }
+      .personal-looks { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.55rem; }
+      .personal-look { min-width:0; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,.22); color:var(--white); background:#242220; text-align:left; cursor:pointer; }
+      .personal-look:hover { border-color:var(--clay); }
+      .personal-look .look-art, .personal-look .look-uploaded-image { height:132px; min-height:132px; }
+      .personal-look-copy { display:block; padding:.65rem; }
+      .personal-look-copy strong { display:block; overflow:hidden; font-size:.8rem; letter-spacing:-.035em; text-overflow:ellipsis; white-space:nowrap; }
+      .personal-look-copy span { display:block; overflow:hidden; margin-top:.25rem; color:#c6bdb4; font-family:var(--mono); font-size:.55rem; text-overflow:ellipsis; text-transform:uppercase; white-space:nowrap; }
+      .personal-products { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.55rem; }
+      .personal-product { min-width:0; padding:.65rem; border:1px solid rgba(255,255,255,.18); background:#302c29; }
+      .personal-product .product-art { height:96px; }
+      .personal-product h5 { overflow:hidden; margin:.55rem 0 .2rem; color:var(--white); font-size:.75rem; letter-spacing:-.035em; text-overflow:ellipsis; white-space:nowrap; }
+      .personal-product p { margin:0; color:#d8c3b3; font-family:var(--mono); font-size:.56rem; }
+      .personal-product a { display:inline-block; margin-top:.55rem; color:var(--white); font-family:var(--mono); font-size:.56rem; text-decoration:none; text-transform:uppercase; }
+      .personal-product a:hover { color:var(--clay); }
+      .personal-empty { margin:0; color:#c6bdb4; font-size:.84rem; line-height:1.55; }
+
       .about-section { display:grid; grid-template-columns:.55fr 1.45fr; gap:2rem; align-items:start; }
       .about-section h2 { max-width:820px; margin:0; font-size:clamp(2.5rem,5.2vw,6.1rem); font-weight:830; letter-spacing:-.1em; line-height:.88; text-transform:uppercase; }
       .about-section h2 em { color:var(--clay); font-style:normal; }
@@ -396,6 +427,24 @@
       .auth-shell { width:min(440px,calc(100vw - 2rem)); }
       .auth-shell h2 { margin:.8rem 0 .65rem; font-size:clamp(2rem,4vw,3.5rem); letter-spacing:-.08em; line-height:.9; text-transform:uppercase; }
       .auth-shell > p { margin:0 0 1.4rem; color:var(--ink-soft); line-height:1.55; }
+      .member-shell { width:min(720px,calc(100vw - 2rem)); }
+      .member-auth-switch { margin:.1rem 0 0; padding:0; border:0; color:var(--clay-dark); background:transparent; font:inherit; font-size:.77rem; text-decoration:underline; cursor:pointer; }
+      .member-auth-switch:hover { color:var(--ink); }
+      .member-profile-head { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-right:2rem; }
+      .member-profile-head h2 { max-width:470px; }
+      .member-profile-head .small-button { flex:0 0 auto; }
+      .member-help { margin:.25rem 0 1rem; color:var(--taupe); font-size:.72rem; line-height:1.45; }
+      .member-request-list { display:grid; gap:.65rem; margin-top:1rem; }
+      .member-request { padding:.85rem; border:1px solid var(--line); background:var(--paper); }
+      .member-request-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.8rem; }
+      .member-request h4 { margin:0; font-size:.95rem; letter-spacing:-.035em; }
+      .member-request p { margin:.55rem 0 0; font-size:.78rem; line-height:1.5; }
+      .request-status { flex:0 0 auto; padding:.34rem .45rem; color:var(--ink); border:1px solid var(--line); background:var(--white); font-family:var(--mono); font-size:.55rem; letter-spacing:.04em; text-transform:uppercase; }
+      .request-status.is-replied, .request-status.is-closed { color:#27513d; border-color:#a7c8b1; background:#eef8f0; }
+      .request-status.is-reviewing { color:#79542c; border-color:#dac09b; background:#fff7e8; }
+      .member-request-links { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.75rem; }
+      .member-request-links a, .member-request-links button { padding:.45rem .55rem; border:1px solid var(--line); color:var(--ink); background:var(--white); font-family:var(--mono); font-size:.56rem; text-decoration:none; text-transform:uppercase; cursor:pointer; }
+      .member-request-links a:hover, .member-request-links button:hover { color:var(--white); border-color:var(--ink); background:var(--ink); }
 
       .studio-scrim { position:fixed; z-index:70; inset:0; visibility:hidden; opacity:0; background:rgba(23,22,20,.43); transition:.2s; }
       .studio-scrim.is-open { visibility:visible; opacity:1; }
@@ -443,6 +492,20 @@
       .studio-row-actions { display:flex; gap:.35rem; flex:0 0 auto; }
       .form-error { min-height:18px; margin:0; color:#9f3831; font-size:.72rem; }
       .bulk-import-actions { display:flex; flex-wrap:wrap; gap:.55rem; align-items:center; }
+      .request-admin-list { display:grid; gap:.8rem; }
+      .request-admin-card { padding:.85rem; border:1px solid var(--line); background:var(--paper); }
+      .request-admin-title { display:flex; align-items:flex-start; justify-content:space-between; gap:.8rem; margin-bottom:.85rem; }
+      .request-admin-title h4 { margin:0; font-size:1rem; letter-spacing:-.04em; }
+      .request-admin-meta { margin:.22rem 0 0; color:var(--taupe); font-family:var(--mono); font-size:.57rem; line-height:1.45; text-transform:uppercase; }
+      .request-admin-brief { margin:.75rem 0; padding:.7rem; border-left:2px solid var(--clay); color:var(--ink-soft); background:var(--white); font-size:.74rem; line-height:1.5; }
+      .request-admin-pills { display:flex; flex-wrap:wrap; gap:.35rem; margin:.5rem 0; }
+      .request-admin-pills span { padding:.28rem .42rem; color:var(--ink-soft); border:1px solid var(--line); background:var(--white); font-family:var(--mono); font-size:.55rem; text-transform:uppercase; }
+      .request-rec-controls { display:grid; grid-template-columns:1fr 1fr; gap:.55rem; }
+      .request-rec-controls .editor-product-row { grid-template-columns:minmax(0,1fr) auto; }
+      .request-rec-list { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.6rem; }
+      .request-rec-chip { display:flex; align-items:center; gap:.35rem; max-width:100%; padding:.4rem .48rem; border:1px solid var(--line); background:var(--white); font-size:.66rem; }
+      .request-rec-chip strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .request-rec-chip button { padding:0; border:0; color:var(--taupe); background:transparent; cursor:pointer; font-size:.9rem; line-height:1; }
       .bulk-import-status { min-height:18px; margin:0; color:var(--ink-soft); font-size:.72rem; line-height:1.45; }
       .bulk-preview { margin-top:.1rem; border:1px solid var(--line); background:var(--paper); }
       .bulk-preview summary { padding:.7rem .75rem; cursor:pointer; color:var(--ink); font-size:.72rem; font-weight:700; }
@@ -471,6 +534,7 @@
         .mood-button { min-width:130px; }
         .journal-grid { grid-template-columns:1fr 1fr; }
         .journal-card:first-child { grid-column:1/-1; min-height:260px; }
+        .personal-products { grid-template-columns:repeat(2,minmax(0,1fr)); }
       }
       /* Stack the hero before tablet widths so phone landscape never squeezes the title. */
       @media (max-width: 900px) {
@@ -512,6 +576,8 @@
         .journal-card { min-height:245px; margin-bottom:.7rem; }
         .journal-cta-grid { grid-template-columns:1fr; }
         .request-grid, .about-section, .look-detail { grid-template-columns:1fr; }
+        .personal-grid { grid-template-columns:1fr; }
+        .personal-intro { min-height:0; }
         .about-section { gap:1rem; }
         .about-points { grid-template-columns:1fr; }
         .footer { padding-left:5vw; padding-right:5vw; }
@@ -543,6 +609,11 @@
         .journal-cta-item input { grid-column:1/-1; }
         .look-item { grid-template-columns:42px 1fr; }
         .item-link { grid-column:2; width:fit-content; }
+        .personal-looks { grid-template-columns:1fr; }
+        .personal-look { display:grid; grid-template-columns:110px 1fr; align-items:stretch; }
+        .personal-look .look-art, .personal-look .look-uploaded-image { height:100%; min-height:100px; }
+        .personal-products { grid-template-columns:1fr 1fr; }
+        .request-rec-controls { grid-template-columns:1fr; }
       }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
@@ -568,6 +639,9 @@
           <button class="icon-button" id="searchButton" type="button" aria-label="Cari look">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4.2 4.2"></path></svg>
           </button>
+          <button class="icon-button" id="accountButton" type="button" aria-label="Masuk atau buka profil SISIP" title="Masuk atau buka profil SISIP">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="3.25"></circle><path d="M5.5 20c.8-3.6 3.1-5.5 6.5-5.5s5.7 1.9 6.5 5.5"></path></svg>
+          </button>
           <button class="icon-button studio-trigger" id="studioButton" type="button" aria-label="Buka SISIP Studio">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 5.5h16v13H4z"></path><path d="M8 9h8M8 12h4M8 15h6"></path></svg>
           </button>
@@ -582,6 +656,7 @@
         <a href="#journal">Journal</a>
         <a href="#request">Request outfit</a>
         <a href="#about">Tentang SISIP</a>
+        <button class="button-outline" id="mobileAccountButton" type="button">Masuk / Profil</button>
         <button class="button-outline" id="mobileStudioButton" type="button">Buka SISIP Studio</button>
       </nav>
     </header>
@@ -639,6 +714,17 @@
         <div class="popular-grid" id="popularGrid"></div>
       </section>
 
+      <section class="section personal-section" id="forYou" aria-labelledby="forYouTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-number eyebrow">03 / Untuk kamu</p>
+            <h2 class="section-title" id="forYouTitle">Yang terasa<br /><span class="accent">lebih dekat.</span></h2>
+          </div>
+          <p class="section-description">Masuk, pilih preferensi gayamu, lalu SISIP mencocokkan tag look dan produk yang paling relevan.</p>
+        </div>
+        <div class="personal-grid" id="personalGrid"></div>
+      </section>
+
       <section class="section lookbook-section" id="lookbook" aria-labelledby="lookbookTitle">
         <div class="section-heading">
           <div>
@@ -687,24 +773,25 @@
       <section class="section" id="request" aria-labelledby="requestTitle">
         <div class="request-grid">
           <div class="request-copy">
-            <p class="eyebrow">05 / Need a look?</p>
+            <p class="eyebrow">06 / Need a look?</p>
             <h2 class="section-title" id="requestTitle">CERITAKAN<br />HARI<span>MU.</span></h2>
-            <p>Butuh look untuk acara tertentu? Tinggalkan brief singkatmu. Form ini sudah dapat diuji; pengiriman publik akan diaktifkan setelah email dan perlindungan anti-spam disiapkan.</p>
+            <p>Butuh look untuk acara tertentu? Kirim brief setelah masuk ke akun SISIP. Preferensi gayamu akan ikut menjadi acuan kurasi.</p>
             <div class="request-note">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 8v4l2.5 1.5"></path><circle cx="12" cy="12" r="8.5"></circle></svg>
-              <span class="microcopy">Saat ini request disimpan sebagai draft lokal untuk mencegah spam.</span>
+              <span class="microcopy">Request hanya dapat dikirim dari akun SISIP agar antrean Studio tetap aman dan relevan.</span>
             </div>
           </div>
           <form class="request-form" id="requestForm">
             <div class="form-grid">
-              <div class="field full"><label for="requestNeed">Untuk acara apa?</label><input id="requestNeed" name="need" required placeholder="Contoh: bukber kantor, wisuda, date malam" /></div>
-              <div class="field"><label for="requestGender">Gender</label><select id="requestGender" name="gender"><option>Uniseks</option><option>Pria</option><option>Wanita</option><option>Prefer tidak menyebutkan</option></select></div>
-              <div class="field"><label for="requestBudget">Budget (opsional)</label><input id="requestBudget" name="budget" placeholder="Contoh: di bawah Rp500.000" /></div>
-              <div class="field"><label for="requestStyle">Arah gaya</label><input id="requestStyle" name="style" placeholder="Contoh: clean, playful, modest" /></div>
-              <div class="field"><label for="requestColor">Warna yang disukai</label><input id="requestColor" name="color" placeholder="Contoh: olive, hitam, earth tone" /></div>
-              <div class="field full"><label for="requestNotes">Catatan tambahan</label><textarea id="requestNotes" name="notes" placeholder="Proporsi tubuh, ukuran, item yang ingin dihindari, atau referensi suasana."></textarea></div>
+              <div class="field full"><label for="requestNeed">Untuk acara apa?</label><input id="requestNeed" name="occasion" required maxlength="160" placeholder="Contoh: bukber kantor, wisuda, date malam" /></div>
+              <div class="field"><label for="requestGender">Gender preferensi</label><select id="requestGender" name="genderTarget"><option value="">Tidak ingin menyebutkan</option><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
+              <div class="field"><label for="requestStyle">Arah gaya</label><input id="requestStyle" name="styleTags" placeholder="Clean, playful, modest" /></div>
+              <div class="field"><label for="requestBudgetMin">Budget minimum (opsional)</label><input id="requestBudgetMin" name="budgetMin" inputmode="numeric" placeholder="200000" /></div>
+              <div class="field"><label for="requestBudgetMax">Budget maksimum (opsional)</label><input id="requestBudgetMax" name="budgetMax" inputmode="numeric" placeholder="500000" /></div>
+              <div class="field full"><label for="requestColor">Warna yang disukai</label><input id="requestColor" name="preferredColors" placeholder="Olive, hitam, earth tone" /></div>
+              <div class="field full"><label for="requestNotes">Detail tambahan</label><textarea id="requestNotes" name="message" required maxlength="3000" placeholder="Item yang ingin dihindari, ukuran, proporsi tubuh (opsional), atau referensi suasana."></textarea></div>
             </div>
-            <button class="button" type="submit">Simpan request prototype <span aria-hidden="true">↗</span></button>
+            <button class="button" type="submit" id="requestSubmitButton">Masuk untuk mengirim <span aria-hidden="true">↗</span></button>
             <p class="form-status" id="requestStatus" role="status"></p>
           </form>
         </div>
@@ -770,6 +857,58 @@
       </div>
     </dialog>
 
+    <dialog id="memberModal" aria-label="Akun SISIP">
+      <div class="article-shell member-shell">
+        <button class="icon-button modal-close" id="closeMemberModal" type="button" aria-label="Tutup akun SISIP">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+        <div id="memberAuthView">
+          <p class="eyebrow" style="color:var(--clay)">SISIP / PERSONAL PROFILE</p>
+          <h2 id="memberAuthTitle">Masuk untuk menemukan yang lebih pas.</h2>
+          <p id="memberAuthCopy">Simpan preferensi style, dapatkan urutan look yang lebih relevan, dan kirim request outfit ke SISIP Studio.</p>
+          <form class="form-stack" id="memberAuthForm">
+            <div class="field" id="memberDisplayNameField" hidden><label for="memberDisplayNameInput">Nama panggilan</label><input id="memberDisplayNameInput" name="displayName" maxlength="80" autocomplete="name" placeholder="Contoh: Ara" /></div>
+            <div class="field"><label for="memberEmailInput">Email</label><input id="memberEmailInput" name="email" type="email" autocomplete="email" required /></div>
+            <div class="field"><label for="memberPasswordInput">Password</label><input id="memberPasswordInput" name="password" type="password" minlength="8" autocomplete="current-password" required /></div>
+            <p class="form-error" id="memberAuthError" role="alert"></p>
+            <button class="button" id="memberAuthSubmit" type="submit">Masuk <span aria-hidden="true">↗</span></button>
+          </form>
+          <button class="member-auth-switch" id="memberAuthSwitch" type="button">Belum punya akun? Daftar dengan email</button>
+        </div>
+        <div id="memberProfileView" hidden>
+          <div class="member-profile-head">
+            <div><p class="eyebrow" style="color:var(--clay)">SISIP / PROFIL GAYA</p><h2>Lebih kamu, lebih mudah dipilih.</h2></div>
+            <button class="small-button muted" id="memberSignOutButton" type="button">Keluar</button>
+          </div>
+          <p class="member-help">Semua pilihan ini bersifat opsional. Data proporsi tubuh hanya dipakai sebagai acuan personal dan tidak ditampilkan ke publik.</p>
+          <form class="form-stack" id="memberProfileForm">
+            <div class="compact-row">
+              <div class="field"><label for="memberProfileName">Nama panggilan</label><input id="memberProfileName" name="displayName" maxlength="80" autocomplete="name" /></div>
+              <div class="field"><label for="memberProfileGender">Gender preferensi</label><select id="memberProfileGender" name="genderTarget"><option value="">Tidak ingin menyebutkan</option><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
+            </div>
+            <div class="field"><label for="memberProfileStyles">Style yang disukai</label><input id="memberProfileStyles" name="styleTags" placeholder="Clean, Casual, Workwear" /></div>
+            <div class="field"><label for="memberProfileOccasions">Occasion yang sering dicari</label><input id="memberProfileOccasions" name="occasionTags" placeholder="Kantor, Kampus, Lebaran" /></div>
+            <div class="compact-row">
+              <div class="field"><label for="memberProfileColors">Warna yang disukai</label><input id="memberProfileColors" name="preferredColors" placeholder="Olive, Navy, Cream" /></div>
+              <div class="field"><label for="memberProfileAvoidedColors">Warna yang dihindari</label><input id="memberProfileAvoidedColors" name="avoidedColors" placeholder="Neon, Merah terang" /></div>
+            </div>
+            <div class="compact-row">
+              <div class="field"><label for="memberProfileBudgetMin">Budget minimum</label><input id="memberProfileBudgetMin" name="budgetMin" inputmode="numeric" placeholder="200000" /></div>
+              <div class="field"><label for="memberProfileBudgetMax">Budget maksimum</label><input id="memberProfileBudgetMax" name="budgetMax" inputmode="numeric" placeholder="750000" /></div>
+            </div>
+            <div class="field"><label for="memberProfileBodyNotes">Proporsi/fit (opsional)</label><textarea id="memberProfileBodyNotes" name="bodyNotes" maxlength="1000" placeholder="Contoh: suka potongan relaxed, ingin terlihat lebih jenjang, atau detail fit lain."></textarea></div>
+            <p class="form-error" id="memberProfileError" role="alert"></p>
+            <button class="button" type="submit">Simpan preferensi <span aria-hidden="true">↗</span></button>
+          </form>
+          <section class="studio-section" style="margin-top:2rem">
+            <h3>Request kamu</h3>
+            <p>Setelah SISIP menyiapkan jawabannya, look dan produk terkait akan muncul di sini.</p>
+            <div class="member-request-list" id="memberRequestList"></div>
+          </section>
+        </div>
+      </div>
+    </dialog>
+
     <div class="studio-scrim" id="studioScrim"></div>
     <aside class="studio-drawer" id="studioDrawer" aria-label="SISIP Studio" aria-hidden="true">
       <div class="studio-top">
@@ -782,6 +921,7 @@
           <button class="studio-tab is-active" type="button" data-studio-tab="looks" role="tab">Looks</button>
           <button class="studio-tab" type="button" data-studio-tab="series" role="tab">New Series</button>
           <button class="studio-tab" type="button" data-studio-tab="journal" role="tab">Journal</button>
+          <button class="studio-tab" type="button" data-studio-tab="requests" role="tab">Requests</button>
           <button class="studio-tab" type="button" data-studio-tab="products" role="tab">Produk</button>
         </div>
 
@@ -886,6 +1026,14 @@
           </section>
         </div>
 
+        <div class="studio-panel" id="studioRequestsPanel" data-studio-panel="requests">
+          <section class="studio-section">
+            <h3>Request outfit masuk</h3>
+            <p>Brief hanya datang dari akun SISIP. Tulis balasan untuk member, simpan catatan internal, lalu pilih look atau produk published yang ingin dikirimkan.</p>
+            <div class="request-admin-list" id="studioRequestsList"></div>
+          </section>
+        </div>
+
         <div class="studio-panel" id="studioProductsPanel" data-studio-panel="products">
           <section class="studio-section" id="bulkImportSection">
             <h3>Import produk banyak</h3>
@@ -907,6 +1055,7 @@
                 <div class="field"><label for="productPriceInput">Harga referensi (manual)</label><input id="productPriceInput" name="price" required inputmode="numeric" placeholder="229000" /></div>
                 <div class="field"><label for="productBadgeInput">Badge (opsional)</label><input id="productBadgeInput" name="badge" placeholder="Pilihan SISIP" /></div>
               </div>
+              <div class="field"><label for="productGenderInput">Gender target</label><select id="productGenderInput" name="genderTarget"><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
               <div class="field"><label for="productLinkInput">Link affiliate Shopee</label><input id="productLinkInput" name="link" required type="url" placeholder="https://shopee.co.id/..." /></div>
               <div class="field"><label for="productStylesInput">Tag style (pisahkan koma)</label><input id="productStylesInput" name="styles" placeholder="Clean, Formal" /></div>
               <div class="field"><label for="productVariantsInput">Varian warna (Nama|#HEX, pisahkan koma)</label><input id="productVariantsInput" name="variants" required placeholder="Putih|#F1F0EC, Biru|#AAB7C7" /></div>
@@ -1052,14 +1201,20 @@
         let journalDraftBlocks = [makeJournalBlock("paragraph")];
         let journalDraftLookCtas = [];
         let journalDraftProductCtas = [];
+        let memberViewer = null;
+        let memberRequests = [];
+        let memberAuthMode = "signin";
+        const requestDrafts = new Map();
 
         const els = {
-          moodList: document.getElementById("moodList"), popularGrid: document.getElementById("popularGrid"), lookGrid: document.getElementById("lookGrid"),
+          moodList: document.getElementById("moodList"), popularGrid: document.getElementById("popularGrid"), personalGrid: document.getElementById("personalGrid"), lookGrid: document.getElementById("lookGrid"),
           search: document.getElementById("searchInput"), gender: document.getElementById("genderFilter"), style: document.getElementById("styleFilter"), sort: document.getElementById("sortFilter"), styleChips: document.getElementById("styleChips"), resultCount: document.getElementById("resultCount"), heroCount: document.getElementById("heroLookCount"),
           newSeriesCarousel: document.getElementById("newSeriesCarousel"), newSeriesStage: document.getElementById("newSeriesStage"), newSeriesPrev: document.getElementById("newSeriesPrev"), newSeriesNext: document.getElementById("newSeriesNext"), newSeriesDots: document.getElementById("newSeriesDots"),
           lookModal: document.getElementById("lookModal"), lookDetail: document.getElementById("lookDetail"), articleModal: document.getElementById("articleModal"), articleDetail: document.getElementById("articleDetail"),
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
-          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), toast: document.getElementById("toast")
+          accountButton: document.getElementById("accountButton"), mobileAccountButton: document.getElementById("mobileAccountButton"), memberModal: document.getElementById("memberModal"), memberAuthView: document.getElementById("memberAuthView"), memberProfileView: document.getElementById("memberProfileView"), memberAuthTitle: document.getElementById("memberAuthTitle"), memberAuthCopy: document.getElementById("memberAuthCopy"), memberAuthForm: document.getElementById("memberAuthForm"), memberAuthError: document.getElementById("memberAuthError"), memberAuthSwitch: document.getElementById("memberAuthSwitch"), memberAuthSubmit: document.getElementById("memberAuthSubmit"), memberDisplayNameField: document.getElementById("memberDisplayNameField"), memberDisplayNameInput: document.getElementById("memberDisplayNameInput"), memberPasswordInput: document.getElementById("memberPasswordInput"), memberProfileForm: document.getElementById("memberProfileForm"), memberProfileError: document.getElementById("memberProfileError"), memberRequestList: document.getElementById("memberRequestList"), memberSignOutButton: document.getElementById("memberSignOutButton"),
+          requestForm: document.getElementById("requestForm"), requestStatus: document.getElementById("requestStatus"), requestSubmitButton: document.getElementById("requestSubmitButton"),
+          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), toast: document.getElementById("toast")
         };
 
         function loadState() {
@@ -1075,7 +1230,7 @@
           if (!cloudEnabled()) return false;
           try {
             const remoteState = await cloud.loadState({ admin });
-            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [] };
+            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [] };
             renderAll();
             updateStudioMode();
             return true;
@@ -1097,10 +1252,187 @@
           els.bulkImportButton.disabled = !cloudMode || !bulkImportGroups.length || bulkImportErrors.length > 0;
         }
         function getProduct(id) { return state.products.find((item) => item.id === id); }
+        function getLook(id) { return state.looks.find((item) => item.id === id); }
         function getVariant(productItem, name) { return productItem?.variants?.find((variant) => variant.name === name) || productItem?.variants?.[0]; }
         function getLookTotal(lookItem) { return lookItem.items.reduce((sum, item) => sum + Number(getProduct(item.productId)?.price || 0), 0); }
         function getAllStyles() { return [...new Set([...STYLE_ORDER, ...state.looks.flatMap((item) => item.styles)])]; }
         function getProductUsage(id) { return state.looks.filter((entry) => entry.items.some((item) => item.productId === id)); }
+        function memberTerm(value) { return String(value || "").trim().toLowerCase().replace(/\s+/g, " "); }
+        function memberTags(value) {
+          const source = Array.isArray(value) ? value : String(value || "").split(",");
+          return [...new Set(source.map(memberTerm).filter(Boolean))].slice(0,12);
+        }
+        function memberTagText(value) { return memberTags(value).join(", "); }
+        function memberIdr(value) {
+          const digits = String(value ?? "").replace(/[^0-9]/g, "");
+          if (!digits) return null;
+          const amount = Number(digits);
+          return Number.isSafeInteger(amount) && amount >= 0 ? amount : null;
+        }
+        function memberPreference() {
+          const preference = memberViewer?.preferences || {};
+          return {
+            genderTarget: String(preference.genderTarget ?? preference.gender_target ?? "").trim().toLowerCase(),
+            styleTags: memberTags(preference.styleTags ?? preference.style_tags),
+            occasionTags: memberTags(preference.occasionTags ?? preference.occasion_tags),
+            preferredColors: memberTags(preference.preferredColors ?? preference.preferred_colors),
+            avoidedColors: memberTags(preference.avoidedColors ?? preference.avoided_colors),
+            budgetMin: Number(preference.budgetMin ?? preference.budget_min_idr) || null,
+            budgetMax: Number(preference.budgetMax ?? preference.budget_max_idr) || null,
+            bodyNotes: String(preference.bodyNotes ?? preference.body_notes ?? ""),
+            onboardingCompleted: Boolean(preference.onboardingCompleted ?? preference.onboarding_completed)
+          };
+        }
+        function memberDisplayName() {
+          const profile = memberViewer?.profile || {};
+          const name = String(profile.displayName ?? profile.display_name ?? "").trim();
+          return name || String(memberViewer?.user?.email || "SISIP Member").split("@")[0] || "SISIP Member";
+        }
+        function memberIsSignedIn() { return Boolean(memberViewer?.user?.id); }
+        function databaseGender(value) {
+          const gender = memberTerm(value);
+          if (gender === "pria" || gender === "wanita" || gender === "unisex" || gender === "uniseks") return gender === "uniseks" ? "unisex" : gender;
+          return "";
+        }
+        function publishedMatchCandidate(entry) {
+          if (!entry) return false;
+          if (!cloudEnabled()) return true;
+          return entry.status === "published" && Boolean(entry.publishedAt) && new Date(entry.publishedAt).getTime() <= Date.now();
+        }
+        function entryColorTags(entry, type) {
+          if (type === "product") return memberTags((entry.variants || []).flatMap((variant) => [variant.name, variant.colorName]));
+          return memberTags((entry.items || []).flatMap((item) => {
+            const product = getProduct(item.productId);
+            const variant = getVariant(product, item.variantName);
+            return [item.variantName, variant?.name, variant?.colorName];
+          }));
+        }
+        function overlapScore(source, preferred, weight) {
+          const sourceSet = new Set(memberTags(source));
+          return memberTags(preferred).reduce((score, tag) => score + (sourceSet.has(tag) ? weight : 0), 0);
+        }
+        function memberMatchScore(entry, type) {
+          const preference = memberPreference();
+          const catalogueTags = memberTags(entry.styles);
+          const entryGender = databaseGender(type === "look" ? entry.gender : entry.genderTarget);
+          const colors = entryColorTags(entry, type);
+          const price = type === "look" ? getLookTotal(entry) : Number(entry.price || 0);
+          let score = overlapScore(catalogueTags, preference.styleTags, 12) + overlapScore(catalogueTags, preference.occasionTags, 7);
+          if (preference.genderTarget) {
+            if (entryGender === preference.genderTarget) score += 6;
+            else if (entryGender === "unisex") score += 3;
+            else score -= 3;
+          }
+          score += overlapScore(colors, preference.preferredColors, 4);
+          if (memberTags(preference.avoidedColors).some((color) => colors.includes(color))) score -= 50;
+          if (preference.budgetMax) score += price <= preference.budgetMax ? 5 : Math.max(-10, -Math.ceil((price - preference.budgetMax) / Math.max(preference.budgetMax, 1) * 10));
+          if (preference.budgetMin && price >= preference.budgetMin) score += 1;
+          return score;
+        }
+        function hasMemberMatchSignals(preference = memberPreference()) {
+          return Boolean(preference.genderTarget || preference.styleTags.length || preference.occasionTags.length || preference.preferredColors.length || preference.avoidedColors.length || preference.budgetMin || preference.budgetMax);
+        }
+        function getMemberMatches() {
+          const compare = (type) => (a, b) => {
+            const scoreDiff = memberMatchScore(b, type) - memberMatchScore(a, type);
+            if (scoreDiff) return scoreDiff;
+            return Number(b.popularity || b.createdOrder || 0) - Number(a.popularity || a.createdOrder || 0);
+          };
+          return {
+            looks: state.looks.filter(publishedMatchCandidate).sort(compare("look")).slice(0,3),
+            products: state.products.filter(publishedMatchCandidate).sort(compare("product")).slice(0,4)
+          };
+        }
+        function requestStatusLabel(status) {
+          return ({ new:"Baru", reviewing:"Diproses", replied:"Rekomendasi siap", closed:"Selesai", spam:"Ditolak" })[String(status || "").toLowerCase()] || "Baru";
+        }
+        function renderMemberRequests() {
+          if (!els.memberRequestList) return;
+          if (!memberIsSignedIn()) { els.memberRequestList.innerHTML = ""; return; }
+          const rows = Array.isArray(memberRequests) ? memberRequests : [];
+          els.memberRequestList.innerHTML = rows.length ? rows.map((request) => {
+            const recommendations = (request.recommendations || []).map((item) => {
+              const type = item.type || item.targetType;
+              const targetId = item.targetId || (type === "look" ? item.lookId : item.productId);
+              if (type === "look") {
+                const look = getLook(targetId);
+                return look ? `<button type="button" data-member-open-look="${esc(look.id)}">${esc(item.label || "Lihat look")}</button>` : "";
+              }
+              const product = getProduct(targetId);
+              return product ? `<a href="${esc(safeUrl(product.affiliateUrl))}" target="_blank" rel="sponsored noopener">${esc(item.label || "Lihat produk")}</a>` : "";
+            }).filter(Boolean).join("");
+            return `<article class="member-request"><div class="member-request-top"><div><h4>${esc(request.occasion || "Request outfit")}</h4><p class="request-admin-meta">${esc(new Date(request.createdAt || request.created_at || Date.now()).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" }))}</p></div><span class="request-status is-${esc(String(request.status || "new").toLowerCase())}">${esc(requestStatusLabel(request.status))}</span></div>${request.responseMessage || request.response_message ? `<p>${esc(request.responseMessage || request.response_message)}</p>` : `<p>Kurasi sedang disiapkan oleh SISIP.</p>`}${recommendations ? `<div class="member-request-links">${recommendations}</div>` : ""}</article>`;
+          }).join("") : `<p class="member-help">Belum ada request. Kirim brief dari bagian Request Outfit saat kamu sudah siap.</p>`;
+        }
+        function renderMemberAuth() {
+          const signup = memberAuthMode === "signup";
+          els.memberAuthTitle.textContent = signup ? "Buat profil gayamu." : "Masuk untuk menemukan yang lebih pas.";
+          els.memberAuthCopy.textContent = signup ? "Daftar dengan email untuk menyimpan preferensi dan menerima kurasi yang lebih relevan." : "Simpan preferensi style, dapatkan urutan look yang lebih relevan, dan kirim request outfit ke SISIP Studio.";
+          els.memberDisplayNameField.hidden = !signup;
+          els.memberAuthSubmit.innerHTML = signup ? `Buat akun <span aria-hidden="true">↗</span>` : `Masuk <span aria-hidden="true">↗</span>`;
+          els.memberAuthSwitch.textContent = signup ? "Sudah punya akun? Masuk dengan email" : "Belum punya akun? Daftar dengan email";
+          els.memberDisplayNameInput.required = signup;
+          els.memberPasswordInput.setAttribute("autocomplete", signup ? "new-password" : "current-password");
+          els.memberAuthError.textContent = "";
+        }
+        function renderMemberProfile() {
+          if (!memberIsSignedIn()) return;
+          const profile = memberViewer?.profile || {};
+          const preference = memberPreference();
+          const form = els.memberProfileForm;
+          form.elements.displayName.value = String(profile.displayName ?? profile.display_name ?? "");
+          form.elements.genderTarget.value = preference.genderTarget;
+          form.elements.styleTags.value = memberTagText(preference.styleTags);
+          form.elements.occasionTags.value = memberTagText(preference.occasionTags);
+          form.elements.preferredColors.value = memberTagText(preference.preferredColors);
+          form.elements.avoidedColors.value = memberTagText(preference.avoidedColors);
+          form.elements.budgetMin.value = preference.budgetMin || "";
+          form.elements.budgetMax.value = preference.budgetMax || "";
+          form.elements.bodyNotes.value = preference.bodyNotes;
+          els.memberProfileError.textContent = "";
+          renderMemberRequests();
+        }
+        function updateMemberUi() {
+          const signedIn = memberIsSignedIn();
+          const label = signedIn ? `Profil ${memberDisplayName()}` : "Masuk atau buka profil SISIP";
+          els.accountButton.setAttribute("aria-label", label);
+          els.accountButton.title = label;
+          els.mobileAccountButton.textContent = signedIn ? `Profil ${memberDisplayName()}` : "Masuk / Profil";
+          els.requestSubmitButton.innerHTML = signedIn ? `Kirim request ke Studio <span aria-hidden="true">↗</span>` : `Masuk untuk mengirim <span aria-hidden="true">↗</span>`;
+          if (signedIn) prefillRequestForm();
+          renderMemberRequests();
+          renderPersonalized();
+        }
+        function prefillRequestForm() {
+          if (!memberIsSignedIn() || !els.requestForm) return;
+          const preference = memberPreference();
+          const form = els.requestForm;
+          if (!form.elements.genderTarget.value && preference.genderTarget) form.elements.genderTarget.value = preference.genderTarget;
+          if (!form.elements.styleTags.value && preference.styleTags.length) form.elements.styleTags.value = memberTagText(preference.styleTags);
+          if (!form.elements.preferredColors.value && preference.preferredColors.length) form.elements.preferredColors.value = memberTagText(preference.preferredColors);
+          if (!form.elements.budgetMin.value && preference.budgetMin) form.elements.budgetMin.value = preference.budgetMin;
+          if (!form.elements.budgetMax.value && preference.budgetMax) form.elements.budgetMax.value = preference.budgetMax;
+        }
+        function renderPersonalized() {
+          if (!els.personalGrid) return;
+          if (!cloudEnabled()) {
+            els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">SISIP / PERSONAL</p><h3>Profil personal aktif saat katalog cloud terhubung.</h3></div><p>Versi production SISIP akan menyimpan pilihanmu secara aman di akun sendiri.</p></div><div class="personal-results"><p class="personal-empty">Hubungkan Supabase cloud untuk mencoba akun dan rekomendasi personal.</p></div>`;
+            return;
+          }
+          if (!memberIsSignedIn()) {
+            els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">SISIP / PERSONAL</p><h3>Mulai dari gaya yang terasa kamu.</h3></div><p>Masuk untuk menyimpan style, warna, budget, dan preferensi yang akan dipakai untuk mengurutkan kurasi.</p><button class="button-outline" type="button" data-open-member>Masuk / buat akun ↗</button></div><div class="personal-results"><p class="personal-empty">Katalog tetap terbuka untuk semua orang. Akun hanya dipakai saat kamu ingin rekomendasi yang lebih personal.</p></div>`;
+            return;
+          }
+          const preference = memberPreference();
+          if (!preference.onboardingCompleted || !hasMemberMatchSignals(preference)) {
+            els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">HALO, ${esc(memberDisplayName().toUpperCase())}</p><h3>Berikan sedikit arah untuk kurasimu.</h3></div><p>Pilih minimal satu style, warna, gender preferensi, atau budget. Kamu bisa mengubahnya kapan saja.</p><button class="button-outline" type="button" data-open-member>Isi preferensi ↗</button></div><div class="personal-results"><p class="personal-empty">Setelah disimpan, SISIP akan mencocokkan tag katalog dan menampilkan Look serta produk yang paling dekat dengan preferensimu.</p></div>`;
+            return;
+          }
+          const matches = getMemberMatches();
+          const looks = matches.looks.map((entry) => `<button class="personal-look" type="button" data-open-look="${esc(entry.id)}">${lookVisual(entry)}<span class="personal-look-copy"><strong>${esc(entry.title)}</strong><span>${esc(entry.styles.slice(0,2).join(" / ") || "Kurasi SISIP")}</span></span></button>`).join("");
+          const products = matches.products.map((item) => { const variant = item.variants?.[0]; return `<article class="personal-product">${productArt(item,variant,true)}<h5>${esc(item.name)}</h5><p>${money(item.price)}</p><a href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></article>`; }).join("");
+          els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">UNTUK ${esc(memberDisplayName().toUpperCase())}</p><h3>Kurasi yang dimulai dari pilihanmu.</h3></div><p>Urutan ini memakai kecocokan tag style, warna, gender preferensi, dan budget dari profil SISIP-mu.</p><button class="button-outline" type="button" data-open-member>Ubah preferensi ↗</button></div><div class="personal-results"><div class="personal-group"><div class="personal-group-head"><h4>Look yang mungkin kamu suka</h4><span class="eyebrow">${matches.looks.length} pilihan</span></div><div class="personal-looks">${looks || `<p class="personal-empty">Belum ada look yang cukup cocok.</p>`}</div></div><div class="personal-group"><div class="personal-group-head"><h4>Pieces untuk disisipkan</h4><span class="eyebrow">${matches.products.length} pilihan</span></div><div class="personal-products">${products || `<p class="personal-empty">Belum ada produk yang cukup cocok.</p>`}</div></div></div>`;
+        }
 
         function productArt(productItem, variant, small = false) {
           const img = safeImage(variant?.image || productItem?.image);
@@ -1320,6 +1652,60 @@
               : "Lima look siap dipilih. Atur urutannya lalu simpan ke beranda.";
           els.saveNewSeriesButton.disabled = !ready;
         }
+        function getRequestDraft(request) {
+          const id = String(request?.id || "");
+          if (!id) return { status:"new", responseMessage:"", adminNote:"", recommendations:[] };
+          if (!requestDrafts.has(id)) {
+            requestDrafts.set(id, {
+              status: String(request.status || "new"),
+              responseMessage: String(request.responseMessage ?? request.response_message ?? ""),
+              adminNote: String(request.adminNote ?? request.admin_note ?? request.note ?? ""),
+              recommendations: (request.recommendations || []).map((item) => ({
+                type: String(item.type || item.targetType || ""),
+                targetId: String(item.targetId || item.id || (item.type === "look" || item.targetType === "look" ? item.lookId : item.productId) || ""),
+                label: String(item.label || (item.type === "look" || item.targetType === "look" ? "Lihat look" : "Lihat produk"))
+              })).filter((item) => (item.type === "look" || item.type === "product") && item.targetId)
+            });
+          }
+          return requestDrafts.get(id);
+        }
+        function syncRequestDraft(form) {
+          const id = String(form?.dataset?.adminRequestForm || "");
+          if (!id || !requestDrafts.has(id)) return;
+          const draft = requestDrafts.get(id);
+          if (form.elements.status) draft.status = String(form.elements.status.value || "new");
+          if (form.elements.responseMessage) draft.responseMessage = String(form.elements.responseMessage.value || "");
+          if (form.elements.adminNote) draft.adminNote = String(form.elements.adminNote.value || "");
+        }
+        function requestCandidateLabel(type, targetId) {
+          const target = type === "look" ? getLook(targetId) : getProduct(targetId);
+          return target?.title || target?.name || "Kurasi tidak tersedia";
+        }
+        function renderRequestsStudio() {
+          if (!els.studioRequestsList) return;
+          const requests = Array.isArray(state.requests) ? [...state.requests] : [];
+          if (!cloudEnabled()) {
+            els.studioRequestsList.innerHTML = `<p class="microcopy" style="color:var(--taupe)">Antrean request aktif setelah SISIP terhubung ke Supabase cloud.</p>`;
+            return;
+          }
+          if (!requests.length) {
+            els.studioRequestsList.innerHTML = `<p class="microcopy" style="color:var(--taupe)">Belum ada request dari member. Request akan masuk ke sini setelah user login dan mengirim brief.</p>`;
+            return;
+          }
+          const looks = state.looks.filter(isPublishedCatalogueEntry);
+          const products = state.products.filter(isPublishedCatalogueEntry);
+          els.studioRequestsList.innerHTML = requests.sort((a,b) => new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0)).map((request) => {
+            const draft = getRequestDraft(request);
+            const selected = new Set(draft.recommendations.map((item) => `${item.type}:${item.targetId}`));
+            const title = request.requesterName || request.requester_name || "Member SISIP";
+            const email = request.requesterEmail || request.requester_email || "";
+            const created = new Date(request.createdAt || request.created_at || Date.now()).toLocaleString("id-ID", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+            const tags = memberTags(request.styleTags ?? request.style_tags).map((tag) => `<span>${esc(tag)}</span>`).join("");
+            const colors = memberTags(request.preferredColors ?? request.preferred_colors).map((color) => `<span>${esc(color)}</span>`).join("");
+            const selection = draft.recommendations.map((item,index) => `<div class="request-rec-chip"><strong>${esc(item.label)} · ${esc(requestCandidateLabel(item.type,item.targetId))}</strong><button type="button" data-remove-request-rec="${esc(request.id)}" data-request-rec-index="${index}" aria-label="Hapus rekomendasi">×</button></div>`).join("") || `<p class="microcopy" style="color:var(--taupe);margin:0">Belum ada kurasi yang dipilih.</p>`;
+            return `<form class="request-admin-card" data-admin-request-form="${esc(request.id)}"><div class="request-admin-title"><div><h4>${esc(request.occasion || "Request outfit")}</h4><p class="request-admin-meta">${esc(title)}${email ? ` · ${esc(email)}` : ""} · ${esc(created)}</p></div><span class="request-status is-${esc(String(draft.status || "new").toLowerCase())}">${esc(requestStatusLabel(draft.status))}</span></div><p class="request-admin-brief">${esc(request.message || "Tanpa detail tambahan.")}</p>${tags || colors || request.budgetMin || request.budget_min_idr || request.budgetMax || request.budget_max_idr ? `<div class="request-admin-pills">${tags}${colors}${request.genderTarget || request.gender_target ? `<span>${esc(request.genderTarget || request.gender_target)}</span>` : ""}${request.budgetMin || request.budget_min_idr || request.budgetMax || request.budget_max_idr ? `<span>${esc(money(request.budgetMin ?? request.budget_min_idr ?? 0))} – ${esc(money(request.budgetMax ?? request.budget_max_idr ?? 0))}</span>` : ""}</div>` : ""}<div class="compact-row"><div class="field"><label>Status</label><select name="status"><option value="new" ${draft.status === "new" ? "selected" : ""}>Baru</option><option value="reviewing" ${draft.status === "reviewing" ? "selected" : ""}>Diproses</option><option value="replied" ${draft.status === "replied" ? "selected" : ""}>Rekomendasi siap</option><option value="closed" ${draft.status === "closed" ? "selected" : ""}>Selesai</option><option value="spam" ${draft.status === "spam" ? "selected" : ""}>Ditolak</option></select></div><div class="field"><label>Balasan untuk member</label><input name="responseMessage" maxlength="3000" value="${esc(draft.responseMessage)}" placeholder="Contoh: Kurasi kamu sudah siap." /></div></div><div class="field"><label>Catatan internal admin</label><textarea name="adminNote" maxlength="3000" placeholder="Tidak terlihat oleh member.">${esc(draft.adminNote)}</textarea></div><div class="request-rec-controls"><div class="field"><label>Tambahkan look</label><div class="editor-product-row"><select data-request-look-select="${esc(request.id)}"><option value="">Pilih look published</option>${looks.filter((item) => !selected.has(`look:${item.id}`)).map((item) => `<option value="${esc(item.id)}">${esc(item.title)}</option>`).join("")}</select><button class="small-button muted" type="button" data-add-request-rec="${esc(request.id)}" data-request-rec-type="look">+ Look</button></div></div><div class="field"><label>Tambahkan produk</label><div class="editor-product-row"><select data-request-product-select="${esc(request.id)}"><option value="">Pilih produk published</option>${products.filter((item) => !selected.has(`product:${item.id}`)).map((item) => `<option value="${esc(item.id)}">${esc(item.name)} · ${money(item.price)}</option>`).join("")}</select><button class="small-button muted" type="button" data-add-request-rec="${esc(request.id)}" data-request-rec-type="product">+ Produk</button></div></div></div><div class="request-rec-list">${selection}</div><p class="form-error" data-request-error="${esc(request.id)}" role="alert"></p><button class="small-button" type="button" data-save-request="${esc(request.id)}">Simpan jawaban</button></form>`;
+          }).join("");
+        }
         function renderStudio() {
           const currentProduct = els.lookProduct.value;
           els.lookProduct.innerHTML = state.products.length ? state.products.map((item)=>`<option value="${esc(item.id)}">${esc(item.name)}</option>`).join("") : `<option value="">Tambah produk terlebih dahulu</option>`;
@@ -1328,6 +1714,7 @@
           renderDraftItems();
           renderNewSeriesStudio();
           renderJournalStudio();
+          renderRequestsStudio();
           els.studioLooksList.innerHTML = state.looks.length ? [...state.looks].sort((a,b)=>Number(b.createdOrder||0)-Number(a.createdOrder||0)).map((entry)=>`<div class="studio-row"><p><strong>${esc(entry.title)}</strong><span>${esc(entry.gender)} · ${esc(entry.styles.join(", "))} · ${entry.items.length} item</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-look="${esc(entry.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada look tersimpan.</p>`;
           els.studioProductsList.innerHTML = state.products.length ? state.products.map((item)=>{ const usage=getProductUsage(item.id).length; return `<div class="studio-row"><p><strong>${esc(item.name)}</strong><span>${money(item.price)} · ${item.variants.length} warna · dipakai ${usage} look</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-product="${esc(item.id)}" type="button">Hapus</button></div></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada produk.</p>`;
           els.studioArticlesList.innerHTML = state.articles.length ? [...state.articles].map((article)=>`<div class="studio-row"><p><strong>${esc(article.title)}</strong><span>${esc(articleCategoryLabel(article.category))} · ${(article.blocks || []).length || "teks"} blok · ${(article.ctas || []).length} CTA</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-article="${esc(article.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada artikel tersimpan.</p>`;
@@ -1339,7 +1726,7 @@
         function renderDraftItems() {
           els.lookDraftItems.innerHTML = lookDraftItems.length ? lookDraftItems.map((item,index)=>{ const productItem=getProduct(item.productId); return `<div class="draft-item"><p><strong>${esc(productItem?.name || "Produk dihapus")}</strong><span>Warna pilihan: ${esc(item.variantName)}</span></p><button class="small-button danger" type="button" data-remove-draft="${index}">×</button></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe);margin:0">Masukkan 2–5 item untuk mempublikasikan look.</p>`;
         }
-        function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderNewSeries(); renderJournal(); renderStudio(); }
+        function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderNewSeries(); renderJournal(); renderStudio(); renderPersonalized(); }
 
         function affiliateUrl(value) {
           let parsed;
@@ -1418,6 +1805,43 @@
           els.authPassword.value = "";
           if (!els.authModal.open) els.authModal.showModal();
           setTimeout(() => els.authPassword.focus(), 0);
+        }
+        async function syncMemberSession({ quiet = true } = {}) {
+          if (!cloudEnabled() || typeof cloud?.getMemberProfile !== "function") {
+            memberViewer = null;
+            memberRequests = [];
+            cloudAdmin = false;
+            updateMemberUi();
+            return;
+          }
+          try {
+            memberViewer = await cloud.getMemberProfile();
+            if (memberIsSignedIn() && typeof cloud?.loadMyOutfitRequests === "function") memberRequests = await cloud.loadMyOutfitRequests();
+            else memberRequests = [];
+            cloudAdmin = memberIsSignedIn() && typeof cloud?.isAdmin === "function" ? await cloud.isAdmin() : false;
+            updateMemberUi();
+            if (memberIsSignedIn() && !els.memberProfileView.hidden) renderMemberProfile();
+          } catch (error) {
+            console.warn("Unable to load SISIP member session", error);
+            memberViewer = null;
+            memberRequests = [];
+            cloudAdmin = false;
+            updateMemberUi();
+            if (!quiet) showToast("Profil SISIP belum dapat dimuat. Coba lagi sesaat lagi.");
+          }
+        }
+        function openMemberAccount() {
+          if (!cloudEnabled()) { showToast("Akun SISIP aktif saat katalog cloud terhubung."); return; }
+          if (memberIsSignedIn()) {
+            els.memberAuthView.hidden = true;
+            els.memberProfileView.hidden = false;
+            renderMemberProfile();
+          } else {
+            els.memberAuthView.hidden = false;
+            els.memberProfileView.hidden = true;
+            renderMemberAuth();
+          }
+          if (!els.memberModal.open) els.memberModal.showModal();
         }
         async function openStudio() {
           if (!cloudEnabled()) { updateStudioMode(); openStudioDrawer(); return; }
@@ -1742,7 +2166,15 @@
         document.getElementById("currentYear").textContent=new Date().getFullYear();
         updateStudioMode();
         renderAll();
-        if (cloudEnabled()) void refreshCloudState({ quiet: true });
+        if (cloudEnabled()) {
+          void refreshCloudState({ quiet: true });
+          void syncMemberSession({ quiet: true });
+          if (typeof cloud?.onAuthStateChange === "function") {
+            cloud.onAuthStateChange(() => {
+              window.setTimeout(() => { void syncMemberSession({ quiet: true }); }, 0);
+            });
+          }
+        }
 
         els.search.addEventListener("input",()=>{ activeStyle="all"; renderStyleControls(); renderLooks(); });
         els.gender.addEventListener("change",renderLooks);
@@ -1761,19 +2193,31 @@
         document.getElementById("menuButton").addEventListener("click",(event)=>{ const nav=document.getElementById("mobileNav"); const open=nav.classList.toggle("is-open"); event.currentTarget.setAttribute("aria-expanded",String(open)); });
         document.getElementById("mobileNav").addEventListener("click",(event)=>{ if(event.target.matches("a")){ event.currentTarget.classList.remove("is-open"); document.getElementById("menuButton").setAttribute("aria-expanded","false"); } });
         [document.getElementById("studioButton"),document.getElementById("mobileStudioButton")].forEach((button)=>button.addEventListener("click",openStudio));
+        [els.accountButton, els.mobileAccountButton].forEach((button)=>button.addEventListener("click",()=>{
+          document.getElementById("mobileNav").classList.remove("is-open");
+          document.getElementById("menuButton").setAttribute("aria-expanded","false");
+          openMemberAccount();
+        }));
+        els.personalGrid.addEventListener("click",(event)=>{
+          const button=event.target.closest("[data-open-member]"); if(button) openMemberAccount();
+          const look=event.target.closest("[data-open-look]"); if(look) openLook(look.dataset.openLook);
+        });
         document.getElementById("closeStudioButton").addEventListener("click",closeStudio); els.studioScrim.addEventListener("click",closeStudio);
         document.getElementById("closeLookModal").addEventListener("click",()=>els.lookModal.close());
         document.getElementById("closeArticleModal").addEventListener("click",()=>els.articleModal.close());
         document.getElementById("closeAuthModal").addEventListener("click",()=>els.authModal.close());
+        document.getElementById("closeMemberModal").addEventListener("click",()=>els.memberModal.close());
         els.authModal.addEventListener("click",(event)=>{ if(event.target===els.authModal)els.authModal.close(); });
+        els.memberModal.addEventListener("click",(event)=>{ if(event.target===els.memberModal)els.memberModal.close(); });
         els.authForm.addEventListener("submit",async(event)=>{
           event.preventDefault();
           els.authFormError.textContent="";
           try {
             const form = new FormData(event.currentTarget);
-            await cloud.signIn(String(form.get("email")||"").trim(),String(form.get("password")||""));
+            await cloud.signInAdmin(String(form.get("email")||"").trim(),String(form.get("password")||""));
             cloudAdmin=true;
             els.authModal.close();
+            await syncMemberSession({ quiet: true });
             await openStudio();
             showToast("Masuk sebagai admin SISIP.");
           } catch(error) {
@@ -1787,8 +2231,97 @@
             closeStudio();
             updateStudioMode();
             await refreshCloudState({ quiet: true });
+            await syncMemberSession({ quiet: true });
             showToast("Kamu sudah keluar dari SISIP Studio.");
           } catch(error) { showToast("Sesi belum dapat diakhiri. Coba lagi."); }
+        });
+        els.memberAuthSwitch.addEventListener("click",()=>{
+          memberAuthMode = memberAuthMode === "signin" ? "signup" : "signin";
+          renderMemberAuth();
+          els.memberPasswordInput?.setAttribute("autocomplete", memberAuthMode === "signup" ? "new-password" : "current-password");
+        });
+        els.memberAuthForm.addEventListener("submit",async(event)=>{
+          event.preventDefault();
+          els.memberAuthError.textContent="";
+          const form=event.currentTarget;
+          const submit=els.memberAuthSubmit;
+          const originalLabel=submit.textContent;
+          submit.disabled=true;
+          try {
+            const data=new FormData(form);
+            const email=String(data.get("email")||"").trim();
+            const password=String(data.get("password")||"");
+            if(memberAuthMode === "signup") {
+              const result=await cloud.signUpMember({email,password,displayName:String(data.get("displayName")||"").trim()});
+              if(result?.needsEmailConfirmation) {
+                els.memberAuthError.textContent="Akun dibuat. Cek email untuk mengonfirmasi, lalu kembali masuk ke SISIP.";
+                return;
+              }
+              showToast("Akun SISIP berhasil dibuat.");
+            } else {
+              await cloud.signInMember(email,password);
+              showToast("Kamu sudah masuk ke profil SISIP.");
+            }
+            form.reset();
+            await syncMemberSession({ quiet:false });
+            openMemberAccount();
+          } catch(error) {
+            els.memberAuthError.textContent=error.message||"Akun belum dapat diproses. Coba lagi.";
+          } finally {
+            submit.disabled=false;
+            submit.textContent=originalLabel;
+          }
+        });
+        els.memberProfileForm.addEventListener("submit",async(event)=>{
+          event.preventDefault();
+          els.memberProfileError.textContent="";
+          const form=event.currentTarget;
+          const submit=form.querySelector("button[type='submit']");
+          const originalLabel=submit?.textContent||"Simpan preferensi";
+          if(submit) { submit.disabled=true; submit.textContent="Menyimpan…"; }
+          try {
+            const data=new FormData(form);
+            const budgetMin=memberIdr(data.get("budgetMin"));
+            const budgetMax=memberIdr(data.get("budgetMax"));
+            if(budgetMin !== null && budgetMax !== null && budgetMax < budgetMin) throw new Error("Budget maksimum tidak boleh lebih kecil dari budget minimum.");
+            await cloud.saveMemberProfile({
+              displayName:String(data.get("displayName")||"").trim(),
+              genderTarget:String(data.get("genderTarget")||"").trim(),
+              styleTags:memberTags(data.get("styleTags")),
+              occasionTags:memberTags(data.get("occasionTags")),
+              preferredColors:memberTags(data.get("preferredColors")),
+              avoidedColors:memberTags(data.get("avoidedColors")),
+              budgetMin,
+              budgetMax,
+              bodyNotes:String(data.get("bodyNotes")||"").trim(),
+              onboardingCompleted:true
+            });
+            await syncMemberSession({ quiet:false });
+            renderMemberProfile();
+            showToast("Preferensi gayamu sudah disimpan.");
+          } catch(error) {
+            els.memberProfileError.textContent=error.message||"Preferensi belum dapat disimpan.";
+          } finally {
+            if(submit) { submit.disabled=false; submit.textContent=originalLabel; }
+          }
+        });
+        els.memberSignOutButton.addEventListener("click",async()=>{
+          try {
+            await cloud.signOut();
+            memberViewer=null;
+            memberRequests=[];
+            cloudAdmin=false;
+            els.memberModal.close();
+            await refreshCloudState({ quiet:true });
+            await syncMemberSession({ quiet:true });
+            showToast("Kamu sudah keluar dari profil SISIP.");
+          } catch(error) { showToast("Sesi belum dapat diakhiri. Coba lagi."); }
+        });
+        els.memberRequestList.addEventListener("click",(event)=>{
+          const button=event.target.closest("[data-member-open-look]");
+          if(!button) return;
+          els.memberModal.close();
+          openLook(button.dataset.memberOpenLook);
         });
         els.lookModal.addEventListener("click",(event)=>{ if(event.target===els.lookModal)els.lookModal.close(); const share=event.target.closest("[data-share-look]"); if(share) shareLook(share.dataset.shareLook); });
         els.articleModal.addEventListener("click",(event)=>{ if(event.target===els.articleModal){els.articleModal.close();return;} const close=event.target.closest("[data-close-article]"); if(close){els.articleModal.close();return;} const look=event.target.closest("[data-open-article-look]"); if(look){els.articleModal.close();openLook(look.dataset.openArticleLook);} });
@@ -1839,6 +2372,68 @@
           }
           const detail=usedIn.length?` Produk ini dipakai di ${usedIn.length} look; item terkait juga akan hilang dari look tersebut.`:"";
           if(confirm(`Hapus produk “${item.name}”?${detail}`)){state.products=state.products.filter((productItem)=>productItem.id!==item.id);state.looks=state.looks.map((entry)=>({...entry,items:entry.items.filter((lookItem)=>lookItem.productId!==item.id)})).filter((entry)=>entry.items.length>=2);state.newSeriesLookIds=(state.newSeriesLookIds||[]).filter((id)=>state.looks.some((entry)=>entry.id===id));saveState();renderAll();showToast("Produk dan referensi terkait berhasil dihapus.");}
+        });
+        els.studioRequestsList.addEventListener("input",(event)=>{
+          const form=event.target.closest("[data-admin-request-form]"); if(form) syncRequestDraft(form);
+        });
+        els.studioRequestsList.addEventListener("change",(event)=>{
+          const form=event.target.closest("[data-admin-request-form]"); if(form) syncRequestDraft(form);
+        });
+        els.studioRequestsList.addEventListener("click",async(event)=>{
+          const add=event.target.closest("[data-add-request-rec]");
+          if(add) {
+            const id=String(add.dataset.addRequestRec||"");
+            const type=String(add.dataset.requestRecType||"");
+            const form=add.closest("[data-admin-request-form]");
+            if(!id || !form || (type!=="look" && type!=="product")) return;
+            syncRequestDraft(form);
+            const selector=type === "look" ? `[data-request-look-select="${id}"]` : `[data-request-product-select="${id}"]`;
+            const select=form.querySelector(selector);
+            const targetId=String(select?.value||"").trim();
+            const formError=form.querySelector("[data-request-error]");
+            if(!targetId) { if(formError) formError.textContent=`Pilih ${type === "look" ? "look" : "produk"} terlebih dahulu.`; return; }
+            const draft=getRequestDraft({id});
+            if(draft.recommendations.length >= 6) { if(formError) formError.textContent="Maksimal enam rekomendasi per request."; return; }
+            if(draft.recommendations.some((item)=>item.type===type && item.targetId===targetId)) { if(formError) formError.textContent="Pilihan ini sudah masuk ke jawaban."; return; }
+            draft.recommendations.push({type,targetId,label:type === "look" ? "Lihat look" : "Lihat produk"});
+            if(formError) formError.textContent="";
+            renderRequestsStudio();
+            return;
+          }
+          const remove=event.target.closest("[data-remove-request-rec]");
+          if(remove) {
+            const id=String(remove.dataset.removeRequestRec||"");
+            const index=Number(remove.dataset.requestRecIndex);
+            const form=remove.closest("[data-admin-request-form]");
+            if(form) syncRequestDraft(form);
+            const draft=getRequestDraft({id});
+            if(Number.isInteger(index) && index>=0) draft.recommendations.splice(index,1);
+            renderRequestsStudio();
+            return;
+          }
+          const save=event.target.closest("[data-save-request]");
+          if(!save) return;
+          const id=String(save.dataset.saveRequest||"");
+          const form=save.closest("[data-admin-request-form]");
+          if(!id || !form) return;
+          syncRequestDraft(form);
+          const draft=getRequestDraft({id});
+          const formError=form.querySelector("[data-request-error]");
+          if(formError) formError.textContent="";
+          const originalLabel=save.textContent;
+          save.disabled=true;
+          save.textContent="Menyimpan…";
+          try {
+            await cloud.updateOutfitRequest({ id, status:draft.status, responseMessage:draft.responseMessage, adminNote:draft.adminNote, recommendations:draft.recommendations });
+            requestDrafts.delete(id);
+            await refreshCloudState({ admin:true });
+            await syncMemberSession({ quiet:true });
+            showToast("Jawaban request telah disimpan.");
+          } catch(error) {
+            if(formError) formError.textContent=error.message||"Jawaban request belum dapat disimpan.";
+            save.disabled=false;
+            save.textContent=originalLabel;
+          }
         });
         els.studioArticlesList.addEventListener("click",async(event)=>{
           const button=event.target.closest("[data-delete-article]");if(!button)return;
@@ -1964,8 +2559,9 @@
           try {
             const badge=String(form.get("badge")||"").trim();
             const styles=parseTags(form.get("styles"));
+            const genderTarget=String(form.get("genderTarget")||"unisex");
             if(cloudEnabled()) {
-              await cloud.createProduct({ title, price, badge, styles, link, variants, imageUrl, imageFile:document.getElementById("productImageInput").files?.[0] });
+              await cloud.createProduct({ title, price, badge, styles, genderTarget, link, variants, imageUrl, imageFile:document.getElementById("productImageInput").files?.[0] });
               productForm.reset();
               await refreshCloudState({admin:true});
               switchStudioTab("products");
@@ -1974,7 +2570,7 @@
             }
             const image=imageUrl || await readImage(document.getElementById("productImageInput"));
             const localVariants=variants.map((variant)=>({...variant,image}));
-            const created={id:uid("product"),name:title,price,badge,styles,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,variants:localVariants};
+            const created={id:uid("product"),name:title,price,badge,styles,genderTarget,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,variants:localVariants};
             state.products.push(created);saveState();productForm.reset();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
           } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
         });
@@ -1996,7 +2592,50 @@
             state.looks.push(created);lookDraftItems=[];saveState();lookForm.reset();renderAll();switchStudioTab("looks");showToast("Look baru dipublikasikan di prototype.");
           } catch(error){els.lookFormError.textContent=error.message||"Look belum dapat disimpan.";}
         });
-        document.getElementById("requestForm").addEventListener("submit",(event)=>{event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries());try{const current=JSON.parse(localStorage.getItem("sisip-request-drafts")||"[]");current.push({...data,createdAt:new Date().toISOString()});localStorage.setItem("sisip-request-drafts",JSON.stringify(current));}catch(error){console.warn(error);}document.getElementById("requestStatus").textContent="Request tersimpan sebagai draft di perangkat ini. Form publik akan diaktifkan lewat endpoint aman setelah anti-spam dan email siap.";event.currentTarget.reset();showToast("Request outfit tersimpan sebagai draft lokal.");});
+        els.requestForm.addEventListener("submit",async(event)=>{
+          event.preventDefault();
+          els.requestStatus.textContent="";
+          if(!cloudEnabled()) { els.requestStatus.textContent="Request outfit aktif setelah katalog cloud SISIP terhubung."; return; }
+          if(!memberIsSignedIn()) {
+            els.requestStatus.textContent="Masuk atau buat akun SISIP terlebih dahulu untuk mengirim brief.";
+            openMemberAccount();
+            return;
+          }
+          const form=event.currentTarget;
+          const data=new FormData(form);
+          const budgetMin=memberIdr(data.get("budgetMin"));
+          const budgetMax=memberIdr(data.get("budgetMax"));
+          if(budgetMin !== null && budgetMax !== null && budgetMax < budgetMin) {
+            els.requestStatus.textContent="Budget maksimum tidak boleh lebih kecil dari budget minimum.";
+            return;
+          }
+          const button=els.requestSubmitButton;
+          const originalLabel=button.textContent;
+          button.disabled=true;
+          button.textContent="Mengirim…";
+          try {
+            await cloud.createOutfitRequest({
+              occasion:String(data.get("occasion")||"").trim(),
+              genderTarget:String(data.get("genderTarget")||"").trim(),
+              styleTags:memberTags(data.get("styleTags")),
+              preferredColors:memberTags(data.get("preferredColors")),
+              budgetMin,
+              budgetMax,
+              message:String(data.get("message")||"").trim()
+            });
+            form.reset();
+            prefillRequestForm();
+            memberRequests=await cloud.loadMyOutfitRequests();
+            updateMemberUi();
+            els.requestStatus.textContent="Brief sudah masuk ke SISIP Studio. Kamu bisa melihat status dan jawabannya dari profil.";
+            showToast("Request outfit sudah dikirim ke SISIP Studio.");
+          } catch(error) {
+            els.requestStatus.textContent=error.message||"Request belum dapat dikirim. Coba lagi sesaat lagi.";
+          } finally {
+            button.disabled=false;
+            button.innerHTML=originalLabel;
+          }
+        });
 
         async function shareLook(id) {
           const entry=state.looks.find((item)=>item.id===id);const text=`${entry?.title||"Look"} — temukan potongannya di SISIP.`;
@@ -2006,4 +2645,3 @@
     </script>
   </body>
 </html>
-

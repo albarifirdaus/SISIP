@@ -28,13 +28,16 @@ supabase/migrations/
 
 Tidak ada environment variable rahasia yang dibutuhkan pada frontend ini. Supabase RLS yang membatasi akses tulis, bukan penyembunyian key browser.
 
-## 3. Supabase Auth redirect URLs
+## 3. Supabase Auth untuk member dan admin
 
 Di Supabase Dashboard, buka **Authentication → URL Configuration**:
 
 - Isi Site URL dengan URL `pages.dev` yang sudah jadi.
 - Tambahkan URL tersebut pada Redirect URLs.
 - Tambahkan domain custom nanti jika sudah punya.
+- Di **Authentication → Providers → Email**, aktifkan email sign-up. Untuk website live, aktifkan juga konfirmasi email.
+
+Member dapat membuat akun sendiri untuk menyimpan preferensi dan request outfit. Akun admin tetap ditentukan oleh email `albarifirdaus209@gmail.com` dan diperiksa ulang oleh RLS di database.
 
 ## 4. Cek sebelum live
 
@@ -42,5 +45,5 @@ Di Supabase Dashboard, buka **Authentication → URL Configuration**:
 - Ganti sample link dengan affiliate link Shopee asli.
 - Cek harga referensi dan tanggal kurasi.
 - Isi minimal satu artikel jika Journal ingin tampil di cloud.
-- Jangan aktifkan form request publik sebelum Edge Function + CAPTCHA dibuat.
-
+- Coba satu akun member: simpan preferensi, kirim Request Outfit, lalu balas lewat **SISIP Studio → Requests**.
+- Aktifkan leaked-password protection di Supabase Auth bila tersedia di paketmu.

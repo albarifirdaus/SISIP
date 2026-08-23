@@ -7,6 +7,9 @@ SISIP adalah katalog fashion all-gender untuk Indonesia: satu look berisi 2–5 
 - Katalog responsive: pencarian, filter style/gender, urutan, detail look, link Shopee, dan Journal.
 - **SISIP Studio**: login admin, tambah produk + varian warna, tambah look, unggah gambar hingga 5 MB ke Supabase Storage, serta hapus data yang tidak dipakai look lain.
 - **New Series**: carousel beranda hingga lima look, lengkap dengan urutan yang dapat dipilih dari tab **New Series** di SISIP Studio.
+- **Akun member**: daftar/masuk dengan email, simpan preferensi style, occasion, warna, budget, serta catatan fit opsional. Preferensi hanya dapat dibaca oleh pemilik akun dan admin.
+- **Untuk Kamu**: look dan produk published diurutkan dari kecocokan tag style, warna, gender preferensi, dan budget—tanpa AI atau data pihak ketiga.
+- **Request Outfit**: member yang sudah masuk dapat mengirim brief langsung ke antrean **SISIP Studio → Requests**. Admin dapat membalas, menyimpan catatan internal, dan memilih hingga enam Look/produk published sebagai jawaban.
 - Data cloud Supabase dengan Row Level Security: publik hanya dapat membaca konten published; hanya `albarifirdaus209@gmail.com` yang dapat mengelola data.
 - Tombol untuk mengimpor 12 look/produk sample ke cloud. Data sample ini dapat dihapus lagi dari Studio.
 - Prototype lokal tetap tersedia bila konfigurasi cloud dihapus/dikosongkan.
@@ -17,17 +20,17 @@ SISIP adalah katalog fashion all-gender untuk Indonesia: satu look berisi 2–5 
 
 `config.js` sengaja dilacak di Git: isinya hanya URL proyek dan **publishable key** Supabase, yang memang aman tampil di browser saat RLS aktif. Jangan pernah menaruh `service_role`, password database, atau credential Shopee di file ini.
 
-## Satu langkah admin yang masih perlu dilakukan
+## Pengaturan Auth sebelum live
 
-Database dan konfigurasi aplikasi sudah terhubung, tetapi akun Auth untuk email admin belum ada. Di Supabase Dashboard:
+Di Supabase Dashboard:
 
 1. Buka **Authentication → Users → Add user**.
 2. Buat user `albarifirdaus209@gmail.com` dengan password yang hanya kamu tahu.
-3. Untuk pengujian cepat, konfirmasi emailnya dari dashboard; untuk live, gunakan alur verifikasi email biasa.
-4. Pastikan provider Email aktif dan nonaktifkan public sign-ups bila hanya satu admin yang diperlukan.
-5. Buka website, klik ikon Studio kanan atas, lalu masuk dengan akun tersebut.
+3. Pastikan provider **Email** aktif dan **Allow new users to sign up** diaktifkan, karena pengunjung akan membuat akun SISIP sendiri.
+4. Untuk live, aktifkan konfirmasi email dan atur Site URL/Redirect URLs ke domain Cloudflare di **Authentication → URL Configuration**.
+5. Buka website, klik ikon Studio kanan atas, lalu masuk dengan akun admin tersebut.
 
-Profil admin dibuat otomatis oleh trigger saat user dibuat. Password tidak pernah tersimpan di file proyek atau GitHub.
+Profil dan baris preferensi dibuat otomatis oleh trigger saat akun Auth dibuat. Password tidak pernah tersimpan di file proyek atau GitHub.
 
 ## Struktur data
 
@@ -48,9 +51,13 @@ Harga adalah harga referensi yang dapat diedit saat kurasi. Mengambil harga/nama
 
 Pengaturan tersimpan di Supabase dan langsung mengubah carousel beranda. Jika belum ada lima look published, beranda tetap menampilkan look yang tersedia; tombol simpan akan aktif setelah lima look siap.
 
-## Request outfit publik
+## Request outfit dan rekomendasi personal
 
-Form request sengaja masih menyimpan draft lokal. Sebelum dibuat live, form perlu Edge Function + CAPTCHA/rate limiting agar tidak menjadi jalur spam. Email tujuan dapat memakai `albarifirdaus209@gmail.com` pada tahap itu.
+Form request tidak menyimpan draft lokal lagi. Pengunjung harus masuk terlebih dahulu, lalu database mengikat request ke sesi Auth mereka—ID, nama, email, status, serta data respons tidak dapat ditentukan dari form browser. Ini membuat form tetap sederhana dan menghindari antrean anonim.
+
+Di Studio, buka tab **Requests** untuk mengubah status, menulis jawaban yang terlihat member, menambahkan catatan internal, dan memilih Look/produk yang sudah published. Saat status menjadi **Rekomendasi siap** atau **Selesai**, jawabannya muncul di profil member.
+
+Rekomendasi pada bagian **Untuk Kamu** dihitung di browser dari data katalog published. Artinya kamu cukup menjaga tag style/warna/gender dan harga katalog tetap rapi; tidak ada biaya API AI tambahan.
 
 ## Deploy
 
@@ -59,4 +66,3 @@ Lihat [DEPLOY.md](DEPLOY.md) untuk langkah GitHub dan hosting. Untuk katalog aff
 ## Supabase
 
 Dokumentasi migration dan keamanan ada di [supabase/README.md](supabase/README.md). Proyek Supabase yang terhubung sudah memiliki migration awal, hardening, dan izin function.
-
