@@ -7,7 +7,7 @@ SISIP adalah katalog fashion all-gender untuk Indonesia: satu look berisi 2–5 
 - Katalog responsive: pencarian, filter style/gender, urutan, detail look, link Shopee, dan Journal.
 - **SISIP Studio**: login admin, tambah produk + varian warna, tambah look, unggah gambar hingga 5 MB ke Supabase Storage, serta hapus data yang tidak dipakai look lain.
 - **New Series**: carousel beranda hingga lima look, lengkap dengan urutan yang dapat dipilih dari tab **New Series** di SISIP Studio.
-- **Akun member**: daftar/masuk dengan email, simpan preferensi style, occasion, warna, budget, serta catatan fit opsional. Preferensi hanya dapat dibaca oleh pemilik akun dan admin.
+- **Akun member**: daftar/masuk dengan email, lalu pilih hingga 10 tag untuk style, occasion, warna yang disukai/dihindari, serta budget. Preferensi hanya dapat dibaca oleh pemilik akun dan admin.
 - **Untuk Kamu**: look dan produk published diurutkan dari kecocokan tag style, warna, gender preferensi, dan budget—tanpa AI atau data pihak ketiga.
 - **Request Outfit**: member yang sudah masuk dapat mengirim brief langsung ke antrean **SISIP Studio → Requests**. Admin dapat membalas, menyimpan catatan internal, dan memilih hingga enam Look/produk published sebagai jawaban.
 - Data cloud Supabase dengan Row Level Security: publik hanya dapat membaca konten published; hanya `albarifirdaus209@gmail.com` yang dapat mengelola data.
@@ -67,3 +67,4 @@ Lihat [DEPLOY.md](DEPLOY.md) untuk langkah GitHub dan hosting. Untuk katalog aff
 ## Supabase
 
 Dokumentasi migration dan keamanan ada di [supabase/README.md](supabase/README.md). Proyek Supabase yang terhubung sudah memiliki migration awal, hardening, dan izin function.
+

@@ -39,6 +39,8 @@ Di Supabase Dashboard, buka **Authentication → URL Configuration**:
 
 Di **Authentication → Email Templates → Confirm signup**, subject dan isi email dapat memakai nama SISIP, misalnya subject `Konfirmasi akun SISIP`. Nama pengirim `SISIP` dengan alamat email branded memerlukan Custom SMTP dan domain email milikmu yang sudah diverifikasi.
 
+Untuk akun user publik, aktifkan **Authentication → Emails → SMTP Settings → Custom SMTP**. SMTP bawaan paket Free hanya cocok untuk pengujian internal dan tidak menjadi jalur pengiriman email konfirmasi ke user umum.
+
 Member dapat membuat akun sendiri untuk menyimpan preferensi dan request outfit. Akun admin tetap ditentukan oleh email `albarifirdaus209@gmail.com` dan diperiksa ulang oleh RLS di database.
 
 ## 4. Cek sebelum live
@@ -49,3 +51,4 @@ Member dapat membuat akun sendiri untuk menyimpan preferensi dan request outfit.
 - Isi minimal satu artikel jika Journal ingin tampil di cloud.
 - Coba satu akun member: simpan preferensi, kirim Request Outfit, lalu balas lewat **SISIP Studio → Requests**.
 - Aktifkan leaked-password protection di Supabase Auth bila tersedia di paketmu.
+

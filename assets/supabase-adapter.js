@@ -474,9 +474,17 @@
       }
     });
     if (error) throw error;
+    // With Confirm email enabled, Supabase returns an obfuscated user (with no
+    // identities) when this address may already be registered. Keep the UI
+    // generic so we do not expose account information, while avoiding a false
+    // "account created" message.
+    const possiblyExistingAccount = !data?.session
+      && Array.isArray(data?.user?.identities)
+      && data.user.identities.length === 0;
     return {
       user: mapAuthUser(data?.user || null),
-      needsEmailConfirmation: !data?.session
+      needsEmailConfirmation: !data?.session,
+      possiblyExistingAccount
     };
   }
 
@@ -516,7 +524,6 @@
       avoidedColors: asArray(row?.avoided_colors).map((tag) => String(tag || "").trim()).filter(Boolean),
       budgetMin: optionalNumber(row?.budget_min_idr),
       budgetMax: optionalNumber(row?.budget_max_idr),
-      bodyNotes: row?.body_notes || "",
       onboardingCompleted: Boolean(row?.onboarding_completed)
     };
   }
@@ -527,7 +534,7 @@
     const db = getClient();
     const [profileResult, preferencesResult] = await Promise.all([
       db.from("profiles").select("id, display_name").eq("id", user.id).maybeSingle(),
-      db.from("user_preferences").select("user_id, gender_target, style_tags, occasion_tags, preferred_colors, avoided_colors, budget_min_idr, budget_max_idr, body_notes, onboarding_completed").eq("user_id", user.id).maybeSingle()
+      db.from("user_preferences").select("user_id, gender_target, style_tags, occasion_tags, preferred_colors, avoided_colors, budget_min_idr, budget_max_idr, onboarding_completed").eq("user_id", user.id).maybeSingle()
     ]);
     if (profileResult.error) throw profileResult.error;
     if (preferencesResult.error) throw preferencesResult.error;
@@ -566,21 +573,15 @@
       : onboardingInput.provided
         ? normalizeBoolean(onboardingInput.value, "Status onboarding")
         : previous.onboardingCompleted;
-    const bodyNotes = normalizeUserText(
-      pickPreference(["bodyNotes", "body_notes"], previous.bodyNotes),
-      "Catatan proporsi tubuh",
-      { max: 1000 }
-    );
     const preferenceRow = {
       user_id: current.user.id,
       gender_target: normalizeGenderPreference(pickPreference(["genderTarget", "gender_target"], previous.genderTarget)),
-      style_tags: normalizeMemberTagList(pickPreference(["styleTags", "style_tags"], previous.styleTags), "Pilihan gaya"),
-      occasion_tags: normalizeMemberTagList(pickPreference(["occasionTags", "occasion_tags"], previous.occasionTags), "Pilihan occasion"),
-      preferred_colors: normalizeMemberTagList(pickPreference(["preferredColors", "preferred_colors"], previous.preferredColors), "Warna favorit"),
-      avoided_colors: normalizeMemberTagList(pickPreference(["avoidedColors", "avoided_colors"], previous.avoidedColors), "Warna yang dihindari"),
+      style_tags: normalizeMemberTagList(pickPreference(["styleTags", "style_tags"], previous.styleTags), "Pilihan gaya", { max: 10 }),
+      occasion_tags: normalizeMemberTagList(pickPreference(["occasionTags", "occasion_tags"], previous.occasionTags), "Pilihan occasion", { max: 10 }),
+      preferred_colors: normalizeMemberTagList(pickPreference(["preferredColors", "preferred_colors"], previous.preferredColors), "Warna favorit", { max: 10 }),
+      avoided_colors: normalizeMemberTagList(pickPreference(["avoidedColors", "avoided_colors"], previous.avoidedColors), "Warna yang dihindari", { max: 10 }),
       budget_min_idr: budgetMin,
       budget_max_idr: budgetMax,
-      body_notes: bodyNotes || null,
       onboarding_completed: Boolean(onboardingCompleted)
     };
 
@@ -1485,3 +1486,4 @@
     publicUrl
   };
 })();
+

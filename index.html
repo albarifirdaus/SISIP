@@ -434,6 +434,15 @@
       .member-profile-head h2 { max-width:470px; }
       .member-profile-head .small-button { flex:0 0 auto; }
       .member-help { margin:.25rem 0 1rem; color:var(--taupe); font-size:.72rem; line-height:1.45; }
+      .member-tag-picker { overflow:hidden; border:1px solid var(--line); background:var(--white); }
+      .member-tag-picker-head { display:flex; align-items:center; justify-content:space-between; gap:.8rem; padding:.62rem .75rem; border-bottom:1px solid var(--line); color:var(--taupe); font-family:var(--mono); font-size:.57rem; letter-spacing:.035em; text-transform:uppercase; }
+      .member-tag-picker-count { flex:0 0 auto; color:var(--clay-dark); white-space:nowrap; }
+      .member-tag-options { display:flex; flex-wrap:wrap; gap:.42rem; padding:.7rem; }
+      .member-tag-option { min-height:31px; padding:.42rem .58rem; border:1px solid var(--line); border-radius:999px; color:var(--ink); background:transparent; font-family:var(--mono); font-size:.56rem; letter-spacing:.025em; text-transform:uppercase; cursor:pointer; transition:background .16s ease,color .16s ease,border-color .16s ease; }
+      .member-tag-option:hover:not(:disabled), .member-tag-option:focus-visible { border-color:var(--clay); color:var(--clay-dark); outline:0; }
+      .member-tag-option[aria-pressed="true"] { color:var(--white); border-color:var(--ink); background:var(--ink); }
+      .member-tag-option.is-legacy { border-style:dashed; }
+      .member-tag-option:disabled { opacity:.34; cursor:not-allowed; }
       .member-request-list { display:grid; gap:.65rem; margin-top:1rem; }
       .member-request { padding:.85rem; border:1px solid var(--line); background:var(--paper); }
       .member-request-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.8rem; }
@@ -881,23 +890,22 @@
             <div><p class="eyebrow" style="color:var(--clay)">SISIP / PROFIL GAYA</p><h2>Lebih kamu, lebih mudah dipilih.</h2></div>
             <button class="small-button muted" id="memberSignOutButton" type="button">Keluar</button>
           </div>
-          <p class="member-help">Semua pilihan ini bersifat opsional. Data proporsi tubuh hanya dipakai sebagai acuan personal dan tidak ditampilkan ke publik.</p>
+          <p class="member-help">Semua pilihan ini bersifat opsional. Pilih tag yang paling mendekati gayamu—maksimal 10 pilihan di setiap kelompok.</p>
           <form class="form-stack" id="memberProfileForm">
             <div class="compact-row">
               <div class="field"><label for="memberProfileName">Nama panggilan</label><input id="memberProfileName" name="displayName" maxlength="80" autocomplete="name" /></div>
               <div class="field"><label for="memberProfileGender">Gender preferensi</label><select id="memberProfileGender" name="genderTarget"><option value="">Tidak ingin menyebutkan</option><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
             </div>
-            <div class="field"><label for="memberProfileStyles">Style yang disukai</label><input id="memberProfileStyles" name="styleTags" placeholder="Clean, Casual, Workwear" /></div>
-            <div class="field"><label for="memberProfileOccasions">Occasion yang sering dicari</label><input id="memberProfileOccasions" name="occasionTags" placeholder="Kantor, Kampus, Lebaran" /></div>
+            <div class="field"><label id="memberProfileStylesLabel">Style yang disukai</label><div class="member-tag-picker" aria-labelledby="memberProfileStylesLabel"><div class="member-tag-picker-head"><span>Pilih hingga 10 style</span><span class="member-tag-picker-count" id="memberProfileStylesCount" aria-live="polite">0 / 10</span></div><div class="member-tag-options" id="memberProfileStylesOptions" role="group" aria-labelledby="memberProfileStylesLabel"></div></div><input id="memberProfileStyles" name="styleTags" type="hidden" /></div>
+            <div class="field"><label id="memberProfileOccasionsLabel">Occasion yang sering dicari</label><div class="member-tag-picker" aria-labelledby="memberProfileOccasionsLabel"><div class="member-tag-picker-head"><span>Pilih hingga 10 occasion</span><span class="member-tag-picker-count" id="memberProfileOccasionsCount" aria-live="polite">0 / 10</span></div><div class="member-tag-options" id="memberProfileOccasionsOptions" role="group" aria-labelledby="memberProfileOccasionsLabel"></div></div><input id="memberProfileOccasions" name="occasionTags" type="hidden" /></div>
             <div class="compact-row">
-              <div class="field"><label for="memberProfileColors">Warna yang disukai</label><input id="memberProfileColors" name="preferredColors" placeholder="Olive, Navy, Cream" /></div>
-              <div class="field"><label for="memberProfileAvoidedColors">Warna yang dihindari</label><input id="memberProfileAvoidedColors" name="avoidedColors" placeholder="Neon, Merah terang" /></div>
+              <div class="field"><label id="memberProfileColorsLabel">Warna yang disukai</label><div class="member-tag-picker" aria-labelledby="memberProfileColorsLabel"><div class="member-tag-picker-head"><span>Pilih hingga 10 warna</span><span class="member-tag-picker-count" id="memberProfileColorsCount" aria-live="polite">0 / 10</span></div><div class="member-tag-options" id="memberProfileColorsOptions" role="group" aria-labelledby="memberProfileColorsLabel"></div></div><input id="memberProfileColors" name="preferredColors" type="hidden" /></div>
+              <div class="field"><label id="memberProfileAvoidedColorsLabel">Warna yang dihindari</label><div class="member-tag-picker" aria-labelledby="memberProfileAvoidedColorsLabel"><div class="member-tag-picker-head"><span>Pilih hingga 10 warna</span><span class="member-tag-picker-count" id="memberProfileAvoidedColorsCount" aria-live="polite">0 / 10</span></div><div class="member-tag-options" id="memberProfileAvoidedColorsOptions" role="group" aria-labelledby="memberProfileAvoidedColorsLabel"></div></div><input id="memberProfileAvoidedColors" name="avoidedColors" type="hidden" /></div>
             </div>
             <div class="compact-row">
               <div class="field"><label for="memberProfileBudgetMin">Budget minimum</label><input id="memberProfileBudgetMin" name="budgetMin" inputmode="numeric" placeholder="200000" /></div>
               <div class="field"><label for="memberProfileBudgetMax">Budget maksimum</label><input id="memberProfileBudgetMax" name="budgetMax" inputmode="numeric" placeholder="750000" /></div>
             </div>
-            <div class="field"><label for="memberProfileBodyNotes">Proporsi/fit (opsional)</label><textarea id="memberProfileBodyNotes" name="bodyNotes" maxlength="1000" placeholder="Contoh: suka potongan relaxed, ingin terlihat lebih jenjang, atau detail fit lain."></textarea></div>
             <p class="form-error" id="memberProfileError" role="alert"></p>
             <button class="button" type="submit">Simpan preferensi <span aria-hidden="true">↗</span></button>
           </form>
@@ -1103,6 +1111,44 @@
           "shopping-guide": "Shopping guide",
           "wardrobe-notes": "Wardrobe notes"
         };
+        const MEMBER_PROFILE_TAG_LIMIT = 10;
+        const MEMBER_PROFILE_TAG_FIELDS = {
+          styleTags: {
+            inputId: "memberProfileStyles", optionsId: "memberProfileStylesOptions", countId: "memberProfileStylesCount", label: "style",
+            options: ["Clean", "Casual", "Smart Casual", "Formal", "Minimalis", "Classic", "Workwear", "Streetwear", "Sporty", "Athleisure", "Preppy", "Vintage", "Retro", "Korean-inspired", "Japanese-inspired", "Modest", "Feminine", "Masculine", "Androgynous", "Bohemian", "Romantic", "Edgy", "Party", "Vacation", "Denim"]
+          },
+          occasionTags: {
+            inputId: "memberProfileOccasions", optionsId: "memberProfileOccasionsOptions", countId: "memberProfileOccasionsCount", label: "occasion",
+            options: ["Kampus", "Kantor", "Meeting", "Interview", "Presentasi", "Bukber", "Lebaran", "Kondangan", "Wisuda", "Date", "Hangout", "Coffee Shop", "Brunch", "Konser", "Festival", "Liburan", "Travel", "Airport", "Olahraga", "Gym", "Weekend", "Pesta", "Dinner", "Acara Formal", "Kumpul Keluarga"]
+          },
+          preferredColors: {
+            inputId: "memberProfileColors", optionsId: "memberProfileColorsOptions", countId: "memberProfileColorsCount", label: "warna",
+            options: ["Hitam", "Putih", "Abu-abu", "Charcoal", "Navy", "Biru", "Denim", "Cokelat", "Mocha", "Beige", "Cream", "Ivory", "Stone", "Taupe", "Olive", "Hijau", "Sage", "Khaki", "Merah", "Maroon", "Burgundy", "Pink", "Ungu", "Kuning", "Orange", "Mustard", "Silver", "Gold", "Pastel", "Earth Tone", "Dusty", "Wine"]
+          },
+          avoidedColors: {
+            inputId: "memberProfileAvoidedColors", optionsId: "memberProfileAvoidedColorsOptions", countId: "memberProfileAvoidedColorsCount", label: "warna",
+            options: ["Hitam", "Putih", "Abu-abu", "Charcoal", "Navy", "Biru", "Denim", "Cokelat", "Mocha", "Beige", "Cream", "Ivory", "Stone", "Taupe", "Olive", "Hijau", "Sage", "Khaki", "Merah", "Maroon", "Burgundy", "Pink", "Ungu", "Kuning", "Orange", "Mustard", "Silver", "Gold", "Pastel", "Earth Tone", "Dusty", "Wine", "Neon"]
+          }
+        };
+        const MEMBER_STYLE_ALIASES = {
+          "smart casual": ["clean", "casual", "formal"], minimalis: ["clean"], classic: ["clean", "formal"], preppy: ["clean", "casual"], athleisure: ["sporty", "casual"], retro: ["vintage"], "japanese-inspired": ["clean", "workwear"], feminine: ["clean", "formal"], masculine: ["formal", "workwear"], androgynous: ["clean", "streetwear"], bohemian: ["vintage", "casual"], romantic: ["formal", "party"], edgy: ["streetwear", "party"], vacation: ["casual", "sporty"], denim: ["casual", "vintage"]
+        };
+        const MEMBER_OCCASION_STYLE_TAGS = {
+          kampus: ["casual", "clean", "preppy"], kantor: ["formal", "clean", "workwear"], meeting: ["formal", "clean", "workwear"], interview: ["formal", "clean"], presentasi: ["formal", "clean", "workwear"], bukber: ["modest", "formal", "clean"], lebaran: ["modest", "formal", "clean"], kondangan: ["formal", "modest", "party"], wisuda: ["formal", "clean"], date: ["casual", "formal", "party"], hangout: ["casual", "streetwear", "clean"], "coffee shop": ["casual", "clean", "vintage"], brunch: ["casual", "clean", "formal"], konser: ["streetwear", "party", "sporty"], festival: ["streetwear", "party", "sporty"], liburan: ["casual", "sporty", "vintage"], travel: ["casual", "sporty", "workwear"], airport: ["casual", "sporty", "workwear"], olahraga: ["sporty", "athleisure"], gym: ["sporty", "athleisure"], weekend: ["casual", "vintage", "sporty"], pesta: ["party", "formal", "streetwear"], dinner: ["formal", "party", "clean"], "acara formal": ["formal", "clean", "modest"], "kumpul keluarga": ["casual", "clean", "modest"]
+        };
+        const MEMBER_COLOR_FAMILIES = [
+          ["hitam", ["hitam", "black", "ink", "charcoal", "graphite", "onyx", "black wash"]],
+          ["putih", ["putih", "white", "cream", "ivory", "ecru", "bone", "milk", "off white"]],
+          ["abu-abu", ["abu", "grey", "gray", "ash", "slate", "steel"]],
+          ["biru", ["biru", "blue", "navy", "denim", "indigo", "mist"]],
+          ["cokelat", ["cokelat", "coklat", "brown", "mocha", "cocoa", "espresso", "cognac", "chocolate"]],
+          ["beige", ["beige", "stone", "taupe", "sand", "nude", "oat", "mushroom", "khaki"]],
+          ["hijau", ["hijau", "olive", "sage", "green"]],
+          ["merah", ["merah", "red", "maroon", "burgundy", "wine", "cherry", "oxblood"]],
+          ["pink", ["pink", "rose", "blush"]], ["ungu", ["ungu", "purple", "violet", "lilac"]],
+          ["kuning", ["kuning", "yellow", "mustard"]], ["orange", ["orange", "oranye", "rust"]],
+          ["metal", ["silver", "gold", "chrome", "metal", "metallic"]]
+        ];
         const JOURNAL_BLOCK_LIMIT = 20;
         const JOURNAL_CTA_LIMIT = 3;
         const BULK_IMPORT_HEADERS = ["product_key", "name", "affiliate_url", "price_idr", "badge", "style_tags", "gender_target", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
@@ -1206,6 +1252,10 @@
         let memberRequests = [];
         let memberAuthMode = "signin";
         let pendingConfirmationEmail = "";
+        let resendConfirmationCooldownUntil = 0;
+        let resendConfirmationTimer;
+        let resendConfirmationInFlight = false;
+        const memberProfileTagState = Object.fromEntries(Object.keys(MEMBER_PROFILE_TAG_FIELDS).map((key) => [key, []]));
         const requestDrafts = new Map();
 
         const els = {
@@ -1265,6 +1315,38 @@
           return [...new Set(source.map(memberTerm).filter(Boolean))].slice(0,12);
         }
         function memberTagText(value) { return memberTags(value).join(", "); }
+        function memberProfileTags(value) { return memberTags(value).slice(0, MEMBER_PROFILE_TAG_LIMIT); }
+        function memberProfileTagLabel(name, value) {
+          const field = MEMBER_PROFILE_TAG_FIELDS[name];
+          return field?.options.find((option) => memberTerm(option) === value) || value;
+        }
+        function renderMemberProfileTagPicker(name) {
+          const field = MEMBER_PROFILE_TAG_FIELDS[name];
+          if (!field) return;
+          const input = document.getElementById(field.inputId);
+          const options = document.getElementById(field.optionsId);
+          const count = document.getElementById(field.countId);
+          const selected = memberProfileTagState[name] || [];
+          if (input) input.value = selected.join(", ");
+          if (count) count.textContent = `${selected.length} / ${MEMBER_PROFILE_TAG_LIMIT}`;
+          if (!options) return;
+          const knownOptions = field.options.map((label) => ({ label, value: memberTerm(label), legacy: false }));
+          const knownValues = new Set(knownOptions.map((option) => option.value));
+          const tags = [...knownOptions, ...selected.filter((value) => !knownValues.has(value)).map((value) => ({ label: memberProfileTagLabel(name, value), value, legacy: true }))];
+          options.innerHTML = tags.map((tag) => {
+            const isSelected = selected.includes(tag.value);
+            const disabled = !isSelected && selected.length >= MEMBER_PROFILE_TAG_LIMIT;
+            return `<button class="member-tag-option${tag.legacy ? " is-legacy" : ""}" type="button" data-member-profile-tag="${esc(name)}" data-member-profile-value="${esc(tag.value)}" aria-pressed="${String(isSelected)}"${disabled ? " disabled" : ""}>${esc(tag.label)}</button>`;
+          }).join("");
+        }
+        function setMemberProfileTags(name, value) {
+          if (!MEMBER_PROFILE_TAG_FIELDS[name]) return;
+          memberProfileTagState[name] = memberProfileTags(value);
+          renderMemberProfileTagPicker(name);
+        }
+        function renderMemberProfileTagPickers() {
+          Object.keys(MEMBER_PROFILE_TAG_FIELDS).forEach((name) => renderMemberProfileTagPicker(name));
+        }
         function memberIdr(value) {
           const digits = String(value ?? "").replace(/[^0-9]/g, "");
           if (!digits) return null;
@@ -1275,13 +1357,12 @@
           const preference = memberViewer?.preferences || {};
           return {
             genderTarget: String(preference.genderTarget ?? preference.gender_target ?? "").trim().toLowerCase(),
-            styleTags: memberTags(preference.styleTags ?? preference.style_tags),
-            occasionTags: memberTags(preference.occasionTags ?? preference.occasion_tags),
-            preferredColors: memberTags(preference.preferredColors ?? preference.preferred_colors),
-            avoidedColors: memberTags(preference.avoidedColors ?? preference.avoided_colors),
+            styleTags: memberProfileTags(preference.styleTags ?? preference.style_tags),
+            occasionTags: memberProfileTags(preference.occasionTags ?? preference.occasion_tags),
+            preferredColors: memberProfileTags(preference.preferredColors ?? preference.preferred_colors),
+            avoidedColors: memberProfileTags(preference.avoidedColors ?? preference.avoided_colors),
             budgetMin: Number(preference.budgetMin ?? preference.budget_min_idr) || null,
             budgetMax: Number(preference.budgetMax ?? preference.budget_max_idr) || null,
-            bodyNotes: String(preference.bodyNotes ?? preference.body_notes ?? ""),
             onboardingCompleted: Boolean(preference.onboardingCompleted ?? preference.onboarding_completed)
           };
         }
@@ -1301,9 +1382,14 @@
           if (!cloudEnabled()) return true;
           return entry.status === "published" && Boolean(entry.publishedAt) && new Date(entry.publishedAt).getTime() <= Date.now();
         }
+        function memberColorTags(value) {
+          const raw = memberTags(value);
+          const families = MEMBER_COLOR_FAMILIES.filter(([, keywords]) => raw.some((tag) => keywords.some((keyword) => tag.includes(keyword)))).map(([family]) => family);
+          return [...new Set([...raw, ...families])];
+        }
         function entryColorTags(entry, type) {
-          if (type === "product") return memberTags((entry.variants || []).flatMap((variant) => [variant.name, variant.colorName]));
-          return memberTags((entry.items || []).flatMap((item) => {
+          if (type === "product") return memberColorTags((entry.variants || []).flatMap((variant) => [variant.name, variant.colorName]));
+          return memberColorTags((entry.items || []).flatMap((item) => {
             const product = getProduct(item.productId);
             const variant = getVariant(product, item.variantName);
             return [item.variantName, variant?.name, variant?.colorName];
@@ -1313,20 +1399,42 @@
           const sourceSet = new Set(memberTags(source));
           return memberTags(preferred).reduce((score, tag) => score + (sourceSet.has(tag) ? weight : 0), 0);
         }
+        function styleOverlapScore(catalogueTags, preferred, weight) {
+          const catalogue = new Set(memberTags(catalogueTags));
+          return memberProfileTags(preferred).reduce((score, tag) => {
+            const matches = [tag, ...(MEMBER_STYLE_ALIASES[tag] || [])];
+            return score + (matches.some((candidate) => catalogue.has(candidate)) ? weight : 0);
+          }, 0);
+        }
+        function occasionOverlapScore(catalogueTags, occasions, weight) {
+          const catalogue = new Set(memberTags(catalogueTags));
+          return memberProfileTags(occasions).reduce((score, occasion) => {
+            const matches = MEMBER_OCCASION_STYLE_TAGS[occasion] || [];
+            return score + (matches.some((candidate) => catalogue.has(candidate)) ? weight : 0);
+          }, 0);
+        }
+        function colorOverlapScore(source, preferred, weight) {
+          const sourceSet = new Set(memberColorTags(source));
+          return memberProfileTags(preferred).reduce((score, color) => score + (memberColorTags([color]).some((tag) => sourceSet.has(tag)) ? weight : 0), 0);
+        }
+        function hasColorOverlap(source, preferred) {
+          const sourceSet = new Set(memberColorTags(source));
+          return memberProfileTags(preferred).some((color) => memberColorTags([color]).some((tag) => sourceSet.has(tag)));
+        }
         function memberMatchScore(entry, type) {
           const preference = memberPreference();
           const catalogueTags = memberTags(entry.styles);
           const entryGender = databaseGender(type === "look" ? entry.gender : entry.genderTarget);
           const colors = entryColorTags(entry, type);
           const price = type === "look" ? getLookTotal(entry) : Number(entry.price || 0);
-          let score = overlapScore(catalogueTags, preference.styleTags, 12) + overlapScore(catalogueTags, preference.occasionTags, 7);
+          let score = styleOverlapScore(catalogueTags, preference.styleTags, 12) + occasionOverlapScore(catalogueTags, preference.occasionTags, 7);
           if (preference.genderTarget) {
             if (entryGender === preference.genderTarget) score += 6;
             else if (entryGender === "unisex") score += 3;
             else score -= 3;
           }
-          score += overlapScore(colors, preference.preferredColors, 4);
-          if (memberTags(preference.avoidedColors).some((color) => colors.includes(color))) score -= 50;
+          score += colorOverlapScore(colors, preference.preferredColors, 4);
+          if (hasColorOverlap(colors, preference.avoidedColors)) score -= 50;
           if (preference.budgetMax) score += price <= preference.budgetMax ? 5 : Math.max(-10, -Math.ceil((price - preference.budgetMax) / Math.max(preference.budgetMax, 1) * 10));
           if (preference.budgetMin && price >= preference.budgetMin) score += 1;
           return score;
@@ -1366,6 +1474,25 @@
             return `<article class="member-request"><div class="member-request-top"><div><h4>${esc(request.occasion || "Request outfit")}</h4><p class="request-admin-meta">${esc(new Date(request.createdAt || request.created_at || Date.now()).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" }))}</p></div><span class="request-status is-${esc(String(request.status || "new").toLowerCase())}">${esc(requestStatusLabel(request.status))}</span></div>${request.responseMessage || request.response_message ? `<p>${esc(request.responseMessage || request.response_message)}</p>` : `<p>Kurasi sedang disiapkan oleh SISIP.</p>`}${recommendations ? `<div class="member-request-links">${recommendations}</div>` : ""}</article>`;
           }).join("") : `<p class="member-help">Belum ada request. Kirim brief dari bagian Request Outfit saat kamu sudah siap.</p>`;
         }
+        function resendConfirmationSecondsLeft() {
+          return Math.max(0, Math.ceil((resendConfirmationCooldownUntil - Date.now()) / 1000));
+        }
+        function renderMemberResendControl() {
+          const button = els.memberResendConfirmation;
+          if (!button) return;
+          const shouldShow = memberAuthMode === "signup" && Boolean(pendingConfirmationEmail);
+          window.clearTimeout(resendConfirmationTimer);
+          button.hidden = !shouldShow;
+          if (!shouldShow) {
+            button.disabled = false;
+            button.textContent = "Kirim ulang email konfirmasi";
+            return;
+          }
+          const seconds = resendConfirmationSecondsLeft();
+          button.disabled = resendConfirmationInFlight || seconds > 0;
+          button.textContent = resendConfirmationInFlight ? "Mengirim…" : seconds ? `Kirim ulang dalam ${seconds} dtk` : "Kirim ulang email konfirmasi";
+          if (!resendConfirmationInFlight && seconds > 0) resendConfirmationTimer = window.setTimeout(renderMemberResendControl, 1000);
+        }
         function renderMemberAuth() {
           const signup = memberAuthMode === "signup";
           els.memberAuthTitle.textContent = signup ? "Buat profil gayamu." : "Masuk untuk menemukan yang lebih pas.";
@@ -1373,7 +1500,7 @@
           els.memberDisplayNameField.hidden = !signup;
           els.memberAuthSubmit.innerHTML = signup ? `Buat akun <span aria-hidden="true">↗</span>` : `Masuk <span aria-hidden="true">↗</span>`;
           els.memberAuthSwitch.textContent = signup ? "Sudah punya akun? Masuk dengan email" : "Belum punya akun? Daftar dengan email";
-          els.memberResendConfirmation.hidden = !(signup && pendingConfirmationEmail);
+          renderMemberResendControl();
           els.memberDisplayNameInput.required = signup;
           els.memberPasswordInput.setAttribute("autocomplete", signup ? "new-password" : "current-password");
           els.memberAuthError.textContent = "";
@@ -1385,13 +1512,12 @@
           const form = els.memberProfileForm;
           form.elements.displayName.value = String(profile.displayName ?? profile.display_name ?? "");
           form.elements.genderTarget.value = preference.genderTarget;
-          form.elements.styleTags.value = memberTagText(preference.styleTags);
-          form.elements.occasionTags.value = memberTagText(preference.occasionTags);
-          form.elements.preferredColors.value = memberTagText(preference.preferredColors);
-          form.elements.avoidedColors.value = memberTagText(preference.avoidedColors);
+          setMemberProfileTags("styleTags", preference.styleTags);
+          setMemberProfileTags("occasionTags", preference.occasionTags);
+          setMemberProfileTags("preferredColors", preference.preferredColors);
+          setMemberProfileTags("avoidedColors", preference.avoidedColors);
           form.elements.budgetMin.value = preference.budgetMin || "";
           form.elements.budgetMax.value = preference.budgetMax || "";
-          form.elements.bodyNotes.value = preference.bodyNotes;
           els.memberProfileError.textContent = "";
           renderMemberRequests();
         }
@@ -2260,7 +2386,9 @@
               if(result?.needsEmailConfirmation) {
                 pendingConfirmationEmail=email;
                 renderMemberAuth();
-                els.memberAuthError.textContent="Akun dibuat. Cek email konfirmasi dari SISIP. Link hanya dapat digunakan sekali; gunakan tombol kirim ulang bila sudah kedaluwarsa.";
+                els.memberAuthError.textContent=result?.possiblyExistingAccount
+                  ? "Jika email ini sudah pernah terdaftar, masuk dengan password yang sudah ada. Jika baru mendaftar, cek inbox, Spam, atau Promosi untuk email konfirmasi SISIP."
+                  : "Cek inbox, Spam, atau Promosi untuk email konfirmasi SISIP. Link hanya dapat digunakan sekali; gunakan tombol kirim ulang setelah 60 detik bila belum masuk.";
                 return;
               }
               showToast("Akun SISIP berhasil dibuat.");
@@ -2280,22 +2408,40 @@
         });
         els.memberResendConfirmation.addEventListener("click",async()=>{
           const email=pendingConfirmationEmail||String(new FormData(els.memberAuthForm).get("email")||"").trim();
-          const button=els.memberResendConfirmation;
-          const originalLabel=button.textContent;
-          button.disabled=true;
-          button.textContent="Mengirim…";
+          if(resendConfirmationInFlight || resendConfirmationSecondsLeft() > 0) { renderMemberResendControl(); return; }
+          resendConfirmationInFlight=true;
+          renderMemberResendControl();
           try {
             if(!email) throw new Error("Masukkan email yang dipakai saat daftar terlebih dahulu.");
             if(typeof cloud.resendMemberConfirmation!=="function") throw new Error("Fitur kirim ulang belum siap. Muat ulang halaman lalu coba lagi.");
             await cloud.resendMemberConfirmation(email);
             pendingConfirmationEmail=email;
-            els.memberAuthError.textContent="Email konfirmasi baru dari SISIP sudah dikirim. Gunakan link terbaru saja.";
+            resendConfirmationCooldownUntil=Date.now()+60000;
+            els.memberAuthError.textContent="Permintaan email konfirmasi sudah diproses. Jika email masuk, gunakan link terbaru saja.";
           } catch(error) {
             els.memberAuthError.textContent=error.message||"Email konfirmasi belum dapat dikirim ulang.";
           } finally {
-            button.disabled=false;
-            button.textContent=originalLabel;
+            resendConfirmationInFlight=false;
+            renderMemberResendControl();
           }
+        });
+        els.memberProfileForm.addEventListener("click",(event)=>{
+          const button=event.target.closest("[data-member-profile-tag]");
+          if(!button || button.disabled) return;
+          const name=String(button.dataset.memberProfileTag||"");
+          const value=memberTerm(button.dataset.memberProfileValue);
+          if(!MEMBER_PROFILE_TAG_FIELDS[name] || !value) return;
+          const selected=memberProfileTagState[name]||[];
+          if(selected.includes(value)) {
+            memberProfileTagState[name]=selected.filter((tag)=>tag!==value);
+          } else if(selected.length >= MEMBER_PROFILE_TAG_LIMIT) {
+            els.memberProfileError.textContent=`Maksimal ${MEMBER_PROFILE_TAG_LIMIT} pilihan untuk ${MEMBER_PROFILE_TAG_FIELDS[name].label}.`;
+            return;
+          } else {
+            memberProfileTagState[name]=[...selected,value];
+          }
+          els.memberProfileError.textContent="";
+          renderMemberProfileTagPicker(name);
         });
         els.memberProfileForm.addEventListener("submit",async(event)=>{
           event.preventDefault();
@@ -2312,13 +2458,12 @@
             await cloud.saveMemberProfile({
               displayName:String(data.get("displayName")||"").trim(),
               genderTarget:String(data.get("genderTarget")||"").trim(),
-              styleTags:memberTags(data.get("styleTags")),
-              occasionTags:memberTags(data.get("occasionTags")),
-              preferredColors:memberTags(data.get("preferredColors")),
-              avoidedColors:memberTags(data.get("avoidedColors")),
+              styleTags:memberProfileTags(data.get("styleTags")),
+              occasionTags:memberProfileTags(data.get("occasionTags")),
+              preferredColors:memberProfileTags(data.get("preferredColors")),
+              avoidedColors:memberProfileTags(data.get("avoidedColors")),
               budgetMin,
               budgetMax,
-              bodyNotes:String(data.get("bodyNotes")||"").trim(),
               onboardingCompleted:true
             });
             await syncMemberSession({ quiet:false });
@@ -2670,3 +2815,4 @@
     </script>
   </body>
 </html>
+
