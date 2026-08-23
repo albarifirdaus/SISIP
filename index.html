@@ -1344,9 +1344,6 @@
           memberProfileTagState[name] = memberProfileTags(value);
           renderMemberProfileTagPicker(name);
         }
-        function renderMemberProfileTagPickers() {
-          Object.keys(MEMBER_PROFILE_TAG_FIELDS).forEach((name) => renderMemberProfileTagPicker(name));
-        }
         function memberIdr(value) {
           const digits = String(value ?? "").replace(/[^0-9]/g, "");
           if (!digits) return null;
