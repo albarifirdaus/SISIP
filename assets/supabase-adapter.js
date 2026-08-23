@@ -78,6 +78,7 @@
       artBg: "#D8D0C6",
       artInk: variants[0]?.hex || "#242220",
       image: publicUrl(row.cover_image_path),
+      genderTarget: row.gender_target || "unisex",
       status: row.status || "draft",
       publishedAt: row.published_at || "",
       variants
@@ -173,9 +174,90 @@
     return data || [];
   }
 
+  function asArray(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  function splitStoredList(value) {
+    if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
+    return String(value || "")
+      .split(/[,;\n|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function optionalNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function mapOutfitRecommendation(row, productMap, lookMap) {
+    const targetType = row.target_type === "look" ? "look" : "product";
+    const lookId = targetType === "look" ? row.look_id || "" : "";
+    const productId = targetType === "product" ? row.product_id || "" : "";
+    const targetId = targetType === "look" ? lookId : productId;
+    const relatedLook = Array.isArray(row.looks) ? row.looks[0] : row.looks;
+    const relatedProduct = Array.isArray(row.products) ? row.products[0] : row.products;
+    const look = lookMap?.get(lookId) || relatedLook || null;
+    const product = productMap?.get(productId) || relatedProduct || null;
+
+    return {
+      id: row.id,
+      position: Number(row.position || 0),
+      type: targetType,
+      targetType,
+      targetId,
+      label: row.label || (targetType === "look" ? "Lihat look" : "Lihat produk"),
+      lookId,
+      productId,
+      look,
+      product
+    };
+  }
+
+  function readAdminNote(row) {
+    const source = Array.isArray(row.outfit_request_admin_notes)
+      ? row.outfit_request_admin_notes[0]
+      : row.outfit_request_admin_notes;
+    return String(source?.note || "").trim();
+  }
+
+  function mapOutfitRequest(row, { productMap, lookMap, includeAdminNote = false } = {}) {
+    const recommendations = asArray(row.outfit_request_recommendations)
+      .sort((a, b) => Number(a.position || 0) - Number(b.position || 0))
+      .map((recommendation) => mapOutfitRecommendation(recommendation, productMap, lookMap));
+    const result = {
+      id: row.id,
+      requesterId: row.requester_id || "",
+      requesterName: row.requester_name || "",
+      requesterEmail: row.requester_email || "",
+      genderTarget: row.gender_target || null,
+      occasion: row.occasion || "",
+      styleTags: asArray(row.style_tags).map((tag) => String(tag || "").trim()).filter(Boolean),
+      budgetMin: optionalNumber(row.budget_min_idr),
+      budgetMax: optionalNumber(row.budget_max_idr),
+      preferredColors: splitStoredList(row.preferred_colors),
+      preferredColorsText: String(row.preferred_colors || "").trim(),
+      message: row.message || "",
+      status: row.status || "new",
+      responseMessage: row.response_message || "",
+      respondedAt: row.responded_at || "",
+      createdAt: row.created_at || "",
+      updatedAt: row.updated_at || "",
+      recommendations
+    };
+    if (includeAdminNote) result.adminNote = readAdminNote(row);
+    return result;
+  }
+
+  const outfitRequestSelect = "id, requester_id, requester_name, requester_email, gender_target, occasion, style_tags, budget_min_idr, budget_max_idr, preferred_colors, message, status, response_message, responded_at, created_at, updated_at, outfit_request_recommendations(id, position, target_type, look_id, product_id, label)";
+  const adminOutfitRequestSelect = `${outfitRequestSelect}, outfit_request_admin_notes(note, created_at, updated_at)`;
+
   async function loadState({ admin = false } = {}) {
     const db = getClient();
     const now = new Date().toISOString();
+
+    if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin SISIP untuk membuka Studio.");
 
     let productsQuery = db
       .from("products")
@@ -195,6 +277,9 @@
       .from("new_series_slots")
       .select("slot, look_id")
       .order("slot", { ascending: true });
+    const outfitRequestsQuery = admin
+      ? db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false })
+      : null;
 
     if (!admin) {
       productsQuery = productsQuery.eq("status", "published").lte("published_at", now);
@@ -202,11 +287,12 @@
       articlesQuery = articlesQuery.eq("status", "published").lte("published_at", now);
     }
 
-    const [productRows, lookRows, articleRows, newSeriesSlotRows] = await Promise.all([
+    const [productRows, lookRows, articleRows, newSeriesSlotRows, outfitRequestRows] = await Promise.all([
       queryRows(productsQuery),
       queryRows(looksQuery),
       queryRows(articlesQuery),
-      queryRows(newSeriesSlotsQuery)
+      queryRows(newSeriesSlotsQuery),
+      outfitRequestsQuery ? queryRows(outfitRequestsQuery) : Promise.resolve([])
     ]);
 
     const products = productRows.map(mapProduct);
@@ -222,7 +308,10 @@
       .filter((slot) => slot.lookId)
       .sort((a, b) => a.slot - b.slot)
       .map((slot) => slot.lookId);
-    return { products, looks, articles, newSeriesSlots, newSeriesLookIds };
+    const requests = admin
+      ? outfitRequestRows.map((row) => mapOutfitRequest(row, { productMap, lookMap, includeAdminNote: true }))
+      : [];
+    return { products, looks, articles, newSeriesSlots, newSeriesLookIds, requests };
   }
 
   async function getSession() {
@@ -231,26 +320,469 @@
     return data.session;
   }
 
-  async function isAdmin() {
-    const session = await getSession();
-    if (!session) return false;
-    const { data, error } = await getClient().auth.getUser();
-    if (error) throw error;
-    return String(data?.user?.email || "").trim().toLowerCase() === String(config.adminEmail || "").trim().toLowerCase();
+  const memberGenderTargets = new Set(["pria", "wanita", "unisex"]);
+  const outfitRequestStatuses = new Set(["new", "reviewing", "replied", "closed", "spam"]);
+
+  function hasOwn(source, key) {
+    return Boolean(source) && Object.prototype.hasOwnProperty.call(source, key);
   }
 
-  async function signIn(email, password) {
-    const { error } = await getClient().auth.signInWithPassword({ email, password });
+  function assertObject(value, label) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} belum valid.`);
+    return value;
+  }
+
+  function firstDefined(source, keys) {
+    for (const key of keys) {
+      if (hasOwn(source, key)) return { provided: true, value: source[key] };
+    }
+    return { provided: false, value: undefined };
+  }
+
+  function normalizeEmail(value) {
+    const email = String(value || "").trim().toLowerCase();
+    if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error("Masukkan alamat email yang valid.");
+    }
+    return email;
+  }
+
+  function normalizePassword(value) {
+    const password = String(value || "");
+    if (password.length < 6 || password.length > 128) throw new Error("Password harus berisi 6–128 karakter.");
+    return password;
+  }
+
+  function normalizeUserText(value, label, { required = false, min = 0, max = 3000 } = {}) {
+    if (value !== null && value !== undefined && typeof value !== "string" && typeof value !== "number") {
+      throw new Error(`${label} belum valid.`);
+    }
+    const text = String(value || "").trim().replace(/\s+/g, " ");
+    if ((required || min > 0) && text.length < min) throw new Error(`${label} wajib diisi.`);
+    if (text.length > max) throw new Error(`${label} maksimal ${max} karakter.`);
+    return text;
+  }
+
+  function normalizeDisplayName(value) {
+    return normalizeUserText(value, "Nama panggilan", { required: true, min: 1, max: 80 });
+  }
+
+  function normalizeMemberTagList(value, label, { max = 12, itemMax = 60 } = {}) {
+    if (value === null || value === undefined || value === "") return [];
+    if (!Array.isArray(value) && typeof value !== "string") throw new Error(`${label} belum valid.`);
+    const source = Array.isArray(value) ? value : value.split(/[,;\n|]/);
+    const items = [...new Set(source.map((item) => normalizeUserText(item, label, { max: itemMax })).filter(Boolean))];
+    if (items.length > max) throw new Error(`${label} maksimal ${max} pilihan.`);
+    return items;
+  }
+
+  function normalizeGenderPreference(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (!raw || raw === "prefer tidak menyebutkan" || raw === "tidak menyebutkan") return null;
+    if (raw === "pria" || raw === "male" || raw === "men") return "pria";
+    if (raw === "wanita" || raw === "female" || raw === "women") return "wanita";
+    if (raw === "unisex" || raw === "uniseks" || raw === "all") return "unisex";
+    if (memberGenderTargets.has(raw)) return raw;
+    throw new Error("Gender harus pria, wanita, unisex, atau dikosongkan.");
+  }
+
+  function normalizeIdrAmount(value, label) {
+    if (value === null || value === undefined || String(value).trim() === "") return null;
+    const raw = typeof value === "number" ? String(value) : String(value).trim().replace(/^rp\.?\s*/i, "").replace(/[.\s,]/g, "");
+    if (!/^\d+$/.test(raw)) throw new Error(`${label} harus berupa angka IDR.`);
+    const amount = Number(raw);
+    if (!Number.isSafeInteger(amount) || amount < 0 || amount > 2147483647) throw new Error(`${label} belum valid.`);
+    return amount;
+  }
+
+  function normalizeBoolean(value, label) {
+    if (typeof value === "boolean") return value;
+    if (value === "true" || value === "1") return true;
+    if (value === "false" || value === "0") return false;
+    throw new Error(`${label} belum valid.`);
+  }
+
+  function configuredAdminEmail() {
+    return String(config.adminEmail || "").trim().toLowerCase();
+  }
+
+  function isAdminEmail(email) {
+    const adminEmail = configuredAdminEmail();
+    return Boolean(adminEmail) && String(email || "").trim().toLowerCase() === adminEmail;
+  }
+
+  function mapAuthUser(user) {
+    if (!user?.id) return null;
+    const email = String(user.email || "").trim().toLowerCase();
+    return {
+      id: user.id,
+      email,
+      displayName: String(user.user_metadata?.display_name || "").trim(),
+      // This flag only controls the client experience. Supabase RLS remains the authority for admin access.
+      isAdmin: isAdminEmail(email)
+    };
+  }
+
+  async function getCurrentUser() {
+    const { data, error } = await getClient().auth.getUser();
     if (error) throw error;
-    if (!(await isAdmin())) {
-      await getClient().auth.signOut();
+    return mapAuthUser(data?.user || null);
+  }
+
+  async function isAdmin() {
+    return Boolean((await getCurrentUser())?.isAdmin);
+  }
+
+  async function signInMember(email, password) {
+    const { data, error } = await getClient().auth.signInWithPassword({
+      email: normalizeEmail(email),
+      password: normalizePassword(password)
+    });
+    if (error) throw error;
+    return mapAuthUser(data?.user || null);
+  }
+
+  async function signInAdmin(email, password) {
+    if (!configuredAdminEmail()) throw new Error("Email admin belum dikonfigurasi di SISIP.");
+    const user = await signInMember(email, password);
+    if (!user?.isAdmin) {
+      try {
+        await signOut();
+      } catch (signOutError) {
+        console.warn("Sesi non-admin tidak dapat diakhiri secara otomatis.", signOutError);
+      }
       throw new Error("Akun ini bukan admin SISIP.");
     }
+    return user;
+  }
+
+  async function signUpMember({ email, password, displayName }) {
+    const { data, error } = await getClient().auth.signUp({
+      email: normalizeEmail(email),
+      password: normalizePassword(password),
+      options: { data: { display_name: normalizeDisplayName(displayName) } }
+    });
+    if (error) throw error;
+    return {
+      user: mapAuthUser(data?.user || null),
+      needsEmailConfirmation: !data?.session
+    };
+  }
+
+  function onAuthStateChange(listener) {
+    if (typeof listener !== "function") throw new Error("Listener autentikasi belum valid.");
+    const { data } = getClient().auth.onAuthStateChange((event, session) => {
+      try {
+        listener(event, mapAuthUser(session?.user || null));
+      } catch (error) {
+        console.error("Listener autentikasi SISIP gagal dijalankan.", error);
+      }
+    });
+    return () => data.subscription.unsubscribe();
   }
 
   async function signOut() {
     const { error } = await getClient().auth.signOut();
     if (error) throw error;
+  }
+
+  function mapMemberPreferences(row) {
+    return {
+      genderTarget: row?.gender_target || null,
+      styleTags: asArray(row?.style_tags).map((tag) => String(tag || "").trim()).filter(Boolean),
+      occasionTags: asArray(row?.occasion_tags).map((tag) => String(tag || "").trim()).filter(Boolean),
+      preferredColors: asArray(row?.preferred_colors).map((tag) => String(tag || "").trim()).filter(Boolean),
+      avoidedColors: asArray(row?.avoided_colors).map((tag) => String(tag || "").trim()).filter(Boolean),
+      budgetMin: optionalNumber(row?.budget_min_idr),
+      budgetMax: optionalNumber(row?.budget_max_idr),
+      bodyNotes: row?.body_notes || "",
+      onboardingCompleted: Boolean(row?.onboarding_completed)
+    };
+  }
+
+  async function getMemberProfile() {
+    const user = await getCurrentUser();
+    if (!user) return null;
+    const db = getClient();
+    const [profileResult, preferencesResult] = await Promise.all([
+      db.from("profiles").select("id, display_name").eq("id", user.id).maybeSingle(),
+      db.from("user_preferences").select("user_id, gender_target, style_tags, occasion_tags, preferred_colors, avoided_colors, budget_min_idr, budget_max_idr, body_notes, onboarding_completed").eq("user_id", user.id).maybeSingle()
+    ]);
+    if (profileResult.error) throw profileResult.error;
+    if (preferencesResult.error) throw preferencesResult.error;
+    return {
+      user,
+      profile: {
+        displayName: String(profileResult.data?.display_name || user.displayName || "SISIP Member").trim()
+      },
+      preferences: mapMemberPreferences(preferencesResult.data)
+    };
+  }
+
+  async function saveMemberProfile(input) {
+    const source = assertObject(input, "Profil member");
+    const current = await getMemberProfile();
+    if (!current) throw new Error("Masuk terlebih dahulu untuk menyimpan profil.");
+    const db = getClient();
+    const profileSource = source.profile && typeof source.profile === "object" && !Array.isArray(source.profile) ? source.profile : source;
+    const preferencesSource = source.preferences && typeof source.preferences === "object" && !Array.isArray(source.preferences) ? source.preferences : source;
+    const displayNameInput = firstDefined(profileSource, ["displayName", "display_name"]);
+    const previous = current.preferences || mapMemberPreferences(null);
+
+    const pickPreference = (keys, fallback) => {
+      const match = firstDefined(preferencesSource, keys);
+      return match.provided ? match.value : fallback;
+    };
+    const budgetMin = normalizeIdrAmount(pickPreference(["budgetMin", "budget_min_idr"], previous.budgetMin), "Budget minimum");
+    const budgetMax = normalizeIdrAmount(pickPreference(["budgetMax", "budget_max_idr"], previous.budgetMax), "Budget maksimum");
+    if (budgetMin !== null && budgetMax !== null && budgetMax < budgetMin) {
+      throw new Error("Budget maksimum tidak boleh lebih kecil dari budget minimum.");
+    }
+    const onboardingInput = firstDefined(preferencesSource, ["onboardingCompleted", "onboarding_completed"]);
+    const completeOnboarding = firstDefined(source, ["completeOnboarding", "complete_onboarding"]);
+    const onboardingCompleted = completeOnboarding.provided && normalizeBoolean(completeOnboarding.value, "Status onboarding")
+      ? true
+      : onboardingInput.provided
+        ? normalizeBoolean(onboardingInput.value, "Status onboarding")
+        : previous.onboardingCompleted;
+    const bodyNotes = normalizeUserText(
+      pickPreference(["bodyNotes", "body_notes"], previous.bodyNotes),
+      "Catatan proporsi tubuh",
+      { max: 1000 }
+    );
+    const preferenceRow = {
+      user_id: current.user.id,
+      gender_target: normalizeGenderPreference(pickPreference(["genderTarget", "gender_target"], previous.genderTarget)),
+      style_tags: normalizeMemberTagList(pickPreference(["styleTags", "style_tags"], previous.styleTags), "Pilihan gaya"),
+      occasion_tags: normalizeMemberTagList(pickPreference(["occasionTags", "occasion_tags"], previous.occasionTags), "Pilihan occasion"),
+      preferred_colors: normalizeMemberTagList(pickPreference(["preferredColors", "preferred_colors"], previous.preferredColors), "Warna favorit"),
+      avoided_colors: normalizeMemberTagList(pickPreference(["avoidedColors", "avoided_colors"], previous.avoidedColors), "Warna yang dihindari"),
+      budget_min_idr: budgetMin,
+      budget_max_idr: budgetMax,
+      body_notes: bodyNotes || null,
+      onboarding_completed: Boolean(onboardingCompleted)
+    };
+
+    if (displayNameInput.provided) {
+      const { error } = await db.from("profiles").update({ display_name: normalizeDisplayName(displayNameInput.value) }).eq("id", current.user.id);
+      if (error) throw error;
+    }
+    const { error: preferenceError } = await db.from("user_preferences").upsert(preferenceRow, { onConflict: "user_id" });
+    if (preferenceError) throw preferenceError;
+    return getMemberProfile();
+  }
+
+  function assertUuid(value, label) {
+    const id = String(value || "").trim();
+    if (!uuidPattern.test(id)) throw new Error(`${label} belum valid.`);
+    return id;
+  }
+
+  function normalizeOutfitRequestPayload(input) {
+    const source = assertObject(input, "Request outfit");
+    const occasion = normalizeUserText(firstDefined(source, ["occasion", "need"]).value, "Acara", { required: true, min: 2, max: 160 });
+    const styleTags = normalizeMemberTagList(firstDefined(source, ["styleTags", "style_tags", "styles", "style"]).value, "Arah gaya");
+    const preferredColors = normalizeMemberTagList(firstDefined(source, ["preferredColors", "preferred_colors", "colors", "color"]).value, "Warna pilihan");
+    const budgetMin = normalizeIdrAmount(firstDefined(source, ["budgetMin", "budget_min_idr"]).value, "Budget minimum");
+    const budgetMax = normalizeIdrAmount(firstDefined(source, ["budgetMax", "budget_max_idr"]).value, "Budget maksimum");
+    if (budgetMin !== null && budgetMax !== null && budgetMax < budgetMin) {
+      throw new Error("Budget maksimum tidak boleh lebih kecil dari budget minimum.");
+    }
+    const messageInput = firstDefined(source, ["message", "notes", "note"]);
+    const message = normalizeUserText(messageInput.value, "Catatan request", { max: 3000 }) || "Tidak ada catatan tambahan.";
+    return {
+      occasion,
+      gender_target: normalizeGenderPreference(firstDefined(source, ["genderTarget", "gender_target", "gender"]).value),
+      style_tags: styleTags,
+      budget_min_idr: budgetMin,
+      budget_max_idr: budgetMax,
+      preferred_colors: preferredColors.join(", ") || null,
+      message
+    };
+  }
+
+  async function createOutfitRequest(input) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Masuk terlebih dahulu untuk mengirim request outfit.");
+    if (user.isAdmin) throw new Error("Gunakan akun member untuk mengirim request outfit.");
+    const { data, error } = await getClient()
+      .from("outfit_requests")
+      .insert(normalizeOutfitRequestPayload(input))
+      .select("id")
+      .single();
+    if (error) throw error;
+    return data.id;
+  }
+
+  async function loadMyOutfitRequests() {
+    const user = await getCurrentUser();
+    if (!user) return [];
+    const rows = await queryRows(
+      getClient()
+        .from("outfit_requests")
+        .select(outfitRequestSelect)
+        .eq("requester_id", user.id)
+        .order("created_at", { ascending: false })
+    );
+    return rows.map((row) => mapOutfitRequest(row));
+  }
+
+  async function loadOutfitRequests() {
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin SISIP untuk membuka request outfit.");
+    const db = getClient();
+    const [requestRows, productRows, lookRows] = await Promise.all([
+      queryRows(db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false })),
+      queryRows(db.from("products").select("id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, status, published_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)")),
+      queryRows(db.from("looks").select("id, slug, title, excerpt, cover_image_path, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order))"))
+    ]);
+    const products = productRows.map(mapProduct);
+    const productMap = new Map(products.map((product) => [product.id, product]));
+    const looks = lookRows.map((row, index) => mapLook(row, productMap, lookRows.length - index));
+    const lookMap = new Map(looks.map((look) => [look.id, look]));
+    return requestRows.map((row) => mapOutfitRequest(row, { productMap, lookMap, includeAdminNote: true }));
+  }
+
+  function normalizeOutfitRecommendation(value, index) {
+    const source = assertObject(value, `Rekomendasi ke-${index + 1}`);
+    const type = String(source.targetType || source.target_type || source.type || "").trim().toLowerCase();
+    if (type !== "look" && type !== "product") throw new Error(`Tipe rekomendasi ke-${index + 1} belum valid.`);
+    const targetId = assertUuid(source.targetId || (type === "look" ? source.lookId || source.look_id : source.productId || source.product_id), `Target rekomendasi ke-${index + 1}`);
+    const label = normalizeUserText(source.label || (type === "look" ? "Lihat look" : "Lihat produk"), `Label rekomendasi ke-${index + 1}`, { required: true, min: 1, max: 80 });
+    return { type, targetId, label };
+  }
+
+  function normalizeOutfitRecommendations(value) {
+    if (!Array.isArray(value)) throw new Error("Daftar rekomendasi belum valid.");
+    if (value.length > 6) throw new Error("Maksimal enam rekomendasi per request.");
+    const recommendations = value.map(normalizeOutfitRecommendation);
+    const targetKeys = new Set();
+    for (const recommendation of recommendations) {
+      const key = `${recommendation.type}:${recommendation.targetId}`;
+      if (targetKeys.has(key)) throw new Error("Look atau produk yang sama tidak boleh dipilih lebih dari sekali.");
+      targetKeys.add(key);
+    }
+    return recommendations;
+  }
+
+  async function assertPublishedOutfitRecommendationTargets(db, recommendations) {
+    const lookIds = recommendations.filter((item) => item.type === "look").map((item) => item.targetId);
+    const productIds = recommendations.filter((item) => item.type === "product").map((item) => item.targetId);
+    const [lookRows, productRows] = await Promise.all([
+      lookIds.length ? queryRows(db.from("looks").select("id, status, published_at").in("id", lookIds)) : Promise.resolve([]),
+      productIds.length ? queryRows(db.from("products").select("id, status, published_at").in("id", productIds)) : Promise.resolve([])
+    ]);
+    const now = Date.now();
+    const targets = {
+      look: new Map(lookRows.map((row) => [row.id, row])),
+      product: new Map(productRows.map((row) => [row.id, row]))
+    };
+    for (const recommendation of recommendations) {
+      const target = targets[recommendation.type].get(recommendation.targetId);
+      if (!target || target.status !== "published" || !target.published_at || Number.isNaN(new Date(target.published_at).getTime()) || new Date(target.published_at).getTime() > now) {
+        throw new Error(`Rekomendasi hanya dapat menunjuk ${recommendation.type === "look" ? "look" : "produk"} yang sudah published.`);
+      }
+    }
+  }
+
+  function recommendationRowsForRequest(requestId, recommendations) {
+    return recommendations.map((recommendation, index) => ({
+      request_id: requestId,
+      position: index + 1,
+      target_type: recommendation.type,
+      look_id: recommendation.type === "look" ? recommendation.targetId : null,
+      product_id: recommendation.type === "product" ? recommendation.targetId : null,
+      label: recommendation.label
+    }));
+  }
+
+  async function replaceOutfitRecommendations(db, requestId, recommendations) {
+    const existing = await queryRows(
+      db.from("outfit_request_recommendations").select("position, target_type, look_id, product_id, label").eq("request_id", requestId).order("position", { ascending: true })
+    );
+    const { error: deleteError } = await db.from("outfit_request_recommendations").delete().eq("request_id", requestId);
+    if (deleteError) throw deleteError;
+    try {
+      if (recommendations.length) {
+        const { error } = await db.from("outfit_request_recommendations").insert(recommendationRowsForRequest(requestId, recommendations));
+        if (error) throw error;
+      }
+    } catch (error) {
+      if (existing.length) {
+        const { error: restoreError } = await db.from("outfit_request_recommendations").insert(existing.map((row) => ({ ...row, request_id: requestId })));
+        if (restoreError) console.error("Rekomendasi request sebelumnya tidak dapat dipulihkan.", restoreError);
+      }
+      throw error;
+    }
+    return existing;
+  }
+
+  async function restoreOutfitRecommendations(db, requestId, rows) {
+    const { error: deleteError } = await db.from("outfit_request_recommendations").delete().eq("request_id", requestId);
+    if (deleteError) throw deleteError;
+    if (!rows.length) return;
+    const { error } = await db.from("outfit_request_recommendations").insert(rows.map((row) => ({ ...row, request_id: requestId })));
+    if (error) throw error;
+  }
+
+  async function updateOutfitRequest(input) {
+    const source = assertObject(input, "Update request outfit");
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin SISIP untuk mengubah request outfit.");
+    const requestId = assertUuid(source.id, "Request outfit");
+    const db = getClient();
+    const { data: existing, error: existingError } = await db
+      .from("outfit_requests")
+      .select("id, status, response_message, responded_at")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (existingError) throw existingError;
+    if (!existing) throw new Error("Request outfit tidak ditemukan.");
+
+    const statusInput = firstDefined(source, ["status"]);
+    const status = statusInput.provided ? String(statusInput.value || "").trim().toLowerCase() : existing.status;
+    if (!outfitRequestStatuses.has(status)) throw new Error("Status request belum valid.");
+    const responseInput = firstDefined(source, ["responseMessage", "response_message"]);
+    const responseMessage = status === "replied" || status === "closed"
+      ? normalizeUserText(responseInput.provided ? responseInput.value : existing.response_message, "Jawaban untuk member", { required: true, min: 1, max: 3000 })
+      : null;
+    const recommendationsInput = firstDefined(source, ["recommendations"]);
+    const recommendations = recommendationsInput.provided ? normalizeOutfitRecommendations(recommendationsInput.value || []) : null;
+    if (recommendations) await assertPublishedOutfitRecommendationTargets(db, recommendations);
+
+    let previousRecommendations = null;
+    try {
+      if (recommendations) previousRecommendations = await replaceOutfitRecommendations(db, requestId, recommendations);
+      const responseWasUpdated = responseInput.provided || status !== existing.status;
+      const respondedAt = responseMessage
+        ? (responseWasUpdated || !existing.responded_at ? new Date().toISOString() : existing.responded_at)
+        : null;
+      const { error: updateError } = await db
+        .from("outfit_requests")
+        .update({ status, response_message: responseMessage, responded_at: respondedAt })
+        .eq("id", requestId);
+      if (updateError) throw updateError;
+
+      const adminNoteInput = firstDefined(source, ["adminNote", "admin_note"]);
+      if (adminNoteInput.provided) {
+        const note = normalizeUserText(adminNoteInput.value, "Catatan internal", { max: 3000 });
+        if (note) {
+          const { error: noteError } = await db.from("outfit_request_admin_notes").upsert({ request_id: requestId, note }, { onConflict: "request_id" });
+          if (noteError) throw noteError;
+        } else {
+          const { error: noteError } = await db.from("outfit_request_admin_notes").delete().eq("request_id", requestId);
+          if (noteError) throw noteError;
+        }
+      }
+    } catch (error) {
+      if (previousRecommendations) {
+        try {
+          await restoreOutfitRecommendations(db, requestId, previousRecommendations);
+        } catch (restoreError) {
+          console.error("Rekomendasi request sebelumnya tidak dapat dipulihkan.", restoreError);
+        }
+      }
+      throw error;
+    }
+    return { id: requestId, status };
   }
 
   function extensionFor(file) {
@@ -906,9 +1438,19 @@
     config,
     loadState,
     getSession,
+    getCurrentUser,
+    onAuthStateChange,
     isAdmin,
-    signIn,
+    signInAdmin,
+    signInMember,
+    signUpMember,
     signOut,
+    getMemberProfile,
+    saveMemberProfile,
+    createOutfitRequest,
+    loadMyOutfitRequests,
+    loadOutfitRequests,
+    updateOutfitRequest,
     createProduct,
     importProducts,
     createLook,
@@ -921,4 +1463,3 @@
     publicUrl
   };
 })();
-
