@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "include": ["/looks/*", "/products/*", "/journal/*"],
+  "exclude": []
+}

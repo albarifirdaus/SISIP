@@ -3,13 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
     <meta
+      id="pageDescription"
       name="description"
       content="COMOOTD - katalog look fashion all-gender yang dikurasi untuk memudahkan menemukan style yang tepat."
     />
-    <title>COMOOTD — Temukan look yang kamu banget.</title>
+    <title id="pageTitle">COMOOTD — Temukan look yang kamu banget.</title>
+    <link id="canonicalUrl" rel="canonical" href="https://sisip-fashion.pages.dev/" />
+    <meta id="openGraphType" property="og:type" content="website" />
+    <meta id="openGraphSiteName" property="og:site_name" content="COMOOTD" />
+    <meta id="openGraphTitle" property="og:title" content="COMOOTD — Temukan look yang kamu banget." />
+    <meta id="openGraphDescription" property="og:description" content="COMOOTD - katalog look fashion all-gender yang dikurasi untuk memudahkan menemukan style yang tepat." />
+    <meta id="openGraphUrl" property="og:url" content="https://sisip-fashion.pages.dev/" />
+    <meta id="twitterCard" name="twitter:card" content="summary" />
+    <meta id="twitterTitle" name="twitter:title" content="COMOOTD — Temukan look yang kamu banget." />
+    <meta id="twitterDescription" name="twitter:description" content="COMOOTD - katalog look fashion all-gender yang dikurasi untuk memudahkan menemukan style yang tepat." />
+    <!-- COMOOTD_ROUTE_META -->
     <meta name="theme-color" content="#e7e1da" />
-    <link rel="icon" type="image/svg+xml" href="assets/branding/comootd-tab-icon-v1.svg" />
+    <link rel="icon" type="image/svg+xml" href="/assets/branding/comootd-tab-icon-v1.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -252,6 +264,11 @@
       .swatch { width:10px; height:10px; flex:0 0 10px; display:inline-block; border:1px solid rgba(23,22,20,.25); border-radius:50%; background:var(--swatch); }
       .product-link { display:inline-flex; align-items:center; gap:.3rem; font-family:var(--mono); font-size:.6rem; letter-spacing:.035em; text-transform:uppercase; }
       .product-link:hover { color:var(--clay); }
+      .product-card-open, .product-name-link, .look-item-title, .article-related-product-open { margin:0; padding:0; border:0; color:inherit; background:transparent; cursor:pointer; text-align:left; }
+      .product-card-open { display:block; width:100%; }
+      .product-card-open:focus-visible, .product-name-link:focus-visible, .look-item-title:focus-visible, .article-related-product-open:focus-visible { outline:2px solid var(--clay); outline-offset:3px; }
+      .product-name-link { display:block; font-size:inherit; font-weight:inherit; line-height:inherit; letter-spacing:inherit; }
+      .product-name-link:hover, .look-item-title:hover, .article-related-product-open:hover { color:var(--clay); }
 
       .lookbook-section { background:var(--white); }
       .filter-toolbar { display:grid; grid-template-columns:minmax(180px,1.35fr) repeat(3,minmax(126px,.45fr)); gap:.55rem; margin-bottom:1.25rem; }
@@ -409,6 +426,16 @@
       .article-lede { margin:-.2rem 0 1.65rem; font-size:1rem; }
       .article-cover { width:100%; aspect-ratio:16/9; margin:1.5rem 0 1.75rem; overflow:hidden; background:var(--sand); }
       .article-cover img { width:100%; height:100%; object-fit:cover; }
+      .product-shell { width:min(900px,calc(100vw - 2rem)); }
+      .product-detail { display:grid; grid-template-columns:minmax(0,.94fr) minmax(280px,1.06fr); gap:clamp(1.5rem,4vw,3.5rem); align-items:start; }
+      .product-detail .product-art { height:clamp(290px,42vw,500px); }
+      .product-detail h2 { margin:.65rem 0 .75rem; font-size:clamp(2.25rem,5vw,4.4rem); letter-spacing:-.09em; line-height:.88; }
+      .product-detail-price { margin:.2rem 0 1rem; color:var(--clay-dark); font-family:var(--mono); font-size:.8rem; letter-spacing:.035em; }
+      .product-variant-options { display:flex; flex-wrap:wrap; gap:.55rem; margin:1.25rem 0 1.5rem; }
+      .product-variant-option { display:inline-flex; align-items:center; gap:.45rem; min-height:38px; padding:0 .75rem; border:1px solid var(--line); color:var(--ink); background:transparent; cursor:pointer; font-size:.76rem; }
+      .product-variant-option.is-selected { border-color:var(--ink); background:var(--ink); color:var(--white); }
+      .product-variant-option .swatch { border-color:currentColor; }
+      .product-detail .detail-actions { margin:1.2rem 0 1.25rem; flex-wrap:wrap; }
       .article-content { display:grid; gap:1.15rem; }
       .article-block { max-width:620px; }
       .article-block h3 { margin:0; font-size:clamp(1.3rem,2.6vw,2rem); letter-spacing:-.055em; line-height:1; }
@@ -602,7 +629,7 @@
         .journal-grid { display:block; background:transparent; border:0; }
         .journal-card { min-height:245px; margin-bottom:.7rem; }
         .journal-cta-grid { grid-template-columns:1fr; }
-        .request-grid, .about-section, .look-detail { grid-template-columns:1fr; }
+        .request-grid, .about-section, .look-detail, .product-detail { grid-template-columns:1fr; }
         .personal-grid { grid-template-columns:1fr; }
         .personal-intro { min-height:0; }
         .about-section { gap:1rem; }
@@ -657,7 +684,7 @@
     <header class="site-header">
       <div class="header-inner">
         <a class="brand" href="#home" aria-label="COMOOTD, kembali ke beranda">
-          <img class="brand-wordmark" src="assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="" decoding="async" />
+          <img class="brand-wordmark" src="/assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="" decoding="async" />
         </a>
         <nav class="desktop-nav" aria-label="Navigasi utama">
           <a href="#lookbook">Looks</a>
@@ -883,6 +910,15 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
         </button>
         <div id="articleDetail"></div>
+      </div>
+    </dialog>
+
+    <dialog id="productModal" aria-label="Detail produk COMOOTD">
+      <div class="article-shell product-shell">
+        <button class="icon-button modal-close" id="closeProductModal" type="button" aria-label="Tutup detail produk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+        <div id="productDetail"></div>
       </div>
     </dialog>
 
@@ -1142,8 +1178,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="./config.js"></script>
-    <script src="./assets/supabase-adapter.js"></script>
+    <script src="/config.js"></script>
+    <script src="/assets/supabase-adapter.js"></script>
     <script>
       (() => {
         "use strict";
@@ -1285,10 +1321,10 @@
         ];
 
         function product(id, name, price, badge, styles, variants, artBg, artInk) {
-          return { id, name, price, badge, styles, affiliateUrl: "https://shopee.co.id/", artBg, artInk, image: "", variants: variants.map(([name, hex]) => ({ id: slugify(name), name, hex })) };
+          return { id, slug: slugify(name), name, price, badge, styles, affiliateUrl: "https://shopee.co.id/", artBg, artInk, image: "", variants: variants.map(([name, hex]) => ({ id: slugify(name), name, hex })) };
         }
         function look(id, title, gender, styles, tone, popularity, createdOrder, items) {
-          return { id, title, gender, styles, tone, popularity, createdOrder, coverImage: "", items: items.map(([productId, variantName]) => ({ productId, variantName })) };
+          return { id, slug: slugify(title), title, gender, styles, tone, popularity, createdOrder, coverImage: "", items: items.map(([productId, variantName]) => ({ productId, variantName })) };
         }
         function slugify(value) { return String(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
         function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -1334,7 +1370,7 @@
           moodList: document.getElementById("moodList"), popularGrid: document.getElementById("popularGrid"), personalGrid: document.getElementById("personalGrid"), lookGrid: document.getElementById("lookGrid"),
           search: document.getElementById("searchInput"), gender: document.getElementById("genderFilter"), style: document.getElementById("styleFilter"), sort: document.getElementById("sortFilter"), styleChips: document.getElementById("styleChips"), resultCount: document.getElementById("resultCount"), heroCount: document.getElementById("heroLookCount"),
           newSeriesCarousel: document.getElementById("newSeriesCarousel"), newSeriesStage: document.getElementById("newSeriesStage"), newSeriesPrev: document.getElementById("newSeriesPrev"), newSeriesNext: document.getElementById("newSeriesNext"), newSeriesDots: document.getElementById("newSeriesDots"),
-          lookModal: document.getElementById("lookModal"), lookDetail: document.getElementById("lookDetail"), articleModal: document.getElementById("articleModal"), articleDetail: document.getElementById("articleDetail"),
+          lookModal: document.getElementById("lookModal"), lookDetail: document.getElementById("lookDetail"), articleModal: document.getElementById("articleModal"), articleDetail: document.getElementById("articleDetail"), productModal: document.getElementById("productModal"), productDetail: document.getElementById("productDetail"),
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
           accountButton: document.getElementById("accountButton"), mobileAccountButton: document.getElementById("mobileAccountButton"), memberModal: document.getElementById("memberModal"), memberAuthView: document.getElementById("memberAuthView"), memberProfileView: document.getElementById("memberProfileView"), memberAuthTitle: document.getElementById("memberAuthTitle"), memberAuthCopy: document.getElementById("memberAuthCopy"), memberAuthForm: document.getElementById("memberAuthForm"), memberAuthError: document.getElementById("memberAuthError"), memberAuthSwitch: document.getElementById("memberAuthSwitch"), memberResendConfirmation: document.getElementById("memberResendConfirmation"), memberAuthSubmit: document.getElementById("memberAuthSubmit"), memberDisplayNameField: document.getElementById("memberDisplayNameField"), memberDisplayNameInput: document.getElementById("memberDisplayNameInput"), memberPasswordInput: document.getElementById("memberPasswordInput"), memberProfileForm: document.getElementById("memberProfileForm"), memberProfileError: document.getElementById("memberProfileError"), memberRequestList: document.getElementById("memberRequestList"), memberSignOutButton: document.getElementById("memberSignOutButton"),
           requestForm: document.getElementById("requestForm"), requestStatus: document.getElementById("requestStatus"), requestSubmitButton: document.getElementById("requestSubmitButton"),
@@ -1356,6 +1392,7 @@
             const remoteState = await cloud.loadState({ admin });
             state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [], newSeriesConfigured: true };
             renderAll();
+            applyContentRoute({ notify: true });
             updateStudioMode();
             return true;
           } catch (error) {
@@ -1628,7 +1665,7 @@
           }
           const matches = getMemberMatches();
           const looks = matches.looks.map((entry) => `<button class="personal-look" type="button" data-open-look="${esc(entry.id)}">${lookVisual(entry)}<span class="personal-look-copy"><strong>${esc(entry.title)}</strong><span>${esc(entry.styles.slice(0,2).join(" / ") || "Kurasi COMOOTD")}</span></span></button>`).join("");
-          const products = matches.products.map((item) => { const variant = item.variants?.[0]; return `<article class="personal-product">${productArt(item,variant,true)}<h5>${esc(item.name)}</h5><p>${money(item.price)}</p><a href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></article>`; }).join("");
+          const products = matches.products.map((item) => { const variant = item.variants?.[0]; return `<article class="personal-product"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item,variant,true)}</button><button class="product-name-link" type="button" data-open-product="${esc(item.id)}"><h5>${esc(item.name)}</h5></button><p>${money(item.price)}</p><a href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></article>`; }).join("");
           els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">UNTUK ${esc(memberDisplayName().toUpperCase())}</p><h3>Kurasi yang dimulai dari pilihanmu.</h3></div><p>Urutan ini memakai kecocokan tag style, warna, gender preferensi, dan budget dari profil COMOOTD-mu.</p><button class="button-outline" type="button" data-open-member>Ubah preferensi ↗</button></div><div class="personal-results"><div class="personal-group"><div class="personal-group-head"><h4>Look yang mungkin kamu suka</h4><span class="eyebrow">${matches.looks.length} pilihan</span></div><div class="personal-looks">${looks || `<p class="personal-empty">Belum ada look yang cukup cocok.</p>`}</div></div><div class="personal-group"><div class="personal-group-head"><h4>Pieces untuk disisipkan</h4><span class="eyebrow">${matches.products.length} pilihan</span></div><div class="personal-products">${products || `<p class="personal-empty">Belum ada produk yang cukup cocok.</p>`}</div></div></div>`;
         }
 
@@ -1755,7 +1792,7 @@
           const popular = [...state.products].sort((a,b) => (counts.get(b.id)||0)-(counts.get(a.id)||0)).slice(0,4);
           els.popularGrid.innerHTML = popular.map((item) => {
             const variant = item.variants[0];
-            return `<article class="popular-card">${productArt(item, variant)}<p class="eyebrow" style="color:var(--taupe);margin:.1rem 0 .45rem">${esc(item.badge || "COMOOTD PICK")}</p><h3 class="product-name">${esc(item.name)}</h3><p class="product-price">${money(item.price)}</p><div class="product-meta"><span class="swatch" style="--swatch:${esc(variant?.hex || "#ccc")}" title="${esc(variant?.name || "")}"></span><a class="product-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></div></article>`;
+            return `<article class="popular-card"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item, variant)}</button><p class="eyebrow" style="color:var(--taupe);margin:.1rem 0 .45rem">${esc(item.badge || "COMOOTD PICK")}</p><h3 class="product-name"><button class="product-name-link" type="button" data-open-product="${esc(item.id)}">${esc(item.name)}</button></h3><p class="product-price">${money(item.price)}</p><div class="product-meta"><span class="swatch" style="--swatch:${esc(variant?.hex || "#ccc")}" title="${esc(variant?.name || "")}"></span><a class="product-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></div></article>`;
           }).join("") || `<div class="empty-state"><h3>Belum ada produk</h3><p>Tambahkan dari COMOOTD Studio.</p></div>`;
         }
         function renderStyleControls() {
@@ -2060,16 +2097,118 @@
           return parsed.href;
         }
         function safeUrl(value) { try { return affiliateUrl(value); } catch { return "https://shopee.co.id/"; } }
-        function openLook(id) {
+        let contentRouteSyncing = false;
+        function contentRouteSegment(type) { return type === "look" ? "looks" : type === "product" ? "products" : "journal"; }
+        function contentEntitySlug(entry, type) { return String(entry?.slug || slugify(entry?.title || entry?.name || type || "comootd")).trim(); }
+        function contentRouteUrl(type, entry, variantId = "") {
+          const url = new URL("/", window.location.origin);
+          url.pathname = `/${contentRouteSegment(type)}/${encodeURIComponent(contentEntitySlug(entry, type))}`;
+          if (type === "product" && variantId) url.searchParams.set("variant", variantId);
+          return url;
+        }
+        function readContentRoute() {
+          const parts = window.location.pathname.split("/").filter(Boolean);
+          if (parts.length !== 2) return null;
+          const type = parts[0] === "looks" ? "look" : parts[0] === "products" ? "product" : parts[0] === "journal" ? "article" : "";
+          if (!type) return null;
+          try {
+            const slug = decodeURIComponent(parts[1]).trim().toLowerCase();
+            if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return null;
+            return { type, slug, variantId: type === "product" ? String(new URL(window.location.href).searchParams.get("variant") || "") : "" };
+          } catch { return null; }
+        }
+        function contentEntryForRoute(route) {
+          const source = route?.type === "look" ? state.looks : route?.type === "product" ? state.products : state.articles;
+          return source?.find((entry) => contentEntitySlug(entry, route?.type).toLowerCase() === route?.slug) || null;
+        }
+        function contentPresentation(type, entry) {
+          const name = String(entry?.title || entry?.name || "COMOOTD");
+          const styles = Array.isArray(entry?.styles) ? entry.styles.filter(Boolean).slice(0, 3) : [];
+          if (type === "look") return { title: `${name} — COMOOTD Look`, description: styles.length ? `${styles.join(" · ")} — temukan setiap item dalam look ini di COMOOTD.` : "Temukan setiap item dalam look kurasi COMOOTD ini.", image: safeImage(entry?.coverImage), ogType: "website" };
+          if (type === "product") return { title: `${name} — COMOOTD`, description: `${money(entry?.price)}${styles.length ? ` · ${styles.join(" · ")}` : ""} — pilihan kurasi COMOOTD yang mudah dipadankan.`, image: safeImage(entry?.image || entry?.variants?.[0]?.image), ogType: "product" };
+          return { title: `${name} — COMOOTD Journal`, description: String(entry?.excerpt || "Catatan style dari COMOOTD.").trim(), image: safeImage(entry?.coverImage), ogType: "article" };
+        }
+        function setMetaContent(id, value) { const node = document.getElementById(id); if (node) node.setAttribute("content", value); }
+        function setOptionalMeta(id, attribute, attributeValue, value) {
+          let node = document.getElementById(id);
+          if (!value) { node?.remove(); return; }
+          if (!node) { node = document.createElement("meta"); node.id = id; node.setAttribute(attribute, attributeValue); document.head.append(node); }
+          node.setAttribute("content", value);
+        }
+        function updateClientMetadata(route = null, entry = null) {
+          const presentation = route && entry ? contentPresentation(route.type, entry) : { title:"COMOOTD — Temukan look yang kamu banget.", description:"COMOOTD - katalog look fashion all-gender yang dikurasi untuk memudahkan menemukan style yang tepat.", image:"", ogType:"website" };
+          const canonical = route && entry ? contentRouteUrl(route.type, entry, route.variantId).href : new URL("/", window.location.origin).href;
+          document.title = presentation.title;
+          document.getElementById("pageTitle")?.replaceChildren(presentation.title);
+          document.getElementById("canonicalUrl")?.setAttribute("href", canonical);
+          setMetaContent("pageDescription", presentation.description);
+          setMetaContent("openGraphType", presentation.ogType);
+          setMetaContent("openGraphTitle", presentation.title);
+          setMetaContent("openGraphDescription", presentation.description);
+          setMetaContent("openGraphUrl", canonical);
+          setMetaContent("twitterCard", presentation.image ? "summary_large_image" : "summary");
+          setMetaContent("twitterTitle", presentation.title);
+          setMetaContent("twitterDescription", presentation.description);
+          setOptionalMeta("openGraphImage", "property", "og:image", presentation.image);
+          setOptionalMeta("twitterImage", "name", "twitter:image", presentation.image);
+        }
+        function withContentRouteSync(callback) {
+          const wasSyncing = contentRouteSyncing;
+          contentRouteSyncing = true;
+          try { callback(); } finally { contentRouteSyncing = wasSyncing; }
+        }
+        function closeContentDialogs(except = null) {
+          withContentRouteSync(() => [els.lookModal, els.productModal, els.articleModal].forEach((dialog) => { if (dialog && dialog !== except && dialog.open) dialog.close(); }));
+        }
+        function navigateToContent(type, entry, { variantId = "", replace = false } = {}) {
+          const url = contentRouteUrl(type, entry, variantId);
+          if (`${window.location.pathname}${window.location.search}` !== `${url.pathname}${url.search}`) {
+            window.history[replace ? "replaceState" : "pushState"]({ comootdContent: true }, "", `${url.pathname}${url.search}`);
+          }
+          updateClientMetadata({ type, slug: contentEntitySlug(entry, type), variantId }, entry);
+        }
+        function closeContentView() {
+          closeContentDialogs();
+          if (readContentRoute()) window.history.replaceState({}, "", "/");
+          updateClientMetadata();
+        }
+        function applyContentRoute({ notify = false } = {}) {
+          const route = readContentRoute();
+          if (!route) { closeContentDialogs(); updateClientMetadata(); return; }
+          const entry = contentEntryForRoute(route);
+          if (!entry) {
+            closeContentDialogs();
+            if (notify) showToast("Konten ini belum tersedia atau sudah tidak dipublikasikan.");
+            return;
+          }
+          if (route.type === "look") openLook(entry.id, { navigate: false });
+          else if (route.type === "product") openProduct(entry.id, { navigate: false, variantId: route.variantId });
+          else openArticle(entry.id, { navigate: false });
+        }
+        function openLook(id, { navigate = true } = {}) {
           const entry = state.looks.find((lookItem)=>lookItem.id===id);
           if (!entry) return;
+          if (navigate) navigateToContent("look", entry); else updateClientMetadata({ type:"look", slug:contentEntitySlug(entry,"look") }, entry);
+          closeContentDialogs(els.lookModal);
           const itemsHtml = entry.items.map((item)=>{
             const productItem=getProduct(item.productId); if (!productItem) return "";
             const variant=getVariant(productItem,item.variantName);
-            return `<li class="look-item"><div class="look-item-art">${productArt(productItem,variant,true)}</div><div><p class="look-item-title">${esc(productItem.name)}</p><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div><a class="item-link" href="${esc(safeUrl(productItem.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></li>`;
+            return `<li class="look-item"><button class="look-item-art product-card-open" type="button" data-open-product="${esc(productItem.id)}" aria-label="Buka detail ${esc(productItem.name)}">${productArt(productItem,variant,true)}</button><div><button class="look-item-title" type="button" data-open-product="${esc(productItem.id)}">${esc(productItem.name)}</button><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div><a class="item-link" href="${esc(safeUrl(productItem.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></li>`;
           }).join("");
           els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">LOOK ${String(entry.createdOrder||0).padStart(2,"0")} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2><div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.</p></div><div class="detail-actions"><button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
           if (!els.lookModal.open) els.lookModal.showModal();
+        }
+        function openProduct(id, { navigate = true, variantId = "", replace = false } = {}) {
+          const entry = getProduct(id);
+          if (!entry) return;
+          const selectedVariant = entry.variants?.find((variant) => variant.id === variantId) || entry.variants?.[0] || null;
+          if (navigate) navigateToContent("product", entry, { variantId: selectedVariant?.id || "", replace });
+          else updateClientMetadata({ type:"product", slug:contentEntitySlug(entry,"product"), variantId:selectedVariant?.id || "" }, entry);
+          closeContentDialogs(els.productModal);
+          const variants = (entry.variants || []).map((variant) => `<button class="product-variant-option${variant.id === selectedVariant?.id ? " is-selected" : ""}" type="button" data-select-product-variant="${esc(variant.id)}" aria-pressed="${String(variant.id === selectedVariant?.id)}"><span class="swatch" style="--swatch:${esc(variant.hex || "#ccc")}"></span>${esc(variant.name || "Warna pilihan")}</button>`).join("");
+          const gender = ({ pria:"Pria", wanita:"Wanita", unisex:"Uniseks" })[String(entry.genderTarget || "").toLowerCase()] || "Uniseks";
+          els.productDetail.innerHTML = `<div class="product-detail"><div>${productArt(entry, selectedVariant)}</div><div><p class="eyebrow" style="color:var(--clay)">COMOOTD / ${esc(gender)}</p><h2>${esc(entry.name)}</h2>${entry.badge ? `<p class="eyebrow" style="color:var(--taupe)">${esc(entry.badge)}</p>` : ""}<p class="product-detail-price">${money(entry.price)}</p><div class="look-card-tags">${(entry.styles || []).map((style) => `<span class="tag">${esc(style)}</span>`).join("")}</div>${variants ? `<div class="product-variant-options" aria-label="Pilih warna">${variants}</div>` : ""}<div class="detail-actions"><a class="button" href="${esc(safeUrl(entry.affiliateUrl))}" target="_blank" rel="sponsored noopener">Lihat di Shopee ↗</a><button class="button-outline" type="button" data-share-product="${esc(entry.id)}" data-share-variant="${esc(selectedVariant?.id || "")}">Bagikan</button></div><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
+          if (!els.productModal.open) els.productModal.showModal();
         }
         function articlePlainText(blocks) {
           return (blocks || []).filter((block) => block.type !== "image").map((block) => String(block.content || "").trim()).filter(Boolean).join("\n\n");
@@ -2108,14 +2247,16 @@
           const looks = ctas.filter((cta) => cta.type === "look");
           const products = ctas.filter((cta) => cta.type === "product");
           const lookMarkup = looks.length ? `<div class="article-related-looks">${looks.map((cta) => `<button class="article-related-look" type="button" data-open-article-look="${esc(cta.look.id)}"><strong>${esc(cta.label || defaultJournalCtaLabel("look"))}</strong><span>${esc(cta.look.title)} ↗</span></button>`).join("")}</div>` : "";
-          const productMarkup = products.length ? `<div class="article-related-products">${products.map((cta) => { const product = cta.product; return `<article class="article-related-product">${productArt(product, product.variants?.[0], true)}<div><h4>${esc(product.name)}</h4><p class="microcopy" style="margin:.25rem 0 0;color:var(--taupe)">${money(product.price)}</p></div><a href="${esc(safeUrl(product.affiliateUrl))}" target="_blank" rel="sponsored noopener">${esc(cta.label || defaultJournalCtaLabel("product"))} ↗</a></article>`; }).join("")}</div>` : "";
+          const productMarkup = products.length ? `<div class="article-related-products">${products.map((cta) => { const product = cta.product; return `<article class="article-related-product"><button class="article-related-product-open" type="button" data-open-product="${esc(product.id)}">${productArt(product, product.variants?.[0], true)}<div><h4>${esc(product.name)}</h4><p class="microcopy" style="margin:.25rem 0 0;color:var(--taupe)">${money(product.price)}</p></div></button><a href="${esc(safeUrl(product.affiliateUrl))}" target="_blank" rel="sponsored noopener">${esc(cta.label || defaultJournalCtaLabel("product"))} ↗</a></article>`; }).join("")}</div>` : "";
           return `<section class="article-curation"><h3>Temukan kurasinya</h3>${lookMarkup}${productMarkup}<p class="affiliate-disclosure">Sebagian tautan pada kurasi ini merupakan tautan affiliate. Harga dan stok dapat berubah di Shopee.</p></section>`;
         }
-        function openArticle(id) {
+        function openArticle(id, { navigate = true } = {}) {
           const article=state.articles.find((entry)=>entry.id===id); if (!article) return;
+          if (navigate) navigateToContent("article", article); else updateClientMetadata({ type:"article", slug:contentEntitySlug(article,"article") }, article);
+          closeContentDialogs(els.articleModal);
           const cover = safeImage(article.coverImage);
           const blocks = Array.isArray(article.blocks) && article.blocks.length ? article.blocks.map(articleBlockMarkup).join("") : String(article.body || article.excerpt || "").split("\n\n").filter(Boolean).map((p)=>`<p class="article-block">${esc(p)}</p>`).join("");
-          els.articleDetail.innerHTML=`<p class="eyebrow" style="color:var(--clay)">${esc(articleCategoryLabel(article.category))} / ${esc(article.number)}</p><h2>${esc(article.title)}</h2>${article.excerpt ? `<p class="article-lede">${esc(article.excerpt)}</p>` : ""}${cover ? `<figure class="article-cover"><img src="${esc(cover)}" alt="${esc(article.coverAlt || article.title)}" /></figure>` : ""}<div class="article-content">${blocks}</div>${articleCurationMarkup(article)}<button class="button-outline" type="button" data-close-article>Tutup catatan</button>`;
+          els.articleDetail.innerHTML=`<p class="eyebrow" style="color:var(--clay)">${esc(articleCategoryLabel(article.category))} / ${esc(article.number)}</p><h2>${esc(article.title)}</h2>${article.excerpt ? `<p class="article-lede">${esc(article.excerpt)}</p>` : ""}<div class="detail-actions"><button class="button-outline" type="button" data-share-article="${esc(article.id)}">Bagikan artikel ↗</button></div>${cover ? `<figure class="article-cover"><img src="${esc(cover)}" alt="${esc(article.coverAlt || article.title)}" /></figure>` : ""}<div class="article-content">${blocks}</div>${articleCurationMarkup(article)}<button class="button-outline" type="button" data-close-article>Tutup catatan</button>`;
           if (!els.articleModal.open) els.articleModal.showModal();
         }
         function showToast(message) { clearTimeout(toastTimer); els.toast.textContent=message; els.toast.classList.add("show"); toastTimer=setTimeout(()=>els.toast.classList.remove("show"),3200); }
@@ -2622,6 +2763,7 @@
         document.getElementById("currentYear").textContent=new Date().getFullYear();
         updateStudioMode();
         renderAll();
+        applyContentRoute({ notify: !cloudEnabled() });
         if (cloudEnabled()) {
           void refreshCloudState({ quiet: true });
           void syncMemberSession({ quiet: true });
@@ -2657,10 +2799,13 @@
         els.personalGrid.addEventListener("click",(event)=>{
           const button=event.target.closest("[data-open-member]"); if(button) openMemberAccount();
           const look=event.target.closest("[data-open-look]"); if(look) openLook(look.dataset.openLook);
+          const product=event.target.closest("[data-open-product]"); if(product) openProduct(product.dataset.openProduct);
         });
+        els.popularGrid.addEventListener("click",(event)=>{ const product=event.target.closest("[data-open-product]"); if(product) openProduct(product.dataset.openProduct); });
         document.getElementById("closeStudioButton").addEventListener("click",closeStudio); els.studioScrim.addEventListener("click",closeStudio);
-        document.getElementById("closeLookModal").addEventListener("click",()=>els.lookModal.close());
-        document.getElementById("closeArticleModal").addEventListener("click",()=>els.articleModal.close());
+        document.getElementById("closeLookModal").addEventListener("click",closeContentView);
+        document.getElementById("closeArticleModal").addEventListener("click",closeContentView);
+        document.getElementById("closeProductModal").addEventListener("click",closeContentView);
         document.getElementById("closeAuthModal").addEventListener("click",()=>els.authModal.close());
         document.getElementById("closeMemberModal").addEventListener("click",()=>els.memberModal.close());
         els.authModal.addEventListener("click",(event)=>{ if(event.target===els.authModal)els.authModal.close(); });
@@ -2820,9 +2965,27 @@
           els.memberModal.close();
           openLook(button.dataset.memberOpenLook);
         });
-        els.lookModal.addEventListener("click",(event)=>{ if(event.target===els.lookModal)els.lookModal.close(); const share=event.target.closest("[data-share-look]"); if(share) shareLook(share.dataset.shareLook); });
-        els.articleModal.addEventListener("click",(event)=>{ if(event.target===els.articleModal){els.articleModal.close();return;} const close=event.target.closest("[data-close-article]"); if(close){els.articleModal.close();return;} const look=event.target.closest("[data-open-article-look]"); if(look){els.articleModal.close();openLook(look.dataset.openArticleLook);} });
+        els.lookModal.addEventListener("click",(event)=>{
+          if(event.target===els.lookModal){closeContentView();return;}
+          const share=event.target.closest("[data-share-look]"); if(share){void shareEntity("look",share.dataset.shareLook);return;}
+          const product=event.target.closest("[data-open-product]"); if(product) openProduct(product.dataset.openProduct);
+        });
+        els.articleModal.addEventListener("click",(event)=>{
+          if(event.target===els.articleModal){closeContentView();return;}
+          const close=event.target.closest("[data-close-article]"); if(close){closeContentView();return;}
+          const share=event.target.closest("[data-share-article]"); if(share){void shareEntity("article",share.dataset.shareArticle);return;}
+          const look=event.target.closest("[data-open-article-look]"); if(look){openLook(look.dataset.openArticleLook);return;}
+          const product=event.target.closest("[data-open-product]"); if(product) openProduct(product.dataset.openProduct);
+        });
+        els.productModal.addEventListener("click",(event)=>{
+          if(event.target===els.productModal){closeContentView();return;}
+          const share=event.target.closest("[data-share-product]"); if(share){void shareEntity("product",share.dataset.shareProduct,{variantId:share.dataset.shareVariant||""});return;}
+          const variant=event.target.closest("[data-select-product-variant]");
+          if(variant){const route=readContentRoute(); const product=route?.type==="product"?contentEntryForRoute(route):null; if(product) openProduct(product.id,{variantId:variant.dataset.selectProductVariant,replace:true});}
+        });
         document.getElementById("journalGrid").addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-article]"); if(button)openArticle(button.dataset.openArticle); });
+        [els.lookModal,els.articleModal,els.productModal].forEach((dialog)=>dialog.addEventListener("close",()=>{ if(!contentRouteSyncing&&readContentRoute()){window.history.replaceState({},"","/");updateClientMetadata();} }));
+        window.addEventListener("popstate",()=>applyContentRoute({notify:true}));
         document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.addEventListener("click",()=>switchStudioTab(button.dataset.studioTab)));
         document.querySelectorAll("[data-add-journal-block]").forEach((button)=>button.addEventListener("click",()=>{ if(journalDraftBlocks.length>=JOURNAL_BLOCK_LIMIT){els.journalFormError.textContent=`Artikel maksimal memiliki ${JOURNAL_BLOCK_LIMIT} blok.`;return;} journalDraftBlocks.push(makeJournalBlock(button.dataset.addJournalBlock));els.journalFormError.textContent="";renderJournalBlockEditor(); }));
         els.saveNewSeriesButton.addEventListener("click",saveNewSeries);
@@ -3211,9 +3374,29 @@
           }
         });
 
-        async function shareLook(id) {
-          const entry=state.looks.find((item)=>item.id===id);const text=`${entry?.title||"Look"} — temukan potongannya di COMOOTD.`;
-          try { if(navigator.share){await navigator.share({title:"COMOOTD",text,url:window.location.href});showToast("Look siap dibagikan.");}else if(navigator.clipboard){await navigator.clipboard.writeText(text);showToast("Deskripsi look disalin ke clipboard.");}else{showToast(text);} }catch(error){if(error.name!=="AbortError")showToast("Bagikan dari browser setelah website dipublikasikan.");}
+        async function copyContentUrl(url) {
+          if (navigator.clipboard?.writeText && window.isSecureContext) { await navigator.clipboard.writeText(url); return true; }
+          const input=document.createElement("textarea");
+          input.value=url; input.setAttribute("readonly",""); input.style.cssText="position:fixed;opacity:0;pointer-events:none;";
+          document.body.append(input); input.select();
+          const copied=typeof document.execCommand === "function" && document.execCommand("copy");
+          input.remove();
+          return Boolean(copied);
+        }
+        async function shareEntity(type, id, { variantId = "" } = {}) {
+          const source=type === "look" ? state.looks : type === "product" ? state.products : state.articles;
+          const entry=source.find((item)=>item.id===id); if(!entry) return;
+          const url=contentRouteUrl(type,entry,variantId).href;
+          const name=entry.title || entry.name || "Kurasi";
+          const text=type === "look" ? `${name} — temukan potongannya di COMOOTD.` : type === "product" ? `${name} — pilihan kurasi COMOOTD.` : `${name} — catatan style dari COMOOTD.`;
+          const label=type === "look" ? "look" : type === "product" ? "produk" : "artikel";
+          try {
+            if(navigator.share){ await navigator.share({title:name,text,url}); showToast(`${label[0].toUpperCase()+label.slice(1)} siap dibagikan.`); return; }
+            if(await copyContentUrl(url)){ showToast(`Link ${label} disalin.`); return; }
+            window.prompt("Salin link ini:",url);
+          } catch(error) {
+            if(error?.name!=="AbortError") showToast("Link belum dapat disalin. Coba lagi dari browser ini.");
+          }
         }
       })();
     </script>

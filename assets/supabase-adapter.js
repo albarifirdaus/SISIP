@@ -159,6 +159,7 @@
       .filter(Boolean);
     return {
       id: row.id,
+      slug: row.slug,
       number: String(index + 1).padStart(2, "0"),
       title: row.title,
       excerpt: row.excerpt || "",
@@ -168,6 +169,8 @@
       tags: row.style_tags || [],
       coverImage: publicUrl(row.cover_image_path),
       coverAlt: row.cover_alt_text || "",
+      status: row.status || "draft",
+      publishedAt: row.published_at || "",
       blocks,
       ctas,
       lookCtas: ctas.filter((cta) => cta.type === "look"),
