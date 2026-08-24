@@ -2121,11 +2121,11 @@
           const source = route?.type === "look" ? state.looks : route?.type === "product" ? state.products : state.articles;
           return source?.find((entry) => contentEntitySlug(entry, route?.type).toLowerCase() === route?.slug) || null;
         }
-        function contentPresentation(type, entry) {
+        function contentPresentation(type, entry, variantId = "") {
           const name = String(entry?.title || entry?.name || "COMOOTD");
           const styles = Array.isArray(entry?.styles) ? entry.styles.filter(Boolean).slice(0, 3) : [];
           if (type === "look") return { title: `${name} — COMOOTD Look`, description: styles.length ? `${styles.join(" · ")} — temukan setiap item dalam look ini di COMOOTD.` : "Temukan setiap item dalam look kurasi COMOOTD ini.", image: safeImage(entry?.coverImage), ogType: "website" };
-          if (type === "product") return { title: `${name} — COMOOTD`, description: `${money(entry?.price)}${styles.length ? ` · ${styles.join(" · ")}` : ""} — pilihan kurasi COMOOTD yang mudah dipadankan.`, image: safeImage(entry?.image || entry?.variants?.[0]?.image), ogType: "product" };
+          if (type === "product") { const variant = entry?.variants?.find((item) => item.id === variantId) || entry?.variants?.[0]; return { title: `${name} — COMOOTD`, description: `${money(entry?.price)}${styles.length ? ` · ${styles.join(" · ")}` : ""} — pilihan kurasi COMOOTD yang mudah dipadankan.`, image: safeImage(variant?.image || entry?.image || entry?.variants?.[0]?.image), ogType: "product" }; }
           return { title: `${name} — COMOOTD Journal`, description: String(entry?.excerpt || "Catatan style dari COMOOTD.").trim(), image: safeImage(entry?.coverImage), ogType: "article" };
         }
         function setMetaContent(id, value) { const node = document.getElementById(id); if (node) node.setAttribute("content", value); }
@@ -2136,8 +2136,8 @@
           node.setAttribute("content", value);
         }
         function updateClientMetadata(route = null, entry = null) {
-          const presentation = route && entry ? contentPresentation(route.type, entry) : { title:"COMOOTD — Temukan look yang kamu banget.", description:"COMOOTD - katalog look fashion all-gender yang dikurasi untuk memudahkan menemukan style yang tepat.", image:"", ogType:"website" };
-          const canonical = route && entry ? contentRouteUrl(route.type, entry, route.variantId).href : new URL("/", window.location.origin).href;
+          const presentation = route && entry ? contentPresentation(route.type, entry, route.variantId) : { title:"COMOOTD — Temukan look yang kamu banget.", description:"COMOOTD - katalog look fashion all-gender yang dikurasi untuk memudahkan menemukan style yang tepat.", image:"", ogType:"website" };
+          const canonical = route && entry ? contentRouteUrl(route.type, entry).href : new URL("/", window.location.origin).href;
           document.title = presentation.title;
           document.getElementById("pageTitle")?.replaceChildren(presentation.title);
           document.getElementById("canonicalUrl")?.setAttribute("href", canonical);
@@ -2763,7 +2763,6 @@
         document.getElementById("currentYear").textContent=new Date().getFullYear();
         updateStudioMode();
         renderAll();
-        applyContentRoute({ notify: !cloudEnabled() });
         if (cloudEnabled()) {
           void refreshCloudState({ quiet: true });
           void syncMemberSession({ quiet: true });
@@ -2772,7 +2771,7 @@
               window.setTimeout(() => { void syncMemberSession({ quiet: true }); }, 0);
             });
           }
-        }
+        } else applyContentRoute({ notify: true });
 
         els.search.addEventListener("input",()=>{ activeStyle="all"; renderStyleControls(); renderLooks(); });
         els.gender.addEventListener("change",renderLooks);

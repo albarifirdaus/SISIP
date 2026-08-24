@@ -11,7 +11,7 @@ const CONTENT_SPECS = {
   },
   product: {
     table: "products",
-    select: "slug,name,price_idr,cover_image_path,style_tags,gender_target",
+    select: "id,slug,name,price_idr,cover_image_path,style_tags,gender_target",
     title: (row) => `${row.name || "Produk"} — COMOOTD`,
     description: (row) => {
       const price = Number(row.price_idr || 0);
@@ -44,8 +44,17 @@ function clippedText(value, limit) {
   return text.length > limit ? `${text.slice(0, Math.max(0, limit - 1)).trimEnd()}…` : text;
 }
 
-function isSafeSlug(slug) {
-  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(slug || ""));
+function routeFromRequest(request) {
+  const parts = new URL(request.url).pathname.split("/").filter(Boolean);
+  if (parts.length !== 2) return null;
+  const type = parts[0] === "looks" ? "look" : parts[0] === "products" ? "product" : parts[0] === "journal" ? "article" : "";
+  if (!type) return null;
+  try {
+    const slug = decodeURIComponent(parts[1]).trim().toLowerCase();
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? { type, slug } : null;
+  } catch {
+    return null;
+  }
 }
 
 function siteOrigin(env) {
@@ -92,8 +101,8 @@ function injectMetadata(html, metadata) {
   return page.replace("<!-- COMOOTD_ROUTE_META -->", `${imageTags}\n    ${robots}`);
 }
 
-async function getStaticShell(context) {
-  const response = await context.env.ASSETS.fetch(new URL("/", context.request.url));
+async function getStaticShell(request, env) {
+  const response = await env.ASSETS.fetch(new URL("/", request.url));
   if (!response.ok) throw new Error("Static app shell is unavailable.");
   return response.text();
 }
@@ -116,12 +125,29 @@ async function findPublishedEntry(env, spec, slug) {
   return Array.isArray(rows) ? rows[0] || null : null;
 }
 
-async function errorPage(context, status) {
-  const origin = siteOrigin(context.env);
+async function findActiveVariantImage(env, productId) {
+  if (!productId) return "";
+  const endpoint = new URL("/rest/v1/product_variants", String(env.SUPABASE_URL || ""));
+  endpoint.searchParams.set("select", "image_path");
+  endpoint.searchParams.set("product_id", `eq.${productId}`);
+  endpoint.searchParams.set("is_active", "eq.true");
+  endpoint.searchParams.set("order", "sort_order.asc");
+  endpoint.searchParams.set("limit", "1");
+  const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
+  const response = await fetch(endpoint, {
+    headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" }
+  });
+  if (!response.ok) return "";
+  const rows = await response.json();
+  return storageImageUrl(env, Array.isArray(rows) ? rows[0]?.image_path : "");
+}
+
+async function errorPage(request, env, status) {
+  const origin = siteOrigin(env);
   const title = status === 404 ? "Konten tidak tersedia — COMOOTD" : "COMOOTD sedang menyiapkan halaman ini";
   const description = status === 404 ? "Konten ini belum tersedia atau sudah tidak dipublikasikan." : "Coba muat ulang beberapa saat lagi.";
   try {
-    const shell = await getStaticShell(context);
+    const shell = await getStaticShell(request, env);
     return new Response(injectMetadata(shell, { title, description, canonical: origin, type: "website", image: "", indexable: false }), {
       status,
       headers: { "Content-Type": "text/html; charset=UTF-8", "Cache-Control": "no-store" }
@@ -131,39 +157,47 @@ async function errorPage(context, status) {
   }
 }
 
-export async function renderContentPage(context, type) {
-  const spec = CONTENT_SPECS[type];
-  const slug = String(context.params?.slug || "").trim().toLowerCase();
-  if (!spec || !isSafeSlug(slug)) return errorPage(context, 404);
-  if (!String(context.env.SUPABASE_URL || "").startsWith("https://") || !String(context.env.SUPABASE_PUBLISHABLE_KEY || "").trim()) return errorPage(context, 503);
-
+async function renderContentPage(request, env, route) {
+  const spec = CONTENT_SPECS[route.type];
+  if (!spec) return errorPage(request, env, 404);
+  if (!String(env.SUPABASE_URL || "").startsWith("https://") || !String(env.SUPABASE_PUBLISHABLE_KEY || "").trim()) return errorPage(request, env, 503);
   try {
-    const [shell, entry] = await Promise.all([getStaticShell(context), findPublishedEntry(context.env, spec, slug)]);
-    if (!entry) return new Response(injectMetadata(shell, {
-      title: "Konten tidak tersedia — COMOOTD",
-      description: "Konten ini belum tersedia atau sudah tidak dipublikasikan.",
-      canonical: siteOrigin(context.env),
-      type: "website",
-      image: "",
-      indexable: false
-    }), { status: 404, headers: { "Content-Type": "text/html; charset=UTF-8", "Cache-Control": "no-store" } });
-
-    const canonical = `${siteOrigin(context.env)}/${type === "look" ? "looks" : type === "product" ? "products" : "journal"}/${encodeURIComponent(slug)}`;
+    const [shell, entry] = await Promise.all([getStaticShell(request, env), findPublishedEntry(env, spec, route.slug)]);
+    if (!entry) {
+      return new Response(injectMetadata(shell, {
+        title: "Konten tidak tersedia — COMOOTD",
+        description: "Konten ini belum tersedia atau sudah tidak dipublikasikan.",
+        canonical: siteOrigin(env),
+        type: "website",
+        image: "",
+        indexable: false
+      }), { status: 404, headers: { "Content-Type": "text/html; charset=UTF-8", "Cache-Control": "no-store" } });
+    }
+    const segment = route.type === "look" ? "looks" : route.type === "product" ? "products" : "journal";
+    const image = storageImageUrl(env, entry.cover_image_path) || (route.type === "product" ? await findActiveVariantImage(env, entry.id) : "");
     const metadata = {
       title: clippedText(spec.title(entry), 120),
       description: clippedText(spec.description(entry), 300),
-      canonical,
+      canonical: `${siteOrigin(env)}/${segment}/${encodeURIComponent(route.slug)}`,
       type: spec.type,
-      image: storageImageUrl(context.env, entry.cover_image_path),
+      image,
       indexable: true
     };
     return new Response(injectMetadata(shell, metadata), {
       headers: {
         "Content-Type": "text/html; charset=UTF-8",
-        "Cache-Control": "public, max-age=300, s-maxage=600, stale-while-revalidate=86400"
+        "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
       }
     });
   } catch {
-    return errorPage(context, 502);
+    return errorPage(request, env, 502);
   }
 }
+
+export default {
+  async fetch(request, env) {
+    const route = ["GET", "HEAD"].includes(request.method) ? routeFromRequest(request) : null;
+    const response = route ? await renderContentPage(request, env, route) : await env.ASSETS.fetch(request);
+    return request.method === "HEAD" ? new Response(null, { status: response.status, statusText: response.statusText, headers: response.headers }) : response;
+  }
+};
