@@ -1010,11 +1010,11 @@
         <div class="studio-panel" id="studioSeriesPanel" data-studio-panel="series">
           <section class="studio-section">
             <h3>New Series di beranda</h3>
-            <p>Pilih lima look yang tampil di carousel beranda, lalu tentukan urutannya dari kiri ke kanan.</p>
+            <p>Pilih hingga lima look yang tampil di carousel beranda. Kosongkan slot untuk melepas look dari carousel.</p>
             <div class="new-series-slots" id="newSeriesSlots"></div>
             <p class="new-series-status" id="newSeriesStatus" aria-live="polite"></p>
             <p class="form-error" id="newSeriesError" role="alert"></p>
-            <button class="small-button" id="saveNewSeriesButton" type="button">Simpan 5 look</button>
+            <button class="small-button" id="saveNewSeriesButton" type="button">Simpan carousel</button>
           </section>
         </div>
 
@@ -1318,17 +1318,17 @@
         function loadState() {
           try {
             const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES), newSeriesLookIds: Array.isArray(saved.newSeriesLookIds) ? saved.newSeriesLookIds : [] };
+            if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES), newSeriesSlots: Array.isArray(saved.newSeriesSlots) ? saved.newSeriesSlots : [], newSeriesLookIds: Array.isArray(saved.newSeriesLookIds) ? saved.newSeriesLookIds : [], newSeriesConfigured: typeof saved.newSeriesConfigured === "boolean" ? saved.newSeriesConfigured : Array.isArray(saved.newSeriesLookIds) && saved.newSeriesLookIds.length > 0 };
           } catch (error) { console.warn("Unable to load SISIP prototype", error); }
-          return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), newSeriesLookIds: [] };
+          return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false };
         }
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), newSeriesLookIds: [] }; lookDraftItems = []; saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
+        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false }; lookDraftItems = []; saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
         async function refreshCloudState({ admin = false, quiet = false } = {}) {
           if (!cloudEnabled()) return false;
           try {
             const remoteState = await cloud.loadState({ admin });
-            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [] };
+            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [], newSeriesConfigured: true };
             renderAll();
             updateStudioMode();
             return true;
@@ -1664,10 +1664,14 @@
         function getNewSeriesLookIds() {
           const candidates = getNewSeriesCandidates();
           const candidateIds = new Set(candidates.map((entry) => entry.id));
+          const configuredSlots = Array.isArray(state.newSeriesSlots) && state.newSeriesSlots.length
+            ? [...state.newSeriesSlots].sort((a,b) => Number(a.slot || 0) - Number(b.slot || 0)).map((slot) => slot.lookId)
+            : (state.newSeriesLookIds || []);
           const selected = [];
-          (state.newSeriesLookIds || []).forEach((id) => {
+          configuredSlots.forEach((id) => {
             if (candidateIds.has(id) && !selected.includes(id)) selected.push(id);
           });
+          if (cloudEnabled() || state.newSeriesConfigured) return selected.slice(0,5);
           candidates.forEach((entry) => {
             if (!selected.includes(entry.id)) selected.push(entry.id);
           });
@@ -1807,22 +1811,23 @@
         function renderNewSeriesStudio() {
           const candidates = getNewSeriesCandidates();
           const candidateIds = new Set(candidates.map((entry) => entry.id));
-          const configuredIds = (state.newSeriesLookIds || []).filter((id, index, ids) => candidateIds.has(id) && ids.indexOf(id) === index).slice(0,5);
-          const selectedIds = getNewSeriesLookIds();
-          els.newSeriesSlots.innerHTML = Array.from({ length: 5 }, (_, index) => {
-            const selectedId = selectedIds[index] || "";
-            const options = [`<option value="">Pilih look</option>`, ...candidates.map((entry) => `<option value="${esc(entry.id)}" ${entry.id === selectedId ? "selected" : ""}>${esc(entry.title)} · ${esc(entry.gender)}</option>`)].join("");
+          const configuredSlotMap = new Map((state.newSeriesSlots || []).map((slot) => [Number(slot.slot), String(slot.lookId || "")]));
+          const fallbackIds = getNewSeriesLookIds();
+          const useConfiguredSlots = cloudEnabled() || state.newSeriesConfigured || configuredSlotMap.size > 0;
+          const selectedSlotIds = Array.from({ length: 5 }, (_, index) => {
+            const configuredId = configuredSlotMap.get(index + 1) || "";
+            return candidateIds.has(configuredId) ? configuredId : (useConfiguredSlots ? "" : (fallbackIds[index] || ""));
+          });
+          els.newSeriesSlots.innerHTML = selectedSlotIds.map((selectedId, index) => {
+            const options = [`<option value="">— Kosongkan slot —</option>`, ...candidates.map((entry) => `<option value="${esc(entry.id)}" ${entry.id === selectedId ? "selected" : ""}>${esc(entry.title)} · ${esc(entry.gender)}</option>`)].join("");
             return `<label class="new-series-slot"><span class="new-series-slot-number">${String(index + 1).padStart(2,"0")}</span><select data-new-series-slot="${index + 1}" aria-label="Look New Series nomor ${index + 1}">${options}</select></label>`;
           }).join("");
-          const missing = Math.max(0,5 - candidates.length);
-          const ready = candidates.length >= 5;
-          els.newSeriesStatus.classList.toggle("is-warning", !ready);
-          els.newSeriesStatus.textContent = !ready
-            ? `${candidates.length} look terbit tersedia. Terbitkan ${missing} look lagi agar carousel dapat diatur lengkap.`
-            : configuredIds.length === 5
-              ? "Lima look tersimpan untuk carousel beranda."
-              : "Lima look siap dipilih. Atur urutannya lalu simpan ke beranda.";
-          els.saveNewSeriesButton.disabled = !ready;
+          const selectedCount = selectedSlotIds.filter(Boolean).length;
+          els.newSeriesStatus.classList.toggle("is-warning", selectedCount === 0);
+          els.newSeriesStatus.textContent = selectedCount
+            ? `${selectedCount} dari 5 slot terisi. Kosongkan slot lalu simpan untuk melepas look dari carousel.`
+            : "Belum ada look di carousel. Pilih hingga lima look, atau biarkan kosong sementara.";
+          els.saveNewSeriesButton.disabled = false;
         }
         function getRequestDraft(request) {
           const id = String(request?.id || "");
@@ -2035,12 +2040,13 @@
         async function saveNewSeries() {
           els.newSeriesError.textContent = "";
           const slotInputs = Array.from(els.newSeriesSlots.querySelectorAll("[data-new-series-slot]"));
-          const lookIds = slotInputs.map((input) => String(input.value || "").trim());
-          if (lookIds.length !== 5 || lookIds.some((id) => !id)) {
-            els.newSeriesError.textContent = "Isi semua lima slot New Series terlebih dahulu.";
+          const slotIds = slotInputs.map((input) => String(input.value || "").trim());
+          const lookIds = slotIds.filter(Boolean);
+          if (slotIds.length !== 5) {
+            els.newSeriesError.textContent = "New Series harus memiliki lima slot.";
             return;
           }
-          if (new Set(lookIds).size !== 5) {
+          if (new Set(lookIds).size !== lookIds.length) {
             els.newSeriesError.textContent = "Satu look hanya boleh dipakai sekali di New Series.";
             return;
           }
@@ -2049,21 +2055,23 @@
           els.saveNewSeriesButton.textContent = "Menyimpan…";
           try {
             if (cloudEnabled()) {
-              await cloud.setNewSeries(lookIds);
+              await cloud.setNewSeries(slotIds);
               await refreshCloudState({ admin: true });
-              showToast("New Series beranda telah diperbarui.");
+              showToast(lookIds.length ? `New Series diperbarui dengan ${lookIds.length} look.` : "Carousel New Series dikosongkan.");
               return;
             }
             state.newSeriesLookIds = lookIds;
+            state.newSeriesSlots = slotIds.map((lookId, index) => ({ slot: index + 1, lookId }));
+            state.newSeriesConfigured = true;
             newSeriesIndex = 0;
             saveState();
             renderAll();
-            showToast("New Series prototype telah diperbarui.");
+            showToast(lookIds.length ? `New Series prototype diperbarui dengan ${lookIds.length} look.` : "Carousel prototype dikosongkan.");
           } catch (error) {
             els.newSeriesError.textContent = error.message || "New Series belum dapat disimpan.";
           } finally {
             els.saveNewSeriesButton.textContent = buttonLabel;
-            els.saveNewSeriesButton.disabled = getNewSeriesCandidates().length < 5;
+            els.saveNewSeriesButton.disabled = false;
           }
         }
         function addDraftItem() {
@@ -2698,11 +2706,13 @@
           const button=event.target.closest("[data-delete-look]"); if(!button)return;
           const entry=state.looks.find((item)=>item.id===button.dataset.deleteLook); if(!entry)return;
           const location=cloudEnabled()?"cloud COMOOTD":"prototype ini";
-          if(!confirm(`Hapus look “${entry.title}” dari ${location}?`))return;
+          const isInNewSeries=getNewSeriesLookIds().includes(entry.id);
+          const seriesNote=isInNewSeries?" Look ini juga akan dilepas dari New Series.":"";
+          if(!confirm(`Hapus look “${entry.title}” dari ${location}?${seriesNote}`))return;
           try {
-            if(cloudEnabled()) { await cloud.deleteLook(entry.id); await refreshCloudState({admin:true}); showToast("Look dihapus dari cloud."); return; }
-            state.looks=state.looks.filter((item)=>item.id!==entry.id); state.newSeriesLookIds=(state.newSeriesLookIds||[]).filter((id)=>id!==entry.id); saveState(); renderAll(); showToast("Look dihapus dari prototype.");
-          } catch(error) { showToast(error.message||"Look belum dapat dihapus."); }
+            if(cloudEnabled()) { await cloud.deleteLook(entry.id); await refreshCloudState({admin:true}); showToast(isInNewSeries?"Look dihapus dan dilepas dari New Series.":"Look dihapus dari cloud."); return; }
+            state.looks=state.looks.filter((item)=>item.id!==entry.id); state.newSeriesLookIds=(state.newSeriesLookIds||[]).filter((id)=>id!==entry.id); state.newSeriesSlots=(state.newSeriesSlots||[]).map((slot)=>({...slot,lookId:slot.lookId===entry.id?"":slot.lookId})); saveState(); renderAll(); showToast("Look dihapus dari prototype.");
+          } catch(error) { const message=String(error?.message||""); if(message.includes("new_series_slots_look_id_fkey")){switchStudioTab("series");showToast("Look ini masih tampil di New Series. Kosongkan slotnya lalu simpan carousel.");return;} showToast(error.message||"Look belum dapat dihapus."); }
         });
         els.studioProductsList.addEventListener("click",async(event)=>{
           const button=event.target.closest("[data-delete-product]"); if(!button)return;

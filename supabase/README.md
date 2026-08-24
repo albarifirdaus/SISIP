@@ -17,6 +17,8 @@ The following migrations have already been applied to that project:
 11. `20260823110000_sisip_member_profiles_and_requests.sql`
 12. `20260823113000_sisip_request_recommendation_fk_indexes.sql`
 13. `20260823143000_sisip_member_preference_tag_limit.sql`
+14. `20260823180000_sisip_look_bulk_import.sql`
+15. `20260824173506_allow_partial_new_series.sql`
 
 For a fresh Supabase project, apply every file in `migrations/` in name order. The initial migration creates the schema, RLS policies, and public-read `sisip-media` bucket; later migrations enforce Shopee-only URLs and additional catalogue consistency/security rules.
 
@@ -36,7 +38,7 @@ Uploads to `sisip-media` are restricted to the signed-in admin. Every new Auth a
 
 `products` owns a single Shopee affiliate link. `product_variants` stores each colour/image. A `look` uses variants through `look_items`, so one product can appear in many different looks without duplicating its link.
 
-`new_series_slots` stores exactly five ordered homepage positions. It is publicly readable only when its associated look is published; the admin replaces all five positions through the `set_sisip_new_series` RPC so a reorder is atomic and cannot produce duplicate slots.
+`new_series_slots` stores up to five ordered homepage positions. It is publicly readable only when its associated look is published; the admin updates all five slots atomically through the `set_sisip_new_series` RPC, while empty slots remain hidden from the public carousel.
 
 `user_preferences` stores private profile choices (style, occasion, colour, and budget). Row Level Security lets the owner manage only their own row, while the SISIP admin retains Studio access. The current profile picker allows up to 10 tags per group.
 

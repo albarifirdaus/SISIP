@@ -1559,11 +1559,18 @@
   }
 
   async function setNewSeries(lookIds) {
-    const ids = Array.isArray(lookIds) ? lookIds.map((id) => String(id || "").trim()) : [];
-    if (ids.length !== 5 || ids.some((id) => !id) || new Set(ids).size !== 5) {
-      throw new Error("Pilih lima look berbeda untuk New Series.");
+    const slots = Array.isArray(lookIds) ? lookIds.map((id) => {
+      const value = String(id || "").trim();
+      return value || null;
+    }) : [];
+    const ids = slots.filter(Boolean);
+    if (slots.length !== 5) {
+      throw new Error("New Series memiliki lima slot.");
     }
-    const { error } = await getClient().rpc("set_sisip_new_series", { p_look_ids: ids });
+    if (new Set(ids).size !== ids.length) {
+      throw new Error("Satu look hanya boleh dipakai sekali di New Series.");
+    }
+    const { error } = await getClient().rpc("set_sisip_new_series", { p_look_ids: slots });
     if (error) throw error;
   }
 
