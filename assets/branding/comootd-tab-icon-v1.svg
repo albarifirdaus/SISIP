@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">COMOOTD tab icon</title>
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="#1E1B18"/>
+  <path d="M365 144C335 113 297 96 256 96C168 96 96 168 96 256C96 344 168 416 256 416C297 416 335 399 365 368" fill="none" stroke="#F5F0E7" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="286" cy="256" r="83" fill="none" stroke="#C8AB76" stroke-width="42"/>
+</svg>

@@ -8,6 +8,8 @@
       content="COMOOTD - katalog look fashion all-gender yang dikurasi untuk memudahkan menemukan style yang tepat."
     />
     <title>COMOOTD — Temukan look yang kamu banget.</title>
+    <meta name="theme-color" content="#e7e1da" />
+    <link rel="icon" type="image/svg+xml" href="assets/branding/comootd-tab-icon-v1.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -77,14 +79,16 @@
         border-bottom: 1px solid var(--line);
       }
       .header-inner {
-        height: 75px; display: grid; grid-template-columns: 1fr auto 1fr;
+        height: 75px; display: grid; grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr);
         align-items: center; padding: 0 3.2vw;
       }
       .brand {
-        width: fit-content; font-size: 1.7rem; font-weight: 900; letter-spacing: -0.095em;
-        line-height: 1; text-transform: uppercase;
+        display: inline-flex; align-items: center; width: fit-content; min-height: 56px;
+        padding: 4px 0; border-radius: var(--radius); transition: opacity 180ms ease;
       }
-      .brand:hover { color: var(--clay); }
+      .brand-wordmark { display: block; width: clamp(140px, 10.6vw, 164px); height: auto; }
+      .brand:hover { opacity: .72; }
+      .brand:focus-visible { outline: 2px solid var(--clay); outline-offset: 4px; }
       .desktop-nav { display: flex; gap: clamp(1rem, 2.3vw, 2.6rem); }
       .desktop-nav a {
         font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.04em;
@@ -575,6 +579,8 @@
         .utility-bar { padding:0 5vw; }
         .utility-bar span:last-child { display:none; }
         .header-inner { height:64px; padding:0 5vw; grid-template-columns:1fr auto; }
+        .brand { min-height:48px; padding:3px 0; }
+        .brand-wordmark { width:clamp(118px,32vw,144px); }
         .desktop-nav, .header-actions .studio-trigger { display:none; }
         .nav-toggle { display:inline-grid; }
         .hero-figure.one { left:12%; }
@@ -610,7 +616,7 @@
         .modal-close { top:.5rem; }
       }
       @media (max-width: 480px) {
-        .brand { font-size:1.5rem; }
+        .brand-wordmark { width:112px; }
         .hero-copy h1 { font-size:clamp(2.55rem,11vw,3.4rem); letter-spacing:-.09em; line-height:.9; }
         .section-title { font-size:clamp(2.05rem,9.4vw,2.9rem); letter-spacing:-.07em; }
         .request-copy .section-title { font-size:clamp(2.15rem,10vw,3rem); }
@@ -650,7 +656,9 @@
 
     <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="#home" aria-label="COMOOTD, kembali ke beranda">COMOOTD</a>
+        <a class="brand" href="#home" aria-label="COMOOTD, kembali ke beranda">
+          <img class="brand-wordmark" src="assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="" decoding="async" />
+        </a>
         <nav class="desktop-nav" aria-label="Navigasi utama">
           <a href="#lookbook">Looks</a>
           <a href="#styles">Styles</a>
