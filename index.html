@@ -501,6 +501,13 @@
       .draft-item p, .studio-row p { min-width:0; margin:0; font-size:.72rem; line-height:1.3; }
       .draft-item span, .studio-row span { display:block; overflow:hidden; color:var(--taupe); font-family:var(--mono); font-size:.56rem; text-overflow:ellipsis; white-space:nowrap; }
       .studio-row-actions { display:flex; gap:.35rem; flex:0 0 auto; }
+      .library-search { display:grid; gap:.4rem; margin:.8rem 0; }
+      .library-search input { width:100%; min-height:40px; padding:.65rem .72rem; border:1px solid var(--line); border-radius:0; background:var(--paper); color:var(--ink); font:inherit; font-size:.78rem; }
+      .library-search input:focus { outline:2px solid var(--clay); outline-offset:1px; }
+      .library-search-meta { min-height:1em; margin:0; color:var(--taupe); font-family:var(--mono); font-size:.57rem; letter-spacing:.02em; }
+      .library-more { margin-top:.7rem; }
+      .form-mode-actions { display:flex; align-items:center; justify-content:space-between; gap:.6rem; padding:.65rem; border:1px dashed var(--line); background:rgba(185,162,141,.1); }
+      .form-mode-actions .microcopy { margin:0; color:var(--ink-soft); }
       .form-error { min-height:18px; margin:0; color:#9f3831; font-size:.72rem; }
       .bulk-import-actions { display:flex; flex-wrap:wrap; gap:.55rem; align-items:center; }
       .request-admin-list { display:grid; gap:.8rem; }
@@ -969,8 +976,8 @@
             </div>
           </section>
           <section class="studio-section">
-            <h3>Tambah look</h3>
-            <p>Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link Shopee-nya sama.</p>
+            <h3 id="lookFormHeading">Tambah look</h3>
+            <p id="lookFormCopy">Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link Shopee-nya sama.</p>
             <form class="form-stack" id="lookForm">
               <div class="compact-row">
                 <div class="field"><label for="lookTitleInput">Nama look</label><input id="lookTitleInput" name="title" required placeholder="Contoh: Kota Setelah Hujan" /></div>
@@ -980,21 +987,24 @@
                 <div class="field"><label for="lookStylesInput">Style (pisahkan koma)</label><input id="lookStylesInput" name="styles" required placeholder="Clean, Casual" /></div>
                 <div class="field"><label for="lookToneInput">Arah visual</label><select id="lookToneInput" name="tone"><option value="carbon">Carbon</option><option value="clay">Clay</option><option value="mineral">Mineral</option><option value="olive">Olive</option><option value="midnight">Midnight</option></select></div>
               </div>
-              <div class="field"><label for="lookCoverInput">Foto cover (opsional)</label><input id="lookCoverInput" type="file" accept="image/jpeg,image/png,image/webp" /></div>
+              <div class="field"><label for="lookCoverInput" id="lookCoverLabel">Foto cover (opsional)</label><input id="lookCoverInput" type="file" accept="image/jpeg,image/png,image/webp" /></div>
               <div class="editor-product-row">
                 <div class="field"><label for="lookProductInput">Tambahkan produk</label><select id="lookProductInput"></select></div>
                 <div class="field"><label for="lookVariantInput">Warna pilihan</label><select id="lookVariantInput"></select></div>
               </div>
               <button class="small-button muted" id="addLookItemButton" type="button">+ Masukkan item ke look</button>
               <div class="draft-items" id="lookDraftItems"></div>
+              <div class="form-mode-actions" id="lookEditActions" hidden><p class="microcopy">Cover lama tetap digunakan bila kamu tidak memilih foto baru.</p><button class="small-button muted" id="cancelLookEditButton" type="button">Batal edit</button></div>
               <p class="form-error" id="lookFormError" role="alert"></p>
-              <button class="small-button" type="submit">Publikasikan look</button>
+              <button class="small-button" id="lookSubmitButton" type="submit">Publikasikan look</button>
             </form>
           </section>
           <section class="studio-section">
             <h3>Look yang tersimpan</h3>
-            <p>Hapus prototype yang tidak ingin dipakai. Kamu selalu bisa mengembalikan data contoh lewat reset.</p>
+            <p>Edit look tanpa memutus New Series atau kurasi yang sudah terkait.</p>
+            <div class="library-search"><label for="studioLooksSearch">Cari look</label><input id="studioLooksSearch" type="search" autocomplete="off" placeholder="Cari judul, tag, gender, produk, atau warna…" /><p class="library-search-meta" id="studioLooksSearchMeta" aria-live="polite"></p></div>
             <div class="studio-list" id="studioLooksList"></div>
+            <button class="small-button muted library-more" id="loadMoreStudioLooks" type="button" hidden>Muat 100 look lagi</button>
           </section>
           <section class="studio-section" id="sampleControls">
             <h3>Kontrol sample</h3>
@@ -1089,8 +1099,8 @@
             </div>
           </section>
           <section class="studio-section">
-            <h3>Tambah produk</h3>
-            <p>Satu produk induk dapat memiliki beberapa pilihan warna tetapi tetap menggunakan satu affiliate link.</p>
+            <h3 id="productFormHeading">Tambah produk</h3>
+            <p id="productFormCopy">Satu produk induk dapat memiliki beberapa pilihan warna tetapi tetap menggunakan satu affiliate link.</p>
             <form class="form-stack" id="productForm">
               <div class="field"><label for="productTitleInput">Nama produk</label><input id="productTitleInput" name="title" required placeholder="Contoh: Relaxed Oxford Shirt" /></div>
               <div class="compact-row">
@@ -1103,15 +1113,18 @@
               <div class="field"><label for="productVariantsInput">Varian warna (Nama|#HEX, pisahkan koma)</label><input id="productVariantsInput" name="variants" required placeholder="Putih|#F1F0EC, Biru|#AAB7C7" /></div>
               <div class="field"><label for="productImageUrlInput">URL foto cover (opsional)</label><input id="productImageUrlInput" name="imageUrl" type="url" placeholder="https://cdn.example.com/foto-produk.jpg" /></div>
               <p class="microcopy" style="margin:-.2rem 0 0;color:var(--taupe)">Link affiliate tidak diekstrak otomatis. Pakai URL gambar resmi dari Product Feed atau upload foto sendiri.</p>
-              <div class="field"><label for="productImageInput">Upload foto produk (opsional)</label><input id="productImageInput" type="file" accept="image/jpeg,image/png,image/webp" /></div>
+              <div class="field"><label for="productImageInput" id="productImageLabel">Upload foto produk (opsional)</label><input id="productImageInput" type="file" accept="image/jpeg,image/png,image/webp" /></div>
+              <div class="form-mode-actions" id="productEditActions" hidden><p class="microcopy">Pertahankan urutan warna saat mengganti nama warna. Warna yang sudah dipakai look tidak dapat dihapus.</p><button class="small-button muted" id="cancelProductEditButton" type="button">Batal edit</button></div>
               <p class="form-error" id="productFormError" role="alert"></p>
-              <button class="small-button" type="submit">Simpan produk</button>
+              <button class="small-button" id="productSubmitButton" type="submit">Simpan produk</button>
             </form>
           </section>
           <section class="studio-section">
             <h3>Library produk</h3>
             <p>Produk yang dipakai look akan memberi peringatan sebelum dihapus.</p>
+            <div class="library-search"><label for="studioProductsSearch">Cari produk</label><input id="studioProductsSearch" type="search" autocomplete="off" placeholder="Cari nama, tag, gender, badge, atau warna…" /><p class="library-search-meta" id="studioProductsSearchMeta" aria-live="polite"></p></div>
             <div class="studio-list" id="studioProductsList"></div>
+            <button class="small-button muted library-more" id="loadMoreStudioProducts" type="button" hidden>Muat 100 produk lagi</button>
           </section>
         </div>
       </div>
@@ -1281,6 +1294,11 @@
         let state = loadState();
         let activeStyle = "all";
         let lookDraftItems = [];
+        let editingLookId = "";
+        let editingProductId = "";
+        const studioLibraryFilters = { looks:"", products:"" };
+        const studioLibraryLimits = { looks:100, products:100 };
+        const studioLibrarySearchTimers = { looks:null, products:null };
         let toastTimer;
         let cloudAdmin = false;
         let bulkImportGroups = [];
@@ -1312,7 +1330,7 @@
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
           accountButton: document.getElementById("accountButton"), mobileAccountButton: document.getElementById("mobileAccountButton"), memberModal: document.getElementById("memberModal"), memberAuthView: document.getElementById("memberAuthView"), memberProfileView: document.getElementById("memberProfileView"), memberAuthTitle: document.getElementById("memberAuthTitle"), memberAuthCopy: document.getElementById("memberAuthCopy"), memberAuthForm: document.getElementById("memberAuthForm"), memberAuthError: document.getElementById("memberAuthError"), memberAuthSwitch: document.getElementById("memberAuthSwitch"), memberResendConfirmation: document.getElementById("memberResendConfirmation"), memberAuthSubmit: document.getElementById("memberAuthSubmit"), memberDisplayNameField: document.getElementById("memberDisplayNameField"), memberDisplayNameInput: document.getElementById("memberDisplayNameInput"), memberPasswordInput: document.getElementById("memberPasswordInput"), memberProfileForm: document.getElementById("memberProfileForm"), memberProfileError: document.getElementById("memberProfileError"), memberRequestList: document.getElementById("memberRequestList"), memberSignOutButton: document.getElementById("memberSignOutButton"),
           requestForm: document.getElementById("requestForm"), requestStatus: document.getElementById("requestStatus"), requestSubmitButton: document.getElementById("requestSubmitButton"),
-          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productFormError: document.getElementById("productFormError"), studioLooksList: document.getElementById("studioLooksList"), studioProductsList: document.getElementById("studioProductsList"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), bulkLookFile: document.getElementById("bulkLookFile"), downloadBulkLookTemplateButton: document.getElementById("downloadBulkLookTemplateButton"), bulkLookImportButton: document.getElementById("bulkLookImportButton"), bulkLookImportStatus: document.getElementById("bulkLookImportStatus"), bulkLookImportPreview: document.getElementById("bulkLookImportPreview"), bulkLookImportPreviewSummary: document.getElementById("bulkLookImportPreviewSummary"), bulkLookImportPreviewList: document.getElementById("bulkLookImportPreviewList"), bulkLookImportError: document.getElementById("bulkLookImportError"), toast: document.getElementById("toast")
+          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookForm: document.getElementById("lookForm"), lookFormHeading: document.getElementById("lookFormHeading"), lookFormCopy: document.getElementById("lookFormCopy"), lookCoverLabel: document.getElementById("lookCoverLabel"), lookEditActions: document.getElementById("lookEditActions"), cancelLookEditButton: document.getElementById("cancelLookEditButton"), lookSubmitButton: document.getElementById("lookSubmitButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productForm: document.getElementById("productForm"), productFormHeading: document.getElementById("productFormHeading"), productFormCopy: document.getElementById("productFormCopy"), productImageLabel: document.getElementById("productImageLabel"), productEditActions: document.getElementById("productEditActions"), cancelProductEditButton: document.getElementById("cancelProductEditButton"), productSubmitButton: document.getElementById("productSubmitButton"), productFormError: document.getElementById("productFormError"), studioLooksSearch: document.getElementById("studioLooksSearch"), studioLooksSearchMeta: document.getElementById("studioLooksSearchMeta"), studioLooksList: document.getElementById("studioLooksList"), loadMoreStudioLooks: document.getElementById("loadMoreStudioLooks"), studioProductsSearch: document.getElementById("studioProductsSearch"), studioProductsSearchMeta: document.getElementById("studioProductsSearchMeta"), studioProductsList: document.getElementById("studioProductsList"), loadMoreStudioProducts: document.getElementById("loadMoreStudioProducts"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), bulkLookFile: document.getElementById("bulkLookFile"), downloadBulkLookTemplateButton: document.getElementById("downloadBulkLookTemplateButton"), bulkLookImportButton: document.getElementById("bulkLookImportButton"), bulkLookImportStatus: document.getElementById("bulkLookImportStatus"), bulkLookImportPreview: document.getElementById("bulkLookImportPreview"), bulkLookImportPreviewSummary: document.getElementById("bulkLookImportPreviewSummary"), bulkLookImportPreviewList: document.getElementById("bulkLookImportPreviewList"), bulkLookImportError: document.getElementById("bulkLookImportError"), toast: document.getElementById("toast")
         };
 
         function loadState() {
@@ -1323,7 +1341,7 @@
           return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false };
         }
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false }; lookDraftItems = []; saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
+        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false }; resetLookEditor(); resetProductEditor(); saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
         async function refreshCloudState({ admin = false, quiet = false } = {}) {
           if (!cloudEnabled()) return false;
           try {
@@ -1883,6 +1901,43 @@
             return `<form class="request-admin-card" data-admin-request-form="${esc(request.id)}"><div class="request-admin-title"><div><h4>${esc(request.occasion || "Request outfit")}</h4><p class="request-admin-meta">${esc(title)}${email ? ` · ${esc(email)}` : ""} · ${esc(created)}</p></div><span class="request-status is-${esc(String(draft.status || "new").toLowerCase())}">${esc(requestStatusLabel(draft.status))}</span></div><p class="request-admin-brief">${esc(request.message || "Tanpa detail tambahan.")}</p>${tags || colors || request.budgetMin || request.budget_min_idr || request.budgetMax || request.budget_max_idr ? `<div class="request-admin-pills">${tags}${colors}${request.genderTarget || request.gender_target ? `<span>${esc(request.genderTarget || request.gender_target)}</span>` : ""}${request.budgetMin || request.budget_min_idr || request.budgetMax || request.budget_max_idr ? `<span>${esc(money(request.budgetMin ?? request.budget_min_idr ?? 0))} – ${esc(money(request.budgetMax ?? request.budget_max_idr ?? 0))}</span>` : ""}</div>` : ""}<div class="compact-row"><div class="field"><label>Status</label><select name="status"><option value="new" ${draft.status === "new" ? "selected" : ""}>Baru</option><option value="reviewing" ${draft.status === "reviewing" ? "selected" : ""}>Diproses</option><option value="replied" ${draft.status === "replied" ? "selected" : ""}>Rekomendasi siap</option><option value="closed" ${draft.status === "closed" ? "selected" : ""}>Selesai</option><option value="spam" ${draft.status === "spam" ? "selected" : ""}>Ditolak</option></select></div><div class="field"><label>Balasan untuk member</label><input name="responseMessage" maxlength="3000" value="${esc(draft.responseMessage)}" placeholder="Contoh: Kurasi kamu sudah siap." /></div></div><div class="field"><label>Catatan internal admin</label><textarea name="adminNote" maxlength="3000" placeholder="Tidak terlihat oleh member.">${esc(draft.adminNote)}</textarea></div><div class="request-rec-controls"><div class="field"><label>Tambahkan look</label><div class="editor-product-row"><select data-request-look-select="${esc(request.id)}"><option value="">Pilih look published</option>${looks.filter((item) => !selected.has(`look:${item.id}`)).map((item) => `<option value="${esc(item.id)}">${esc(item.title)}</option>`).join("")}</select><button class="small-button muted" type="button" data-add-request-rec="${esc(request.id)}" data-request-rec-type="look">+ Look</button></div></div><div class="field"><label>Tambahkan produk</label><div class="editor-product-row"><select data-request-product-select="${esc(request.id)}"><option value="">Pilih produk published</option>${products.filter((item) => !selected.has(`product:${item.id}`)).map((item) => `<option value="${esc(item.id)}">${esc(item.name)} · ${money(item.price)}</option>`).join("")}</select><button class="small-button muted" type="button" data-add-request-rec="${esc(request.id)}" data-request-rec-type="product">+ Produk</button></div></div></div><div class="request-rec-list">${selection}</div><p class="form-error" data-request-error="${esc(request.id)}" role="alert"></p><button class="small-button" type="button" data-save-request="${esc(request.id)}">Simpan jawaban</button></form>`;
           }).join("");
         }
+        function normalizeLibrarySearch(value) { return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g," ").trim(); }
+        function productLibrarySearchText(item) {
+          return normalizeLibrarySearch([
+            item.name, item.slug, item.badge, item.genderTarget,
+            ...(item.styles || []),
+            ...(item.variants || []).flatMap((variant)=>[variant.name,variant.colorName,variant.hex])
+          ].filter(Boolean).join(" "));
+        }
+        function lookLibrarySearchText(entry) {
+          return normalizeLibrarySearch([
+            entry.title, entry.slug, entry.gender, entry.tone, ...(entry.styles || []),
+            ...(entry.items || []).flatMap((item)=>[getProduct(item.productId)?.name,item.variantName])
+          ].filter(Boolean).join(" "));
+        }
+        function setLibrarySearchMeta(meta, moreButton, { total, matched, visible, label, query }) {
+          if (!total) meta.textContent=`Belum ada ${label}.`;
+          else if (query && !matched) meta.textContent=`Tidak ada hasil untuk “${query}”.`;
+          else meta.textContent=matched===total ? `${matched} ${label}` : `${matched} dari ${total} ${label}`;
+          const remaining=Math.max(0,matched-visible);
+          moreButton.hidden=remaining===0;
+          moreButton.textContent=remaining>0?`Muat ${Math.min(100,remaining)} ${label} lagi`:"";
+        }
+        function renderStudioLibraries() {
+          const lookQuery=normalizeLibrarySearch(studioLibraryFilters.looks);
+          const productQuery=normalizeLibrarySearch(studioLibraryFilters.products);
+          const sortedLooks=[...state.looks].sort((a,b)=>Number(b.createdOrder||0)-Number(a.createdOrder||0));
+          const matchedLooks=lookQuery?sortedLooks.filter((entry)=>lookLibrarySearchText(entry).includes(lookQuery)):sortedLooks;
+          const visibleLooks=matchedLooks.slice(0,studioLibraryLimits.looks);
+          els.studioLooksList.innerHTML=visibleLooks.length?visibleLooks.map((entry)=>`<div class="studio-row"><p><strong>${esc(entry.title)}</strong><span>${esc(entry.gender)} · ${esc((entry.styles||[]).join(", "))} · ${(entry.items||[]).length} item</span></p><div class="studio-row-actions"><button class="small-button muted" data-edit-look="${esc(entry.id)}" type="button">Edit</button><button class="small-button danger" data-delete-look="${esc(entry.id)}" type="button">Hapus</button></div></div>`).join(""):(state.looks.length?`<p class="microcopy" style="color:var(--taupe)">Tidak ada look yang cocok dengan pencarian.</p>`:`<p class="microcopy" style="color:var(--taupe)">Belum ada look tersimpan.</p>`);
+          setLibrarySearchMeta(els.studioLooksSearchMeta,els.loadMoreStudioLooks,{total:state.looks.length,matched:matchedLooks.length,visible:visibleLooks.length,label:"look",query:studioLibraryFilters.looks});
+
+          const sortedProducts=[...state.products];
+          const matchedProducts=productQuery?sortedProducts.filter((item)=>productLibrarySearchText(item).includes(productQuery)):sortedProducts;
+          const visibleProducts=matchedProducts.slice(0,studioLibraryLimits.products);
+          els.studioProductsList.innerHTML=visibleProducts.length?visibleProducts.map((item)=>{ const usage=getProductUsage(item.id).length; return `<div class="studio-row"><p><strong>${esc(item.name)}</strong><span>${money(item.price)} · ${(item.variants||[]).length} warna · dipakai ${usage} look</span></p><div class="studio-row-actions"><button class="small-button muted" data-edit-product="${esc(item.id)}" type="button">Edit</button><button class="small-button danger" data-delete-product="${esc(item.id)}" type="button">Hapus</button></div></div>`; }).join(""):(state.products.length?`<p class="microcopy" style="color:var(--taupe)">Tidak ada produk yang cocok dengan pencarian.</p>`:`<p class="microcopy" style="color:var(--taupe)">Belum ada produk.</p>`);
+          setLibrarySearchMeta(els.studioProductsSearchMeta,els.loadMoreStudioProducts,{total:state.products.length,matched:matchedProducts.length,visible:visibleProducts.length,label:"produk",query:studioLibraryFilters.products});
+        }
         function renderStudio() {
           const currentProduct = els.lookProduct.value;
           els.lookProduct.innerHTML = state.products.length ? state.products.map((item)=>`<option value="${esc(item.id)}">${esc(item.name)}</option>`).join("") : `<option value="">Tambah produk terlebih dahulu</option>`;
@@ -1892,8 +1947,7 @@
           renderNewSeriesStudio();
           renderJournalStudio();
           renderRequestsStudio();
-          els.studioLooksList.innerHTML = state.looks.length ? [...state.looks].sort((a,b)=>Number(b.createdOrder||0)-Number(a.createdOrder||0)).map((entry)=>`<div class="studio-row"><p><strong>${esc(entry.title)}</strong><span>${esc(entry.gender)} · ${esc(entry.styles.join(", "))} · ${entry.items.length} item</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-look="${esc(entry.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada look tersimpan.</p>`;
-          els.studioProductsList.innerHTML = state.products.length ? state.products.map((item)=>{ const usage=getProductUsage(item.id).length; return `<div class="studio-row"><p><strong>${esc(item.name)}</strong><span>${money(item.price)} · ${item.variants.length} warna · dipakai ${usage} look</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-product="${esc(item.id)}" type="button">Hapus</button></div></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada produk.</p>`;
+          renderStudioLibraries();
           els.studioArticlesList.innerHTML = state.articles.length ? [...state.articles].map((article)=>`<div class="studio-row"><p><strong>${esc(article.title)}</strong><span>${esc(articleCategoryLabel(article.category))} · ${(article.blocks || []).length || "teks"} blok · ${(article.ctas || []).length} CTA</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-article="${esc(article.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada artikel tersimpan.</p>`;
         }
         function renderVariantSelect() {
@@ -1902,6 +1956,89 @@
         }
         function renderDraftItems() {
           els.lookDraftItems.innerHTML = lookDraftItems.length ? lookDraftItems.map((item,index)=>{ const productItem=getProduct(item.productId); return `<div class="draft-item"><p><strong>${esc(productItem?.name || "Produk dihapus")}</strong><span>Warna pilihan: ${esc(item.variantName)}</span></p><button class="small-button danger" type="button" data-remove-draft="${index}">×</button></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe);margin:0">Masukkan 2–5 item untuk mempublikasikan look.</p>`;
+        }
+        function resetLookEditor() {
+          editingLookId="";
+          lookDraftItems=[];
+          els.lookForm.reset();
+          els.lookFormHeading.textContent="Tambah look";
+          els.lookFormCopy.textContent="Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link Shopee-nya sama.";
+          els.lookCoverLabel.textContent="Foto cover (opsional)";
+          els.lookSubmitButton.textContent="Publikasikan look";
+          els.lookEditActions.hidden=true;
+          els.lookFormError.textContent="";
+          renderVariantSelect();
+          renderDraftItems();
+        }
+        function startLookEdit(entry) {
+          if(!entry) return;
+          editingLookId=entry.id;
+          lookDraftItems=clone(entry.items||[]);
+          els.lookForm.elements.title.value=entry.title||"";
+          els.lookForm.elements.gender.value=entry.gender||"Uniseks";
+          els.lookForm.elements.styles.value=(entry.styles||[]).join(", ");
+          els.lookForm.elements.tone.value=entry.tone||"carbon";
+          els.lookFormHeading.textContent="Edit look";
+          els.lookFormCopy.textContent="Perbarui detail dan item look tanpa mengubah ID atau relasi New Series, Journal, dan request outfit.";
+          els.lookCoverLabel.textContent="Ganti foto cover (opsional)";
+          els.lookSubmitButton.textContent="Simpan perubahan look";
+          els.lookEditActions.hidden=false;
+          els.lookFormError.textContent="";
+          renderVariantSelect();
+          renderDraftItems();
+          els.lookFormHeading.scrollIntoView?.({behavior:"smooth",block:"start"});
+        }
+        function resetProductEditor() {
+          editingProductId="";
+          els.productForm.reset();
+          els.productFormHeading.textContent="Tambah produk";
+          els.productFormCopy.textContent="Satu produk induk dapat memiliki beberapa pilihan warna tetapi tetap menggunakan satu affiliate link.";
+          els.productImageLabel.textContent="Upload foto produk (opsional)";
+          els.productSubmitButton.textContent="Simpan produk";
+          els.productEditActions.hidden=true;
+          els.productFormError.textContent="";
+        }
+        function startProductEdit(item) {
+          if(!item) return;
+          editingProductId=item.id;
+          els.productForm.elements.title.value=item.name||"";
+          els.productForm.elements.price.value=item.price||"";
+          els.productForm.elements.badge.value=item.badge||"";
+          els.productForm.elements.genderTarget.value=item.genderTarget||"unisex";
+          els.productForm.elements.link.value=item.affiliateUrl||"";
+          els.productForm.elements.styles.value=(item.styles||[]).join(", ");
+          els.productForm.elements.variants.value=(item.variants||[]).map((variant)=>`${variant.name}|${variant.hex}`).join(", ");
+          // Storage paths are intentionally not copied into this visible URL field.
+          els.productForm.elements.imageUrl.value="";
+          els.productFormHeading.textContent="Edit produk";
+          els.productFormCopy.textContent="Perbarui produk yang sama. Harga, link, dan semua look yang menggunakannya tetap terhubung.";
+          els.productImageLabel.textContent="Ganti foto produk (opsional)";
+          els.productSubmitButton.textContent="Simpan perubahan produk";
+          els.productEditActions.hidden=false;
+          els.productFormError.textContent="";
+          els.productFormHeading.scrollIntoView?.({behavior:"smooth",block:"start"});
+        }
+        function reconcileProductVariantIds(variants, productItem) {
+          const existing=productItem?.variants||[];
+          const claimed=new Set();
+          const resolved=new Array(variants.length).fill("");
+          variants.forEach((variant,index)=>{
+            const name=normalizeLibrarySearch(variant.name);
+            const matched=existing.find((candidate)=>!claimed.has(candidate.id)&&normalizeLibrarySearch(candidate.name)===name);
+            if(matched){resolved[index]=matched.id;claimed.add(matched.id);}
+          });
+          variants.forEach((variant,index)=>{
+            if(resolved[index]) return;
+            const candidate=existing[index];
+            if(candidate&&!claimed.has(candidate.id)){resolved[index]=candidate.id;claimed.add(candidate.id);}
+          });
+          return variants.map((variant,index)=>({...variant,id:resolved[index]||null}));
+        }
+        function assertLocalProductVariantSafety(item, variants) {
+          const usedNames=new Set(state.looks.filter((look)=>look.items.some((entry)=>entry.productId===item.id)).flatMap((look)=>look.items.filter((entry)=>entry.productId===item.id).map((entry)=>normalizeLibrarySearch(entry.variantName))));
+          const nextNames=new Set(variants.map((variant)=>normalizeLibrarySearch(variant.name)));
+          const removed=[...usedNames].filter((name)=>!nextNames.has(name));
+          if(removed.length) throw new Error("Warna yang sudah dipakai look tidak dapat dihapus atau diganti namanya. Edit look terkait terlebih dahulu.");
         }
         function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderNewSeries(); renderJournal(); renderStudio(); renderPersonalized(); }
 
@@ -2684,6 +2821,20 @@
         els.lookProduct.addEventListener("change",renderVariantSelect);
         document.getElementById("addLookItemButton").addEventListener("click",addDraftItem);
         els.lookDraftItems.addEventListener("click",(event)=>{ const button=event.target.closest("[data-remove-draft]");if(!button)return;lookDraftItems.splice(Number(button.dataset.removeDraft),1);renderDraftItems(); });
+        els.cancelLookEditButton.addEventListener("click",resetLookEditor);
+        els.cancelProductEditButton.addEventListener("click",resetProductEditor);
+        els.studioLooksSearch.addEventListener("input",(event)=>{
+          const value=event.target.value;
+          clearTimeout(studioLibrarySearchTimers.looks);
+          studioLibrarySearchTimers.looks=setTimeout(()=>{studioLibraryFilters.looks=value;studioLibraryLimits.looks=100;renderStudioLibraries();},170);
+        });
+        els.studioProductsSearch.addEventListener("input",(event)=>{
+          const value=event.target.value;
+          clearTimeout(studioLibrarySearchTimers.products);
+          studioLibrarySearchTimers.products=setTimeout(()=>{studioLibraryFilters.products=value;studioLibraryLimits.products=100;renderStudioLibraries();},170);
+        });
+        els.loadMoreStudioLooks.addEventListener("click",()=>{studioLibraryLimits.looks+=100;renderStudioLibraries();});
+        els.loadMoreStudioProducts.addEventListener("click",()=>{studioLibraryLimits.products+=100;renderStudioLibraries();});
         els.journalBlocks.addEventListener("click",(event)=>{ const button=event.target.closest("[data-remove-journal-block]"); if(!button)return; journalDraftBlocks.splice(Number(button.dataset.removeJournalBlock),1); renderJournalBlockEditor(); });
         els.journalBlocks.addEventListener("input",(event)=>{
           const target=event.target; const contentIndex=Number(target.dataset?.journalBlockContent); const altIndex=Number(target.dataset?.journalBlockAlt); const captionIndex=Number(target.dataset?.journalBlockCaption);
@@ -2703,6 +2854,8 @@
         els.journalLookCtas.addEventListener("input",(event)=>{const index=Number(event.target.dataset?.journalLookCtaLabel);if(Number.isInteger(index)&&journalDraftLookCtas[index])journalDraftLookCtas[index].label=event.target.value;});
         els.journalProductCtas.addEventListener("input",(event)=>{const index=Number(event.target.dataset?.journalProductCtaLabel);if(Number.isInteger(index)&&journalDraftProductCtas[index])journalDraftProductCtas[index].label=event.target.value;});
         els.studioLooksList.addEventListener("click",async(event)=>{
+          const editButton=event.target.closest("[data-edit-look]");
+          if(editButton){startLookEdit(getLook(editButton.dataset.editLook));return;}
           const button=event.target.closest("[data-delete-look]"); if(!button)return;
           const entry=state.looks.find((item)=>item.id===button.dataset.deleteLook); if(!entry)return;
           const location=cloudEnabled()?"cloud COMOOTD":"prototype ini";
@@ -2710,22 +2863,25 @@
           const seriesNote=isInNewSeries?" Look ini juga akan dilepas dari New Series.":"";
           if(!confirm(`Hapus look “${entry.title}” dari ${location}?${seriesNote}`))return;
           try {
-            if(cloudEnabled()) { await cloud.deleteLook(entry.id); await refreshCloudState({admin:true}); showToast(isInNewSeries?"Look dihapus dan dilepas dari New Series.":"Look dihapus dari cloud."); return; }
+            if(cloudEnabled()) { await cloud.deleteLook(entry.id); if(editingLookId===entry.id)resetLookEditor(); await refreshCloudState({admin:true}); showToast(isInNewSeries?"Look dihapus dan dilepas dari New Series.":"Look dihapus dari cloud."); return; }
+            if(editingLookId===entry.id)resetLookEditor();
             state.looks=state.looks.filter((item)=>item.id!==entry.id); state.newSeriesLookIds=(state.newSeriesLookIds||[]).filter((id)=>id!==entry.id); state.newSeriesSlots=(state.newSeriesSlots||[]).map((slot)=>({...slot,lookId:slot.lookId===entry.id?"":slot.lookId})); saveState(); renderAll(); showToast("Look dihapus dari prototype.");
           } catch(error) { const message=String(error?.message||""); if(message.includes("new_series_slots_look_id_fkey")){switchStudioTab("series");showToast("Look ini masih tampil di New Series. Kosongkan slotnya lalu simpan carousel.");return;} showToast(error.message||"Look belum dapat dihapus."); }
         });
         els.studioProductsList.addEventListener("click",async(event)=>{
+          const editButton=event.target.closest("[data-edit-product]");
+          if(editButton){startProductEdit(getProduct(editButton.dataset.editProduct));return;}
           const button=event.target.closest("[data-delete-product]"); if(!button)return;
           const item=getProduct(button.dataset.deleteProduct); if(!item)return;
           const usedIn=getProductUsage(item.id);
           if(cloudEnabled()) {
             if(!confirm(`Hapus produk “${item.name}” dari cloud? Produk yang masih dipakai di look akan ditolak demi menjaga katalog.`))return;
-            try { await cloud.deleteProduct(item.id); await refreshCloudState({admin:true}); showToast("Produk dihapus dari cloud."); }
+            try { await cloud.deleteProduct(item.id); if(editingProductId===item.id)resetProductEditor(); await refreshCloudState({admin:true}); showToast("Produk dihapus dari cloud."); }
             catch(error) { showToast("Produk ini masih dipakai oleh look, atau belum dapat dihapus."); }
             return;
           }
           const detail=usedIn.length?` Produk ini dipakai di ${usedIn.length} look; item terkait juga akan hilang dari look tersebut.`:"";
-          if(confirm(`Hapus produk “${item.name}”?${detail}`)){state.products=state.products.filter((productItem)=>productItem.id!==item.id);state.looks=state.looks.map((entry)=>({...entry,items:entry.items.filter((lookItem)=>lookItem.productId!==item.id)})).filter((entry)=>entry.items.length>=2);state.newSeriesLookIds=(state.newSeriesLookIds||[]).filter((id)=>state.looks.some((entry)=>entry.id===id));saveState();renderAll();showToast("Produk dan referensi terkait berhasil dihapus.");}
+          if(confirm(`Hapus produk “${item.name}”?${detail}`)){if(editingProductId===item.id)resetProductEditor();state.products=state.products.filter((productItem)=>productItem.id!==item.id);state.looks=state.looks.map((entry)=>({...entry,items:entry.items.filter((lookItem)=>lookItem.productId!==item.id)})).filter((entry)=>entry.items.length>=2);state.newSeriesLookIds=(state.newSeriesLookIds||[]).filter((id)=>state.looks.some((entry)=>entry.id===id));saveState();renderAll();showToast("Produk dan referensi terkait berhasil dihapus.");}
         });
         els.studioRequestsList.addEventListener("input",(event)=>{
           const form=event.target.closest("[data-admin-request-form]"); if(form) syncRequestDraft(form);
@@ -2934,16 +3090,20 @@
           } catch(error){els.journalFormError.textContent=error.message||"Artikel belum dapat dipublikasikan.";}
           finally {if(submitButton){submitButton.disabled=false;submitButton.textContent=originalLabel;}}
         });
-        document.getElementById("productForm").addEventListener("submit",async(event)=>{
+        els.productForm.addEventListener("submit",async(event)=>{
           event.preventDefault();
           els.productFormError.textContent="";
           // `event.currentTarget` is cleared by the browser after an async boundary.
           // Preserve the form before any await so it can safely be reset on success.
           const productForm=event.currentTarget;
+          const editId=editingProductId;
+          const existingProduct=editId?getProduct(editId):null;
+          if(editId&&!existingProduct){els.productFormError.textContent="Produk ini sudah tidak tersedia. Muat ulang Studio lalu coba lagi.";resetProductEditor();return;}
           const form=new FormData(productForm);
           const title=String(form.get("title")||"").trim();
           const price=Number(String(form.get("price")||"").replace(/[^0-9]/g,""));
-          const variants=parseVariants(form.get("variants"));
+          const parsedVariants=parseVariants(form.get("variants"));
+          const variants=editId?reconcileProductVariantIds(parsedVariants,existingProduct):parsedVariants;
           let link, imageUrl;
           try { link=affiliateUrl(form.get("link")); imageUrl=normalizeBulkImageUrl(form.get("imageUrl")); } catch(error) { els.productFormError.textContent=error.message; return; }
           if(!title || !price || variants.length===0){els.productFormError.textContent="Nama, harga, link, dan minimal satu varian warna wajib diisi.";return;}
@@ -2952,35 +3112,50 @@
             const styles=parseTags(form.get("styles"));
             const genderTarget=String(form.get("genderTarget")||"unisex");
             if(cloudEnabled()) {
-              await cloud.createProduct({ title, price, badge, styles, genderTarget, link, variants, imageUrl, imageFile:document.getElementById("productImageInput").files?.[0] });
-              productForm.reset();
+              if(editId) await cloud.updateProduct(editId,{ title, price, badge, styles, genderTarget, link, variants, imageUrl, imageFile:document.getElementById("productImageInput").files?.[0] });
+              else await cloud.createProduct({ title, price, badge, styles, genderTarget, link, variants, imageUrl, imageFile:document.getElementById("productImageInput").files?.[0] });
+              resetProductEditor();
               await refreshCloudState({admin:true});
               switchStudioTab("products");
-              showToast("Produk baru tersimpan ke cloud.");
+              showToast(editId?"Produk berhasil diperbarui di cloud.":"Produk baru tersimpan ke cloud.");
               return;
             }
-            const image=imageUrl || await readImage(document.getElementById("productImageInput"));
-            const localVariants=variants.map((variant)=>({...variant,image}));
+            if(editId) assertLocalProductVariantSafety(existingProduct,variants);
+            const uploadedImage=await readImage(document.getElementById("productImageInput"));
+            const image=imageUrl || uploadedImage || existingProduct?.image || "";
+            const localVariants=variants.map((variant)=>{const previous=existingProduct?.variants?.find((candidate)=>candidate.id===variant.id);return {...(previous||{}),id:variant.id||uid("variant"),name:variant.name,hex:variant.hex,image:previous?.image||image};});
+            if(editId) {
+              Object.assign(existingProduct,{name:title,price,badge,styles,genderTarget,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,variants:localVariants});
+              saveState();resetProductEditor();renderAll();switchStudioTab("products");showToast("Produk berhasil diperbarui di prototype.");
+              return;
+            }
             const created={id:uid("product"),name:title,price,badge,styles,genderTarget,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,variants:localVariants};
-            state.products.push(created);saveState();productForm.reset();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
+            state.products.push(created);saveState();resetProductEditor();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
           } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
         });
-        document.getElementById("lookForm").addEventListener("submit",async(event)=>{
+        els.lookForm.addEventListener("submit",async(event)=>{
           event.preventDefault();els.lookFormError.textContent="";const lookForm=event.currentTarget;const form=new FormData(lookForm);const title=String(form.get("title")||"").trim();const styles=parseTags(form.get("styles"));
+          const editId=editingLookId;const existingLook=editId?getLook(editId):null;
+          if(editId&&!existingLook){els.lookFormError.textContent="Look ini sudah tidak tersedia. Muat ulang Studio lalu coba lagi.";resetLookEditor();return;}
           if(lookDraftItems.length<2||lookDraftItems.length>5){els.lookFormError.textContent="Satu look harus berisi 2–5 item.";return;} if(!title||!styles.length){els.lookFormError.textContent="Nama look dan minimal satu style wajib diisi.";return;}
           try {
             if(cloudEnabled()) {
-              await cloud.createLook({title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),items:clone(lookDraftItems),coverFile:document.getElementById("lookCoverInput").files?.[0]});
-              lookDraftItems=[];
-              lookForm.reset();
+              if(editId) await cloud.updateLook({id:editId,title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),items:clone(lookDraftItems),coverFile:document.getElementById("lookCoverInput").files?.[0]});
+              else await cloud.createLook({title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),items:clone(lookDraftItems),coverFile:document.getElementById("lookCoverInput").files?.[0]});
+              resetLookEditor();
               await refreshCloudState({admin:true});
               switchStudioTab("looks");
-              showToast("Look baru dipublikasikan ke cloud.");
+              showToast(editId?"Look berhasil diperbarui di cloud.":"Look baru dipublikasikan ke cloud.");
               return;
             }
-            const coverImage=await readImage(document.getElementById("lookCoverInput"));
+            const coverImage=(await readImage(document.getElementById("lookCoverInput")))||existingLook?.coverImage||"";
+            if(editId) {
+              Object.assign(existingLook,{title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),coverImage,items:clone(lookDraftItems)});
+              saveState();resetLookEditor();renderAll();switchStudioTab("looks");showToast("Look berhasil diperbarui di prototype.");
+              return;
+            }
             const created={id:uid("look"),title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),popularity:0,createdOrder:Math.max(0,...state.looks.map((item)=>Number(item.createdOrder)||0))+1,coverImage,items:clone(lookDraftItems)};
-            state.looks.push(created);lookDraftItems=[];saveState();lookForm.reset();renderAll();switchStudioTab("looks");showToast("Look baru dipublikasikan di prototype.");
+            state.looks.push(created);saveState();resetLookEditor();renderAll();switchStudioTab("looks");showToast("Look baru dipublikasikan di prototype.");
           } catch(error){els.lookFormError.textContent=error.message||"Look belum dapat disimpan.";}
         });
         els.requestForm.addEventListener("submit",async(event)=>{

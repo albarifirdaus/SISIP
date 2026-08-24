@@ -181,6 +181,17 @@
     return data || [];
   }
 
+  async function queryAllRows(createQuery, { pageSize = 500 } = {}) {
+    const rows = [];
+    let from = 0;
+    while (true) {
+      const page = await queryRows(createQuery(from, from + pageSize - 1));
+      rows.push(...page);
+      if (page.length < pageSize) return rows;
+      from += pageSize;
+    }
+  }
+
   function asArray(value) {
     return Array.isArray(value) ? value : [];
   }
@@ -266,40 +277,52 @@
 
     if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka Studio.");
 
-    let productsQuery = db
-      .from("products")
-      .select("id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, status, published_at, sort_order, created_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
-    let looksQuery = db
-      .from("looks")
-      .select("id, slug, title, excerpt, cover_image_path, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path)))")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
-    let articlesQuery = db
-      .from("articles")
-      .select("id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)")
-      .order("published_at", { ascending: false });
+    const productSelect = "id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, status, published_at, sort_order, created_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
+    const lookSelect = "id, slug, title, excerpt, cover_image_path, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path)))";
+    const articleSelect = "id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)";
+    const productsQuery = (from, to) => {
+      let query = db
+        .from("products")
+        .select(productSelect)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: true });
+      if (!admin) query = query.eq("status", "published").lte("published_at", now);
+      return query.range(from, to);
+    };
+    const looksQuery = (from, to) => {
+      let query = db
+        .from("looks")
+        .select(lookSelect)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: true });
+      if (!admin) query = query.eq("status", "published").lte("published_at", now);
+      return query.range(from, to);
+    };
+    const articlesQuery = (from, to) => {
+      let query = db
+        .from("articles")
+        .select(articleSelect)
+        .order("published_at", { ascending: false })
+        .order("id", { ascending: true });
+      if (!admin) query = query.eq("status", "published").lte("published_at", now);
+      return query.range(from, to);
+    };
     const newSeriesSlotsQuery = db
       .from("new_series_slots")
       .select("slot, look_id")
       .order("slot", { ascending: true });
     const outfitRequestsQuery = admin
-      ? db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false })
+      ? (from, to) => db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)
       : null;
 
-    if (!admin) {
-      productsQuery = productsQuery.eq("status", "published").lte("published_at", now);
-      looksQuery = looksQuery.eq("status", "published").lte("published_at", now);
-      articlesQuery = articlesQuery.eq("status", "published").lte("published_at", now);
-    }
-
     const [productRows, lookRows, articleRows, newSeriesSlotRows, outfitRequestRows] = await Promise.all([
-      queryRows(productsQuery),
-      queryRows(looksQuery),
-      queryRows(articlesQuery),
+      queryAllRows(productsQuery),
+      queryAllRows(looksQuery),
+      queryAllRows(articlesQuery),
       queryRows(newSeriesSlotsQuery),
-      outfitRequestsQuery ? queryRows(outfitRequestsQuery) : Promise.resolve([])
+      outfitRequestsQuery ? queryAllRows(outfitRequestsQuery) : Promise.resolve([])
     ]);
 
     const products = productRows.map(mapProduct);
@@ -639,13 +662,13 @@
   async function loadMyOutfitRequests() {
     const user = await getCurrentUser();
     if (!user) return [];
-    const rows = await queryRows(
-      getClient()
-        .from("outfit_requests")
-        .select(outfitRequestSelect)
-        .eq("requester_id", user.id)
-        .order("created_at", { ascending: false })
-    );
+    const rows = await queryAllRows((from, to) => getClient()
+      .from("outfit_requests")
+      .select(outfitRequestSelect)
+      .eq("requester_id", user.id)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(from, to));
     return rows.map((row) => mapOutfitRequest(row));
   }
 
@@ -653,9 +676,9 @@
     if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka request outfit.");
     const db = getClient();
     const [requestRows, productRows, lookRows] = await Promise.all([
-      queryRows(db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false })),
-      queryRows(db.from("products").select("id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, status, published_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)")),
-      queryRows(db.from("looks").select("id, slug, title, excerpt, cover_image_path, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order))"))
+      queryAllRows((from, to) => db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)),
+      queryAllRows((from, to) => db.from("products").select("id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, status, published_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)").order("sort_order", { ascending: true }).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)),
+      queryAllRows((from, to) => db.from("looks").select("id, slug, title, excerpt, cover_image_path, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order))").order("sort_order", { ascending: true }).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to))
     ]);
     const products = productRows.map(mapProduct);
     const productMap = new Map(products.map((product) => [product.id, product]));
@@ -824,6 +847,19 @@
     });
     if (error) throw error;
     return path;
+  }
+
+  function ownMediaPath(folder, parentId, path) {
+    const value = String(path || "").trim();
+    const prefix = `${folder}/${parentId}/`;
+    return value.startsWith(prefix) ? value : "";
+  }
+
+  async function removeOwnedMedia(folder, parentId, path) {
+    const ownedPath = ownMediaPath(folder, parentId, path);
+    if (!ownedPath) return;
+    const { error } = await getClient().storage.from(bucket).remove([ownedPath]);
+    if (error) console.warn("Foto lama tidak dapat dibersihkan dari Storage.", error);
   }
 
   const articleCategories = new Set([
@@ -1008,6 +1044,7 @@
       const label = String(variant?.name || "").trim();
       if (!label) throw new Error("Setiap produk membutuhkan nama varian warna.");
       return {
+        id: String(variant?.id || "").trim() || null,
         name: label,
         hex: normalizeColorHex(variant?.hex),
         imageUrl: assertImageUrl(variant?.imageUrl)
@@ -1138,6 +1175,60 @@
   async function createProduct(input) {
     const result = await saveProduct(input);
     return result.id;
+  }
+
+  async function updateProduct(productId, input) {
+    if (!uuidPattern.test(String(productId || ""))) throw new Error("Produk yang akan diedit belum valid.");
+    const db = getClient();
+    const payload = normalizeProductPayload({ ...input, importKey: "" });
+    const { data: existing, error: existingError } = await db
+      .from("products")
+      .select("id, cover_image_path, product_variants(id, label, image_path, is_active, sort_order)")
+      .eq("id", productId)
+      .single();
+    if (existingError) throw existingError;
+
+    const existingVariants = new Map((existing.product_variants || []).map((variant) => [variant.id, variant]));
+    let uploadedImagePath = "";
+    try {
+      uploadedImagePath = await uploadImage(input.imageFile, "products", productId);
+      const nextCoverPath = uploadedImagePath || payload.imageUrl || existing.cover_image_path || null;
+      const variants = payload.variants.map((variant) => {
+        const previous = variant.id ? existingVariants.get(variant.id) : null;
+        const inheritsPreviousCover = Boolean(
+          previous?.image_path
+          && existing.cover_image_path
+          && previous.image_path === existing.cover_image_path
+        );
+        return {
+          id: previous ? variant.id : null,
+          label: variant.name,
+          color_hex: variant.hex,
+          image_path: variant.imageUrl || (inheritsPreviousCover ? nextCoverPath : previous?.image_path) || nextCoverPath || null
+        };
+      });
+      const { error } = await db.rpc("update_sisip_product", {
+        p_product_id: productId,
+        p_title: payload.title,
+        p_affiliate_url: payload.link,
+        p_price_idr: payload.price,
+        p_badges: payload.badge ? [payload.badge] : [],
+        p_style_tags: payload.styles,
+        p_gender_target: payload.genderTarget,
+        p_cover_image_path: nextCoverPath,
+        p_variants: variants
+      });
+      if (error) throw error;
+
+      const oldCoverIsStillUsed = variants.some((variant) => variant.image_path === existing.cover_image_path);
+      if (nextCoverPath !== existing.cover_image_path && !oldCoverIsStillUsed) {
+        await removeOwnedMedia("products", productId, existing.cover_image_path);
+      }
+      return productId;
+    } catch (error) {
+      if (uploadedImagePath) await removeOwnedMedia("products", productId, uploadedImagePath);
+      throw error;
+    }
   }
 
   async function importProducts(groups, onProgress) {
@@ -1327,6 +1418,49 @@
     } catch (error) {
       if (coverPath) await getClient().storage.from(bucket).remove([coverPath]);
       await db.from("looks").delete().eq("id", look.id);
+      throw error;
+    }
+  }
+
+  async function updateLook({ id, title, gender, styles, tone, items, coverFile }) {
+    if (!uuidPattern.test(String(id || ""))) throw new Error("Look yang akan diedit belum valid.");
+    if (!Array.isArray(items) || items.length < 2 || items.length > 5) {
+      throw new Error("Satu look harus berisi 2–5 item.");
+    }
+    const variantIds = items.map((item) => String(item?.variantId || "").trim());
+    if (variantIds.some((variantId) => !uuidPattern.test(variantId)) || new Set(variantIds).size !== variantIds.length) {
+      throw new Error("Item look belum valid. Muat ulang Studio lalu coba lagi.");
+    }
+
+    const db = getClient();
+    const { data: existing, error: existingError } = await db
+      .from("looks")
+      .select("id, cover_image_path")
+      .eq("id", id)
+      .single();
+    if (existingError) throw existingError;
+
+    let uploadedCoverPath = "";
+    try {
+      uploadedCoverPath = await uploadImage(coverFile, "looks", id);
+      const nextCoverPath = uploadedCoverPath || existing.cover_image_path || null;
+      const { error } = await db.rpc("update_sisip_look", {
+        p_look_id: id,
+        p_title: String(title || "").trim(),
+        p_gender_target: genderToDb[gender] || "unisex",
+        p_style_tags: Array.isArray(styles) ? styles : [],
+        p_tone: String(tone || "").trim(),
+        p_product_variant_ids: variantIds,
+        p_cover_image_path: nextCoverPath
+      });
+      if (error) throw error;
+
+      if (uploadedCoverPath && existing.cover_image_path !== uploadedCoverPath) {
+        await removeOwnedMedia("looks", id, existing.cover_image_path);
+      }
+      return id;
+    } catch (error) {
+      if (uploadedCoverPath) await removeOwnedMedia("looks", id, uploadedCoverPath);
       throw error;
     }
   }
@@ -1594,9 +1728,11 @@
     loadOutfitRequests,
     updateOutfitRequest,
     createProduct,
+    updateProduct,
     importProducts,
     importLooks,
     createLook,
+    updateLook,
     createArticle,
     importDemoCatalogue,
     deleteLook,
