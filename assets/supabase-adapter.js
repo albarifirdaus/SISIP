@@ -264,7 +264,7 @@
     const db = getClient();
     const now = new Date().toISOString();
 
-    if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin SISIP untuk membuka Studio.");
+    if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka Studio.");
 
     let productsQuery = db
       .from("products")
@@ -450,7 +450,7 @@
   }
 
   async function signInAdmin(email, password) {
-    if (!configuredAdminEmail()) throw new Error("Email admin belum dikonfigurasi di SISIP.");
+    if (!configuredAdminEmail()) throw new Error("Email admin belum dikonfigurasi di COMOOTD.");
     const user = await signInMember(email, password);
     if (!user?.isAdmin) {
       try {
@@ -458,7 +458,7 @@
       } catch (signOutError) {
         console.warn("Sesi non-admin tidak dapat diakhiri secara otomatis.", signOutError);
       }
-      throw new Error("Akun ini bukan admin SISIP.");
+      throw new Error("Akun ini bukan admin COMOOTD.");
     }
     return user;
   }
@@ -541,7 +541,7 @@
     return {
       user,
       profile: {
-        displayName: String(profileResult.data?.display_name || user.displayName || "SISIP Member").trim()
+        displayName: String(profileResult.data?.display_name || user.displayName || "COMOOTD Member").trim()
       },
       preferences: mapMemberPreferences(preferencesResult.data)
     };
@@ -650,7 +650,7 @@
   }
 
   async function loadOutfitRequests() {
-    if (!(await isAdmin())) throw new Error("Masuk sebagai admin SISIP untuk membuka request outfit.");
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka request outfit.");
     const db = getClient();
     const [requestRows, productRows, lookRows] = await Promise.all([
       queryRows(db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false })),
@@ -748,7 +748,7 @@
 
   async function updateOutfitRequest(input) {
     const source = assertObject(input, "Update request outfit");
-    if (!(await isAdmin())) throw new Error("Masuk sebagai admin SISIP untuk mengubah request outfit.");
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk mengubah request outfit.");
     const requestId = assertUuid(source.id, "Request outfit");
     const db = getClient();
     const { data: existing, error: existingError } = await db
@@ -912,7 +912,7 @@
     const pieces = [excerpt, ...blocks.map((block) => block.content || block.alt || block.caption || "")]
       .map((piece) => String(piece || "").trim())
       .filter(Boolean);
-    return (pieces.join("\n\n") || `${title} — SISIP Journal`).slice(0, 16000);
+    return (pieces.join("\n\n") || `${title} — COMOOTD Journal`).slice(0, 16000);
   }
 
   async function assertPublishedArticleTargets(db, ctas, publishedAt) {
@@ -1193,7 +1193,7 @@
     if (!title || title.length > 160) throw new Error("Nama look wajib diisi dan maksimal 160 karakter.");
     if (excerpt.length > 500) throw new Error("Excerpt maksimal 500 karakter.");
     if (!styles.length) throw new Error("Look memerlukan minimal satu tag style.");
-    if (!["carbon", "clay", "mineral", "olive", "midnight"].includes(tone)) throw new Error("tone belum sesuai pilihan SISIP.");
+    if (!["carbon", "clay", "mineral", "olive", "midnight"].includes(tone)) throw new Error("tone belum sesuai pilihan COMOOTD.");
     if (coverImageUrl && !coverAltText) throw new Error("Deskripsi cover wajib diisi saat memakai cover_image_url.");
     if (coverAltText.length > 240) throw new Error("Deskripsi cover maksimal 240 karakter.");
     if (items.length < 2 || items.length > 5) throw new Error("Satu look harus berisi 2–5 item.");
@@ -1335,7 +1335,7 @@
     const db = getClient();
     const sourceProducts = Array.isArray(products) ? products : [];
     const sourceLooks = Array.isArray(looks) ? looks : [];
-    if (!sourceProducts.length || !sourceLooks.length) throw new Error("Data sample SISIP belum lengkap.");
+    if (!sourceProducts.length || !sourceLooks.length) throw new Error("Data sample COMOOTD belum lengkap.");
 
     const now = new Date().toISOString();
     const demoLookSlugs = sourceLooks.map((look) => `demo-${slugify(look.id)}`);
