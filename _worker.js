@@ -46,12 +46,27 @@ function clippedText(value, limit) {
 
 function routeFromRequest(request) {
   const parts = new URL(request.url).pathname.split("/").filter(Boolean);
+  // `/curators` is a first-class public directory rendered by the app shell.
+  // It still needs the shell fallback because Pages has no physical file at
+  // that route.
+  if (parts.length === 1 && parts[0] === "curators") return { type: "curator-directory" };
   if (parts.length !== 2) return null;
-  const type = parts[0] === "looks" ? "look" : parts[0] === "products" ? "product" : parts[0] === "journal" ? "article" : "";
+  const type = parts[0] === "looks"
+    ? "look"
+    : parts[0] === "products"
+      ? "product"
+      : parts[0] === "journal"
+        ? "article"
+        : parts[0] === "curators"
+          ? "curator"
+          : "";
   if (!type) return null;
   try {
     const slug = decodeURIComponent(parts[1]).trim().toLowerCase();
-    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? { type, slug } : null;
+    const isValid = type === "curator"
+      ? /^[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?$/.test(slug)
+      : /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+    return isValid ? { type, slug } : null;
   } catch {
     return null;
   }
@@ -125,6 +140,60 @@ async function findPublishedEntry(env, spec, slug) {
   return Array.isArray(rows) ? rows[0] || null : null;
 }
 
+async function findProfile(env, userId) {
+  if (!userId) return null;
+  const endpoint = new URL("/rest/v1/profiles", String(env.SUPABASE_URL || ""));
+  endpoint.searchParams.set("select", "id,display_name,avatar_path");
+  endpoint.searchParams.set("id", `eq.${userId}`);
+  endpoint.searchParams.set("limit", "1");
+  const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
+  const response = await fetch(endpoint, {
+    headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" }
+  });
+  if (!response.ok) return null;
+  const rows = await response.json();
+  return Array.isArray(rows) ? rows[0] || null : null;
+}
+
+async function findLatestPublishedCuratorLook(env, userId) {
+  if (!userId) return null;
+  const endpoint = new URL("/rest/v1/looks", String(env.SUPABASE_URL || ""));
+  endpoint.searchParams.set("select", "cover_image_path");
+  endpoint.searchParams.set("creator_id", `eq.${userId}`);
+  endpoint.searchParams.set("status", "eq.published");
+  endpoint.searchParams.set("published_at", `lte.${new Date().toISOString()}`);
+  endpoint.searchParams.set("order", "published_at.desc");
+  endpoint.searchParams.set("limit", "1");
+  const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
+  const response = await fetch(endpoint, {
+    headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" }
+  });
+  if (!response.ok) return null;
+  const rows = await response.json();
+  return Array.isArray(rows) ? rows[0] || null : null;
+}
+
+async function findActiveCurator(env, handle) {
+  const endpoint = new URL("/rest/v1/curator_profiles", String(env.SUPABASE_URL || ""));
+  endpoint.searchParams.set("select", "user_id,handle,display_name,bio,job_tags,avatar_path");
+  endpoint.searchParams.set("handle", `eq.${handle}`);
+  endpoint.searchParams.set("is_active", "eq.true");
+  endpoint.searchParams.set("limit", "1");
+  const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
+  const response = await fetch(endpoint, {
+    headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" }
+  });
+  if (!response.ok) throw new Error("Curator metadata request failed.");
+  const rows = await response.json();
+  const curator = Array.isArray(rows) ? rows[0] || null : null;
+  if (!curator) return null;
+  const [profile, latestLook] = await Promise.all([
+    findProfile(env, curator.user_id),
+    findLatestPublishedCuratorLook(env, curator.user_id)
+  ]);
+  return { ...curator, profile, latestLook };
+}
+
 async function findActiveVariantImage(env, productId) {
   if (!productId) return "";
   const endpoint = new URL("/rest/v1/product_variants", String(env.SUPABASE_URL || ""));
@@ -157,7 +226,77 @@ async function errorPage(request, env, status) {
   }
 }
 
+function curatorMetadata(env, curator) {
+  const displayName = clippedText(curator?.display_name || curator?.profile?.display_name || curator?.handle || "Curator", 80);
+  const handle = clippedText(curator?.handle || "", 48);
+  const tags = Array.isArray(curator?.job_tags) ? curator.job_tags.filter(Boolean).slice(0, 3) : [];
+  const bio = clippedText(curator?.bio, 210);
+  const identity = handle ? `${displayName} (@${handle})` : displayName;
+  const description = bio
+    ? `${bio}${tags.length ? ` · ${tags.join(" · ")}` : ""}`
+    : `${tags.length ? `${tags.join(" · ")} — ` : ""}Temukan kurasi outfit dari ${displayName} di COMOOTD.`;
+  return {
+    title: clippedText(`${identity} — COMOOTD Curator`, 120),
+    description: clippedText(description, 300),
+    canonical: `${siteOrigin(env)}/curators/${encodeURIComponent(handle)}`,
+    type: "profile",
+    image: storageImageUrl(env, curator?.avatar_path)
+      || storageImageUrl(env, curator?.profile?.avatar_path)
+      || storageImageUrl(env, curator?.latestLook?.cover_image_path),
+    indexable: true
+  };
+}
+
+async function renderCuratorPage(request, env, route) {
+  if (!String(env.SUPABASE_URL || "").startsWith("https://") || !String(env.SUPABASE_PUBLISHABLE_KEY || "").trim()) return errorPage(request, env, 503);
+  try {
+    const [shell, curator] = await Promise.all([getStaticShell(request, env), findActiveCurator(env, route.slug)]);
+    if (!curator) {
+      return new Response(injectMetadata(shell, {
+        title: "Curator tidak tersedia — COMOOTD",
+        description: "Profil Curator ini belum tersedia atau sudah tidak aktif.",
+        canonical: siteOrigin(env),
+        type: "website",
+        image: "",
+        indexable: false
+      }), { status: 404, headers: { "Content-Type": "text/html; charset=UTF-8", "Cache-Control": "no-store" } });
+    }
+    return new Response(injectMetadata(shell, curatorMetadata(env, curator)), {
+      headers: {
+        "Content-Type": "text/html; charset=UTF-8",
+        "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
+      }
+    });
+  } catch {
+    return errorPage(request, env, 502);
+  }
+}
+
+async function renderCuratorDirectoryPage(request, env) {
+  try {
+    const shell = await getStaticShell(request, env);
+    const origin = siteOrigin(env);
+    return new Response(injectMetadata(shell, {
+      title: "Curators — COMOOTD",
+      description: "Temukan sudut pandang, kurasi outfit, dan tautan Shopee dari Curator COMOOTD.",
+      canonical: `${origin}/curators`,
+      type: "website",
+      image: "",
+      indexable: true
+    }), {
+      headers: {
+        "Content-Type": "text/html; charset=UTF-8",
+        "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
+      }
+    });
+  } catch {
+    return errorPage(request, env, 502);
+  }
+}
+
 async function renderContentPage(request, env, route) {
+  if (route.type === "curator-directory") return renderCuratorDirectoryPage(request, env);
+  if (route.type === "curator") return renderCuratorPage(request, env, route);
   const spec = CONTENT_SPECS[route.type];
   if (!spec) return errorPage(request, env, 404);
   if (!String(env.SUPABASE_URL || "").startsWith("https://") || !String(env.SUPABASE_PUBLISHABLE_KEY || "").trim()) return errorPage(request, env, 503);

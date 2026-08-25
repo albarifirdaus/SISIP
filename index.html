@@ -28,6 +28,7 @@
       href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,100..900&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/assets/curator-experience.css" />
     <style>
       :root {
         --ink: #171614;
@@ -532,6 +533,11 @@
       .draft-item p, .studio-row p { min-width:0; margin:0; font-size:.72rem; line-height:1.3; }
       .draft-item span, .studio-row span { display:block; overflow:hidden; color:var(--taupe); font-family:var(--mono); font-size:.56rem; text-overflow:ellipsis; white-space:nowrap; }
       .studio-row-actions { display:flex; gap:.35rem; flex:0 0 auto; }
+      .curator-admin-row { align-items:flex-start; }
+      .curator-admin-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:.35rem; }
+      .curator-admin-actions label { display:flex; align-items:center; gap:.28rem; color:var(--ink-soft); font-family:var(--mono); font-size:.58rem; }
+      .curator-admin-actions input[type="number"] { width:4.5rem; min-height:38px; padding:.35rem; border:1px solid var(--line); background:var(--white); color:var(--ink); font:inherit; font-size:.7rem; }
+      .curator-admin-actions input[type="checkbox"] { accent-color:var(--ink); }
       .library-search { display:grid; gap:.4rem; margin:.8rem 0; }
       .library-search input { width:100%; min-height:40px; padding:.65rem .72rem; border:1px solid var(--line); border-radius:0; background:var(--paper); color:var(--ink); font:inherit; font-size:.78rem; }
       .library-search input:focus { outline:2px solid var(--clay); outline-offset:1px; }
@@ -689,6 +695,7 @@
         <nav class="desktop-nav" aria-label="Navigasi utama">
           <a href="#lookbook">Looks</a>
           <a href="#styles">Styles</a>
+          <a href="/curators">Curators</a>
           <a href="#journal">Journal</a>
           <a href="#request">Request</a>
         </nav>
@@ -710,6 +717,7 @@
       <nav class="mobile-nav" id="mobileNav" aria-label="Navigasi mobile">
         <a href="#lookbook">Looks</a>
         <a href="#styles">Styles</a>
+        <a href="/curators">Curators</a>
         <a href="#journal">Journal</a>
         <a href="#request">Request outfit</a>
         <a href="#about">Tentang COMOOTD</a>
@@ -829,6 +837,8 @@
         </div>
         <div class="look-grid" id="lookGrid" aria-live="polite"></div>
       </section>
+
+      <div id="curatorsMount"></div>
 
       <section class="section dark" id="journal" aria-labelledby="journalTitle">
         <div class="section-heading">
@@ -1005,6 +1015,7 @@
           <button class="studio-tab" type="button" data-studio-tab="journal" role="tab">Journal</button>
           <button class="studio-tab" type="button" data-studio-tab="requests" role="tab">Requests</button>
           <button class="studio-tab" type="button" data-studio-tab="products" role="tab">Produk</button>
+          <button class="studio-tab" type="button" data-studio-tab="curators" role="tab">Curators</button>
         </div>
 
         <div class="studio-panel is-active" id="studioLooksPanel" data-studio-panel="looks">
@@ -1169,6 +1180,14 @@
             <div class="library-search"><label for="studioProductsSearch">Cari produk</label><input id="studioProductsSearch" type="search" autocomplete="off" placeholder="Cari nama, tag, gender, badge, atau warna…" /><p class="library-search-meta" id="studioProductsSearchMeta" aria-live="polite"></p></div>
             <div class="studio-list" id="studioProductsList"></div>
             <button class="small-button muted library-more" id="loadMoreStudioProducts" type="button" hidden>Muat 100 produk lagi</button>
+          </section>
+        </div>
+
+        <div class="studio-panel" id="studioCuratorsPanel" data-studio-panel="curators">
+          <section class="studio-section">
+            <h3>Curator access &amp; quota</h3>
+            <p>Starter dimulai dari 30 look aktif. Kamu dapat menaikkan, menurunkan, atau menonaktifkan akun jika diperlukan.</p>
+            <div class="studio-list" id="studioCuratorsList"></div>
           </section>
         </div>
       </div>
@@ -1390,7 +1409,7 @@
           if (!cloudEnabled()) return false;
           try {
             const remoteState = await cloud.loadState({ admin });
-            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [], newSeriesConfigured: true };
+            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], curators: remoteState.curators || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [], newSeriesConfigured: true };
             renderAll();
             applyContentRoute({ notify: true });
             updateStudioMode();
@@ -1496,6 +1515,7 @@
         function entryColorTags(entry, type) {
           if (type === "product") return memberColorTags((entry.variants || []).flatMap((variant) => [variant.name, variant.colorName]));
           return memberColorTags((entry.items || []).flatMap((item) => {
+            if (item?.affiliateUrl && !item?.productId) return [item.colorLabel, item.variantName];
             const product = getProduct(item.productId);
             const variant = getVariant(product, item.variantName);
             return [item.variantName, variant?.name, variant?.colorName];
@@ -1692,7 +1712,10 @@
           </div>`;
         }
         function lookSearchText(entry) {
-          const itemText = entry.items.map((item) => { const p=getProduct(item.productId); return `${p?.name||""} ${item.variantName||""} ${p?.styles?.join(" ")||""}`; }).join(" ");
+          const itemText = entry.items.map((item) => {
+            if (item?.affiliateUrl && !item?.productId) return `${item.name||""} ${item.category||""} ${item.colorLabel||item.variantName||""}`;
+            const p=getProduct(item.productId); return `${p?.name||""} ${item.variantName||""} ${p?.styles?.join(" ")||""}`;
+          }).join(" ");
           return `${entry.title} ${entry.gender} ${entry.styles.join(" ")} ${itemText}`.toLowerCase();
         }
         function filteredLooks() {
@@ -1788,7 +1811,9 @@
         }
         function renderPopular() {
           const counts = new Map();
-          state.looks.forEach((entry) => entry.items.forEach((item) => counts.set(item.productId, (counts.get(item.productId)||0)+1)));
+          state.looks.forEach((entry) => entry.items.forEach((item) => {
+            if (item.productId) counts.set(item.productId, (counts.get(item.productId)||0)+1);
+          }));
           const popular = [...state.products].sort((a,b) => (counts.get(b.id)||0)-(counts.get(a.id)||0)).slice(0,4);
           els.popularGrid.innerHTML = popular.map((item) => {
             const variant = item.variants[0];
@@ -1957,8 +1982,16 @@
         function lookLibrarySearchText(entry) {
           return normalizeLibrarySearch([
             entry.title, entry.slug, entry.gender, entry.tone, ...(entry.styles || []),
-            ...(entry.items || []).flatMap((item)=>[getProduct(item.productId)?.name,item.variantName])
+            ...(entry.items || []).flatMap((item)=>[
+              item?.affiliateUrl && !item?.productId ? item.name : getProduct(item.productId)?.name,
+              item.category,
+              item.colorLabel,
+              item.variantName
+            ])
           ].filter(Boolean).join(" "));
+        }
+        function isInlineCuratorLook(entry) {
+          return Boolean((entry?.items || []).some((item) => item?.affiliateUrl && !item?.productId));
         }
         function setLibrarySearchMeta(meta, moreButton, { total, matched, visible, label, query }) {
           if (!total) meta.textContent=`Belum ada ${label}.`;
@@ -1974,7 +2007,7 @@
           const sortedLooks=[...state.looks].sort((a,b)=>Number(b.createdOrder||0)-Number(a.createdOrder||0));
           const matchedLooks=lookQuery?sortedLooks.filter((entry)=>lookLibrarySearchText(entry).includes(lookQuery)):sortedLooks;
           const visibleLooks=matchedLooks.slice(0,studioLibraryLimits.looks);
-          els.studioLooksList.innerHTML=visibleLooks.length?visibleLooks.map((entry)=>`<div class="studio-row"><p><strong>${esc(entry.title)}</strong><span>${esc(entry.gender)} · ${esc((entry.styles||[]).join(", "))} · ${(entry.items||[]).length} item</span></p><div class="studio-row-actions"><button class="small-button muted" data-edit-look="${esc(entry.id)}" type="button">Edit</button><button class="small-button danger" data-delete-look="${esc(entry.id)}" type="button">Hapus</button></div></div>`).join(""):(state.looks.length?`<p class="microcopy" style="color:var(--taupe)">Tidak ada look yang cocok dengan pencarian.</p>`:`<p class="microcopy" style="color:var(--taupe)">Belum ada look tersimpan.</p>`);
+          els.studioLooksList.innerHTML=visibleLooks.length?visibleLooks.map((entry)=>`<div class="studio-row"><p><strong>${esc(entry.title)}</strong><span>${esc(entry.gender)} · ${esc((entry.styles||[]).join(", "))} · ${(entry.items||[]).length} item${isInlineCuratorLook(entry)?" · Curator":""}</span></p><div class="studio-row-actions">${isInlineCuratorLook(entry)?`<span class="microcopy" style="color:var(--taupe)">Dikelola Curator</span>`:`<button class="small-button muted" data-edit-look="${esc(entry.id)}" type="button">Edit</button><button class="small-button danger" data-delete-look="${esc(entry.id)}" type="button">Hapus</button>`}</div></div>`).join(""):(state.looks.length?`<p class="microcopy" style="color:var(--taupe)">Tidak ada look yang cocok dengan pencarian.</p>`:`<p class="microcopy" style="color:var(--taupe)">Belum ada look tersimpan.</p>`);
           setLibrarySearchMeta(els.studioLooksSearchMeta,els.loadMoreStudioLooks,{total:state.looks.length,matched:matchedLooks.length,visible:visibleLooks.length,label:"look",query:studioLibraryFilters.looks});
 
           const sortedProducts=[...state.products];
@@ -1982,6 +2015,32 @@
           const visibleProducts=matchedProducts.slice(0,studioLibraryLimits.products);
           els.studioProductsList.innerHTML=visibleProducts.length?visibleProducts.map((item)=>{ const usage=getProductUsage(item.id).length; return `<div class="studio-row"><p><strong>${esc(item.name)}</strong><span>${money(item.price)} · ${(item.variants||[]).length} warna · dipakai ${usage} look</span></p><div class="studio-row-actions"><button class="small-button muted" data-edit-product="${esc(item.id)}" type="button">Edit</button><button class="small-button danger" data-delete-product="${esc(item.id)}" type="button">Hapus</button></div></div>`; }).join(""):(state.products.length?`<p class="microcopy" style="color:var(--taupe)">Tidak ada produk yang cocok dengan pencarian.</p>`:`<p class="microcopy" style="color:var(--taupe)">Belum ada produk.</p>`);
           setLibrarySearchMeta(els.studioProductsSearchMeta,els.loadMoreStudioProducts,{total:state.products.length,matched:matchedProducts.length,visible:visibleProducts.length,label:"produk",query:studioLibraryFilters.products});
+        }
+        function renderCuratorAdmin() {
+          const list=document.getElementById("studioCuratorsList");
+          if(!list) return;
+          if(!cloudEnabled() || !cloudAdmin) {
+            list.innerHTML=`<p class="microcopy" style="color:var(--taupe)">Masuk sebagai admin untuk mengatur Curator.</p>`;
+            return;
+          }
+          const activeLookCounts=new Map();
+          (state.looks||[]).filter((look)=>look.status!=="archived").forEach((look)=>{
+            const creatorId=String(look.creatorId||look.creator_id||"");
+            if(creatorId) activeLookCounts.set(creatorId,(activeLookCounts.get(creatorId)||0)+1);
+          });
+          const curators=[...(state.curators||[])]
+            .filter((curator)=>String(curator?.userId||curator?.id||""))
+            .sort((a,b)=>String(a.displayName||a.name||a.handle||"").localeCompare(String(b.displayName||b.name||b.handle||"")));
+          list.innerHTML=curators.length?curators.map((curator)=>{
+            const id=String(curator.userId||curator.id||"");
+            const name=String(curator.displayName||curator.name||curator.handle||"COMOOTD Curator");
+            const handle=String(curator.handle||"");
+            const rawQuota=Number(curator.maxPublishedLooks??curator.activeLookLimit??30);
+            const quota=Number.isInteger(rawQuota)&&rawQuota>=0&&rawQuota<=1000?rawQuota:30;
+            const active=curator.isActive!==false;
+            const lookCount=activeLookCounts.get(id)||0;
+            return `<div class="studio-row curator-admin-row" data-curator-admin-row data-curator-admin-id="${esc(id)}"><p><strong>${esc(name)}</strong><span>@${esc(handle||"tanpa-handle")} · ${lookCount} look aktif · ${active?"Aktif":"Dinonaktifkan"}</span></p><div class="curator-admin-actions"><label>Limit <input data-curator-limit type="number" min="0" max="1000" step="1" value="${quota}" inputmode="numeric" /></label><label><input data-curator-active type="checkbox"${active?" checked":""} /> Aktif</label><button class="small-button muted" type="button" data-save-curator-access>Simpan</button></div></div>`;
+          }).join(""):`<p class="microcopy" style="color:var(--taupe)">Belum ada akun Curator.</p>`;
         }
         function renderStudio() {
           const currentProduct = els.lookProduct.value;
@@ -1993,6 +2052,7 @@
           renderJournalStudio();
           renderRequestsStudio();
           renderStudioLibraries();
+          renderCuratorAdmin();
           els.studioArticlesList.innerHTML = state.articles.length ? [...state.articles].map((article)=>`<div class="studio-row"><p><strong>${esc(article.title)}</strong><span>${esc(articleCategoryLabel(article.category))} · ${(article.blocks || []).length || "teks"} blok · ${(article.ctas || []).length} CTA</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-article="${esc(article.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada artikel tersimpan.</p>`;
         }
         function renderVariantSelect() {
@@ -2191,11 +2251,17 @@
           if (navigate) navigateToContent("look", entry); else updateClientMetadata({ type:"look", slug:contentEntitySlug(entry,"look") }, entry);
           closeContentDialogs(els.lookModal);
           const itemsHtml = entry.items.map((item)=>{
+            if (item?.affiliateUrl && !item?.productId) {
+              return `<li class="look-item"><div class="look-item-art" aria-hidden="true" style="display:grid;place-items:center;background:var(--paper-deep);color:var(--clay-dark)"><span class="meta">${esc(String(item.category||"item").slice(0,4))}</span></div><div><p class="look-item-title">${esc(item.name||"Item pilihan")}</p><div class="look-item-info"><span>${esc(item.colorLabel||item.variantName||"Warna pilihan")}</span><span>·</span><span>Curator pick</span></div></div><a class="item-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></li>`;
+            }
             const productItem=getProduct(item.productId); if (!productItem) return "";
             const variant=getVariant(productItem,item.variantName);
             return `<li class="look-item"><button class="look-item-art product-card-open" type="button" data-open-product="${esc(productItem.id)}" aria-label="Buka detail ${esc(productItem.name)}">${productArt(productItem,variant,true)}</button><div><button class="look-item-title" type="button" data-open-product="${esc(productItem.id)}">${esc(productItem.name)}</button><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div><a class="item-link" href="${esc(safeUrl(productItem.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></li>`;
           }).join("");
-          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">LOOK ${String(entry.createdOrder||0).padStart(2,"0")} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2><div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.</p></div><div class="detail-actions"><button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
+          const curatorName = entry.curator?.displayName || entry.curator?.name || "";
+          const curatorHandle = entry.curator?.handle || "";
+          const curatorLine = curatorName ? `<p class="eyebrow" style="color:var(--taupe);margin:.5rem 0 0">CURATED BY ${esc(curatorName)}${curatorHandle ? ` / @${esc(curatorHandle)}` : ""}</p>` : "";
+          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">LOOK ${String(entry.createdOrder||0).padStart(2,"0")} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">${esc(entry.excerpt || "Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.")}</p></div><div class="detail-actions"><button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
           if (!els.lookModal.open) els.lookModal.showModal();
         }
         function openProduct(id, { navigate = true, variantId = "", replace = false } = {}) {
@@ -3005,6 +3071,30 @@
         });
         els.loadMoreStudioLooks.addEventListener("click",()=>{studioLibraryLimits.looks+=100;renderStudioLibraries();});
         els.loadMoreStudioProducts.addEventListener("click",()=>{studioLibraryLimits.products+=100;renderStudioLibraries();});
+        document.getElementById("studioCuratorsList").addEventListener("click",async(event)=>{
+          const button=event.target.closest("[data-save-curator-access]");
+          if(!button || !cloudEnabled() || !cloudAdmin) return;
+          const row=button.closest("[data-curator-admin-row]");
+          const userId=String(row?.dataset.curatorAdminId||"").trim();
+          const active=Boolean(row?.querySelector("[data-curator-active]")?.checked);
+          const limit=Number(row?.querySelector("[data-curator-limit]")?.value);
+          if(!userId || !Number.isInteger(limit) || limit<0 || limit>1000) {
+            showToast("Limit Curator harus berupa angka antara 0 dan 1000.");
+            return;
+          }
+          const originalLabel=button.textContent;
+          button.disabled=true;
+          button.textContent="Menyimpan…";
+          try {
+            await cloud.setCuratorAccess({userId,isActive:active,activeLookLimit:limit});
+            await refreshCloudState({admin:true});
+            showToast(active?"Akses dan limit Curator disimpan.":"Akun Curator dinonaktifkan.");
+          } catch(error) {
+            showToast(error?.message||"Pengaturan Curator belum dapat disimpan.");
+          } finally {
+            if(document.body.contains(button)) { button.disabled=false; button.textContent=originalLabel; }
+          }
+        });
         els.journalBlocks.addEventListener("click",(event)=>{ const button=event.target.closest("[data-remove-journal-block]"); if(!button)return; journalDraftBlocks.splice(Number(button.dataset.removeJournalBlock),1); renderJournalBlockEditor(); });
         els.journalBlocks.addEventListener("input",(event)=>{
           const target=event.target; const contentIndex=Number(target.dataset?.journalBlockContent); const altIndex=Number(target.dataset?.journalBlockAlt); const captionIndex=Number(target.dataset?.journalBlockCaption);
@@ -3399,5 +3489,6 @@
         }
       })();
     </script>
+    <script src="/assets/curator-experience.js"></script>
   </body>
 </html>
