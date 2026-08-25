@@ -222,7 +222,7 @@
     const cardClass = directory ? "curator-directory-card" : "curator-card";
     return `<article class="${cardClass}">
       ${media}
-      <div class="curator-card-top"><span class="eyebrow">CURATOR / ${String(index + 1).padStart(2, "0")}</span><span class="curator-card-number">${looks.length} LOOK${looks.length === 1 ? "" : "S"}</span></div>
+      <div class="curator-card-top curator-card-top--count"><span class="curator-card-number">${looks.length} LOOK${looks.length === 1 ? "" : "S"}</span></div>
       <div class="curator-card-person">
         ${imageMarkup(curator.avatarPath, "", "curator-avatar", curator.displayName)}
         <div><h3 class="curator-card-name">${esc(curator.displayName)}</h3><p class="curator-card-handle">@${esc(curator.handle)}</p></div>
@@ -276,7 +276,7 @@
     </article>`;
   }
   function routeBarMarkup() {
-    return `<header class="curator-route-bar"><button class="curator-route-brand" type="button" data-close-curator-route>COMO<span>O</span>TD</button><button class="curator-route-back" type="button" data-close-curator-route>← Back to COMOOTD</button></header>`;
+    return `<header class="curator-route-bar"><button class="curator-route-brand" type="button" data-close-curator-route aria-label="COMOOTD, kembali ke beranda"><img class="curator-route-wordmark" src="/assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="" decoding="async" /></button><button class="curator-route-back" type="button" data-close-curator-route>← Back to COMOOTD</button></header>`;
   }
   function directoryMarkup() {
     const curators = allCurators();
