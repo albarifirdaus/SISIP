@@ -531,7 +531,14 @@
   }
 
   async function getCurrentUser() {
-    const { data, error } = await getClient().auth.getUser();
+    const client = getClient();
+    // `getUser()` raises AuthSessionMissingError when no visitor has signed in.
+    // Check for that ordinary signed-out state first, then still verify any
+    // existing session with `getUser()` before exposing account details.
+    const { data: sessionData, error: sessionError } = await client.auth.getSession();
+    if (sessionError) throw sessionError;
+    if (!sessionData?.session) return null;
+    const { data, error } = await client.auth.getUser();
     if (error) throw error;
     return mapAuthUser(data?.user || null);
   }

@@ -524,7 +524,10 @@
         else jobs.push(Promise.resolve([]));
         const [curatorRaw, likesRaw] = await Promise.all(jobs);
         if (version !== state.refreshVersion) return;
-        if (curatorRaw) state.curator = normaliseCurator(curatorRaw);
+        // The adapter returns a wrapper for every signed-in member. Only the
+        // nested `curator` value represents an activated Curator profile.
+        const curatorSource = curatorRaw?.curator || (curatorRaw?.handle ? curatorRaw : null);
+        if (curatorSource) state.curator = normaliseCurator(curatorSource);
         const likeRows = asArray(likesRaw?.likes || likesRaw);
         state.liked = new Set(likeRows.map((entry) => String(entry?.lookId || entry?.look_id || entry)).filter(Boolean));
       }
@@ -729,7 +732,9 @@
   function installStudioCapture() {
     document.addEventListener("click", (event) => {
       const trigger = event.target.closest("#studioButton, #mobileStudioButton");
-      if (!trigger || !state.user || !state.curator?.isActive) return;
+      // Admin Studio must always retain its own entry point. Curator Studio
+      // only captures this action for an activated profile with a public handle.
+      if (!trigger || !state.user || state.user.isAdmin || !state.curator?.isActive || !state.curator?.handle) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       openStudio();
