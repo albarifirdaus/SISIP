@@ -56,6 +56,26 @@
     if (/^https?:\/\//i.test(value) || value.startsWith("data:image/")) return value;
     try { return typeof cloud()?.publicUrl === "function" ? cloud().publicUrl(value) : value; } catch { return value; }
   }
+  function imageAspect(value, fallback = "portrait") {
+    const source = compact(value).toLowerCase();
+    if (source === "square" || /(?:^|[\/_.-])square(?:[\/_.-]|$)/.test(source)) return "square";
+    if (source === "portrait" || /(?:^|[\/_.-])portrait(?:[\/_.-]|$)/.test(source)) return "portrait";
+    return fallback === "square" ? "square" : "portrait";
+  }
+  function preparedImageFile(input) {
+    if (!input?.files?.length) return null;
+    const cropper = window.COMOOTDImageCropper;
+    if (!cropper) return input.files[0];
+    const prepared = cropper.getFile(input);
+    if (!prepared) throw new Error("Selesaikan pengaturan crop foto terlebih dahulu.");
+    return prepared;
+  }
+  function selectedImageAspect(input, fallback = "portrait") {
+    return imageAspect(window.COMOOTDImageCropper?.getAspect?.(input), fallback);
+  }
+  function bindImageCropper(input, options) {
+    if (input && window.COMOOTDImageCropper?.bind) window.COMOOTDImageCropper.bind(input, options);
+  }
   function initials(value) {
     const chars = compact(value).split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("");
     return chars.toUpperCase() || "CO";
@@ -263,7 +283,7 @@
   function lookCardMarkup(look) {
     const cover = publicImage(look.coverImage);
     const liked = state.liked.has(look.id);
-    return `<article class="curator-look-card">
+    return `<article class="curator-look-card image-frame--${imageAspect(look.coverAspect || look.coverImage, "portrait")}">
       ${cover ? `<div class="curator-card-media"><img src="${esc(cover)}" alt="${esc(look.coverAlt || look.title)}" loading="lazy" /></div>` : ""}
       <div class="curator-look-card-top"><span class="eyebrow">${esc(look.gender)}</span><span class="curator-look-card-meta">${esc(humanDate(look.publishedAt))}</span></div>
       <h3 class="curator-look-card-title">${esc(look.title)}</h3>
@@ -431,6 +451,12 @@
     const quota = state.curator.maxPublishedLooks || DEFAULT_QUOTA;
     const count = publishedOwnLookCount();
     const body = state.editingLook ? lookEditorMarkup(state.editingLook) : (tab === "profile" ? profileEditorMarkup(state.curator) : studioLibraryMarkup());
+    window.requestAnimationFrame(() => {
+      const avatarInput = dialog.querySelector("#curatorAvatarInput");
+      const lookCoverInput = dialog.querySelector("#curatorLookCover");
+      bindImageCropper(avatarInput, { defaultAspect:"square", lockedAspect:"square", label:"foto profil" });
+      bindImageCropper(lookCoverInput, { defaultAspect:"portrait", label:"foto cover look" });
+    });
     dialog.innerHTML = `<button class="icon-button curator-studio-close" type="button" data-close-curator-studio aria-label="Tutup Curator Studio">×</button><div class="curator-studio-shell"><aside class="curator-studio-side"><p class="eyebrow">COMOOTD / CURATOR</p><h2>Studio<br />${esc(state.curator.displayName.split(" ")[0])}</h2><div class="curator-studio-quota"><strong>${count} / ${quota}</strong><span>Look aktif di Starter</span></div><nav class="curator-studio-tabs" aria-label="Menu Curator Studio"><button class="curator-studio-tab${tab === "looks" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="looks">Look library</button><button class="curator-studio-tab${tab === "profile" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="profile">Profile</button></nav></aside><div class="curator-studio-main">${body}</div></div>`;
   }
   function openStudio() {
@@ -464,13 +490,15 @@
       colorLabel: compact(row.querySelector("[name=referenceColor]")?.value),
       affiliateUrl: compact(row.querySelector("[name=referenceUrl]")?.value)
     }));
-    const coverFile = form.querySelector("[name=coverFile]")?.files?.[0] || null;
+    const coverInput = form.querySelector("[name=coverFile]");
+    const coverFile = preparedImageFile(coverInput);
     return {
       title: compact(form.elements.title?.value),
       gender: compact(form.elements.gender?.value || "Uniseks"),
       tone: compact(form.elements.tone?.value),
       styles: tagList(form.elements.styles?.value, 10),
       coverFile,
+      coverAspect: selectedImageAspect(coverInput, "portrait"),
       items: references
     };
   }
@@ -624,7 +652,8 @@
     const status = form.querySelector("[data-curator-profile-status]");
     const submit = form.querySelector("[type=submit]");
     if (!api || typeof api.saveCuratorProfile !== "function") { setFormStatus(status, "Profil belum tersambung. Coba lagi sesaat lagi."); return; }
-    const avatarFile = form.elements.avatarFile?.files?.[0] || null;
+    const avatarInput = form.elements.avatarFile;
+    const avatarFile = preparedImageFile(avatarInput);
     const socials = Object.keys(SOCIAL_LABELS).map((platform) => ({ platform, url: compact(form.elements[`social-${platform}`]?.value) })).filter((entry) => entry.url);
     const invalidSocial = socials.find((entry) => !/^https:\/\//i.test(entry.url));
     const payload = {

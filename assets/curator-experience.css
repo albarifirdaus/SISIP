@@ -310,7 +310,8 @@
 @media (max-width: 620px) {
   .curator-section .section-heading { gap:1.1rem; }
   .curator-heading-actions { justify-content:flex-start; }
-  .curator-home-grid,.curator-directory-grid,.curator-look-grid { grid-template-columns:1fr; }
+  .curator-home-grid,.curator-directory-grid { grid-template-columns:1fr; }
+  .curator-look-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .curator-card { min-height:320px; }
   .curator-callout { align-items:flex-start; flex-direction:column; }
   .curator-route-bar { min-height:62px; padding:0 5vw; }
@@ -321,7 +322,12 @@
   .curator-profile-identity { align-items:center; grid-template-columns:74px minmax(0,1fr); gap:.9rem; }
   .curator-profile-avatar,.curator-profile-avatar-fallback { width:74px; }
   .curator-profile-stats { margin-top:1.2rem; }
-  .curator-look-card { min-height:325px; }
+  .curator-look-card { min-height:0; aspect-ratio:3 / 4; padding:.72rem; }
+  .curator-look-card.image-frame--square { aspect-ratio:1 / 1; }
+  .curator-look-card-title { max-width:100%; margin:auto 0 .2rem; font-size:clamp(1.05rem,5.2vw,1.35rem); line-height:.92; }
+  .curator-look-card-actions { flex-wrap:wrap; gap:.28rem; margin-top:.55rem; }
+  .curator-look-card-actions a,
+  .curator-look-card-actions button { min-height:29px; padding:.32rem .38rem; font-size:.48rem; }
   .curator-studio-dialog { width:100vw; max-height:100vh; min-height:100vh; border:0; }
   .curator-studio-main { padding:1.1rem; }
   .curator-form-grid,.curator-social-fields { grid-template-columns:1fr; }

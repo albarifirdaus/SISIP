@@ -63,6 +63,20 @@
     return data?.publicUrl || "";
   }
 
+  function normalizeImageAspect(value, fallback = "portrait") {
+    const source = String(value || "").trim().toLowerCase();
+    if (source === "square" || source === "1:1" || source === "1x1") return "square";
+    if (source === "portrait" || source === "3:4" || source === "3x4") return "portrait";
+    return fallback === "square" ? "square" : "portrait";
+  }
+
+  function imageAspectFromPath(path, fallback = "portrait") {
+    const source = String(path || "").trim().toLowerCase();
+    if (/(?:^|[\/_.-])square(?:[\/_.-]|$)/.test(source)) return "square";
+    if (/(?:^|[\/_.-])portrait(?:[\/_.-]|$)/.test(source)) return "portrait";
+    return normalizeImageAspect("", fallback);
+  }
+
   function mapProduct(row) {
     const variants = (row.product_variants || [])
       .filter((variant) => variant.is_active !== false)
@@ -71,7 +85,8 @@
         id: variant.id,
         name: variant.label,
         hex: variant.color_hex || "#B8AEA1",
-        image: publicUrl(variant.image_path)
+        image: publicUrl(variant.image_path),
+        imageAspect: imageAspectFromPath(variant.image_path, "square")
       }));
 
     return {
@@ -85,6 +100,7 @@
       artBg: "#D8D0C6",
       artInk: variants[0]?.hex || "#242220",
       image: publicUrl(row.cover_image_path),
+      imageAspect: imageAspectFromPath(row.cover_image_path, "square"),
       genderTarget: row.gender_target || "unisex",
       status: row.status || "draft",
       publishedAt: row.published_at || "",
@@ -137,6 +153,7 @@
       createdOrder: Number(row.sort_order || fallbackOrder),
       coverImage: publicUrl(row.cover_image_path),
       coverImagePath: row.cover_image_path || "",
+      coverAspect: imageAspectFromPath(row.cover_image_path, "portrait"),
       excerpt: row.excerpt || "",
       creatorId,
       curator: creatorId ? curatorMap.get(creatorId) || null : null,
@@ -177,6 +194,7 @@
         level: block.heading_level || null,
         image: publicUrl(block.image_path),
         imagePath: block.image_path || "",
+        imageAspect: imageAspectFromPath(block.image_path, "portrait"),
         alt: block.image_alt_text || "",
         caption: block.caption || ""
       }));
@@ -212,6 +230,7 @@
       styles: row.style_tags || [],
       tags: row.style_tags || [],
       coverImage: publicUrl(row.cover_image_path),
+      coverAspect: imageAspectFromPath(row.cover_image_path, "portrait"),
       coverAlt: row.cover_alt_text || "",
       status: row.status || "draft",
       publishedAt: row.published_at || "",
@@ -919,11 +938,13 @@
     return ["jpg", "jpeg", "png", "webp"].includes(candidate) ? candidate : "webp";
   }
 
-  async function uploadImage(file, folder, parentId) {
+  async function uploadImage(file, folder, parentId, aspect) {
     if (!file) return "";
     if (!/^image\/(jpeg|png|webp)$/.test(file.type || "")) throw new Error("Gunakan gambar JPEG, PNG, atau WebP.");
     if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran gambar maksimal 5 MB.");
-    const path = `${folder}/${parentId}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${extensionFor(file)}`;
+    const fallbackAspect = folder === "products" ? "square" : "portrait";
+    const imageAspect = normalizeImageAspect(aspect, fallbackAspect);
+    const path = `${folder}/${parentId}/${imageAspect}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${extensionFor(file)}`;
     const { error } = await getClient().storage.from(bucket).upload(path, file, {
       cacheControl: "3600",
       upsert: false,
@@ -989,7 +1010,7 @@
         if (!file) throw new Error(`Pilih foto untuk blok gambar ke-${index + 1}.`);
         const alt = normalizeArticleText(rawBlock?.alt || rawBlock?.imageAlt || rawBlock?.imageAltText, `Alt text gambar ke-${index + 1}`, { min: 1, max: 240, required: true });
         const caption = normalizeArticleText(rawBlock?.caption, `Caption gambar ke-${index + 1}`, { max: 500 });
-        return { type, file, alt, caption };
+        return { type, file, imageAspect: normalizeImageAspect(rawBlock?.imageAspect ?? rawBlock?.image_aspect, "portrait"), alt, caption };
       }
 
       const limits = type === "heading" ? 240 : type === "quote" ? 800 : 6000;
@@ -1172,14 +1193,15 @@
     return value.startsWith(`curators/${userId}/`) ? value : "";
   }
 
-  async function uploadCuratorImage(file, kind, ownerId) {
+  async function uploadCuratorImage(file, kind, ownerId, aspect) {
     if (!file) return "";
     if (!/^image\/(jpeg|png|webp)$/.test(file.type || "")) throw new Error("Gunakan gambar JPEG, PNG, atau WebP.");
     if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran gambar maksimal 5 MB.");
     const user = await getCurrentUser();
     if (!user) throw new Error("Masuk terlebih dahulu untuk mengunggah foto.");
     const safeKind = kind === "avatar" ? "avatar" : "looks";
-    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${extensionFor(file)}`;
+    const imageAspect = normalizeImageAspect(aspect, safeKind === "avatar" ? "square" : "portrait");
+    const suffix = `${imageAspect}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${extensionFor(file)}`;
     const path = safeKind === "avatar"
       ? `curators/${user.id}/avatar/${suffix}`
       : `curators/${user.id}/looks/${ownerId}/${suffix}`;
@@ -1256,7 +1278,7 @@
     const socialLinks = normalizeCuratorSocialLinks(source.socialLinks ?? source.social_links ?? current.curator.socials);
     let uploadedAvatarPath = "";
     try {
-      uploadedAvatarPath = await uploadCuratorImage(source.avatarFile || source.avatar_file, "avatar", userId);
+      uploadedAvatarPath = await uploadCuratorImage(source.avatarFile || source.avatar_file, "avatar", userId, "square");
       const avatarPath = uploadedAvatarPath || current.curator.avatarPath || null;
       const db = getClient();
       const { error: curatorError } = await db.from("curator_profiles").update({ display_name: displayName, handle, bio: bio || null, job_tags: jobTags, avatar_path: avatarPath }).eq("user_id", userId);
@@ -1300,7 +1322,7 @@
     }
     let uploadedCoverPath = "";
     try {
-      uploadedCoverPath = await uploadCuratorImage(input.coverFile || input.cover_file, "looks", id);
+      uploadedCoverPath = await uploadCuratorImage(input.coverFile || input.cover_file, "looks", id, input.coverAspect || input.cover_aspect || "portrait");
       const coverPath = uploadedCoverPath || currentCoverPath || null;
       const { data, error } = await db.rpc("save_contributor_look", {
         // Generate the UUID client-side so the Storage path and database row
@@ -1458,7 +1480,7 @@
     return new Map((data || []).map((variant) => [variant.label, variant.image_path || ""]));
   }
 
-  async function saveProduct({ title, price, badge, styles, link, variants, imageFile, imageUrl, genderTarget, importKey }) {
+  async function saveProduct({ title, price, badge, styles, link, variants, imageFile, imageUrl, imageAspect, genderTarget, importKey }) {
     const db = getClient();
     const payload = normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, importKey });
     let existing = null;
@@ -1498,7 +1520,7 @@
 
     let uploadedImagePath = "";
     try {
-      uploadedImagePath = await uploadImage(imageFile, "products", product.id);
+      uploadedImagePath = await uploadImage(imageFile, "products", product.id, imageAspect || "square");
       const suppliedCoverPath = uploadedImagePath || payload.imageUrl;
       const coverImagePath = suppliedCoverPath || product.cover_image_path || "";
 
@@ -1572,7 +1594,7 @@
     const existingVariants = new Map((existing.product_variants || []).map((variant) => [variant.id, variant]));
     let uploadedImagePath = "";
     try {
-      uploadedImagePath = await uploadImage(input.imageFile, "products", productId);
+      uploadedImagePath = await uploadImage(input.imageFile, "products", productId, input.imageAspect || "square");
       const nextCoverPath = uploadedImagePath || payload.imageUrl || existing.cover_image_path || null;
       const variants = payload.variants.map((variant) => {
         const previous = variant.id ? existingVariants.get(variant.id) : null;
@@ -1756,7 +1778,7 @@
     return { createdCount, updatedCount, failedCount, results };
   }
 
-  async function createLook({ title, gender, styles, tone, items, coverFile, popularity = 0 }) {
+  async function createLook({ title, gender, styles, tone, items, coverFile, coverAspect, popularity = 0 }) {
     const db = getClient();
     const { data: look, error: lookError } = await db
       .from("looks")
@@ -1775,7 +1797,7 @@
 
     let coverPath = "";
     try {
-      coverPath = await uploadImage(coverFile, "looks", look.id);
+      coverPath = await uploadImage(coverFile, "looks", look.id, coverAspect || "portrait");
       if (coverPath) {
         const { error } = await db.from("looks").update({ cover_image_path: coverPath }).eq("id", look.id);
         if (error) throw error;
@@ -1803,7 +1825,7 @@
     }
   }
 
-  async function updateLook({ id, title, gender, styles, tone, items, coverFile }) {
+  async function updateLook({ id, title, gender, styles, tone, items, coverFile, coverAspect }) {
     if (!uuidPattern.test(String(id || ""))) throw new Error("Look yang akan diedit belum valid.");
     if (!Array.isArray(items) || items.length < 2 || items.length > 5) {
       throw new Error("Satu look harus berisi 2–5 item.");
@@ -1823,7 +1845,7 @@
 
     let uploadedCoverPath = "";
     try {
-      uploadedCoverPath = await uploadImage(coverFile, "looks", id);
+      uploadedCoverPath = await uploadImage(coverFile, "looks", id, coverAspect || "portrait");
       const nextCoverPath = uploadedCoverPath || existing.cover_image_path || null;
       const { error } = await db.rpc("update_sisip_look", {
         p_look_id: id,
@@ -1949,7 +1971,7 @@
     return { productCount: sourceProducts.length, lookCount: sourceLooks.length };
   }
 
-  async function createArticle({ title, excerpt, category, styles, coverFile, coverAlt, blocks, lookCtas, productCtas }) {
+  async function createArticle({ title, excerpt, category, styles, coverFile, coverAspect, coverAlt, blocks, lookCtas, productCtas }) {
     const db = getClient();
     const articleTitle = normalizeArticleText(title, "Judul artikel", { min: 1, max: 180, required: true });
     const articleExcerpt = normalizeArticleText(excerpt, "Ringkasan artikel", { max: 600 });
@@ -1981,7 +2003,7 @@
 
     const uploadedPaths = [];
     try {
-      const coverPath = await uploadImage(coverFile, "articles", article.id);
+      const coverPath = await uploadImage(coverFile, "articles", article.id, coverAspect || "portrait");
       if (coverPath) uploadedPaths.push(coverPath);
 
       const blockRows = [];
@@ -1989,7 +2011,7 @@
         const block = articleBlocks[index];
         let imagePath = null;
         if (block.type === "image") {
-          imagePath = await uploadImage(block.file, "articles", article.id);
+          imagePath = await uploadImage(block.file, "articles", article.id, block.imageAspect || "portrait");
           uploadedPaths.push(imagePath);
         }
         blockRows.push({
