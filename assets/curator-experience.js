@@ -421,19 +421,20 @@
     </div>`;
   }
   function lookEditorMarkup(editing = null) {
+    const isExistingLook = Boolean(editing?.id);
     const references = editing?.items?.length ? editing.items.slice(0, MAX_REFERENCES) : [{}, {}];
-    return `<section class="curator-studio-panel" data-curator-studio-panel="editor"><p class="eyebrow" style="color:var(--clay)">${editing ? "EDIT LOOK" : "NEW CURATION"}</p><h3>${editing ? "Refine this\nlook." : "Build a look\nworth sharing."}</h3><p class="curator-studio-lede">Kamu bisa menerbitkan langsung—tanpa review admin. Tambahkan 2 hingga 5 produk dengan tautan affiliate Shopee-mu sendiri.</p>
+    return `<section class="curator-studio-panel" data-curator-studio-panel="editor"><p class="eyebrow" style="color:var(--clay)">${isExistingLook ? "EDIT LOOK" : "NEW CURATION"}</p><h3>${isExistingLook ? "Refine this\nlook." : "Build a look\nworth sharing."}</h3><p class="curator-studio-lede">Kamu bisa menerbitkan langsung—tanpa review admin. Tambahkan 2 hingga 5 produk dengan tautan affiliate Shopee-mu sendiri.</p>
       <form class="curator-form" data-curator-look-form data-curator-edit-id="${esc(editing?.id || "")}"><div class="curator-form-grid">
         <div class="curator-field curator-field-full"><label for="curatorLookTitle">Nama mix &amp; match</label><input id="curatorLookTitle" name="title" maxlength="160" value="${esc(editing?.title || "")}" placeholder="Contoh: Monday in Olive" required /></div>
         <div class="curator-field"><label for="curatorLookGender">Gender</label><select id="curatorLookGender" name="gender"><option value="Uniseks"${editing?.gender === "Uniseks" ? " selected" : ""}>Uniseks</option><option value="Pria"${editing?.gender === "Pria" ? " selected" : ""}>Pria</option><option value="Wanita"${editing?.gender === "Wanita" ? " selected" : ""}>Wanita</option></select></div>
         <div class="curator-field"><label for="curatorLookTone">Mood / tone</label><select id="curatorLookTone" name="tone">${[["carbon","Carbon"],["clay","Clay"],["mineral","Mineral"],["olive","Olive"],["midnight","Midnight"]].map(([value,label])=>`<option value="${value}"${(editing?.tone || "carbon") === value ? " selected" : ""}>${label}</option>`).join("")}</select></div>
         <div class="curator-field curator-field-full"><label for="curatorLookStyles">Tag style</label><input id="curatorLookStyles" name="styles" maxlength="240" value="${esc((editing?.styles || []).join(", "))}" placeholder="Contoh: Clean, Casual, Workwear" /><p class="curator-file-note">Pisahkan tag dengan koma agar look lebih mudah ditemukan.</p></div>
-        <div class="curator-field curator-field-full"><label for="curatorLookCover">Foto cover look${editing ? " (opsional)" : ""}</label><input id="curatorLookCover" name="coverFile" type="file" accept="image/jpeg,image/png,image/webp"${editing ? "" : " required"} /><p class="curator-file-note">Gunakan foto kombinasi outfit milikmu. JPG, PNG, atau WebP, maksimal 5 MB.</p></div>
+        <div class="curator-field curator-field-full"><label for="curatorLookCover">Foto cover look${isExistingLook ? " (opsional)" : ""}</label><input id="curatorLookCover" name="coverFile" type="file" accept="image/jpeg,image/png,image/webp"${isExistingLook ? "" : " required"} /><p class="curator-file-note">${isExistingLook ? "Pilih foto baru hanya bila ingin mengganti cover. Jika memilih foto, atur crop lalu pilih Gunakan foto." : "Wajib untuk look baru. Pilih foto, atur crop, lalu pilih Gunakan foto. JPG, PNG, atau WebP, maksimal 5 MB."}</p></div>
       </div>
       <div class="curator-reference-head"><h4>Products in this look</h4><span class="curator-reference-count" data-curator-reference-count>${references.length} / ${MAX_REFERENCES}</span></div>
       <div class="curator-reference-list" data-curator-reference-list>${references.map(productReferenceMarkup).join("")}</div>
       <button class="curator-small-button" type="button" data-add-curator-reference${references.length >= MAX_REFERENCES ? " disabled" : ""}>+ Tambah produk</button>
-      <div class="curator-form-actions"><button class="curator-small-button" type="button" data-cancel-curator-edit>Kembali</button><div><p class="curator-form-status" data-curator-look-status role="alert"></p><button class="button" type="submit">${editing ? "Simpan perubahan" : "Publish look"} ↗</button></div></div>
+      <div class="curator-form-actions"><button class="curator-small-button" type="button" data-cancel-curator-edit>Kembali</button><div><p class="curator-form-status" data-curator-look-status role="alert"></p><button class="button" type="submit">${isExistingLook ? "Simpan perubahan" : "Publish look"} ↗</button></div></div>
       </form></section>`;
   }
   function studioLibraryMarkup() {
@@ -686,13 +687,13 @@
     const status = form.querySelector("[data-curator-look-status]");
     const submit = form.querySelector("[type=submit]");
     const editId = compact(form.dataset.curatorEditId);
-    const payload = collectLookPayload(form);
-    const validation = validateLookPayload(payload, Boolean(editId));
-    if (validation) { setFormStatus(status, validation); return; }
-    if (!api || (editId ? typeof api.updateCuratorLook !== "function" : typeof api.createCuratorLook !== "function")) { setFormStatus(status, "Look belum tersambung. Coba lagi sesaat lagi."); return; }
-    submit.disabled = true;
-    setFormStatus(status, editId ? "Menyimpan perubahan…" : "Menerbitkan look…");
     try {
+      const payload = collectLookPayload(form);
+      const validation = validateLookPayload(payload, Boolean(editId));
+      if (validation) { setFormStatus(status, validation); return; }
+      if (!api || (editId ? typeof api.updateCuratorLook !== "function" : typeof api.createCuratorLook !== "function")) { setFormStatus(status, "Look belum tersambung. Coba lagi sesaat lagi."); return; }
+      if (submit) submit.disabled = true;
+      setFormStatus(status, editId ? "Menyimpan perubahan…" : "Menerbitkan look…");
       if (editId) await api.updateCuratorLook({ id: editId, ...payload });
       else await api.createCuratorLook(payload);
       state.editingLook = null;
@@ -701,7 +702,7 @@
       showToast(editId ? "Look diperbarui." : "Look langsung diterbitkan.");
     } catch (error) {
       setFormStatus(status, error?.message || "Look belum dapat disimpan.");
-    } finally { submit.disabled = false; }
+    } finally { if (submit) submit.disabled = false; }
   }
   async function deleteLook(id) {
     const api = cloud();

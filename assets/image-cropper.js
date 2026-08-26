@@ -465,7 +465,11 @@
     dialog.appendChild(controls);
     dialog.appendChild(actions);
     overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
+    // Native dialogs sit in the browser's top layer. Mount the cropper in the
+    // same dialog when its file input lives there, otherwise the crop controls
+    // would be visually hidden behind the active Studio dialog.
+    var overlayHost = session.state.input.closest("dialog") || document.body;
+    overlayHost.appendChild(overlay);
 
     session.overlay = overlay;
     session.dialog = dialog;
