@@ -310,7 +310,7 @@
 @media (max-width: 620px) {
   .curator-section .section-heading { gap:1.1rem; }
   .curator-heading-actions { justify-content:flex-start; }
-  .curator-home-grid,.curator-directory-grid { grid-template-columns:1fr; }
+  .curator-home-grid,.curator-directory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .curator-look-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .curator-card { min-height:320px; }
   .curator-callout { align-items:flex-start; flex-direction:column; }
