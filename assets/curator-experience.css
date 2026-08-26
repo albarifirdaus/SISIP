@@ -312,7 +312,29 @@
   .curator-heading-actions { justify-content:flex-start; }
   .curator-home-grid,.curator-directory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .curator-look-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .curator-card { min-height:320px; }
+  .curator-card,
+  .curator-directory-card { min-height:0; aspect-ratio:3 / 4; padding:.7rem; }
+  .curator-directory-card { display:flex; flex-direction:column; justify-content:flex-end; }
+  .curator-card-number { font-size:.5rem; }
+  .curator-card-person { gap:.45rem; margin-top:.7rem; }
+  .curator-avatar,
+  .curator-avatar-fallback { width:31px; height:31px; }
+  .curator-card-name { font-size:.84rem; }
+  .curator-card-handle { font-size:.46rem; }
+  .curator-card .curator-card-title,
+  .curator-directory-card .curator-card-title {
+    display:-webkit-box;
+    max-width:100%;
+    margin:.7rem 0 0;
+    overflow:hidden;
+    font-size:clamp(.95rem,4.6vw,1.15rem);
+    line-height:.94;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:5;
+  }
+  .curator-card-tags { gap:.24rem; margin-top:.55rem; }
+  .curator-card-tags span { padding:.22rem .3rem; font-size:.4rem; }
+  .curator-card-tags span:nth-child(n+3) { display:none; }
   .curator-callout { align-items:flex-start; flex-direction:column; }
   .curator-route-bar { min-height:62px; padding:0 5vw; }
   .curator-route-wordmark { width:112px; }
