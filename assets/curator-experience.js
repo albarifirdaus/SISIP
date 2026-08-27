@@ -13,6 +13,10 @@
   const DEFAULT_QUOTA = 30;
   const MIN_REFERENCES = 2;
   const MAX_REFERENCES = 5;
+  // The existing database still stores a tone for every Look. New curator
+  // submissions keep this as an internal fallback, without making visual tone
+  // another decision the curator has to make in the editor.
+  const DEFAULT_LOOK_TONE = "carbon";
   const SOCIAL_LABELS = {
     instagram: "Instagram",
     tiktok: "TikTok",
@@ -24,6 +28,22 @@
     ["top", "Atasan"], ["bottom", "Bawahan"], ["outerwear", "Outerwear"],
     ["dress", "Dress / Set"], ["footwear", "Sepatu"], ["bag", "Tas"],
     ["accessory", "Aksesori"], ["hijab", "Hijab"], ["jewelry", "Perhiasan"], ["other", "Lainnya"]
+  ];
+  // Keep these in lock-step with the public COMOOTD filter taxonomy. A curator
+  // can only publish with the same language that visitors can actually search.
+  const STYLE_OPTIONS = [
+    "Clean", "Casual", "Formal", "Streetwear", "Modest",
+    "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party"
+  ];
+  const CURATOR_JOB_TAG_OPTIONS = [
+    "Stylist", "Fashion Creator", "Content Creator", "Creative Director",
+    "Photographer", "Model", "Designer", "Writer", "Visual Artist",
+    "Fashion Student", "Brand / Marketing", "Marketing", "Student",
+    "Fashion Enthusiast", "Hardworker"
+  ];
+  const PRODUCT_BADGE_OPTIONS = [
+    "COMOOTD Pick", "Wardrobe Staple", "Statement Piece", "Layering Essential",
+    "Occasion Ready", "New Find", "Best Value"
   ];
   const state = {
     catalogue: { looks: [], curators: [] },
@@ -48,6 +68,25 @@
     .map(compact)
     .filter(Boolean))].slice(0, maximum);
   const plural = (amount, word) => `${amount} ${word}${amount === 1 ? "" : "s"}`;
+  const optionMap = (options) => new Map(options.map((option) => [option.toLowerCase(), option]));
+  function controlledTagList(value, options, maximum = 3) {
+    const allowed = optionMap(options);
+    return [...new Set(tagList(value, options.length)
+      .map((tag) => allowed.get(tag.toLowerCase()))
+      .filter(Boolean))].slice(0, maximum);
+  }
+  function controlledTagPickerMarkup({ name, options, selected, maximum = 3, label, note = "" }) {
+    const chosen = new Set(controlledTagList(selected, options, maximum));
+    return `<fieldset class="curator-choice-picker" data-curator-choice-picker data-max-selections="${maximum}">
+      <legend>${esc(label)} <span data-curator-choice-count>${chosen.size} / ${maximum}</span></legend>
+      <div class="curator-choice-list">${options.map((option) => `<label class="curator-choice${chosen.has(option) ? " is-selected" : ""}"><input type="checkbox" name="${esc(name)}" value="${esc(option)}"${chosen.has(option) ? " checked" : ""} /><span>${esc(option)}</span></label>`).join("")}</div>
+      ${note ? `<p class="curator-file-note">${esc(note)}</p>` : ""}
+    </fieldset>`;
+  }
+  function controlledValuesFromForm(form, name, options, maximum = 3) {
+    const values = [...(form?.querySelectorAll(`input[name="${name}"]:checked`) || [])].map((input) => input.value);
+    return controlledTagList(values, options, maximum);
+  }
 
   function cloud() { return window.SISIPCloud || null; }
   function publicImage(path) {
@@ -115,7 +154,7 @@
       displayName,
       avatarPath: raw.avatarPath || raw.avatar_path || profile.avatarPath || profile.avatar_path || "",
       bio: compact(raw.bio || raw.description || ""),
-      jobTags: tagList(raw.jobTags ?? raw.job_tags ?? raw.tags, 5),
+      jobTags: controlledTagList(raw.jobTags ?? raw.job_tags ?? raw.tags, CURATOR_JOB_TAG_OPTIONS, 3),
       socials: normaliseSocialLinks(raw),
       isActive: raw.isActive ?? raw.is_active ?? true,
       maxPublishedLooks: Number(raw.maxPublishedLooks ?? raw.max_published_looks ?? DEFAULT_QUOTA) || DEFAULT_QUOTA
@@ -139,7 +178,7 @@
       creator: creator ? normaliseCurator(creator) : null,
       title: compact(raw.title || "Untitled look") || "Untitled look",
       slug: compact(raw.slug || raw.id || ""),
-      styles: tagList(raw.styles || raw.styleTags || raw.style_tags, 8),
+      styles: controlledTagList(raw.styles || raw.styleTags || raw.style_tags, STYLE_OPTIONS, 3),
       gender: compact(raw.gender || "Uniseks") || "Uniseks",
       tone: compact(raw.tone || raw.mood || ""),
       coverImage: raw.coverImage || raw.cover_image_path || raw.cover_image || "",
@@ -242,12 +281,12 @@
     const cardClass = directory ? "curator-directory-card" : "curator-card";
     return `<article class="${cardClass}">
       ${media}
-      <div class="curator-card-top curator-card-top--count"><span class="curator-card-number">${looks.length} LOOK${looks.length === 1 ? "" : "S"}</span></div>
+      <div class="curator-card-top curator-card-top--count"><span class="curator-card-number">${looks.length} CURATION${looks.length === 1 ? "" : "S"}</span></div>
       <div class="curator-card-person">
         ${imageMarkup(curator.avatarPath, "", "curator-avatar", curator.displayName)}
         <div><h3 class="curator-card-name">${esc(curator.displayName)}</h3><p class="curator-card-handle">@${esc(curator.handle)}</p></div>
       </div>
-      <p class="curator-card-title">${esc(curator.bio || "A personal edit of pieces worth repeating.")}</p>
+      <p class="curator-card-bio">${esc(curator.bio || "A personal edit of pieces worth repeating.")}</p>
       ${curator.jobTags.length ? `<div class="curator-card-tags">${curator.jobTags.slice(0, 3).map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>` : ""}
       <a href="${ROUTE_ROOT}/${encodeURIComponent(curator.handle)}" data-curator-route="${esc(curator.handle)}" aria-label="Lihat kurasi ${esc(curator.displayName)}" class="curator-card-link"></a>
     </article>`;
@@ -287,7 +326,7 @@
       ${cover ? `<div class="curator-card-media"><img src="${esc(cover)}" alt="${esc(look.coverAlt || look.title)}" loading="lazy" /></div>` : ""}
       <div class="curator-look-card-top"><span class="eyebrow">${esc(look.gender)}</span><span class="curator-look-card-meta">${esc(humanDate(look.publishedAt))}</span></div>
       <h3 class="curator-look-card-title">${esc(look.title)}</h3>
-      <p class="curator-look-card-meta">${esc(look.styles.slice(0, 3).join(" · ") || look.tone || "Curated look")}</p>
+      <p class="curator-look-card-meta">${esc(look.styles.slice(0, 3).join(" · ") || "Curated look")}</p>
       <div class="curator-look-card-actions">
         <a href="/looks/${encodeURIComponent(look.slug)}" aria-label="Buka ${esc(look.title)}">Lihat look ↗</a>
         <button type="button" data-toggle-curator-like="${esc(look.id)}" aria-pressed="${liked ? "true" : "false"}" aria-label="Sukai ${esc(look.title)}">♥ ${look.popularity}</button>
@@ -384,7 +423,7 @@
   function onboardMarkup() {
     return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / OPEN CURATOR</p><h2>Show Your<br />Point of View.</h2><p class="curator-onboard-copy">Buka profil curator gratis untuk membagikan hingga ${DEFAULT_QUOTA} look aktif. Tautan Shopee yang kamu cantumkan tetap milikmu.</p><form class="curator-form" data-curator-onboard-form>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorOnboardName">Nama tampil</label><input id="curatorOnboardName" name="displayName" maxlength="80" required placeholder="Nama kamu" /></div><div class="curator-field"><label for="curatorOnboardHandle">Handle</label><input id="curatorOnboardHandle" name="handle" minlength="3" maxlength="32" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required placeholder="contoh: araedits" autocomplete="off" /><p class="curator-file-note">3–32 karakter: huruf kecil, angka, _ atau -.</p></div></div>
-      <div class="curator-field"><label for="curatorOnboardJob">Job tags</label><input id="curatorOnboardJob" name="jobTags" maxlength="180" placeholder="Contoh: Stylist, Content Creator" /><p class="curator-file-note">Pisahkan dengan koma, maksimal 5 tag.</p></div>
+      ${controlledTagPickerMarkup({ name:"jobTags", options:CURATOR_JOB_TAG_OPTIONS, selected:[], maximum:3, label:"Job tags", note:"Pilih maksimal 3 tag yang paling menggambarkan peranmu." })}
       <div class="curator-field"><label for="curatorOnboardBio">Tentang edit kamu</label><textarea id="curatorOnboardBio" name="bio" maxlength="500" placeholder="Ceritakan sedikit sudut pandang atau pendekatan styling-mu."></textarea></div>
       <p class="curator-form-status" data-curator-onboard-status role="alert"></p><button class="button" type="submit">Aktifkan profil curator ↗</button></form></div>`;
   }
@@ -406,7 +445,7 @@
     return `<section class="curator-studio-panel" data-curator-studio-panel="profile"><p class="eyebrow" style="color:var(--clay)">YOUR PUBLIC PROFILE</p><h3>Make the profile<br />feel like you.</h3><p class="curator-studio-lede">Foto, job tags, bio, dan tautan sosial tampil di halaman shareable milikmu.</p>
       <form class="curator-form" data-curator-profile-form><div class="curator-profile-photo-row">${imageMarkup(curator.avatarPath, "", "curator-profile-avatar", curator.displayName)}<div class="curator-field" style="flex:1"><label for="curatorAvatarInput">Foto profil</label><input id="curatorAvatarInput" name="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" /><p class="curator-file-note">JPG, PNG, atau WebP. Maksimal 5 MB.</p></div></div>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorDisplayName">Nama tampil</label><input id="curatorDisplayName" name="displayName" maxlength="80" value="${esc(curator.displayName)}" required /></div><div class="curator-field"><label for="curatorHandle">Handle</label><input id="curatorHandle" name="handle" minlength="3" maxlength="32" value="${esc(curator.handle)}" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required /><p class="curator-file-note">Handle menjadi alamat profil kamu.</p></div></div>
-      <div class="curator-field"><label for="curatorJobTags">Job tags</label><input id="curatorJobTags" name="jobTags" maxlength="180" value="${esc(curator.jobTags.join(", "))}" placeholder="Stylist, Content Creator" /><p class="curator-file-note">Pisahkan dengan koma, maksimal 5 tag.</p></div><div class="curator-field"><label for="curatorBio">Bio</label><textarea id="curatorBio" name="bio" maxlength="500" placeholder="Sudut pandang style kamu.">${esc(curator.bio)}</textarea></div>
+      ${controlledTagPickerMarkup({ name:"jobTags", options:CURATOR_JOB_TAG_OPTIONS, selected:curator.jobTags, maximum:3, label:"Job tags", note:"Pilih maksimal 3 tag yang paling menggambarkan peranmu." })}<div class="curator-field"><label for="curatorBio">Bio</label><textarea id="curatorBio" name="bio" maxlength="500" placeholder="Sudut pandang style kamu.">${esc(curator.bio)}</textarea></div>
       <div><p class="curator-inline-label">Social links</p><div class="curator-social-fields">${Object.entries(SOCIAL_LABELS).map(([platform, label]) => `<div class="curator-field"><label for="curatorSocial${platform}">${esc(label)}</label><input id="curatorSocial${platform}" name="social-${esc(platform)}" type="url" placeholder="https://" value="${esc(socialMap[platform] || "")}" /></div>`).join("")}</div></div>
       <div class="curator-form-actions"><p class="curator-form-status" data-curator-profile-status role="alert"></p><button class="button" type="submit">Simpan profil ↗</button></div></form></section>`;
   }
@@ -427,8 +466,7 @@
       <form class="curator-form" data-curator-look-form data-curator-edit-id="${esc(editing?.id || "")}"><div class="curator-form-grid">
         <div class="curator-field curator-field-full"><label for="curatorLookTitle">Nama mix &amp; match</label><input id="curatorLookTitle" name="title" maxlength="160" value="${esc(editing?.title || "")}" placeholder="Contoh: Monday in Olive" required /></div>
         <div class="curator-field"><label for="curatorLookGender">Gender</label><select id="curatorLookGender" name="gender"><option value="Uniseks"${editing?.gender === "Uniseks" ? " selected" : ""}>Uniseks</option><option value="Pria"${editing?.gender === "Pria" ? " selected" : ""}>Pria</option><option value="Wanita"${editing?.gender === "Wanita" ? " selected" : ""}>Wanita</option></select></div>
-        <div class="curator-field"><label for="curatorLookTone">Mood / tone</label><select id="curatorLookTone" name="tone">${[["carbon","Carbon"],["clay","Clay"],["mineral","Mineral"],["olive","Olive"],["midnight","Midnight"]].map(([value,label])=>`<option value="${value}"${(editing?.tone || "carbon") === value ? " selected" : ""}>${label}</option>`).join("")}</select></div>
-        <div class="curator-field curator-field-full"><label for="curatorLookStyles">Tag style</label><input id="curatorLookStyles" name="styles" maxlength="240" value="${esc((editing?.styles || []).join(", "))}" placeholder="Contoh: Clean, Casual, Workwear" /><p class="curator-file-note">Pisahkan tag dengan koma agar look lebih mudah ditemukan.</p></div>
+        ${controlledTagPickerMarkup({ name:"styles", options:STYLE_OPTIONS, selected:editing?.styles || [], maximum:3, label:"Tag style", note:"Pilih maksimal 3 tag agar look mudah ditemukan melalui filter." })}
         <div class="curator-field curator-field-full"><label for="curatorLookCover">Foto cover look${isExistingLook ? " (opsional)" : ""}</label><input id="curatorLookCover" name="coverFile" type="file" accept="image/jpeg,image/png,image/webp"${isExistingLook ? "" : " required"} /><p class="curator-file-note">${isExistingLook ? "Pilih foto baru hanya bila ingin mengganti cover. Jika memilih foto, atur crop lalu pilih Gunakan foto." : "Wajib untuk look baru. Pilih foto, atur crop, lalu pilih Gunakan foto. JPG, PNG, atau WebP, maksimal 5 MB."}</p></div>
       </div>
       <div class="curator-reference-head"><h4>Products in this look</h4><span class="curator-reference-count" data-curator-reference-count>${references.length} / ${MAX_REFERENCES}</span></div>
@@ -496,8 +534,8 @@
     return {
       title: compact(form.elements.title?.value),
       gender: compact(form.elements.gender?.value || "Uniseks"),
-      tone: compact(form.elements.tone?.value),
-      styles: tagList(form.elements.styles?.value, 10),
+      tone: DEFAULT_LOOK_TONE,
+      styles: controlledValuesFromForm(form, "styles", STYLE_OPTIONS, 3),
       coverFile,
       coverAspect: selectedImageAspect(coverInput, "portrait"),
       items: references
@@ -600,6 +638,7 @@
       updateLookPopularity(id, liked === wasLiked ? 0 : (liked ? 1 : -1));
       renderHome();
       renderRoute();
+      window.dispatchEvent(new CustomEvent("comootd:like-change", { detail: { source: "curator", lookId: String(id), liked, delta: liked === wasLiked ? 0 : (liked ? 1 : -1) } }));
     } catch (error) {
       showToast(error?.message || "Like belum dapat disimpan. Coba lagi.");
     } finally { button?.removeAttribute("aria-busy"); }
@@ -630,7 +669,7 @@
     const payload = {
       displayName: compact(form.elements.displayName?.value),
       handle: safeHandle(form.elements.handle?.value),
-      jobTags: tagList(form.elements.jobTags?.value, 5),
+      jobTags: controlledValuesFromForm(form, "jobTags", CURATOR_JOB_TAG_OPTIONS, 3),
       bio: compact(form.elements.bio?.value)
     };
     if (!/^[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?$/.test(payload.handle) || payload.handle.length < 3 || payload.handle.length > 32) { setFormStatus(status, "Handle harus 3–32 karakter dan hanya memakai huruf kecil, angka, _ atau -."); return; }
@@ -661,7 +700,7 @@
       displayName: compact(form.elements.displayName?.value),
       handle: safeHandle(form.elements.handle?.value),
       bio: compact(form.elements.bio?.value),
-      jobTags: tagList(form.elements.jobTags?.value, 5),
+      jobTags: controlledValuesFromForm(form, "jobTags", CURATOR_JOB_TAG_OPTIONS, 3),
       avatarFile,
       socials,
       socialLinks: socials
@@ -753,6 +792,20 @@
     const look = event.target.closest("[data-curator-look-form]");
     if (look) { event.preventDefault(); submitLook(look); }
   }
+  function onChange(event) {
+    const input = event.target.closest("[data-curator-choice-picker] input[type=checkbox]");
+    if (!input) return;
+    const picker = input.closest("[data-curator-choice-picker]");
+    const maximum = Number(picker?.dataset.maxSelections || 3);
+    const selected = [...picker.querySelectorAll("input:checked")];
+    if (selected.length > maximum) {
+      input.checked = false;
+      showToast(`Pilih maksimal ${maximum} tag.`);
+    }
+    const active = picker.querySelectorAll("input:checked");
+    picker.querySelector("[data-curator-choice-count]")?.replaceChildren(`${active.length} / ${maximum}`);
+    picker.querySelectorAll(".curator-choice").forEach((choice) => choice.classList.toggle("is-selected", Boolean(choice.querySelector("input")?.checked)));
+  }
   function onKeydown(event) {
     if (event.key === "Escape" && state.routeOpen) {
       event.preventDefault();
@@ -778,8 +831,18 @@
     ensureLayers();
     document.addEventListener("click", onClick);
     document.addEventListener("submit", onSubmit);
+    document.addEventListener("change", onChange);
     document.addEventListener("keydown", onKeydown);
     window.addEventListener("popstate", renderRoute);
+    window.addEventListener("comootd:like-change", (event) => {
+      const detail = event?.detail || {};
+      if (detail.source === "curator" || !detail.lookId) return;
+      const id = String(detail.lookId);
+      if (detail.liked) state.liked.add(id); else state.liked.delete(id);
+      updateLookPopularity(id, Number(detail.delta || 0));
+      renderHome();
+      renderRoute();
+    });
     installStudioCapture();
     installMemberPromptObserver();
     const api = cloud();

@@ -13,6 +13,17 @@
 
   const genderToUi = { pria: "Pria", wanita: "Wanita", unisex: "Uniseks" };
   const genderToDb = { Pria: "pria", Wanita: "wanita", Uniseks: "unisex" };
+  // One taxonomy powers filters, the Studio, curator tools, and imports. This
+  // prevents invisible typo-tags from being saved into the public catalogue.
+  const STYLE_OPTIONS = ["Clean", "Casual", "Formal", "Streetwear", "Modest", "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party"];
+  const STYLE_ALIASES = new Map([
+    ["korea style", "Korean-inspired"], ["korean style", "Korean-inspired"],
+    ["korean-inspired", "Korean-inspired"], ["korean inspired", "Korean-inspired"]
+  ]);
+  const PRODUCT_BADGE_OPTIONS = ["", "COMOOTD Pick", "High Rotation", "Wardrobe Staple", "New In", "Trending", "Best Value", "Limited"];
+  const PRODUCT_BADGE_ALIASES = new Map([["populer", "High Rotation"], ["best seller", "High Rotation"], ["terlaris", "High Rotation"], ["termurah", "Best Value"]]);
+  const CURATOR_JOB_TAG_OPTIONS = ["Stylist", "Fashion Creator", "Content Creator", "Creative Director", "Photographer", "Model", "Designer", "Writer", "Visual Artist", "Fashion Student", "Brand / Marketing", "Marketing", "Student", "Fashion Enthusiast", "Hardworker"];
+  const DEFAULT_LOOK_TONE = "carbon";
 
   function validConfig() {
     const key = String(config.supabasePublishableKey || "").trim();
@@ -63,6 +74,28 @@
     return data?.publicUrl || "";
   }
 
+  function controlledList(value, options, { max = 3, aliases = new Map(), label = "Tag" } = {}) {
+    const source = Array.isArray(value) ? value : String(value || "").split(/[,;\n|]/);
+    const canonical = new Map(options.map((item) => [item.toLowerCase(), item]));
+    const result = [];
+    for (const raw of source) {
+      const key = String(raw || "").trim().toLowerCase();
+      if (!key) continue;
+      const mapped = aliases.get(key) || canonical.get(key);
+      if (!mapped) throw new Error(`${label} “${String(raw).trim()}” belum tersedia di COMOOTD.`);
+      if (!result.includes(mapped)) result.push(mapped);
+    }
+    if (result.length > max) throw new Error(`${label} maksimal ${max} pilihan.`);
+    return result;
+  }
+  function controlledStoredList(value, options, aliases = new Map()) {
+    const canonical = new Map(options.map((item) => [item.toLowerCase(), item]));
+    return (Array.isArray(value) ? value : []).map((raw) => {
+      const key = String(raw || "").trim().toLowerCase();
+      return aliases.get(key) || canonical.get(key) || "";
+    }).filter(Boolean);
+  }
+
   function normalizeImageAspect(value, fallback = "portrait") {
     const source = String(value || "").trim().toLowerCase();
     if (source === "square" || source === "1:1" || source === "1x1") return "square";
@@ -94,8 +127,8 @@
       slug: row.slug,
       name: row.name,
       price: Number(row.price_idr || 0),
-      badge: row.badges?.[0] || "",
-      styles: row.style_tags || [],
+      badge: controlledStoredList(row.badges, PRODUCT_BADGE_OPTIONS, PRODUCT_BADGE_ALIASES)[0] || "",
+      styles: controlledStoredList(row.style_tags, STYLE_OPTIONS, STYLE_ALIASES),
       affiliateUrl: row.affiliate_url,
       artBg: "#D8D0C6",
       artInk: variants[0]?.hex || "#242220",
@@ -145,7 +178,7 @@
       slug: row.slug,
       title: row.title,
       gender: genderToUi[row.gender_target] || "Uniseks",
-      styles: row.style_tags || [],
+      styles: controlledStoredList(row.style_tags, STYLE_OPTIONS, STYLE_ALIASES),
       tone: row.tone || "carbon",
       status: row.status || "draft",
       publishedAt: row.published_at || "",
@@ -156,6 +189,11 @@
       coverAspect: imageAspectFromPath(row.cover_image_path, "portrait"),
       excerpt: row.excerpt || "",
       creatorId,
+      // Inline reference items are the durable distinction: Curator looks
+      // carry their own affiliate items, while COMOOTD looks use the shared
+      // product library. An admin can also have a curator profile, so creator
+      // identity alone must not change a COMOOTD look into a Curator look.
+      publisherType: referenceItems.length ? "curator" : "comootd",
       curator: creatorId ? curatorMap.get(creatorId) || null : null,
       creator: creatorId ? curatorMap.get(creatorId) || null : null,
       items: referenceItems.length ? referenceItems : libraryItems
@@ -172,7 +210,7 @@
       displayName: name,
       name,
       bio: String(row.bio || "").trim(),
-      jobTags: asArray(row.job_tags).map((tag) => String(tag || "").trim()).filter(Boolean),
+      jobTags: controlledStoredList(row.job_tags, CURATOR_JOB_TAG_OPTIONS),
       avatarPath,
       avatar: publicUrl(avatarPath),
       maxPublishedLooks: Number(row.active_look_limit || 30),
@@ -227,8 +265,8 @@
       excerpt: row.excerpt || "",
       body: row.body_markdown || row.excerpt || "",
       category: row.category || "editorial",
-      styles: row.style_tags || [],
-      tags: row.style_tags || [],
+      styles: controlledStoredList(row.style_tags, STYLE_OPTIONS, STYLE_ALIASES),
+      tags: controlledStoredList(row.style_tags, STYLE_OPTIONS, STYLE_ALIASES),
       coverImage: publicUrl(row.cover_image_path),
       coverAspect: imageAspectFromPath(row.cover_image_path, "portrait"),
       coverAlt: row.cover_alt_text || "",
@@ -423,7 +461,12 @@
 
     const products = productRows.map(mapProduct);
     const productMap = new Map(products.map((product) => [product.id, product]));
-    const looks = lookRows.map((row, index) => mapLook(row, productMap, lookRows.length - index, curatorMap));
+    // A public Curator look must belong to an active public Curator profile.
+    // Official COMOOTD looks use the shared product library and stay visible.
+    const visibleLookRows = admin
+      ? lookRows
+      : lookRows.filter((row) => !(row.look_curation_items || []).length || curatorMap.has(row.creator_id));
+    const looks = visibleLookRows.map((row, index) => mapLook(row, productMap, visibleLookRows.length - index, curatorMap));
     const lookMap = new Map(looks.map((look) => [look.id, look]));
     const articles = articleRows.map((row, index) => mapArticle(row, index, productMap, lookMap));
     const newSeriesSlots = newSeriesSlotRows.map((row) => ({
@@ -992,9 +1035,7 @@
   }
 
   function normalizeArticleStyles(styles) {
-    return Array.isArray(styles)
-      ? styles.map((style) => String(style || "").trim()).filter(Boolean).slice(0, 12)
-      : [];
+    return controlledList(styles, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style artikel" });
   }
 
   function normalizeArticleBlocks(blocks) {
@@ -1126,7 +1167,7 @@
   }
 
   function normalizeCuratorTags(value, label, { max = 5 } = {}) {
-    return normalizeMemberTagList(value, label, { max, itemMax: 48 });
+    return controlledList(value, CURATOR_JOB_TAG_OPTIONS, { max: Math.min(max, 3), label });
   }
 
   function normalizeCuratorSocialLinks(value) {
@@ -1173,9 +1214,9 @@
     const excerpt = normalizeUserText(source.excerpt, "Deskripsi look", { max: 600 });
     const genderTarget = String(source.genderTarget ?? source.gender ?? "unisex").trim().toLowerCase();
     if (!memberGenderTargets.has(genderTarget)) throw new Error("Gender look harus pria, wanita, atau unisex.");
-    const tone = String(source.tone || "carbon").trim().toLowerCase();
-    if (!curatorTones.has(tone)) throw new Error("Arah visual look belum valid.");
-    const styles = normalizeMemberTagList(source.styles ?? source.styleTags, "Tag style", { max: 10, itemMax: 80 });
+    const tone = DEFAULT_LOOK_TONE;
+    if (!curatorTones.has(tone)) throw new Error("Konfigurasi look belum valid.");
+    const styles = controlledList(source.styles ?? source.styleTags, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style" });
     if (!styles.length) throw new Error("Tambahkan minimal satu tag style.");
     return {
       title,
@@ -1461,8 +1502,8 @@
     return {
       title: name,
       price: amount,
-      badge: String(badge || "").trim(),
-      styles: Array.isArray(styles) ? styles.map((style) => String(style || "").trim()).filter(Boolean).slice(0, 12) : [],
+      badge: controlledList([badge], PRODUCT_BADGE_OPTIONS.slice(1), { max: 1, aliases: PRODUCT_BADGE_ALIASES, label: "Badge produk" })[0] || "",
+      styles: controlledList(styles, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style produk" }),
       link: assertShopeeAffiliateUrl(link),
       variants: preparedVariants,
       imageUrl: assertImageUrl(imageUrl),
@@ -1672,11 +1713,9 @@
     const excerpt = String(group?.excerpt || "").trim();
     const coverImageUrl = assertImageUrl(group?.coverImageUrl);
     const coverAltText = String(group?.coverAltText || "").trim();
-    const tone = String(group?.tone || "").trim().toLowerCase();
+    const tone = DEFAULT_LOOK_TONE;
     const genderTarget = normalizeGenderTarget(group?.genderTarget);
-    const styles = Array.isArray(group?.styles)
-      ? [...new Set(group.styles.map((style) => String(style || "").trim()).filter(Boolean))].slice(0, 12)
-      : [];
+    const styles = controlledList(group?.styles, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style look" });
     const items = Array.isArray(group?.items) ? group.items.map((item) => ({
       productKey: normalizeImportKey(item?.productKey),
       variantLabel: String(item?.variantLabel || "").trim(),
@@ -1687,7 +1726,6 @@
     if (!title || title.length > 160) throw new Error("Nama look wajib diisi dan maksimal 160 karakter.");
     if (excerpt.length > 500) throw new Error("Excerpt maksimal 500 karakter.");
     if (!styles.length) throw new Error("Look memerlukan minimal satu tag style.");
-    if (!["carbon", "clay", "mineral", "olive", "midnight"].includes(tone)) throw new Error("tone belum sesuai pilihan COMOOTD.");
     if (coverImageUrl && !coverAltText) throw new Error("Deskripsi cover wajib diisi saat memakai cover_image_url.");
     if (coverAltText.length > 240) throw new Error("Deskripsi cover maksimal 240 karakter.");
     if (items.length < 2 || items.length > 5) throw new Error("Satu look harus berisi 2–5 item.");
@@ -1778,7 +1816,9 @@
     return { createdCount, updatedCount, failedCount, results };
   }
 
-  async function createLook({ title, gender, styles, tone, items, coverFile, coverAspect, popularity = 0 }) {
+  async function createLook({ title, gender, styles, tone = DEFAULT_LOOK_TONE, items, coverFile, coverAspect, popularity = 0 }) {
+    const controlledStyles = controlledList(styles, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style look" });
+    if (!controlledStyles.length) throw new Error("Look memerlukan minimal satu tag style.");
     const db = getClient();
     const { data: look, error: lookError } = await db
       .from("looks")
@@ -1786,8 +1826,8 @@
         slug: uniqueSlug(title),
         title,
         gender_target: genderToDb[gender] || "unisex",
-        style_tags: styles,
-        tone,
+        style_tags: controlledStyles,
+        tone: DEFAULT_LOOK_TONE,
         popularity,
         status: "draft"
       })
@@ -1825,7 +1865,7 @@
     }
   }
 
-  async function updateLook({ id, title, gender, styles, tone, items, coverFile, coverAspect }) {
+  async function updateLook({ id, title, gender, styles, tone = DEFAULT_LOOK_TONE, items, coverFile, coverAspect }) {
     if (!uuidPattern.test(String(id || ""))) throw new Error("Look yang akan diedit belum valid.");
     if (!Array.isArray(items) || items.length < 2 || items.length > 5) {
       throw new Error("Satu look harus berisi 2–5 item.");
@@ -1834,6 +1874,8 @@
     if (variantIds.some((variantId) => !uuidPattern.test(variantId)) || new Set(variantIds).size !== variantIds.length) {
       throw new Error("Item look belum valid. Muat ulang Studio lalu coba lagi.");
     }
+    const controlledStyles = controlledList(styles, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style look" });
+    if (!controlledStyles.length) throw new Error("Look memerlukan minimal satu tag style.");
 
     const db = getClient();
     const { data: existing, error: existingError } = await db
@@ -1851,8 +1893,8 @@
         p_look_id: id,
         p_title: String(title || "").trim(),
         p_gender_target: genderToDb[gender] || "unisex",
-        p_style_tags: Array.isArray(styles) ? styles : [],
-        p_tone: String(tone || "").trim(),
+        p_style_tags: controlledStyles,
+        p_tone: DEFAULT_LOOK_TONE,
         p_product_variant_ids: variantIds,
         p_cover_image_path: nextCoverPath
       });

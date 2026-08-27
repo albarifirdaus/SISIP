@@ -72,7 +72,7 @@
 .curator-avatar-fallback { display:grid; place-items:center; color:var(--curator-white); font-family:var(--mono,monospace); font-size:.68rem; }
 .curator-card-name { margin:0; color:inherit; font-size:1.05rem; line-height:1; letter-spacing:-.055em; }
 .curator-card-handle { margin:.2rem 0 0; color:rgba(248,246,242,.76); font-family:var(--mono,monospace); font-size:.57rem; letter-spacing:.04em; }
-.curator-card-title { margin:1.2rem 0 0; max-width:12ch; color:inherit; font-size:clamp(1.38rem, 2vw, 1.95rem); line-height:.96; letter-spacing:-.075em; }
+.curator-card-bio { display:-webkit-box; margin:.78rem 0 0; overflow:hidden; color:rgba(248,246,242,.86); font-size:clamp(.78rem,1.05vw,.94rem); line-height:1.38; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
 .curator-card-tags { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.8rem; }
 .curator-card-tags span,
 .curator-tag { padding:.28rem .42rem; border:1px solid rgba(248,246,242,.4); color:inherit; font-family:var(--mono,monospace); font-size:.52rem; letter-spacing:.045em; line-height:1; text-transform:uppercase; }
@@ -154,7 +154,7 @@
 }
 .curator-directory-card::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.86)); }
 .curator-directory-card .curator-card-media { z-index:-2; }
-.curator-directory-card .curator-card-title { max-width:14ch; }
+.curator-directory-card .curator-card-bio { max-width:32ch; }
 .curator-directory-card a { position:absolute; inset:0; z-index:1; }
 .curator-profile-hero { align-items:end; }
 .curator-profile-identity { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:end; gap:clamp(1rem,2.3vw,2.25rem); }
@@ -270,6 +270,15 @@
 .curator-product-reference input:focus,
 .curator-product-reference select:focus { border-color:var(--curator-clay); box-shadow:0 0 0 2px rgba(169,85,60,.15); }
 .curator-file-note { margin:.08rem 0 0; color:#6c625a; font-size:.67rem; line-height:1.38; }
+.curator-choice-picker { display:grid; gap:.5rem; margin:0; padding:0; border:0; }
+.curator-choice-picker legend { padding:0; color:var(--curator-ink); font-family:var(--mono,monospace); font-size:.58rem; letter-spacing:.055em; text-transform:uppercase; }
+.curator-choice-picker legend span { color:#746a61; }
+.curator-choice-list { display:flex; flex-wrap:wrap; gap:.42rem; }
+.curator-choice { position:relative; display:inline-flex; }
+.curator-choice input { position:absolute; inline-size:1px; block-size:1px; overflow:hidden; opacity:0; pointer-events:none; }
+.curator-choice span { display:inline-flex; align-items:center; min-height:34px; padding:.38rem .55rem; border:1px solid var(--curator-line); color:#5b544e; background:var(--curator-paper); font-family:var(--mono,monospace); font-size:.54rem; letter-spacing:.035em; text-transform:uppercase; cursor:pointer; transition:background .16s ease,color .16s ease,border-color .16s ease; }
+.curator-choice:hover span,.curator-choice.is-selected span { color:var(--curator-white); border-color:var(--curator-ink); background:var(--curator-ink); }
+.curator-choice input:focus-visible + span { outline:2px solid var(--curator-clay); outline-offset:2px; }
 .curator-reference-head { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; margin-top:.4rem; }
 .curator-reference-head h4 { margin:0; font-size:1.2rem; letter-spacing:-.055em; }
 .curator-reference-count { color:#6a6058; font-family:var(--mono,monospace); font-size:.57rem; letter-spacing:.05em; text-transform:uppercase; }
@@ -321,16 +330,16 @@
   .curator-avatar-fallback { width:31px; height:31px; }
   .curator-card-name { font-size:.84rem; }
   .curator-card-handle { font-size:.46rem; }
-  .curator-card .curator-card-title,
-  .curator-directory-card .curator-card-title {
+  .curator-card .curator-card-bio,
+  .curator-directory-card .curator-card-bio {
     display:-webkit-box;
     max-width:100%;
     margin:.7rem 0 0;
     overflow:hidden;
-    font-size:clamp(.95rem,4.6vw,1.15rem);
-    line-height:.94;
+    font-size:.68rem;
+    line-height:1.35;
     -webkit-box-orient:vertical;
-    -webkit-line-clamp:5;
+    -webkit-line-clamp:2;
   }
   .curator-card-tags { gap:.24rem; margin-top:.55rem; }
   .curator-card-tags span { padding:.22rem .3rem; font-size:.4rem; }

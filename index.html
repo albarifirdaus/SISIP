@@ -218,6 +218,8 @@
       .new-series-dots { display:flex; align-items:center; justify-content:center; gap:.38rem; }
       .new-series-dot { width:7px; height:7px; border:1px solid rgba(255,255,255,.85); border-radius:50%; padding:0; background:transparent; cursor:pointer; transition:width .18s ease,border-radius .18s ease,background .18s ease; }
       .new-series-dot.is-active { width:25px; border-radius:99px; background:var(--white); }
+      .new-series-dots .look-like-button { min-height:28px; margin-left:.3rem; color:var(--white); border-color:rgba(255,255,255,.58); background:rgba(15,14,13,.16); }
+      .new-series-dots .look-like-button:hover,.new-series-dots .look-like-button.is-liked { color:var(--ink); border-color:var(--white); background:var(--white); }
       .new-series-empty { position:absolute; inset:0; display:grid; place-items:center; padding:4rem 2rem 2rem; color:var(--white); text-align:center; }
       .new-series-empty p { max-width:260px; margin:0; color:#e9dfd4; font-family:var(--mono); font-size:.65rem; line-height:1.55; letter-spacing:.04em; text-transform:uppercase; }
 
@@ -299,6 +301,10 @@
       .look-card-meta { display:flex; align-items:center; justify-content:space-between; gap:.6rem; color:var(--taupe); }
       .look-card-title { margin:.56rem 0 .78rem; font-size:clamp(1.25rem,1.8vw,1.7rem); font-weight:800; letter-spacing:-.07em; line-height:.93; }
       .look-card-tags { display:flex; flex-wrap:wrap; gap:.35rem; }
+      .look-card-footer { display:flex; align-items:flex-end; justify-content:space-between; gap:.6rem; }
+      .look-like-button { display:inline-flex; align-items:center; justify-content:center; gap:.32rem; min-height:36px; padding:.42rem .58rem; border:1px solid var(--line); color:var(--ink); background:var(--white); font-family:var(--mono); font-size:.57rem; letter-spacing:.03em; cursor:pointer; transition:.16s ease; }
+      .look-like-button:hover,.look-like-button.is-liked { color:var(--white); border-color:var(--ink); background:var(--ink); }
+      .look-like-button.is-compact { min-height:28px; padding:.26rem .38rem; font-size:.5rem; }
       .tag { display:inline-flex; align-items:center; min-height:20px; padding:0 .35rem; color:var(--ink-soft); border:1px solid var(--line); background:rgba(248,246,242,.45); font-size:.55rem; letter-spacing:.035em; }
       .open-look { position:absolute; right:.8rem; bottom:.8rem; opacity:0; transform:translateY(7px); transition:.18s ease; }
       .look-uploaded-image { width:100%; height:100%; object-fit:cover; transition:transform .35s ease; }
@@ -368,12 +374,15 @@
       .personal-group-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.75rem; }
       .personal-group-head h4 { margin:0; color:#d8c3b3; font-family:var(--mono); font-size:.61rem; font-weight:500; letter-spacing:.06em; text-transform:uppercase; }
       .personal-looks { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.55rem; }
-      .personal-look { min-width:0; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,.22); color:var(--white); background:#242220; text-align:left; cursor:pointer; }
-      .personal-look:hover { border-color:var(--clay); }
+      .personal-look { position:relative; min-width:0; overflow:hidden; border:1px solid rgba(255,255,255,.22); color:var(--white); background:#242220; }
+      .personal-look:hover,.personal-look:focus-within { border-color:var(--clay); }
+      .personal-look-open { display:block; width:100%; padding:0; border:0; color:inherit; background:transparent; text-align:left; cursor:pointer; }
       .personal-look .look-art, .personal-look .look-uploaded-image { height:132px; min-height:132px; }
       .personal-look-copy { display:block; padding:.65rem; }
       .personal-look-copy strong { display:block; overflow:hidden; font-size:.8rem; letter-spacing:-.035em; text-overflow:ellipsis; white-space:nowrap; }
       .personal-look-copy span { display:block; overflow:hidden; margin-top:.25rem; color:#c6bdb4; font-family:var(--mono); font-size:.55rem; text-overflow:ellipsis; text-transform:uppercase; white-space:nowrap; }
+      .personal-look .look-like-button { position:absolute; z-index:2; right:.45rem; bottom:.45rem; min-height:26px; color:var(--white); border-color:rgba(255,255,255,.5); background:rgba(20,18,16,.4); backdrop-filter:blur(5px); }
+      .personal-look .look-like-button:hover,.personal-look .look-like-button.is-liked { color:var(--ink); border-color:var(--white); background:var(--white); }
       .personal-products { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.55rem; }
       .personal-product { min-width:0; padding:.65rem; border:1px solid rgba(255,255,255,.18); background:#302c29; }
       .personal-product .product-art { height:96px; }
@@ -462,7 +471,6 @@
       .image-upload-note { margin:.48rem 0 0; color:var(--taupe); font-size:.67rem; line-height:1.45; }
       .article-related-product a { width:fit-content; color:var(--ink); font-family:var(--mono); font-size:.6rem; text-decoration:none; }
       .article-related-product a:hover { color:var(--clay); }
-      .affiliate-disclosure { margin:0; color:var(--taupe); font-family:var(--mono); font-size:.58rem; line-height:1.5; }
       .auth-shell { width:min(440px,calc(100vw - 2rem)); }
       .auth-shell h2 { margin:.8rem 0 .65rem; font-size:clamp(2rem,4vw,3.5rem); letter-spacing:-.08em; line-height:.9; text-transform:uppercase; }
       .auth-shell > p { margin:0 0 1.4rem; color:var(--ink-soft); line-height:1.55; }
@@ -496,15 +504,15 @@
 
       .studio-scrim { position:fixed; z-index:70; inset:0; visibility:hidden; opacity:0; background:rgba(23,22,20,.43); transition:.2s; }
       .studio-scrim.is-open { visibility:visible; opacity:1; }
-      .studio-drawer { position:fixed; z-index:80; top:0; right:0; width:min(600px,100vw); height:100dvh; overflow:auto; transform:translateX(102%); color:var(--ink); background:var(--white); box-shadow:-20px 0 50px rgba(0,0,0,.18); transition:transform .28s cubic-bezier(.2,.7,.2,1); }
+      .studio-drawer { position:fixed; z-index:80; top:0; right:0; width:min(940px,100vw); height:100dvh; overflow:auto; transform:translateX(102%); color:var(--ink); background:var(--white); box-shadow:-20px 0 50px rgba(0,0,0,.18); transition:transform .28s cubic-bezier(.2,.7,.2,1); }
       .studio-drawer.is-open { transform:translateX(0); }
-      .studio-top { position:sticky; z-index:3; top:0; display:flex; align-items:center; justify-content:space-between; padding:1.05rem 1.15rem; border-bottom:1px solid var(--line); background:rgba(248,246,242,.95); backdrop-filter:blur(12px); }
-      .studio-title { margin:0; font-size:1.25rem; font-weight:850; letter-spacing:-.07em; }
+      .studio-top { position:sticky; z-index:3; top:0; display:flex; align-items:center; justify-content:space-between; padding:1.1rem clamp(1.1rem,2.7vw,2.4rem); border-bottom:1px solid var(--line); background:rgba(248,246,242,.95); backdrop-filter:blur(12px); }
+      .studio-title { margin:0; font-size:clamp(1.25rem,2vw,1.65rem); font-weight:850; letter-spacing:-.075em; }
       .studio-top-actions { display:flex; align-items:center; gap:.35rem; }
-      .studio-content { padding:1.15rem; }
+      .studio-content { max-width:880px; padding:clamp(1.15rem,3vw,2.5rem); }
       .prototype-note { margin:0 0 1.3rem; padding:.85rem; border-left:3px solid var(--clay); background:#f1e8df; color:var(--ink-soft); font-size:.76rem; line-height:1.5; }
-      .studio-tabs { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1rem; }
-      .studio-tab { padding:.65rem .8rem; border:1px solid var(--line); background:transparent; cursor:pointer; font-family:var(--mono); font-size:.6rem; letter-spacing:.035em; text-transform:uppercase; }
+      .studio-tabs { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1.35rem; padding-bottom:.8rem; border-bottom:1px solid var(--line); }
+      .studio-tab { padding:.65rem .8rem; border:1px solid var(--line); background:var(--paper); cursor:pointer; font-family:var(--mono); font-size:.6rem; letter-spacing:.035em; text-transform:uppercase; transition:.16s ease; }
       .studio-tab.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
       .studio-panel { display:none; }
       .studio-panel.is-active { display:block; }
@@ -525,6 +533,15 @@
       .studio-section h3 { margin:0 0 .35rem; font-size:1.35rem; letter-spacing:-.06em; }
       .studio-section > p { margin:.1rem 0 1rem; color:var(--ink-soft); font-size:.78rem; line-height:1.45; }
       .form-stack { display:grid; gap:.75rem; }
+      .taxonomy-picker { display:grid; gap:.5rem; margin:0; padding:0; border:0; }
+      .taxonomy-picker legend { padding:0; color:var(--ink); font-family:var(--mono); font-size:.58rem; letter-spacing:.055em; text-transform:uppercase; }
+      .taxonomy-picker legend span { color:var(--taupe); }
+      .taxonomy-options { display:flex; flex-wrap:wrap; gap:.4rem; }
+      .taxonomy-options label { position:relative; display:inline-flex; }
+      .taxonomy-options input { position:absolute; inline-size:1px; block-size:1px; overflow:hidden; opacity:0; pointer-events:none; }
+      .taxonomy-options span { display:inline-flex; align-items:center; min-height:34px; padding:.38rem .54rem; border:1px solid var(--line); color:var(--ink-soft); background:var(--paper); font-family:var(--mono); font-size:.54rem; letter-spacing:.035em; text-transform:uppercase; cursor:pointer; transition:.16s ease; }
+      .taxonomy-options label:hover span,.taxonomy-options label.is-selected span { color:var(--white); border-color:var(--ink); background:var(--ink); }
+      .taxonomy-options input:focus-visible + span { outline:2px solid var(--clay); outline-offset:2px; }
       .compact-row { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
       .editor-product-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.5rem; }
       .small-button { min-height:38px; padding:0 .7rem; border:1px solid var(--ink); color:var(--white); background:var(--ink); cursor:pointer; font-size:.7rem; font-weight:700; }
@@ -583,6 +600,41 @@
       body.drawer-open { overflow:hidden; }
 
       .toast { position:fixed; z-index:100; right:1rem; bottom:1rem; max-width:min(400px,calc(100vw - 2rem)); padding:.85rem 1rem; opacity:0; transform:translateY(15px); pointer-events:none; color:var(--white); background:var(--ink); box-shadow:var(--shadow); font-size:.78rem; line-height:1.4; transition:.2s; }
+      .catalogue-route-layer { position:fixed; z-index:145; inset:0; display:none; overflow:auto; color:var(--ink); background:var(--white); }
+      .catalogue-route-layer.is-open { display:block; }
+      .catalogue-route-bar { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; min-height:74px; padding:0 3.2vw; border-bottom:1px solid var(--line); background:rgba(248,246,242,.94); backdrop-filter:blur(13px); }
+      .catalogue-route-brand img { display:block; width:clamp(120px,10vw,158px); height:auto; }
+      .catalogue-route-back { color:var(--ink); font-family:var(--mono); font-size:.6rem; letter-spacing:.055em; text-transform:uppercase; }
+      .catalogue-route-body { width:min(1440px,100%); margin:0 auto; padding:clamp(1.5rem,4vw,4.4rem) 3.2vw 5rem; }
+      .catalogue-route-heading { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(240px,.55fr); align-items:end; gap:1.2rem 4rem; padding-bottom:2.1rem; border-bottom:1px solid var(--line); }
+      .catalogue-route-heading > p:first-child { grid-column:1/-1; margin:0; color:var(--clay); font-family:var(--mono); font-size:.58rem; letter-spacing:.055em; text-transform:uppercase; }
+      .catalogue-route-heading h1 { margin:0; font-size:clamp(3rem,7vw,7.4rem); font-weight:900; letter-spacing:-.108em; line-height:.82; text-transform:uppercase; text-wrap:balance; }
+      .catalogue-route-heading > p:last-child { max-width:32rem; margin:0; color:var(--ink-soft); font-size:clamp(.95rem,1.25vw,1.12rem); line-height:1.48; }
+      .catalogue-route-tabs { display:flex; flex-wrap:wrap; gap:.42rem; padding:1rem 0 1.25rem; }
+      .catalogue-route-tabs a { padding:.42rem .58rem; border:1px solid var(--line); color:var(--ink-soft); background:var(--paper); font-family:var(--mono); font-size:.55rem; letter-spacing:.035em; text-transform:uppercase; }
+      .catalogue-route-tabs a:hover,.catalogue-route-tabs a.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
+      .catalogue-look-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; background:var(--line); }
+      .catalogue-look-card { min-width:0; background:var(--white); }
+      .catalogue-look-image { width:100%; aspect-ratio:3/4; padding:0; overflow:hidden; border:0; background:var(--ink); cursor:pointer; }
+      .catalogue-look-image.image-frame--square { aspect-ratio:1; }
+      .catalogue-look-copy { display:grid; gap:.62rem; min-height:154px; padding:1rem; }
+      .catalogue-look-copy > p,.catalogue-product-card p { margin:0; color:var(--taupe); font-family:var(--mono); font-size:.54rem; letter-spacing:.04em; text-transform:uppercase; }
+      .catalogue-look-copy h2,.catalogue-product-card h2,.catalogue-journal-card h2 { margin:0; font-size:clamp(1.2rem,1.8vw,1.75rem); line-height:.94; letter-spacing:-.07em; }
+      .catalogue-look-copy .look-like-button { justify-self:end; margin-top:auto; }
+      .catalogue-product-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px; background:var(--line); }
+      .catalogue-product-card { min-width:0; padding:1rem; background:var(--white); }
+      .catalogue-product-card > button { width:100%; padding:0; border:0; background:transparent; cursor:pointer; }
+      .catalogue-product-card > div { padding-top:.8rem; }
+      .catalogue-product-card span { display:block; margin-top:.5rem; font-family:var(--mono); font-size:.63rem; }
+      .catalogue-journal-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; background:var(--line); }
+      .catalogue-journal-card { background:var(--white); }
+      .catalogue-journal-card button { position:relative; display:grid; align-content:end; width:100%; min-height:360px; padding:1rem; overflow:hidden; border:0; color:var(--white); background:var(--ink); text-align:left; cursor:pointer; isolation:isolate; }
+      .catalogue-journal-card button::after { content:""; position:absolute; z-index:-1; inset:0; background:linear-gradient(180deg,transparent,rgba(0,0,0,.82)); }
+      .catalogue-journal-card img { position:absolute; z-index:-2; inset:0; width:100%; height:100%; object-fit:cover; }
+      .catalogue-journal-card span { margin-bottom:.65rem; color:rgba(248,246,242,.72); font-family:var(--mono); font-size:.55rem; letter-spacing:.04em; text-transform:uppercase; }
+      .catalogue-journal-card p { margin:.62rem 0 0; color:rgba(248,246,242,.85); font-size:.78rem; line-height:1.45; }
+      .catalogue-empty { margin:0; padding:2rem; border:1px solid var(--line); color:var(--ink-soft); background:var(--paper); }
+      body.catalogue-route-open { overflow:hidden; }
       .toast.show { opacity:1; transform:translateY(0); }
 
       @media (max-width: 980px) {
@@ -614,6 +666,20 @@
         .new-series-controls { right:1.25rem; bottom:1rem; left:1.25rem; }
       }
       @media (max-width: 760px) {
+        .catalogue-route-bar { min-height:62px; padding:0 5vw; }
+        .catalogue-route-brand img { width:112px; }
+        .catalogue-route-body { padding:1.3rem 5vw 3.5rem; }
+        .catalogue-route-heading { grid-template-columns:1fr; gap:.85rem; padding-bottom:1.35rem; }
+        .catalogue-route-heading h1 { font-size:clamp(2.8rem,14vw,4.6rem); }
+        .catalogue-route-heading > p:last-child { font-size:.9rem; }
+        .catalogue-route-tabs { flex-wrap:nowrap; overflow:auto; margin-right:-5vw; padding-right:5vw; }
+        .catalogue-route-tabs a { white-space:nowrap; }
+        .catalogue-look-grid,.catalogue-product-grid,.catalogue-journal-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .catalogue-look-copy { min-height:0; padding:.72rem; }
+        .catalogue-look-copy h2,.catalogue-product-card h2,.catalogue-journal-card h2 { font-size:1.05rem; }
+        .catalogue-look-copy > p,.catalogue-product-card p { font-size:.46rem; }
+        .catalogue-product-card { padding:.72rem; }
+        .catalogue-journal-card button { min-height:250px; padding:.72rem; }
         .utility-bar { padding:0 5vw; }
         .utility-bar span:last-child { display:none; }
         .header-inner { height:64px; padding:0 5vw; grid-template-columns:1fr auto; }
@@ -677,7 +743,7 @@
         .look-item { grid-template-columns:42px 1fr; }
         .item-link { grid-column:2; width:fit-content; }
         .personal-looks { grid-template-columns:1fr; }
-        .personal-look { display:grid; grid-template-columns:110px 1fr; align-items:stretch; }
+        .personal-look-open { display:grid; grid-template-columns:110px 1fr; align-items:stretch; }
         .personal-look .look-art, .personal-look .look-uploaded-image { height:100%; min-height:100px; }
         .personal-products { grid-template-columns:1fr 1fr; }
         .request-rec-controls { grid-template-columns:1fr; }
@@ -698,10 +764,11 @@
           <img class="brand-wordmark" src="/assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="" decoding="async" />
         </a>
         <nav class="desktop-nav" aria-label="Navigasi utama">
-          <a href="#lookbook">Looks</a>
+          <a href="/looks">Looks</a>
+          <a href="/products">Products</a>
           <a href="#styles">Styles</a>
           <a href="/curators">Curators</a>
-          <a href="#journal">Journal</a>
+          <a href="/journal">Journal</a>
           <a href="#request">Request</a>
         </nav>
         <div class="header-actions">
@@ -720,10 +787,11 @@
         </div>
       </div>
       <nav class="mobile-nav" id="mobileNav" aria-label="Navigasi mobile">
-        <a href="#lookbook">Looks</a>
+        <a href="/looks">Looks</a>
+        <a href="/products">Products</a>
         <a href="#styles">Styles</a>
         <a href="/curators">Curators</a>
-        <a href="#journal">Journal</a>
+        <a href="/journal">Journal</a>
         <a href="#request">Request outfit</a>
         <a href="#about">Tentang COMOOTD</a>
         <button class="button-outline" id="mobileAccountButton" type="button">Masuk / Profil</button>
@@ -731,7 +799,7 @@
       </nav>
     </header>
 
-    <main>
+    <main id="siteMain">
       <section class="hero" id="home" aria-labelledby="heroTitle">
         <div class="hero-copy">
           <div>
@@ -1037,10 +1105,7 @@
                 <div class="field"><label for="lookTitleInput">Nama look</label><input id="lookTitleInput" name="title" required placeholder="Contoh: Kota Setelah Hujan" /></div>
                 <div class="field"><label for="lookGenderInput">Gender</label><select id="lookGenderInput" name="gender"><option>Uniseks</option><option>Pria</option><option>Wanita</option></select></div>
               </div>
-              <div class="compact-row">
-                <div class="field"><label for="lookStylesInput">Style (pisahkan koma)</label><input id="lookStylesInput" name="styles" required placeholder="Clean, Casual" /></div>
-                <div class="field"><label for="lookToneInput">Arah visual</label><select id="lookToneInput" name="tone"><option value="carbon">Carbon</option><option value="clay">Clay</option><option value="mineral">Mineral</option><option value="olive">Olive</option><option value="midnight">Midnight</option></select></div>
-              </div>
+              <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="lookStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="lookStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="lookStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="lookStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="lookStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="lookStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="lookStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="lookStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="lookStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="lookStyles" value="Party" /><span>Party</span></label></div><p class="microcopy">Pilih maksimal tiga tag agar look mudah ditemukan.</p></fieldset>
               <div class="field"><label for="lookCoverInput" id="lookCoverLabel">Foto cover (opsional)</label><input id="lookCoverInput" type="file" accept="image/jpeg,image/png,image/webp" /><p class="image-upload-note">Setelah memilih foto, atur crop portrait 3:4 atau square 1:1.</p></div>
               <div class="editor-product-row">
                 <div class="field"><label for="lookProductInput">Tambahkan produk</label><select id="lookProductInput"></select></div>
@@ -1092,7 +1157,7 @@
                 <div class="field"><label for="journalCategoryInput">Jenis artikel</label><select id="journalCategoryInput" name="category"><option value="style-guide">Style guide</option><option value="occasion-guide">Occasion guide</option><option value="trend-watch">Trend watch</option><option value="editorial">Editorial</option><option value="shopping-guide">Shopping guide</option><option value="wardrobe-notes">Wardrobe notes</option></select></div>
               </div>
               <div class="field"><label for="journalExcerptInput">Ringkasan</label><textarea id="journalExcerptInput" name="excerpt" maxlength="420" required placeholder="Satu sampai dua kalimat yang mengundang pembaca membuka artikel."></textarea></div>
-              <div class="field"><label for="journalStylesInput">Tag style (pisahkan koma)</label><input id="journalStylesInput" name="styles" placeholder="Clean, Formal, Lebaran" /></div>
+              <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Tag style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="journalStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="journalStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="journalStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="journalStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="journalStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="journalStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="journalStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="journalStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="journalStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="journalStyles" value="Party" /><span>Party</span></label></div><p class="microcopy">Pilih maksimal tiga tag dari taxonomy yang juga dipakai katalog.</p></fieldset>
               <div class="compact-row">
                 <div class="field"><label for="journalCoverInput">Foto cover (opsional)</label><input id="journalCoverInput" type="file" accept="image/jpeg,image/png,image/webp" /><p class="image-upload-note">Atur crop portrait 3:4 atau square 1:1 setelah memilih foto.</p></div>
                 <div class="field"><label for="journalCoverAltInput">Deskripsi foto cover</label><input id="journalCoverAltInput" name="coverAlt" maxlength="240" placeholder="Contoh: Look serba cokelat di cahaya sore" /></div>
@@ -1159,11 +1224,11 @@
               <div class="field"><label for="productTitleInput">Nama produk</label><input id="productTitleInput" name="title" required placeholder="Contoh: Relaxed Oxford Shirt" /></div>
               <div class="compact-row">
                 <div class="field"><label for="productPriceInput">Harga referensi (manual)</label><input id="productPriceInput" name="price" required inputmode="numeric" placeholder="229000" /></div>
-                <div class="field"><label for="productBadgeInput">Badge (opsional)</label><input id="productBadgeInput" name="badge" placeholder="COMOOTD Pick" /></div>
+                <div class="field"><label for="productBadgeInput">Badge (opsional)</label><select id="productBadgeInput" name="badge"><option value="">Tanpa badge</option><option>COMOOTD Pick</option><option>High Rotation</option><option>Wardrobe Staple</option><option>New In</option><option>Trending</option><option>Best Value</option><option>Limited</option></select></div>
               </div>
               <div class="field"><label for="productGenderInput">Gender target</label><select id="productGenderInput" name="genderTarget"><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
               <div class="field"><label for="productLinkInput">Link affiliate Shopee</label><input id="productLinkInput" name="link" required type="url" placeholder="https://shopee.co.id/..." /></div>
-              <div class="field"><label for="productStylesInput">Tag style (pisahkan koma)</label><input id="productStylesInput" name="styles" placeholder="Clean, Formal" /></div>
+              <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Tag style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="productStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="productStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="productStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="productStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="productStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="productStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="productStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="productStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="productStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="productStyles" value="Party" /><span>Party</span></label></div><p class="microcopy">Pilih maksimal tiga tag. Tag ini sama dengan filter yang dilihat pengunjung.</p></fieldset>
               <div class="field"><label for="productVariantsInput">Varian warna (Nama|#HEX, pisahkan koma)</label><input id="productVariantsInput" name="variants" required placeholder="Putih|#F1F0EC, Biru|#AAB7C7" /></div>
               <div class="field"><label for="productImageUrlInput">URL foto cover (opsional)</label><input id="productImageUrlInput" name="imageUrl" type="url" placeholder="https://cdn.example.com/foto-produk.jpg" /></div>
               <p class="microcopy" style="margin:-.2rem 0 0;color:var(--taupe)">Link affiliate tidak diekstrak otomatis. Pakai URL gambar resmi dari Product Feed atau upload foto sendiri.</p>
@@ -1212,6 +1277,7 @@
           midnight: { bg: "#263038", accent: "#b66c59", garment: "#d7d4cc", bottom: "#3e454a", figure: "#e8ddcf", skin: "#9d694f", skinDark: "#81503d", hair: "#211b19", label: "#f8f6f2", light: true }
         };
         const STYLE_ORDER = ["Clean", "Casual", "Formal", "Streetwear", "Modest", "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party"];
+        const PRODUCT_BADGE_OPTIONS = ["", "COMOOTD Pick", "High Rotation", "Wardrobe Staple", "New In", "Trending", "Best Value", "Limited"];
         const ARTICLE_CATEGORIES = {
           "style-guide": "Style guide",
           "occasion-guide": "Occasion guide",
@@ -1265,13 +1331,13 @@
           ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
           ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Biru kabut", "#AAB7C7", "https://cdn.contoh.com/oxford-biru.jpg"],
           ["TROUSER-001", "Pleated Straight Trousers", "https://shope.ee/contoh-link", "289000", "", "", "Clean", "Formal", "", "unisex", "https://cdn.contoh.com/trouser-cover.jpg", "Charcoal", "#3B3A38", ""],
-          ["LOAFER-001", "Leather Penny Loafers", "https://shope.ee/contoh-link", "319000", "Populer", "", "Formal", "Clean", "", "unisex", "https://cdn.contoh.com/loafer-cover.jpg", "Hitam", "#211F1D", ""]
+          ["LOAFER-001", "Leather Penny Loafers", "https://shope.ee/contoh-link", "319000", "High Rotation", "", "Formal", "Clean", "", "unisex", "https://cdn.contoh.com/loafer-cover.jpg", "Hitam", "#211F1D", ""]
         ];
-        const BULK_LOOK_IMPORT_HEADERS = ["look_key", "title", "excerpt", "gender_target", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "tone", "cover_image_url", "cover_alt_text", "item_position", "product_key", "variant_label"];
+        const BULK_LOOK_IMPORT_HEADERS = ["look_key", "title", "excerpt", "gender_target", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "cover_image_url", "cover_alt_text", "item_position", "product_key", "variant_label"];
         const BULK_LOOK_IMPORT_TEMPLATE_ROWS = [
-          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "mineral", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "1", "OXFORD-001", "Putih"],
-          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "mineral", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "2", "TROUSER-001", "Charcoal"],
-          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "mineral", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "3", "LOAFER-001", "Hitam"]
+          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "1", "OXFORD-001", "Putih"],
+          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "2", "TROUSER-001", "Charcoal"],
+          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "3", "LOAFER-001", "Hitam"]
         ];
         const BULK_IMPORT_MAX_ROWS = 1000;
         const BULK_IMPORT_MAX_PRODUCTS = 200;
@@ -1285,7 +1351,7 @@
 
         const SEED_PRODUCTS = [
           product("oxford", "Relaxed Oxford Shirt", 229000, "COMOOTD Pick", ["Clean", "Formal"], [["Putih kertas", "#F1F0EC"], ["Biru kabut", "#AAB7C7"], ["Charcoal", "#45423F"]], "#d9d4cd", "#f1f0ec"),
-          product("trouser", "Relaxed Pleat Trousers", 259000, "Populer", ["Clean", "Formal"], [["Charcoal", "#3F3C39"], ["Olive gelap", "#52583F"], ["Stone", "#B8AEA1"]], "#bfb5aa", "#3f3c39"),
+          product("trouser", "Relaxed Pleat Trousers", 259000, "High Rotation", ["Clean", "Formal"], [["Charcoal", "#3F3C39"], ["Olive gelap", "#52583F"], ["Stone", "#B8AEA1"]], "#bfb5aa", "#3f3c39"),
           product("loafer", "Soft Leather Loafer", 349000, "", ["Clean", "Formal"], [["Hitam", "#1A1918"], ["Cokelat tua", "#563B2C"]], "#cfc4b8", "#1a1918"),
           product("tote", "Soft Structure Tote", 189000, "", ["Clean", "Casual"], [["Cognac", "#86533A"], ["Hitam", "#1D1B19"]], "#d6c5b3", "#86533a"),
           product("blazer", "Relaxed Tailored Blazer", 379000, "COMOOTD Pick", ["Formal", "Clean"], [["Taupe", "#918173"], ["Stone", "#B6AAA0"], ["Hitam", "#242220"]], "#d4c9bf", "#918173"),
@@ -1295,7 +1361,7 @@
           product("overshirt", "Boxy Overshirt", 269000, "", ["Casual", "Streetwear", "Workwear"], [["Charcoal", "#403E3B"], ["Olive", "#59604A"], ["Sand", "#B9AA94"]], "#bbb5ad", "#403e3b"),
           product("heavy-tee", "Heavyweight Plain Tee", 99000, "", ["Casual", "Streetwear"], [["Graphite", "#343434"], ["Ecru", "#DDD7CD"], ["Ash", "#99958E"]], "#d5d0c8", "#343434"),
           product("cargo", "Relaxed Cargo Pants", 239000, "", ["Casual", "Streetwear", "Workwear"], [["Olive", "#58614C"], ["Black", "#22211F"], ["Stone", "#AEA599"]], "#c9c2b8", "#58614c"),
-          product("retro-sneaker", "Retro Panel Sneakers", 329000, "Populer", ["Casual", "Streetwear"], [["White / Grey", "#E0DFDA"], ["Gum", "#A87850"]], "#d8d4ce", "#e0dfda"),
+          product("retro-sneaker", "Retro Panel Sneakers", 329000, "High Rotation", ["Casual", "Streetwear"], [["White / Grey", "#E0DFDA"], ["Gum", "#A87850"]], "#d8d4ce", "#e0dfda"),
           product("denim-jacket", "Faded Denim Trucker", 289000, "", ["Casual", "Vintage"], [["Faded blue", "#72879A"], ["Black wash", "#3C3D40"]], "#cad0d2", "#72879a"),
           product("straight-denim", "Straight Denim Jeans", 249000, "", ["Casual", "Vintage"], [["Black wash", "#353638"], ["Indigo", "#3C5368"]], "#c7c5c0", "#353638"),
           product("canvas-sneaker", "Canvas Low Sneakers", 179000, "", ["Casual", "Vintage"], [["Milk", "#EAE5DD"], ["Black", "#22211F"]], "#d8d1c8", "#eae5dd"),
@@ -1316,7 +1382,7 @@
           product("mini-bag", "Mini Frame Bag", 199000, "", ["Casual", "Party"], [["Cocoa", "#704837"], ["Silver", "#A7A5A1"]], "#cfbdaf", "#704837"),
           product("track-jacket", "Retro Track Jacket", 239000, "", ["Sporty", "Casual"], [["Navy", "#283B53"], ["Burgundy", "#6D3334"]], "#c2c7cd", "#283b53"),
           product("nylon-pants", "Easy Nylon Pants", 219000, "", ["Sporty", "Casual"], [["Black", "#232220"], ["Slate", "#58626A"]], "#c4c5c2", "#232220"),
-          product("silver-sneaker", "Silver Runner Sneakers", 349000, "Populer", ["Sporty", "Streetwear"], [["Silver", "#A6A7AA"], ["White", "#E3E1DC"]], "#d4d4d3", "#a6a7aa"),
+          product("silver-sneaker", "Silver Runner Sneakers", 349000, "High Rotation", ["Sporty", "Streetwear"], [["Silver", "#A6A7AA"], ["White", "#E3E1DC"]], "#d4d4d3", "#a6a7aa"),
           product("satin-shirt", "Fluid Satin Shirt", 259000, "", ["Party", "Formal"], [["Black", "#1C1B1A"], ["Steel", "#596166"]], "#c9c8c4", "#1c1b1a"),
           product("tank", "Ribbed Tank Top", 89000, "", ["Party", "Casual"], [["Black", "#22211F"], ["Bone", "#DDD5CA"]], "#d3cbc1", "#22211f"),
           product("leather-boots", "Sleek Leather Boots", 399000, "", ["Party", "Formal"], [["Black", "#191817"], ["Brown", "#4D352B"]], "#cfc2b6", "#191817"),
@@ -1399,6 +1465,7 @@
         let journalDraftProductCtas = [];
         let memberViewer = null;
         let memberRequests = [];
+        let likedLookIds = new Set();
         let memberAuthMode = "signin";
         let pendingConfirmationEmail = "";
         let resendConfirmationCooldownUntil = 0;
@@ -1457,7 +1524,36 @@
         function getLook(id) { return state.looks.find((item) => item.id === id); }
         function getVariant(productItem, name) { return productItem?.variants?.find((variant) => variant.name === name) || productItem?.variants?.[0]; }
         function getLookTotal(lookItem) { return lookItem.items.reduce((sum, item) => sum + Number(getProduct(item.productId)?.price || 0), 0); }
-        function getAllStyles() { return [...new Set([...STYLE_ORDER, ...state.looks.flatMap((item) => item.styles)])]; }
+        function getAllStyles() { return STYLE_ORDER; }
+        function taxonomyValues(form, name, maximum = 3) {
+          return [...form.querySelectorAll(`input[name="${name}"]:checked`)].map((input) => input.value).filter((value) => STYLE_ORDER.includes(value)).slice(0, maximum);
+        }
+        function setTaxonomyValues(form, name, values = []) {
+          const chosen = new Set((values || []).filter((value) => STYLE_ORDER.includes(value)));
+          form.querySelectorAll(`input[name="${name}"]`).forEach((input) => { input.checked = chosen.has(input.value); });
+          refreshTaxonomyPicker(form.querySelector(`input[name="${name}"]`)?.closest("[data-taxonomy-picker]"));
+        }
+        function refreshTaxonomyPicker(picker) {
+          if (!picker) return;
+          const maximum = Number(picker.dataset.maxTags || 3);
+          const selected = [...picker.querySelectorAll("input:checked")];
+          picker.querySelector("[data-taxonomy-count]")?.replaceChildren(`${selected.length} / ${maximum}`);
+          picker.querySelectorAll("label").forEach((label) => label.classList.toggle("is-selected", Boolean(label.querySelector("input")?.checked)));
+        }
+        function setupTaxonomyPickers() {
+          document.querySelectorAll("[data-taxonomy-picker]").forEach(refreshTaxonomyPicker);
+          document.addEventListener("change", (event) => {
+            const input = event.target.closest("[data-taxonomy-picker] input[type=checkbox]");
+            if (!input) return;
+            const picker = input.closest("[data-taxonomy-picker]");
+            const maximum = Number(picker.dataset.maxTags || 3);
+            if (picker.querySelectorAll("input:checked").length > maximum) {
+              input.checked = false;
+              showToast(`Pilih maksimal ${maximum} tag style.`);
+            }
+            refreshTaxonomyPicker(picker);
+          });
+        }
         function getProductUsage(id) { return state.looks.filter((entry) => entry.items.some((item) => item.productId === id)); }
         function memberTerm(value) { return String(value || "").trim().toLowerCase().replace(/\s+/g, " "); }
         function memberTags(value) {
@@ -1706,7 +1802,7 @@
             return;
           }
           const matches = getMemberMatches();
-          const looks = matches.looks.map((entry) => `<button class="personal-look" type="button" data-open-look="${esc(entry.id)}">${lookVisual(entry)}<span class="personal-look-copy"><strong>${esc(entry.title)}</strong><span>${esc(entry.styles.slice(0,2).join(" / ") || "Kurasi COMOOTD")}</span></span></button>`).join("");
+          const looks = matches.looks.map((entry) => `<article class="personal-look"><button class="personal-look-open" type="button" data-open-look="${esc(entry.id)}">${lookVisual(entry)}<span class="personal-look-copy"><strong>${esc(entry.title)}</strong><span>${esc(entry.styles.slice(0,2).join(" / ") || "Kurasi COMOOTD")}</span></span></button>${lookLikeButton(entry,true)}</article>`).join("");
           const products = matches.products.map((item) => { const variant = item.variants?.[0]; return `<article class="personal-product"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item,variant,true)}</button><button class="product-name-link" type="button" data-open-product="${esc(item.id)}"><h5>${esc(item.name)}</h5></button><p>${money(item.price)}</p><a href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></article>`; }).join("");
           els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">UNTUK ${esc(memberDisplayName().toUpperCase())}</p><h3>Kurasi yang dimulai dari pilihanmu.</h3></div><p>Urutan ini memakai kecocokan tag style, warna, gender preferensi, dan budget dari profil COMOOTD-mu.</p><button class="button-outline" type="button" data-open-member>Ubah preferensi ↗</button></div><div class="personal-results"><div class="personal-group"><div class="personal-group-head"><h4>Look yang mungkin kamu suka</h4><span class="eyebrow">${matches.looks.length} pilihan</span></div><div class="personal-looks">${looks || `<p class="personal-empty">Belum ada look yang cukup cocok.</p>`}</div></div><div class="personal-group"><div class="personal-group-head"><h4>Pieces untuk disisipkan</h4><span class="eyebrow">${matches.products.length} pilihan</span></div><div class="personal-products">${products || `<p class="personal-empty">Belum ada produk yang cukup cocok.</p>`}</div></div></div>`;
         }
@@ -1729,10 +1825,10 @@
           if (image) return `<img class="look-uploaded-image" src="${esc(image)}" alt="Foto look ${esc(lookItem.title)}" />`;
           const tone = TONES[lookItem.tone] || TONES.carbon;
           return `<div class="look-art ${lookItem.createdOrder % 2 === 0 ? "flip" : ""} ${tone.light ? "light" : ""}" style="--art-bg:${tone.bg};--art-accent:${tone.accent};--garment:${tone.garment};--bottom:${tone.bottom};--figure:${tone.figure};--skin:${tone.skin};--skin-dark:${tone.skinDark};--hair:${tone.hair};--art-label:${tone.label};">
-            <span class="art-index meta">LOOK ${String(lookItem.createdOrder || 0).padStart(2,"0")}</span><span class="stripe"></span>
+            <span class="art-index meta">COMOOTD LOOK</span><span class="stripe"></span>
             <div class="figure secondary" aria-hidden="true"><span class="hair"></span><span class="head"></span><span class="neck"></span><span class="body"></span><span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span></div>
             <div class="figure" aria-hidden="true"><span class="hair"></span><span class="head"></span><span class="neck"></span><span class="body"></span><span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span></div>
-            <span class="art-caption meta">${detail ? "CURATED BY COMOOTD" : esc(lookItem.gender)}</span>
+            <span class="art-caption meta">${esc(lookAttribution(lookItem))}</span>
           </div>`;
         }
         function lookSearchText(entry) {
@@ -1822,7 +1918,7 @@
           const styles = entry.styles?.slice(0,2).join(" / ") || "Kurasi COMOOTD";
           const count = String(newSeriesIndex + 1).padStart(2,"0") + " / " + String(entries.length).padStart(2,"0");
           els.newSeriesStage.innerHTML = `<button class="new-series-slide" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka look ${esc(entry.title)}"><span class="new-series-visual">${lookVisual(entry)}</span><span class="new-series-overlay"><span class="new-series-count meta">${count}</span><strong>${esc(entry.title)}</strong><span class="new-series-meta">${esc(entry.gender)} · ${esc(styles)}</span><span class="new-series-open">Buka look ↗</span></span></button>`;
-          els.newSeriesDots.innerHTML = entries.map((item,index) => `<button class="new-series-dot ${index === newSeriesIndex ? "is-active" : ""}" type="button" data-new-series-index="${index}" aria-label="Tampilkan look ${index + 1}: ${esc(item.title)}" aria-current="${index === newSeriesIndex ? "true" : "false"}"></button>`).join("");
+          els.newSeriesDots.innerHTML = `${entries.map((item,index) => `<button class="new-series-dot ${index === newSeriesIndex ? "is-active" : ""}" type="button" data-new-series-index="${index}" aria-label="Tampilkan look ${index + 1}: ${esc(item.title)}" aria-current="${index === newSeriesIndex ? "true" : "false"}"></button>`).join("")}${lookLikeButton(entry,true)}`;
           const canMove = entries.length > 1;
           els.newSeriesPrev.disabled = !canMove;
           els.newSeriesNext.disabled = !canMove;
@@ -1851,6 +1947,35 @@
           if (styles.includes(previous)) els.style.value = previous;
           els.styleChips.innerHTML = [`<button class="filter-chip ${activeStyle === "all" ? "is-active" : ""}" type="button" data-style="all">Semua</button>`, ...styles.map((style)=>`<button class="filter-chip ${activeStyle === style ? "is-active" : ""}" type="button" data-style="${esc(style)}">${esc(style)}</button>`)].join("");
         }
+        function lookAttribution(entry) {
+          const curator = entry?.curator;
+          if (entry?.publisherType === "curator" || curator?.handle) return curator?.handle ? `CURATED BY @${curator.handle}` : "CURATED BY CURATOR";
+          return "BY COMOOTD";
+        }
+        function lookLikeButton(entry, compact = false) {
+          const liked = likedLookIds.has(entry.id);
+          const label = liked ? "Disukai" : "Sukai look";
+          return `<button class="look-like-button${liked ? " is-liked" : ""}${compact ? " is-compact" : ""}" type="button" data-toggle-main-like="${esc(entry.id)}" aria-pressed="${String(liked)}" aria-label="${label} ${esc(entry.title)}"><span aria-hidden="true">♥</span><span>${entry.popularity || 0}</span></button>`;
+        }
+        async function toggleMainLookLike(lookId) {
+          const entry = getLook(lookId);
+          if (!entry) return;
+          if (!cloudEnabled() || typeof cloud?.toggleLookLike !== "function") { showToast("Fitur like aktif saat katalog cloud COMOOTD terhubung."); return; }
+          if (!memberIsSignedIn()) { showToast("Masuk untuk menyukai look."); openMemberAccount(); return; }
+          try {
+            const wasLiked = likedLookIds.has(lookId);
+            const result = await cloud.toggleLookLike(lookId);
+            const liked = Boolean(result?.liked);
+            if (liked) likedLookIds.add(lookId); else likedLookIds.delete(lookId);
+            entry.popularity = Math.max(0, Number(entry.popularity || 0) + (liked === wasLiked ? 0 : liked ? 1 : -1));
+            renderLooks();
+            renderNewSeries();
+            renderPersonalized();
+            renderDirectoryRoute();
+            if (els.lookModal.open) openLook(lookId, { navigate:false });
+            window.dispatchEvent(new CustomEvent("comootd:like-change", { detail: { source:"main", lookId, liked, delta:liked === wasLiked ? 0 : liked ? 1 : -1 } }));
+          } catch (error) { showToast(error?.message || "Like belum dapat disimpan."); }
+        }
         function renderLooks() {
           const entries = filteredLooks();
           els.heroCount.textContent = state.looks.length;
@@ -1859,7 +1984,7 @@
             els.lookGrid.innerHTML = `<div class="empty-state"><h3>Belum ada look yang cocok.</h3><p>Coba ubah kata kunci atau reset filter untuk melihat seluruh kurasi.</p><button class="button-outline" id="clearFilterButton" type="button" style="margin-top:1rem">Reset filter</button></div>`;
             return;
           }
-          els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image ${imageFrameClass(entry.coverAspect || entry.coverImage, "portrait")}" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}<span class="open-look button">Lihat look ↗</span></button><div class="look-card-body"><div class="look-card-meta meta"><span>LOOK ${String(entry.createdOrder||0).padStart(2,"0")}</span><span>${esc(entry.gender)}</span></div><h3 class="look-card-title">${esc(entry.title)}</h3><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div></div></article>`).join("");
+          els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image ${imageFrameClass(entry.coverAspect || entry.coverImage, "portrait")}" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}<span class="open-look button">Lihat look ↗</span></button><div class="look-card-body"><div class="look-card-meta meta"><span>${esc(lookAttribution(entry))}</span><span>${esc(entry.gender)}</span></div><h3 class="look-card-title">${esc(entry.title)}</h3><div class="look-card-footer"><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry,true)}</div></div></article>`).join("");
         }
         function articleCategoryLabel(category) { return ARTICLE_CATEGORIES[category] || ARTICLE_CATEGORIES.editorial; }
         function makeJournalBlock(type) {
@@ -2009,7 +2134,7 @@
         }
         function lookLibrarySearchText(entry) {
           return normalizeLibrarySearch([
-            entry.title, entry.slug, entry.gender, entry.tone, ...(entry.styles || []),
+            entry.title, entry.slug, entry.gender, ...(entry.styles || []),
             ...(entry.items || []).flatMap((item)=>[
               item?.affiliateUrl && !item?.productId ? item.name : getProduct(item.productId)?.name,
               item.category,
@@ -2094,6 +2219,7 @@
           editingLookId="";
           lookDraftItems=[];
           els.lookForm.reset();
+          setTaxonomyValues(els.lookForm,"lookStyles",[]);
           els.lookFormHeading.textContent="Tambah look";
           els.lookFormCopy.textContent="Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link Shopee-nya sama.";
           els.lookCoverLabel.textContent="Foto cover (opsional)";
@@ -2109,8 +2235,7 @@
           lookDraftItems=clone(entry.items||[]);
           els.lookForm.elements.title.value=entry.title||"";
           els.lookForm.elements.gender.value=entry.gender||"Uniseks";
-          els.lookForm.elements.styles.value=(entry.styles||[]).join(", ");
-          els.lookForm.elements.tone.value=entry.tone||"carbon";
+          setTaxonomyValues(els.lookForm,"lookStyles",entry.styles||[]);
           els.lookFormHeading.textContent="Edit look";
           els.lookFormCopy.textContent="Perbarui detail dan item look tanpa mengubah ID atau relasi New Series, Journal, dan request outfit.";
           els.lookCoverLabel.textContent="Ganti foto cover (opsional)";
@@ -2124,6 +2249,7 @@
         function resetProductEditor() {
           editingProductId="";
           els.productForm.reset();
+          setTaxonomyValues(els.productForm,"productStyles",[]);
           els.productFormHeading.textContent="Tambah produk";
           els.productFormCopy.textContent="Satu produk induk dapat memiliki beberapa pilihan warna tetapi tetap menggunakan satu affiliate link.";
           els.productImageLabel.textContent="Upload foto produk (opsional)";
@@ -2139,7 +2265,7 @@
           els.productForm.elements.badge.value=item.badge||"";
           els.productForm.elements.genderTarget.value=item.genderTarget||"unisex";
           els.productForm.elements.link.value=item.affiliateUrl||"";
-          els.productForm.elements.styles.value=(item.styles||[]).join(", ");
+          setTaxonomyValues(els.productForm,"productStyles",item.styles||[]);
           els.productForm.elements.variants.value=(item.variants||[]).map((variant)=>`${variant.name}|${variant.hex}`).join(", ");
           // Storage paths are intentionally not copied into this visible URL field.
           els.productForm.elements.imageUrl.value="";
@@ -2197,6 +2323,7 @@
         function readContentRoute() {
           const parts = window.location.pathname.split("/").filter(Boolean);
           if (parts.length !== 2) return null;
+          if (parts[0] === "looks" && (parts[1] === "comootd" || parts[1] === "curators")) return null;
           const type = parts[0] === "looks" ? "look" : parts[0] === "products" ? "product" : parts[0] === "journal" ? "article" : "";
           if (!type) return null;
           try {
@@ -2204,6 +2331,51 @@
             if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return null;
             return { type, slug, variantId: type === "product" ? String(new URL(window.location.href).searchParams.get("variant") || "") : "" };
           } catch { return null; }
+        }
+        function readDirectoryRoute() {
+          const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+          const entries = {
+            "/looks": { key:"looks", title:"All Looks", deck:"Kurasi mix-and-match untuk berbagai agenda, style, dan mood." },
+            "/looks/comootd": { key:"comootd", title:"Looks by COMOOTD", deck:"Kurasi editorial dari tim COMOOTD, dibuat untuk dipakai berulang." },
+            "/looks/curators": { key:"curators", title:"Looks by Curators", deck:"Sudut pandang personal dari para curator dan fashion people COMOOTD." },
+            "/products": { key:"products", title:"Products", deck:"Produk pilihan COMOOTD yang siap menjadi bagian dari rotasi wardrobe-mu." },
+            "/journal": { key:"journal", title:"Style Journal", deck:"Catatan praktis tentang proporsi, warna, dan strategi mix-and-match." }
+          };
+          return entries[pathname] || null;
+        }
+        function ensureCatalogueRouteLayer() {
+          let layer = document.getElementById("catalogueRouteLayer");
+          if (!layer) { layer = document.createElement("div"); layer.id = "catalogueRouteLayer"; layer.className = "catalogue-route-layer"; document.body.append(layer); }
+          return layer;
+        }
+        function catalogueRouteBar() {
+          return `<header class="catalogue-route-bar"><a class="catalogue-route-brand" href="/" data-close-catalogue-route><img src="/assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="COMOOTD" /></a><a class="catalogue-route-back" href="/" data-close-catalogue-route>← Back to home</a></header>`;
+        }
+        function catalogueLookCard(entry) {
+          return `<article class="catalogue-look-card"><button class="catalogue-look-image ${imageFrameClass(entry.coverAspect || entry.coverImage,"portrait")}" type="button" data-open-look="${esc(entry.id)}">${lookVisual(entry)}</button><div class="catalogue-look-copy"><p>${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2><div>${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry)}</div></article>`;
+        }
+        function catalogueProductCard(entry) {
+          return `<article class="catalogue-product-card"><button type="button" data-open-product="${esc(entry.id)}">${productArt(entry,entry.variants?.[0])}</button><div><p>${esc(entry.badge || "COMOOTD EDIT")}</p><h2>${esc(entry.name)}</h2><span>${money(entry.price)}</span></div></article>`;
+        }
+        function catalogueJournalCard(entry) {
+          return `<article class="catalogue-journal-card"><button type="button" data-open-article="${esc(entry.id)}">${entry.coverImage ? `<img src="${esc(safeImage(entry.coverImage))}" alt="${esc(entry.coverAlt || entry.title)}" />` : ""}<span>${esc(articleCategoryLabel(entry.category))}</span><h2>${esc(entry.title)}</h2><p>${esc(entry.excerpt || "Catatan style dari COMOOTD.")}</p></button></article>`;
+        }
+        function renderDirectoryRoute() {
+          const route = readDirectoryRoute();
+          const layer = ensureCatalogueRouteLayer();
+          if (!route) { layer.classList.remove("is-open"); layer.innerHTML=""; document.body.classList.remove("catalogue-route-open"); return false; }
+          let content="";
+          if (route.key === "products") content = state.products.map(catalogueProductCard).join("");
+          else if (route.key === "journal") content = state.articles.map(catalogueJournalCard).join("");
+          else {
+            const source = route.key === "comootd" ? state.looks.filter((item)=>item.publisherType !== "curator" && !item.curator?.handle) : route.key === "curators" ? state.looks.filter((item)=>item.publisherType === "curator" || item.curator?.handle) : state.looks;
+            content = source.map(catalogueLookCard).join("");
+          }
+          const className = route.key === "products" ? "catalogue-product-grid" : route.key === "journal" ? "catalogue-journal-grid" : "catalogue-look-grid";
+          layer.innerHTML = `<div class="catalogue-route-shell">${catalogueRouteBar()}<main class="catalogue-route-body"><div class="catalogue-route-heading"><p>COMOOTD / DIRECTORY</p><h1>${esc(route.title)}</h1><p>${esc(route.deck)}</p></div><nav class="catalogue-route-tabs" aria-label="Pilihan katalog"><a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a><a href="/products" class="${route.key === "products" ? "is-active" : ""}">Products</a><a href="/journal" class="${route.key === "journal" ? "is-active" : ""}">Journal</a></nav><section class="${className}">${content || `<p class="catalogue-empty">Belum ada konten yang diterbitkan di kategori ini.</p>`}</section></main></div>`;
+          layer.classList.add("is-open"); document.body.classList.add("catalogue-route-open");
+          updateDirectoryMetadata(route);
+          return true;
         }
         function contentEntryForRoute(route) {
           const source = route?.type === "look" ? state.looks : route?.type === "product" ? state.products : state.articles;
@@ -2215,6 +2387,24 @@
           if (type === "look") return { title: `${name} — COMOOTD Look`, description: styles.length ? `${styles.join(" · ")} — temukan setiap item dalam look ini di COMOOTD.` : "Temukan setiap item dalam look kurasi COMOOTD ini.", image: safeImage(entry?.coverImage), ogType: "website" };
           if (type === "product") { const variant = entry?.variants?.find((item) => item.id === variantId) || entry?.variants?.[0]; return { title: `${name} — COMOOTD`, description: `${money(entry?.price)}${styles.length ? ` · ${styles.join(" · ")}` : ""} — pilihan kurasi COMOOTD yang mudah dipadankan.`, image: safeImage(variant?.image || entry?.image || entry?.variants?.[0]?.image), ogType: "product" }; }
           return { title: `${name} — COMOOTD Journal`, description: String(entry?.excerpt || "Catatan style dari COMOOTD.").trim(), image: safeImage(entry?.coverImage), ogType: "article" };
+        }
+        function updateDirectoryMetadata(route) {
+          const canonical = new URL(window.location.href);
+          canonical.search = "";
+          const title = `${route.title} — COMOOTD`;
+          document.title = title;
+          document.getElementById("pageTitle")?.replaceChildren(title);
+          document.getElementById("canonicalUrl")?.setAttribute("href", canonical.href);
+          setMetaContent("pageDescription", route.deck);
+          setMetaContent("openGraphType", "website");
+          setMetaContent("openGraphTitle", title);
+          setMetaContent("openGraphDescription", route.deck);
+          setMetaContent("openGraphUrl", canonical.href);
+          setMetaContent("twitterCard", "summary");
+          setMetaContent("twitterTitle", title);
+          setMetaContent("twitterDescription", route.deck);
+          document.getElementById("openGraphImage")?.remove();
+          document.getElementById("twitterImage")?.remove();
         }
         function setMetaContent(id, value) { const node = document.getElementById(id); if (node) node.setAttribute("content", value); }
         function setOptionalMeta(id, attribute, attributeValue, value) {
@@ -2248,19 +2438,32 @@
         function closeContentDialogs(except = null) {
           withContentRouteSync(() => [els.lookModal, els.productModal, els.articleModal].forEach((dialog) => { if (dialog && dialog !== except && dialog.open) dialog.close(); }));
         }
+        function contentReturnPath() {
+          const stateReturn = typeof window.history.state?.contentReturn === "string" ? window.history.state.contentReturn : "";
+          if (stateReturn) return stateReturn;
+          const currentDirectory = readDirectoryRoute();
+          if (currentDirectory) return `${window.location.pathname}${window.location.search}`;
+          return "/";
+        }
         function navigateToContent(type, entry, { variantId = "", replace = false } = {}) {
           const url = contentRouteUrl(type, entry, variantId);
           if (`${window.location.pathname}${window.location.search}` !== `${url.pathname}${url.search}`) {
-            window.history[replace ? "replaceState" : "pushState"]({ comootdContent: true }, "", `${url.pathname}${url.search}`);
+            window.history[replace ? "replaceState" : "pushState"]({ comootdContent: true, contentReturn: contentReturnPath() }, "", `${url.pathname}${url.search}`);
           }
           updateClientMetadata({ type, slug: contentEntitySlug(entry, type), variantId }, entry);
         }
         function closeContentView() {
           closeContentDialogs();
-          if (readContentRoute()) window.history.replaceState({}, "", "/");
+          if (readContentRoute()) {
+            const returnPath = contentReturnPath();
+            window.history.replaceState({}, "", returnPath);
+            applyContentRoute();
+            return;
+          }
           updateClientMetadata();
         }
         function applyContentRoute({ notify = false } = {}) {
+          if (renderDirectoryRoute()) { closeContentDialogs(); return; }
           const route = readContentRoute();
           if (!route) { closeContentDialogs(); updateClientMetadata(); return; }
           const entry = contentEntryForRoute(route);
@@ -2276,7 +2479,8 @@
         function openLook(id, { navigate = true } = {}) {
           const entry = state.looks.find((lookItem)=>lookItem.id===id);
           if (!entry) return;
-          if (navigate) navigateToContent("look", entry); else updateClientMetadata({ type:"look", slug:contentEntitySlug(entry,"look") }, entry);
+          if (navigate) { navigateToContent("look", entry); renderDirectoryRoute(); }
+          else updateClientMetadata({ type:"look", slug:contentEntitySlug(entry,"look") }, entry);
           closeContentDialogs(els.lookModal);
           const itemsHtml = entry.items.map((item)=>{
             if (item?.affiliateUrl && !item?.productId) {
@@ -2289,14 +2493,14 @@
           const curatorName = entry.curator?.displayName || entry.curator?.name || "";
           const curatorHandle = entry.curator?.handle || "";
           const curatorLine = curatorName ? `<p class="eyebrow" style="color:var(--taupe);margin:.5rem 0 0">CURATED BY ${esc(curatorName)}${curatorHandle ? ` / @${esc(curatorHandle)}` : ""}</p>` : "";
-          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">LOOK ${String(entry.createdOrder||0).padStart(2,"0")} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">${esc(entry.excerpt || "Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.")}</p></div><div class="detail-actions"><button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
+          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">${esc(entry.excerpt || "Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.")}</p></div><div class="detail-actions">${lookLikeButton(entry)}<button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
           if (!els.lookModal.open) els.lookModal.showModal();
         }
         function openProduct(id, { navigate = true, variantId = "", replace = false } = {}) {
           const entry = getProduct(id);
           if (!entry) return;
           const selectedVariant = entry.variants?.find((variant) => variant.id === variantId) || entry.variants?.[0] || null;
-          if (navigate) navigateToContent("product", entry, { variantId: selectedVariant?.id || "", replace });
+          if (navigate) { navigateToContent("product", entry, { variantId: selectedVariant?.id || "", replace }); renderDirectoryRoute(); }
           else updateClientMetadata({ type:"product", slug:contentEntitySlug(entry,"product"), variantId:selectedVariant?.id || "" }, entry);
           closeContentDialogs(els.productModal);
           const variants = (entry.variants || []).map((variant) => `<button class="product-variant-option${variant.id === selectedVariant?.id ? " is-selected" : ""}" type="button" data-select-product-variant="${esc(variant.id)}" aria-pressed="${String(variant.id === selectedVariant?.id)}"><span class="swatch" style="--swatch:${esc(variant.hex || "#ccc")}"></span>${esc(variant.name || "Warna pilihan")}</button>`).join("");
@@ -2342,11 +2546,12 @@
           const products = ctas.filter((cta) => cta.type === "product");
           const lookMarkup = looks.length ? `<div class="article-related-looks">${looks.map((cta) => `<button class="article-related-look" type="button" data-open-article-look="${esc(cta.look.id)}"><strong>${esc(cta.label || defaultJournalCtaLabel("look"))}</strong><span>${esc(cta.look.title)} ↗</span></button>`).join("")}</div>` : "";
           const productMarkup = products.length ? `<div class="article-related-products">${products.map((cta) => { const product = cta.product; return `<article class="article-related-product"><button class="article-related-product-open" type="button" data-open-product="${esc(product.id)}">${productArt(product, product.variants?.[0], true)}<div><h4>${esc(product.name)}</h4><p class="microcopy" style="margin:.25rem 0 0;color:var(--taupe)">${money(product.price)}</p></div></button><a href="${esc(safeUrl(product.affiliateUrl))}" target="_blank" rel="sponsored noopener">${esc(cta.label || defaultJournalCtaLabel("product"))} ↗</a></article>`; }).join("")}</div>` : "";
-          return `<section class="article-curation"><h3>Temukan kurasinya</h3>${lookMarkup}${productMarkup}<p class="affiliate-disclosure">Sebagian tautan pada kurasi ini merupakan tautan affiliate. Harga dan stok dapat berubah di Shopee.</p></section>`;
+          return `<section class="article-curation"><h3>Temukan kurasinya</h3>${lookMarkup}${productMarkup}</section>`;
         }
         function openArticle(id, { navigate = true } = {}) {
           const article=state.articles.find((entry)=>entry.id===id); if (!article) return;
-          if (navigate) navigateToContent("article", article); else updateClientMetadata({ type:"article", slug:contentEntitySlug(article,"article") }, article);
+          if (navigate) { navigateToContent("article", article); renderDirectoryRoute(); }
+          else updateClientMetadata({ type:"article", slug:contentEntitySlug(article,"article") }, article);
           closeContentDialogs(els.articleModal);
           const cover = safeImage(article.coverImage);
           const blocks = Array.isArray(article.blocks) && article.blocks.length ? article.blocks.map(articleBlockMarkup).join("") : String(article.body || article.excerpt || "").split("\n\n").filter(Boolean).map((p)=>`<p class="article-block">${esc(p)}</p>`).join("");
@@ -2367,6 +2572,7 @@
           if (!cloudEnabled() || typeof cloud?.getMemberProfile !== "function") {
             memberViewer = null;
             memberRequests = [];
+            likedLookIds = new Set();
             cloudAdmin = false;
             updateMemberUi();
             return;
@@ -2375,15 +2581,26 @@
             memberViewer = await cloud.getMemberProfile();
             if (memberIsSignedIn() && typeof cloud?.loadMyOutfitRequests === "function") memberRequests = await cloud.loadMyOutfitRequests();
             else memberRequests = [];
+            if (memberIsSignedIn() && typeof cloud?.loadMyLookLikes === "function") likedLookIds = new Set(await cloud.loadMyLookLikes());
+            else likedLookIds = new Set();
             cloudAdmin = memberIsSignedIn() && typeof cloud?.isAdmin === "function" ? await cloud.isAdmin() : false;
             updateMemberUi();
+            renderLooks();
+            renderNewSeries();
+            renderPersonalized();
+            renderDirectoryRoute();
             if (memberIsSignedIn() && !els.memberProfileView.hidden) renderMemberProfile();
           } catch (error) {
             console.warn("Unable to load SISIP member session", error);
             memberViewer = null;
             memberRequests = [];
+            likedLookIds = new Set();
             cloudAdmin = false;
             updateMemberUi();
+            renderLooks();
+            renderNewSeries();
+            renderPersonalized();
+            renderDirectoryRoute();
             if (!quiet) showToast("Profil COMOOTD belum dapat dimuat. Coba lagi sesaat lagi.");
           }
         }
@@ -2565,7 +2782,7 @@
           });
         }
         function matrixToBulkRows(matrix) { return matrixToImportRows(matrix, ["product_key", "name", "affiliate_url", "price_idr", "color_name"]); }
-        function matrixToBulkLookRows(matrix) { return matrixToImportRows(matrix, ["look_key", "title", "gender_target", "tone", "item_position", "product_key", "variant_label"]); }
+        function matrixToBulkLookRows(matrix) { return matrixToImportRows(matrix, ["look_key", "title", "gender_target", "item_position", "product_key", "variant_label"]); }
         function normalizeBulkImageUrl(value) {
           const raw = String(value || "").trim();
           if (!raw) return "";
@@ -2592,7 +2809,14 @@
           if (!Number.isSafeInteger(price) || price <= 0) throw new Error("price_idr harus berupa harga IDR lebih dari nol.");
           return price;
         }
-        const BULK_STYLE_TAGS = new Map(STYLE_ORDER.map((style) => [style.toLowerCase(), style]));
+        const BULK_STYLE_TAGS = new Map([
+          ...STYLE_ORDER.map((style) => [style.toLowerCase(), style]),
+          ["korea style", "Korean-inspired"], ["korean style", "Korean-inspired"], ["korean inspired", "Korean-inspired"]
+        ]);
+        const BULK_PRODUCT_BADGES = new Map([
+          ...PRODUCT_BADGE_OPTIONS.slice(1).map((badge) => [badge.toLowerCase(), badge]),
+          ["populer", "High Rotation"], ["best seller", "High Rotation"], ["terlaris", "High Rotation"], ["termurah", "Best Value"]
+        ]);
         function parseBulkTags(row) {
           const values = [row.style_tags, row.style_tag_1, row.style_tag_2, row.style_tag_3]
             .flatMap((value) => String(value || "").split(/[|,;]/))
@@ -2600,7 +2824,16 @@
             .filter(Boolean);
           const invalid = values.filter((tag) => !BULK_STYLE_TAGS.has(tag.toLowerCase()));
           if (invalid.length) throw new Error("Tag style tidak sesuai pilihan COMOOTD: " + [...new Set(invalid)].join(", ") + ".");
-          return [...new Set(values.map((tag) => BULK_STYLE_TAGS.get(tag.toLowerCase())))].slice(0, 12);
+          const tags = [...new Set(values.map((tag) => BULK_STYLE_TAGS.get(tag.toLowerCase())))];
+          if (tags.length > 3) throw new Error("Tag style maksimal 3 pilihan.");
+          return tags;
+        }
+        function parseBulkBadge(value) {
+          const raw = String(value || "").trim();
+          if (!raw) return "";
+          const badge = BULK_PRODUCT_BADGES.get(raw.toLowerCase());
+          if (!badge) throw new Error("Badge harus dipilih dari: " + PRODUCT_BADGE_OPTIONS.slice(1).join(", ") + ".");
+          return badge;
         }
         function validateBulkRows(rows) {
           const errors = [];
@@ -2623,10 +2856,12 @@
             let coverImageUrl = "";
             let variantImageUrl = "";
             let styles = [];
+            let badge = "";
             try { affiliateUrl = affiliateUrlFromBulk(row.affiliate_url); } catch (error) { problems.push(error.message); }
             try { price = parseBulkPrice(row.price_idr); } catch (error) { problems.push(error.message); }
             try { genderTarget = normalizeBulkGender(row.gender_target); } catch (error) { problems.push(error.message); }
             try { styles = parseBulkTags(row); } catch (error) { problems.push(error.message); }
+            try { badge = parseBulkBadge(row.badge); } catch (error) { problems.push(error.message); }
             try { colorHex = normalizeBulkColorHex(row.color_hex) || "#B8AEA1"; if (!String(row.color_hex || "").trim()) warnings.push("Baris " + row.rowNumber + ": color_hex kosong, memakai #B8AEA1."); } catch (error) { problems.push(error.message); }
             try { coverImageUrl = normalizeBulkImageUrl(row.cover_image_url); } catch (error) { problems.push("cover_image_url: " + error.message); }
             try { variantImageUrl = normalizeBulkImageUrl(row.variant_image_url); } catch (error) { problems.push("variant_image_url: " + error.message); }
@@ -2636,7 +2871,7 @@
               name,
               affiliateUrl,
               price,
-              badge: String(row.badge || "").trim(),
+              badge,
               styles,
               genderTarget,
               coverImageUrl,
@@ -2683,13 +2918,10 @@
             if (!Number.isInteger(itemPosition) || itemPosition < 1 || itemPosition > 5) problems.push("item_position harus angka 1 sampai 5.");
             let genderTarget = "unisex";
             let styles = [];
-            let tone = "carbon";
             let coverImageUrl = "";
             const coverAltText = String(row.cover_alt_text || "").trim();
             try { genderTarget = normalizeBulkGender(row.gender_target); } catch (error) { problems.push(error.message); }
             try { styles = parseBulkTags(row); if (!styles.length) problems.push("minimal satu style_tag wajib diisi."); } catch (error) { problems.push(error.message); }
-            tone = String(row.tone || "carbon").trim().toLowerCase();
-            if (!["carbon", "clay", "mineral", "olive", "midnight"].includes(tone)) problems.push("tone harus carbon, clay, mineral, olive, atau midnight.");
             try { coverImageUrl = normalizeBulkImageUrl(row.cover_image_url); } catch (error) { problems.push("cover_image_url: " + error.message); }
             if (coverImageUrl && !coverAltText) problems.push("cover_alt_text wajib diisi saat cover_image_url dipakai.");
             if (coverAltText.length > 240) problems.push("cover_alt_text maksimal 240 karakter.");
@@ -2700,7 +2932,6 @@
               excerpt,
               genderTarget,
               styles,
-              tone,
               coverImageUrl,
               coverAltText,
               items: [{ productKey, variantLabel, position: itemPosition }],
@@ -2713,7 +2944,7 @@
               groups.set(key, candidate);
               return;
             }
-            const sameMetadata = existing.title === candidate.title && existing.excerpt === candidate.excerpt && existing.genderTarget === candidate.genderTarget && existing.styles.join("|") === candidate.styles.join("|") && existing.tone === candidate.tone && existing.coverImageUrl === candidate.coverImageUrl && existing.coverAltText === candidate.coverAltText;
+            const sameMetadata = existing.title === candidate.title && existing.excerpt === candidate.excerpt && existing.genderTarget === candidate.genderTarget && existing.styles.join("|") === candidate.styles.join("|") && existing.coverImageUrl === candidate.coverImageUrl && existing.coverAltText === candidate.coverAltText;
             if (!sameMetadata) { errors.push("Baris " + row.rowNumber + ": metadata untuk look_key " + key + " harus sama pada setiap item."); return; }
             if (existing.positions.has(itemPosition)) { errors.push("Baris " + row.rowNumber + ": item_position " + itemPosition + " tercatat dua kali untuk " + key + "."); return; }
             const variantReference = productKey + ":" + variantLabel.toLowerCase();
@@ -2728,7 +2959,7 @@
             const positions = items.map((item) => item.position);
             if (items.length < 2 || items.length > 5) { errors.push("look_key " + group.key + " harus memiliki 2–5 item."); return; }
             if (positions.some((position, index) => position !== index + 1)) { errors.push("look_key " + group.key + " harus memakai item_position berurutan mulai dari 1."); return; }
-            normalizedGroups.push({ key: group.key, title: group.title, excerpt: group.excerpt, genderTarget: group.genderTarget, styles: group.styles, tone: group.tone, coverImageUrl: group.coverImageUrl, coverAltText: group.coverAltText, items });
+            normalizedGroups.push({ key: group.key, title: group.title, excerpt: group.excerpt, genderTarget: group.genderTarget, styles: group.styles, coverImageUrl: group.coverImageUrl, coverAltText: group.coverAltText, items });
           });
           if (!normalizedGroups.length && groups.size && !errors.length) warnings.push("Tidak ada look yang siap diimpor.");
           return { groups: normalizedGroups, errors, warnings };
@@ -2867,6 +3098,7 @@
 
         document.getElementById("currentYear").textContent=new Date().getFullYear();
         setupImageCropperInputs();
+        setupTaxonomyPickers();
         updateStudioMode();
         renderAll();
         if (cloudEnabled()) {
@@ -2886,10 +3118,20 @@
         els.newSeriesStage.addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-look]"); if(button) openLook(button.dataset.openLook); });
         els.newSeriesPrev.addEventListener("click",()=>moveNewSeries(-1));
         els.newSeriesNext.addEventListener("click",()=>moveNewSeries(1));
-        els.newSeriesDots.addEventListener("click",(event)=>{ const button=event.target.closest("[data-new-series-index]"); if(!button)return; newSeriesIndex=Number(button.dataset.newSeriesIndex)||0; renderNewSeries(); });
+        els.newSeriesDots.addEventListener("click",(event)=>{ const like=event.target.closest("[data-toggle-main-like]"); if(like){event.preventDefault();void toggleMainLookLike(like.dataset.toggleMainLike);return;} const button=event.target.closest("[data-new-series-index]"); if(!button)return; newSeriesIndex=Number(button.dataset.newSeriesIndex)||0; renderNewSeries(); });
         els.newSeriesCarousel.addEventListener("pointerenter",stopNewSeriesAutoplay);
         els.newSeriesCarousel.addEventListener("pointerleave",startNewSeriesAutoplay);
-        els.lookGrid.addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-look]"); if(button) openLook(button.dataset.openLook); const clear=event.target.closest("#clearFilterButton"); if(clear){ els.search.value="";els.gender.value="all";els.style.value="all";activeStyle="all";renderStyleControls();renderLooks(); } });
+        els.lookGrid.addEventListener("click",(event)=>{ const like=event.target.closest("[data-toggle-main-like]"); if(like){event.preventDefault();void toggleMainLookLike(like.dataset.toggleMainLike);return;} const button=event.target.closest("[data-open-look]"); if(button) openLook(button.dataset.openLook); const clear=event.target.closest("#clearFilterButton"); if(clear){ els.search.value="";els.gender.value="all";els.style.value="all";activeStyle="all";renderStyleControls();renderLooks(); } });
+        document.addEventListener("click",(event)=>{
+          const withinDirectory=event.target.closest("#catalogueRouteLayer"); if(!withinDirectory) return;
+          const like=event.target.closest("[data-toggle-main-like]"); if(like){event.preventDefault();void toggleMainLookLike(like.dataset.toggleMainLike);return;}
+          const look=event.target.closest("[data-open-look]"); if(look){event.preventDefault();openLook(look.dataset.openLook);return;}
+          const product=event.target.closest("[data-open-product]"); if(product){event.preventDefault();openProduct(product.dataset.openProduct);return;}
+          const article=event.target.closest("[data-open-article]"); if(article){event.preventDefault();openArticle(article.dataset.openArticle);return;}
+          const link=event.target.closest("a[href]"); if(!link) return;
+          const url=new URL(link.href,window.location.origin); if(url.origin!==window.location.origin) return;
+          event.preventDefault(); history.pushState({},"",`${url.pathname}${url.search}`); applyContentRoute({notify:true}); ensureCatalogueRouteLayer().scrollTo({top:0,behavior:"auto"});
+        });
         els.styleChips.addEventListener("click",(event)=>{ const button=event.target.closest("[data-style]"); if(!button)return; activeStyle=button.dataset.style; els.style.value="all"; renderStyleControls();renderLooks(); });
         els.moodList.addEventListener("click",(event)=>{ const button=event.target.closest("[data-style-jump]"); if(!button)return; activeStyle=button.dataset.styleJump; els.style.value="all";renderStyleControls();renderLooks();document.getElementById("lookbook").scrollIntoView({behavior:"smooth",block:"start"}); });
         document.getElementById("searchButton").addEventListener("click",()=>{ document.getElementById("lookbook").scrollIntoView({behavior:"smooth",block:"start"}); setTimeout(()=>els.search.focus(),500); });
@@ -2903,6 +3145,7 @@
         }));
         els.personalGrid.addEventListener("click",(event)=>{
           const button=event.target.closest("[data-open-member]"); if(button) openMemberAccount();
+          const like=event.target.closest("[data-toggle-main-like]"); if(like){event.preventDefault();void toggleMainLookLike(like.dataset.toggleMainLike);return;}
           const look=event.target.closest("[data-open-look]"); if(look) openLook(look.dataset.openLook);
           const product=event.target.closest("[data-open-product]"); if(product) openProduct(product.dataset.openProduct);
         });
@@ -3072,6 +3315,7 @@
         });
         els.lookModal.addEventListener("click",(event)=>{
           if(event.target===els.lookModal){closeContentView();return;}
+          const like=event.target.closest("[data-toggle-main-like]"); if(like){void toggleMainLookLike(like.dataset.toggleMainLike);return;}
           const share=event.target.closest("[data-share-look]"); if(share){void shareEntity("look",share.dataset.shareLook);return;}
           const product=event.target.closest("[data-open-product]"); if(product) openProduct(product.dataset.openProduct);
         });
@@ -3089,8 +3333,18 @@
           if(variant){const route=readContentRoute(); const product=route?.type==="product"?contentEntryForRoute(route):null; if(product) openProduct(product.id,{variantId:variant.dataset.selectProductVariant,replace:true});}
         });
         document.getElementById("journalGrid").addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-article]"); if(button)openArticle(button.dataset.openArticle); });
-        [els.lookModal,els.articleModal,els.productModal].forEach((dialog)=>dialog.addEventListener("close",()=>{ if(!contentRouteSyncing&&readContentRoute()){window.history.replaceState({},"","/");updateClientMetadata();} }));
+        [els.lookModal,els.articleModal,els.productModal].forEach((dialog)=>dialog.addEventListener("close",()=>{ if(!contentRouteSyncing&&readContentRoute()){window.history.replaceState({},"",contentReturnPath());applyContentRoute();} }));
         window.addEventListener("popstate",()=>applyContentRoute({notify:true}));
+        window.addEventListener("comootd:like-change",(event)=>{
+          const detail=event?.detail || {};
+          if (detail.source === "main" || !detail.lookId) return;
+          const lookId=String(detail.lookId);
+          if (detail.liked) likedLookIds.add(lookId); else likedLookIds.delete(lookId);
+          const entry=getLook(lookId);
+          if (entry) entry.popularity=Math.max(0,Number(entry.popularity||0)+Number(detail.delta||0));
+          renderLooks(); renderNewSeries(); renderPersonalized(); renderDirectoryRoute();
+          if (els.lookModal.open && entry) openLook(lookId,{navigate:false});
+        });
         document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.addEventListener("click",()=>switchStudioTab(button.dataset.studioTab)));
         document.querySelectorAll("[data-add-journal-block]").forEach((button)=>button.addEventListener("click",()=>{ if(journalDraftBlocks.length>=JOURNAL_BLOCK_LIMIT){els.journalFormError.textContent=`Artikel maksimal memiliki ${JOURNAL_BLOCK_LIMIT} blok.`;return;} journalDraftBlocks.push(makeJournalBlock(button.dataset.addJournalBlock));els.journalFormError.textContent="";renderJournalBlockEditor(); }));
         els.saveNewSeriesButton.addEventListener("click",saveNewSeries);
@@ -3363,7 +3617,7 @@
           const title=String(form.get("title")||"").trim();
           const excerpt=String(form.get("excerpt")||"").trim();
           const category=String(form.get("category")||"editorial").trim();
-          const styles=parseTags(form.get("styles"));
+          const styles=taxonomyValues(journalForm,"journalStyles");
           const journalCoverInput=document.getElementById("journalCoverInput");
           const coverFile=preparedImageFile(journalCoverInput);
           const coverAspect=selectedImageAspect(journalCoverInput,"portrait");
@@ -3382,6 +3636,7 @@
               if(typeof cloud?.createArticle!=="function") throw new Error("Fitur Journal belum termuat. Muat ulang halaman lalu coba lagi.");
               await cloud.createArticle({title,excerpt,category,styles,coverFile,coverAspect,coverAlt,blocks,lookCtas,productCtas});
               journalForm.reset();
+              setTaxonomyValues(journalForm,"journalStyles",[]);
               resetJournalDraft();
               await refreshCloudState({admin:true});
               switchStudioTab("journal");
@@ -3397,7 +3652,7 @@
             const localLookCtas=lookCtas.map((cta,index)=>({id:uid("article-cta"),type:"look",lookId:cta.id,label:cta.label,position:index+1,look:state.looks.find((entry)=>entry.id===cta.id)}));
             const localProductCtas=productCtas.map((cta,index)=>({id:uid("article-cta"),type:"product",productId:cta.id,label:cta.label,position:localLookCtas.length+index+1,product:state.products.find((entry)=>entry.id===cta.id)}));
             const created={id:uid("article"),number:String(state.articles.length+1).padStart(2,"0"),title,excerpt,category,styles,coverImage,coverAspect,coverAlt,body:articlePlainText(localBlocks),blocks:localBlocks,ctas:[...localLookCtas,...localProductCtas],status:"published",publishedAt:new Date().toISOString()};
-            state.articles.unshift(created);saveState();journalForm.reset();resetJournalDraft();renderAll();switchStudioTab("journal");showToast("Artikel Journal tersimpan di browser ini.");
+            state.articles.unshift(created);saveState();journalForm.reset();setTaxonomyValues(journalForm,"journalStyles",[]);resetJournalDraft();renderAll();switchStudioTab("journal");showToast("Artikel Journal tersimpan di browser ini.");
           } catch(error){els.journalFormError.textContent=error.message||"Artikel belum dapat dipublikasikan.";}
           finally {if(submitButton){submitButton.disabled=false;submitButton.textContent=originalLabel;}}
         });
@@ -3420,7 +3675,7 @@
           if(!title || !price || variants.length===0){els.productFormError.textContent="Nama, harga, link, dan minimal satu varian warna wajib diisi.";return;}
           try {
             const badge=String(form.get("badge")||"").trim();
-            const styles=parseTags(form.get("styles"));
+            const styles=taxonomyValues(productForm,"productStyles");
             const genderTarget=String(form.get("genderTarget")||"unisex");
             const productImageInput=document.getElementById("productImageInput");
             const imageFile=preparedImageFile(productImageInput);
@@ -3449,7 +3704,7 @@
           } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
         });
         els.lookForm.addEventListener("submit",async(event)=>{
-          event.preventDefault();els.lookFormError.textContent="";const lookForm=event.currentTarget;const form=new FormData(lookForm);const title=String(form.get("title")||"").trim();const styles=parseTags(form.get("styles"));
+          event.preventDefault();els.lookFormError.textContent="";const lookForm=event.currentTarget;const form=new FormData(lookForm);const title=String(form.get("title")||"").trim();const styles=taxonomyValues(lookForm,"lookStyles");
           const editId=editingLookId;const existingLook=editId?getLook(editId):null;
           if(editId&&!existingLook){els.lookFormError.textContent="Look ini sudah tidak tersedia. Muat ulang Studio lalu coba lagi.";resetLookEditor();return;}
           if(lookDraftItems.length<2||lookDraftItems.length>5){els.lookFormError.textContent="Satu look harus berisi 2–5 item.";return;} if(!title||!styles.length){els.lookFormError.textContent="Nama look dan minimal satu style wajib diisi.";return;}
@@ -3458,8 +3713,8 @@
             const coverFile=preparedImageFile(lookCoverInput);
             const coverAspect=selectedImageAspect(lookCoverInput,"portrait");
             if(cloudEnabled()) {
-              if(editId) await cloud.updateLook({id:editId,title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),items:clone(lookDraftItems),coverFile,coverAspect});
-              else await cloud.createLook({title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),items:clone(lookDraftItems),coverFile,coverAspect});
+              if(editId) await cloud.updateLook({id:editId,title,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect});
+              else await cloud.createLook({title,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect});
               resetLookEditor();
               await refreshCloudState({admin:true});
               switchStudioTab("looks");
@@ -3468,11 +3723,11 @@
             }
             const coverImage=(await readImage(document.getElementById("lookCoverInput")))||existingLook?.coverImage||"";
             if(editId) {
-              Object.assign(existingLook,{title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),coverImage,coverAspect:coverFile ? coverAspect : existingLook.coverAspect,items:clone(lookDraftItems)});
+              Object.assign(existingLook,{title,gender:String(form.get("gender")),styles,tone:"carbon",coverImage,coverAspect:coverFile ? coverAspect : existingLook.coverAspect,items:clone(lookDraftItems)});
               saveState();resetLookEditor();renderAll();switchStudioTab("looks");showToast("Look berhasil diperbarui di prototype.");
               return;
             }
-            const created={id:uid("look"),title,gender:String(form.get("gender")),styles,tone:String(form.get("tone")),popularity:0,createdOrder:Math.max(0,...state.looks.map((item)=>Number(item.createdOrder)||0))+1,coverImage,coverAspect,items:clone(lookDraftItems)};
+            const created={id:uid("look"),title,gender:String(form.get("gender")),styles,tone:"carbon",popularity:0,createdOrder:Math.max(0,...state.looks.map((item)=>Number(item.createdOrder)||0))+1,coverImage,coverAspect,items:clone(lookDraftItems)};
             state.looks.push(created);saveState();resetLookEditor();renderAll();switchStudioTab("looks");showToast("Look baru dipublikasikan di prototype.");
           } catch(error){els.lookFormError.textContent=error.message||"Look belum dapat disimpan.";}
         });

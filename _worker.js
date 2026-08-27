@@ -46,11 +46,21 @@ function clippedText(value, limit) {
 
 function routeFromRequest(request) {
   const parts = new URL(request.url).pathname.split("/").filter(Boolean);
-  // `/curators` is a first-class public directory rendered by the app shell.
-  // It still needs the shell fallback because Pages has no physical file at
-  // that route.
-  if (parts.length === 1 && parts[0] === "curators") return { type: "curator-directory" };
+  // Collection routes are first-class public pages rendered by the app shell.
+  // They need an explicit shell fallback because Pages has no physical file at
+  // these paths.
+  if (parts.length === 1) {
+    const directories = {
+      curators: "curator-directory",
+      looks: "look-directory",
+      products: "product-directory",
+      journal: "journal-directory"
+    };
+    return directories[parts[0]] ? { type: directories[parts[0]] } : null;
+  }
   if (parts.length !== 2) return null;
+  if (parts[0] === "looks" && parts[1] === "comootd") return { type: "comootd-look-directory" };
+  if (parts[0] === "looks" && parts[1] === "curators") return { type: "curator-look-directory" };
   const type = parts[0] === "looks"
     ? "look"
     : parts[0] === "products"
@@ -272,18 +282,50 @@ async function renderCuratorPage(request, env, route) {
   }
 }
 
-async function renderCuratorDirectoryPage(request, env) {
-  try {
-    const shell = await getStaticShell(request, env);
-    const origin = siteOrigin(env);
-    return new Response(injectMetadata(shell, {
+function directoryMetadata(env, type) {
+  const origin = siteOrigin(env);
+  const metadata = {
+    "curator-directory": {
       title: "Curators — COMOOTD",
       description: "Temukan sudut pandang, kurasi outfit, dan tautan Shopee dari Curator COMOOTD.",
-      canonical: `${origin}/curators`,
-      type: "website",
-      image: "",
-      indexable: true
-    }), {
+      canonical: `${origin}/curators`
+    },
+    "look-directory": {
+      title: "Looks — COMOOTD",
+      description: "Jelajahi kurasi outfit COMOOTD untuk berbagai style, occasion, dan mood.",
+      canonical: `${origin}/looks`
+    },
+    "comootd-look-directory": {
+      title: "Looks by COMOOTD — COMOOTD",
+      description: "Kurasi editorial resmi COMOOTD. Setiap look dilengkapi item-by-item dan tautan Shopee.",
+      canonical: `${origin}/looks/comootd`
+    },
+    "curator-look-directory": {
+      title: "Looks by Curators — COMOOTD",
+      description: "Temukan outfit pilihan dari fashion people dan Curator COMOOTD.",
+      canonical: `${origin}/looks/curators`
+    },
+    "product-directory": {
+      title: "Products — COMOOTD",
+      description: "Produk fashion pilihan yang muncul dalam kurasi COMOOTD dan siap dibeli lewat Shopee.",
+      canonical: `${origin}/products`
+    },
+    "journal-directory": {
+      title: "Journal — COMOOTD",
+      description: "Catatan style, panduan mix-and-match, dan referensi fashion dari COMOOTD.",
+      canonical: `${origin}/journal`
+    }
+  };
+  const entry = metadata[type];
+  return entry ? { ...entry, type: "website", image: "", indexable: true } : null;
+}
+
+async function renderDirectoryPage(request, env, type) {
+  try {
+    const shell = await getStaticShell(request, env);
+    const metadata = directoryMetadata(env, type);
+    if (!metadata) return errorPage(request, env, 404);
+    return new Response(injectMetadata(shell, metadata), {
       headers: {
         "Content-Type": "text/html; charset=UTF-8",
         "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
@@ -295,7 +337,7 @@ async function renderCuratorDirectoryPage(request, env) {
 }
 
 async function renderContentPage(request, env, route) {
-  if (route.type === "curator-directory") return renderCuratorDirectoryPage(request, env);
+  if (route.type.endsWith("directory")) return renderDirectoryPage(request, env, route.type);
   if (route.type === "curator") return renderCuratorPage(request, env, route);
   const spec = CONTENT_SPECS[route.type];
   if (!spec) return errorPage(request, env, 404);
