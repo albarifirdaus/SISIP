@@ -1040,18 +1040,13 @@
             <div><p class="eyebrow" style="color:var(--clay)">COMOOTD / PROFIL GAYA</p><h2>Lebih kamu, lebih mudah dipilih.</h2></div>
             <button class="small-button muted" id="memberSignOutButton" type="button">Keluar</button>
           </div>
-          <p class="member-help">Semua pilihan ini bersifat opsional. Pilih tag yang paling mendekati gayamu—maksimal 10 pilihan di setiap kelompok.</p>
+          <p class="member-help">Semua pilihan ini bersifat opsional. Pilih hingga 10 style yang paling mendekati gayamu.</p>
           <form class="form-stack" id="memberProfileForm">
             <div class="compact-row">
               <div class="field"><label for="memberProfileName">Nama panggilan</label><input id="memberProfileName" name="displayName" maxlength="80" autocomplete="name" /></div>
               <div class="field"><label for="memberProfileGender">Gender preferensi</label><select id="memberProfileGender" name="genderTarget"><option value="">Tidak ingin menyebutkan</option><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
             </div>
             <div class="field"><label id="memberProfileStylesLabel">Style yang disukai</label><div class="member-tag-picker" aria-labelledby="memberProfileStylesLabel"><div class="member-tag-picker-head"><span>Pilih hingga 10 style</span><span class="member-tag-picker-count" id="memberProfileStylesCount" aria-live="polite">0 / 10</span></div><div class="member-tag-options" id="memberProfileStylesOptions" role="group" aria-labelledby="memberProfileStylesLabel"></div></div><input id="memberProfileStyles" name="styleTags" type="hidden" /></div>
-            <div class="field"><label id="memberProfileOccasionsLabel">Occasion yang sering dicari</label><div class="member-tag-picker" aria-labelledby="memberProfileOccasionsLabel"><div class="member-tag-picker-head"><span>Pilih hingga 10 occasion</span><span class="member-tag-picker-count" id="memberProfileOccasionsCount" aria-live="polite">0 / 10</span></div><div class="member-tag-options" id="memberProfileOccasionsOptions" role="group" aria-labelledby="memberProfileOccasionsLabel"></div></div><input id="memberProfileOccasions" name="occasionTags" type="hidden" /></div>
-            <div class="compact-row">
-              <div class="field"><label id="memberProfileColorsLabel">Warna yang disukai</label><div class="member-tag-picker" aria-labelledby="memberProfileColorsLabel"><div class="member-tag-picker-head"><span>Pilih hingga 10 warna</span><span class="member-tag-picker-count" id="memberProfileColorsCount" aria-live="polite">0 / 10</span></div><div class="member-tag-options" id="memberProfileColorsOptions" role="group" aria-labelledby="memberProfileColorsLabel"></div></div><input id="memberProfileColors" name="preferredColors" type="hidden" /></div>
-              <div class="field"><label id="memberProfileAvoidedColorsLabel">Warna yang dihindari</label><div class="member-tag-picker" aria-labelledby="memberProfileAvoidedColorsLabel"><div class="member-tag-picker-head"><span>Pilih hingga 10 warna</span><span class="member-tag-picker-count" id="memberProfileAvoidedColorsCount" aria-live="polite">0 / 10</span></div><div class="member-tag-options" id="memberProfileAvoidedColorsOptions" role="group" aria-labelledby="memberProfileAvoidedColorsLabel"></div></div><input id="memberProfileAvoidedColors" name="avoidedColors" type="hidden" /></div>
-            </div>
             <div class="compact-row">
               <div class="field"><label for="memberProfileBudgetMin">Budget minimum</label><input id="memberProfileBudgetMin" name="budgetMin" inputmode="numeric" placeholder="200000" /></div>
               <div class="field"><label for="memberProfileBudgetMax">Budget maksimum</label><input id="memberProfileBudgetMax" name="budgetMax" inputmode="numeric" placeholder="750000" /></div>
@@ -1291,39 +1286,11 @@
           styleTags: {
             inputId: "memberProfileStyles", optionsId: "memberProfileStylesOptions", countId: "memberProfileStylesCount", label: "style",
             options: ["Clean", "Casual", "Smart Casual", "Formal", "Minimalis", "Classic", "Workwear", "Streetwear", "Sporty", "Athleisure", "Preppy", "Vintage", "Retro", "Korean-inspired", "Japanese-inspired", "Modest", "Feminine", "Masculine", "Androgynous", "Bohemian", "Romantic", "Edgy", "Party", "Vacation", "Denim"]
-          },
-          occasionTags: {
-            inputId: "memberProfileOccasions", optionsId: "memberProfileOccasionsOptions", countId: "memberProfileOccasionsCount", label: "occasion",
-            options: ["Kampus", "Kantor", "Meeting", "Interview", "Presentasi", "Bukber", "Lebaran", "Kondangan", "Wisuda", "Date", "Hangout", "Coffee Shop", "Brunch", "Konser", "Festival", "Liburan", "Travel", "Airport", "Olahraga", "Gym", "Weekend", "Pesta", "Dinner", "Acara Formal", "Kumpul Keluarga"]
-          },
-          preferredColors: {
-            inputId: "memberProfileColors", optionsId: "memberProfileColorsOptions", countId: "memberProfileColorsCount", label: "warna",
-            options: ["Hitam", "Putih", "Abu-abu", "Charcoal", "Navy", "Biru", "Denim", "Cokelat", "Mocha", "Beige", "Cream", "Ivory", "Stone", "Taupe", "Olive", "Hijau", "Sage", "Khaki", "Merah", "Maroon", "Burgundy", "Pink", "Ungu", "Kuning", "Orange", "Mustard", "Silver", "Gold", "Pastel", "Earth Tone", "Dusty", "Wine"]
-          },
-          avoidedColors: {
-            inputId: "memberProfileAvoidedColors", optionsId: "memberProfileAvoidedColorsOptions", countId: "memberProfileAvoidedColorsCount", label: "warna",
-            options: ["Hitam", "Putih", "Abu-abu", "Charcoal", "Navy", "Biru", "Denim", "Cokelat", "Mocha", "Beige", "Cream", "Ivory", "Stone", "Taupe", "Olive", "Hijau", "Sage", "Khaki", "Merah", "Maroon", "Burgundy", "Pink", "Ungu", "Kuning", "Orange", "Mustard", "Silver", "Gold", "Pastel", "Earth Tone", "Dusty", "Wine", "Neon"]
           }
         };
         const MEMBER_STYLE_ALIASES = {
           "smart casual": ["clean", "casual", "formal"], minimalis: ["clean"], classic: ["clean", "formal"], preppy: ["clean", "casual"], athleisure: ["sporty", "casual"], retro: ["vintage"], "japanese-inspired": ["clean", "workwear"], feminine: ["clean", "formal"], masculine: ["formal", "workwear"], androgynous: ["clean", "streetwear"], bohemian: ["vintage", "casual"], romantic: ["formal", "party"], edgy: ["streetwear", "party"], vacation: ["casual", "sporty"], denim: ["casual", "vintage"]
         };
-        const MEMBER_OCCASION_STYLE_TAGS = {
-          kampus: ["casual", "clean", "preppy"], kantor: ["formal", "clean", "workwear"], meeting: ["formal", "clean", "workwear"], interview: ["formal", "clean"], presentasi: ["formal", "clean", "workwear"], bukber: ["modest", "formal", "clean"], lebaran: ["modest", "formal", "clean"], kondangan: ["formal", "modest", "party"], wisuda: ["formal", "clean"], date: ["casual", "formal", "party"], hangout: ["casual", "streetwear", "clean"], "coffee shop": ["casual", "clean", "vintage"], brunch: ["casual", "clean", "formal"], konser: ["streetwear", "party", "sporty"], festival: ["streetwear", "party", "sporty"], liburan: ["casual", "sporty", "vintage"], travel: ["casual", "sporty", "workwear"], airport: ["casual", "sporty", "workwear"], olahraga: ["sporty", "athleisure"], gym: ["sporty", "athleisure"], weekend: ["casual", "vintage", "sporty"], pesta: ["party", "formal", "streetwear"], dinner: ["formal", "party", "clean"], "acara formal": ["formal", "clean", "modest"], "kumpul keluarga": ["casual", "clean", "modest"]
-        };
-        const MEMBER_COLOR_FAMILIES = [
-          ["hitam", ["hitam", "black", "ink", "charcoal", "graphite", "onyx", "black wash"]],
-          ["putih", ["putih", "white", "cream", "ivory", "ecru", "bone", "milk", "off white"]],
-          ["abu-abu", ["abu", "grey", "gray", "ash", "slate", "steel"]],
-          ["biru", ["biru", "blue", "navy", "denim", "indigo", "mist"]],
-          ["cokelat", ["cokelat", "coklat", "brown", "mocha", "cocoa", "espresso", "cognac", "chocolate"]],
-          ["beige", ["beige", "stone", "taupe", "sand", "nude", "oat", "mushroom", "khaki"]],
-          ["hijau", ["hijau", "olive", "sage", "green"]],
-          ["merah", ["merah", "red", "maroon", "burgundy", "wine", "cherry", "oxblood"]],
-          ["pink", ["pink", "rose", "blush"]], ["ungu", ["ungu", "purple", "violet", "lilac"]],
-          ["kuning", ["kuning", "yellow", "mustard"]], ["orange", ["orange", "oranye", "rust"]],
-          ["metal", ["silver", "gold", "chrome", "metal", "metallic"]]
-        ];
         const JOURNAL_BLOCK_LIMIT = 20;
         const JOURNAL_CTA_LIMIT = 3;
         const BULK_IMPORT_HEADERS = ["product_key", "name", "affiliate_url", "price_idr", "badge", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "gender_target", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
@@ -1601,9 +1568,6 @@
           return {
             genderTarget: String(preference.genderTarget ?? preference.gender_target ?? "").trim().toLowerCase(),
             styleTags: memberProfileTags(preference.styleTags ?? preference.style_tags),
-            occasionTags: memberProfileTags(preference.occasionTags ?? preference.occasion_tags),
-            preferredColors: memberProfileTags(preference.preferredColors ?? preference.preferred_colors),
-            avoidedColors: memberProfileTags(preference.avoidedColors ?? preference.avoided_colors),
             budgetMin: Number(preference.budgetMin ?? preference.budget_min_idr) || null,
             budgetMax: Number(preference.budgetMax ?? preference.budget_max_idr) || null,
             onboardingCompleted: Boolean(preference.onboardingCompleted ?? preference.onboarding_completed)
@@ -1625,24 +1589,6 @@
           if (!cloudEnabled()) return true;
           return entry.status === "published" && Boolean(entry.publishedAt) && new Date(entry.publishedAt).getTime() <= Date.now();
         }
-        function memberColorTags(value) {
-          const raw = memberTags(value);
-          const families = MEMBER_COLOR_FAMILIES.filter(([, keywords]) => raw.some((tag) => keywords.some((keyword) => tag.includes(keyword)))).map(([family]) => family);
-          return [...new Set([...raw, ...families])];
-        }
-        function entryColorTags(entry, type) {
-          if (type === "product") return memberColorTags((entry.variants || []).flatMap((variant) => [variant.name, variant.colorName]));
-          return memberColorTags((entry.items || []).flatMap((item) => {
-            if (item?.affiliateUrl && !item?.productId) return [item.colorLabel, item.variantName];
-            const product = getProduct(item.productId);
-            const variant = getVariant(product, item.variantName);
-            return [item.variantName, variant?.name, variant?.colorName];
-          }));
-        }
-        function overlapScore(source, preferred, weight) {
-          const sourceSet = new Set(memberTags(source));
-          return memberTags(preferred).reduce((score, tag) => score + (sourceSet.has(tag) ? weight : 0), 0);
-        }
         function styleOverlapScore(catalogueTags, preferred, weight) {
           const catalogue = new Set(memberTags(catalogueTags));
           return memberProfileTags(preferred).reduce((score, tag) => {
@@ -1650,41 +1596,23 @@
             return score + (matches.some((candidate) => catalogue.has(candidate)) ? weight : 0);
           }, 0);
         }
-        function occasionOverlapScore(catalogueTags, occasions, weight) {
-          const catalogue = new Set(memberTags(catalogueTags));
-          return memberProfileTags(occasions).reduce((score, occasion) => {
-            const matches = MEMBER_OCCASION_STYLE_TAGS[occasion] || [];
-            return score + (matches.some((candidate) => catalogue.has(candidate)) ? weight : 0);
-          }, 0);
-        }
-        function colorOverlapScore(source, preferred, weight) {
-          const sourceSet = new Set(memberColorTags(source));
-          return memberProfileTags(preferred).reduce((score, color) => score + (memberColorTags([color]).some((tag) => sourceSet.has(tag)) ? weight : 0), 0);
-        }
-        function hasColorOverlap(source, preferred) {
-          const sourceSet = new Set(memberColorTags(source));
-          return memberProfileTags(preferred).some((color) => memberColorTags([color]).some((tag) => sourceSet.has(tag)));
-        }
         function memberMatchScore(entry, type) {
           const preference = memberPreference();
           const catalogueTags = memberTags(entry.styles);
           const entryGender = databaseGender(type === "look" ? entry.gender : entry.genderTarget);
-          const colors = entryColorTags(entry, type);
           const price = type === "look" ? getLookTotal(entry) : Number(entry.price || 0);
-          let score = styleOverlapScore(catalogueTags, preference.styleTags, 12) + occasionOverlapScore(catalogueTags, preference.occasionTags, 7);
+          let score = styleOverlapScore(catalogueTags, preference.styleTags, 12);
           if (preference.genderTarget) {
             if (entryGender === preference.genderTarget) score += 6;
             else if (entryGender === "unisex") score += 3;
             else score -= 3;
           }
-          score += colorOverlapScore(colors, preference.preferredColors, 4);
-          if (hasColorOverlap(colors, preference.avoidedColors)) score -= 50;
           if (preference.budgetMax) score += price <= preference.budgetMax ? 5 : Math.max(-10, -Math.ceil((price - preference.budgetMax) / Math.max(preference.budgetMax, 1) * 10));
           if (preference.budgetMin && price >= preference.budgetMin) score += 1;
           return score;
         }
         function hasMemberMatchSignals(preference = memberPreference()) {
-          return Boolean(preference.genderTarget || preference.styleTags.length || preference.occasionTags.length || preference.preferredColors.length || preference.avoidedColors.length || preference.budgetMin || preference.budgetMax);
+          return Boolean(preference.genderTarget || preference.styleTags.length || preference.budgetMin || preference.budgetMax);
         }
         function getMemberMatches() {
           const compare = (type) => (a, b) => {
@@ -1757,9 +1685,6 @@
           form.elements.displayName.value = String(profile.displayName ?? profile.display_name ?? "");
           form.elements.genderTarget.value = preference.genderTarget;
           setMemberProfileTags("styleTags", preference.styleTags);
-          setMemberProfileTags("occasionTags", preference.occasionTags);
-          setMemberProfileTags("preferredColors", preference.preferredColors);
-          setMemberProfileTags("avoidedColors", preference.avoidedColors);
           form.elements.budgetMin.value = preference.budgetMin || "";
           form.elements.budgetMax.value = preference.budgetMax || "";
           els.memberProfileError.textContent = "";
@@ -1782,7 +1707,6 @@
           const form = els.requestForm;
           if (!form.elements.genderTarget.value && preference.genderTarget) form.elements.genderTarget.value = preference.genderTarget;
           if (!form.elements.styleTags.value && preference.styleTags.length) form.elements.styleTags.value = memberTagText(preference.styleTags);
-          if (!form.elements.preferredColors.value && preference.preferredColors.length) form.elements.preferredColors.value = memberTagText(preference.preferredColors);
           if (!form.elements.budgetMin.value && preference.budgetMin) form.elements.budgetMin.value = preference.budgetMin;
           if (!form.elements.budgetMax.value && preference.budgetMax) form.elements.budgetMax.value = preference.budgetMax;
         }
@@ -1793,18 +1717,18 @@
             return;
           }
           if (!memberIsSignedIn()) {
-            els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">COMOOTD / PERSONAL</p><h3>Mulai dari gaya yang terasa kamu.</h3></div><p>Masuk untuk menyimpan style, warna, budget, dan preferensi yang akan dipakai untuk mengurutkan kurasi.</p><button class="button-outline" type="button" data-open-member>Masuk / buat akun ↗</button></div><div class="personal-results"><p class="personal-empty">Katalog tetap terbuka untuk semua orang. Akun hanya dipakai saat kamu ingin rekomendasi yang lebih personal.</p></div>`;
+            els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">COMOOTD / PERSONAL</p><h3>Mulai dari gaya yang terasa kamu.</h3></div><p>Masuk untuk menyimpan style, gender preferensi, dan budget yang akan dipakai untuk mengurutkan kurasi.</p><button class="button-outline" type="button" data-open-member>Masuk / buat akun ↗</button></div><div class="personal-results"><p class="personal-empty">Katalog tetap terbuka untuk semua orang. Akun hanya dipakai saat kamu ingin rekomendasi yang lebih personal.</p></div>`;
             return;
           }
           const preference = memberPreference();
           if (!preference.onboardingCompleted || !hasMemberMatchSignals(preference)) {
-            els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">HALO, ${esc(memberDisplayName().toUpperCase())}</p><h3>Berikan sedikit arah untuk kurasimu.</h3></div><p>Pilih minimal satu style, warna, gender preferensi, atau budget. Kamu bisa mengubahnya kapan saja.</p><button class="button-outline" type="button" data-open-member>Isi preferensi ↗</button></div><div class="personal-results"><p class="personal-empty">Setelah disimpan, COMOOTD akan mencocokkan tag katalog dan menampilkan Look serta produk yang paling dekat dengan preferensimu.</p></div>`;
+            els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">HALO, ${esc(memberDisplayName().toUpperCase())}</p><h3>Berikan sedikit arah untuk kurasimu.</h3></div><p>Pilih minimal satu style, gender preferensi, atau budget. Kamu bisa mengubahnya kapan saja.</p><button class="button-outline" type="button" data-open-member>Isi preferensi ↗</button></div><div class="personal-results"><p class="personal-empty">Setelah disimpan, COMOOTD akan mencocokkan tag katalog dan menampilkan Look serta produk yang paling dekat dengan preferensimu.</p></div>`;
             return;
           }
           const matches = getMemberMatches();
           const looks = matches.looks.map((entry) => `<article class="personal-look"><button class="personal-look-open" type="button" data-open-look="${esc(entry.id)}">${lookVisual(entry)}<span class="personal-look-copy"><strong>${esc(entry.title)}</strong><span>${esc(entry.styles.slice(0,2).join(" / ") || "Kurasi COMOOTD")}</span></span></button>${lookLikeButton(entry,true)}</article>`).join("");
           const products = matches.products.map((item) => { const variant = item.variants?.[0]; return `<article class="personal-product"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item,variant,true)}</button><button class="product-name-link" type="button" data-open-product="${esc(item.id)}"><h5>${esc(item.name)}</h5></button><p>${money(item.price)}</p><a href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></article>`; }).join("");
-          els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">UNTUK ${esc(memberDisplayName().toUpperCase())}</p><h3>Kurasi yang dimulai dari pilihanmu.</h3></div><p>Urutan ini memakai kecocokan tag style, warna, gender preferensi, dan budget dari profil COMOOTD-mu.</p><button class="button-outline" type="button" data-open-member>Ubah preferensi ↗</button></div><div class="personal-results"><div class="personal-group"><div class="personal-group-head"><h4>Look yang mungkin kamu suka</h4><span class="eyebrow">${matches.looks.length} pilihan</span></div><div class="personal-looks">${looks || `<p class="personal-empty">Belum ada look yang cukup cocok.</p>`}</div></div><div class="personal-group"><div class="personal-group-head"><h4>Pieces untuk disisipkan</h4><span class="eyebrow">${matches.products.length} pilihan</span></div><div class="personal-products">${products || `<p class="personal-empty">Belum ada produk yang cukup cocok.</p>`}</div></div></div>`;
+          els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">UNTUK ${esc(memberDisplayName().toUpperCase())}</p><h3>Kurasi yang dimulai dari pilihanmu.</h3></div><p>Urutan ini memakai kecocokan tag style, gender preferensi, dan budget dari profil COMOOTD-mu.</p><button class="button-outline" type="button" data-open-member>Ubah preferensi ↗</button></div><div class="personal-results"><div class="personal-group"><div class="personal-group-head"><h4>Look yang mungkin kamu suka</h4><span class="eyebrow">${matches.looks.length} pilihan</span></div><div class="personal-looks">${looks || `<p class="personal-empty">Belum ada look yang cukup cocok.</p>`}</div></div><div class="personal-group"><div class="personal-group-head"><h4>Pieces untuk disisipkan</h4><span class="eyebrow">${matches.products.length} pilihan</span></div><div class="personal-products">${products || `<p class="personal-empty">Belum ada produk yang cukup cocok.</p>`}</div></div></div>`;
         }
 
         function productArt(productItem, variant, small = false) {
@@ -3279,9 +3203,6 @@
               displayName:String(data.get("displayName")||"").trim(),
               genderTarget:String(data.get("genderTarget")||"").trim(),
               styleTags:memberProfileTags(data.get("styleTags")),
-              occasionTags:memberProfileTags(data.get("occasionTags")),
-              preferredColors:memberProfileTags(data.get("preferredColors")),
-              avoidedColors:memberProfileTags(data.get("avoidedColors")),
               budgetMin,
               budgetMax,
               onboardingCompleted:true

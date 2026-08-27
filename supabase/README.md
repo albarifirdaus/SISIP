@@ -40,7 +40,7 @@ Uploads to `sisip-media` are restricted to the signed-in admin. Every new Auth a
 
 `new_series_slots` stores up to five ordered homepage positions. It is publicly readable only when its associated look is published; the admin updates all five slots atomically through the `set_sisip_new_series` RPC, while empty slots remain hidden from the public carousel.
 
-`user_preferences` stores private profile choices (style, occasion, colour, and budget). Row Level Security lets the owner manage only their own row, while the SISIP admin retains Studio access. The current profile picker allows up to 10 tags per group.
+`user_preferences` stores private profile choices (style, gender, and budget). Legacy occasion/colour columns remain in the database for compatibility but are no longer read or used by the profile UI. Row Level Security lets the owner manage only their own row, while the SISIP admin retains Studio access. The current profile picker allows up to 10 style tags.
 
 `outfit_requests` is member-only: a database trigger derives `requester_id`, name, and email from the authenticated session. `outfit_request_admin_notes` is admin-only, while `outfit_request_recommendations` is shown to its owner only after the request is replied or closed. Recommendations can point only to published Looks/products.
 

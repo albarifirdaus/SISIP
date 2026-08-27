@@ -35,11 +35,14 @@
     "Clean", "Casual", "Formal", "Streetwear", "Modest",
     "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party"
   ];
-  const CURATOR_JOB_TAG_OPTIONS = [
+  const CURATOR_PROFILE_TAG_OPTIONS = [
+    "Clean", "Casual", "Formal", "Streetwear", "Modest",
+    "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party",
     "Stylist", "Fashion Creator", "Content Creator", "Creative Director",
     "Photographer", "Model", "Designer", "Writer", "Visual Artist",
     "Fashion Student", "Brand / Marketing", "Marketing", "Student",
-    "Fashion Enthusiast", "Hardworker"
+    "Fashion Enthusiast", "Hardworker", "Minimalist", "Thrift Hunter",
+    "Sneakerhead", "Style Explorer", "Wardrobe Curator"
   ];
   const PRODUCT_BADGE_OPTIONS = [
     "COMOOTD Pick", "Wardrobe Staple", "Statement Piece", "Layering Essential",
@@ -154,7 +157,7 @@
       displayName,
       avatarPath: raw.avatarPath || raw.avatar_path || profile.avatarPath || profile.avatar_path || "",
       bio: compact(raw.bio || raw.description || ""),
-      jobTags: controlledTagList(raw.jobTags ?? raw.job_tags ?? raw.tags, CURATOR_JOB_TAG_OPTIONS, 3),
+      jobTags: controlledTagList(raw.jobTags ?? raw.job_tags ?? raw.tags, CURATOR_PROFILE_TAG_OPTIONS, 5),
       socials: normaliseSocialLinks(raw),
       isActive: raw.isActive ?? raw.is_active ?? true,
       maxPublishedLooks: Number(raw.maxPublishedLooks ?? raw.max_published_looks ?? DEFAULT_QUOTA) || DEFAULT_QUOTA
@@ -423,7 +426,7 @@
   function onboardMarkup() {
     return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / OPEN CURATOR</p><h2>Show Your<br />Point of View.</h2><p class="curator-onboard-copy">Buka profil curator gratis untuk membagikan hingga ${DEFAULT_QUOTA} look aktif. Tautan Shopee yang kamu cantumkan tetap milikmu.</p><form class="curator-form" data-curator-onboard-form>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorOnboardName">Nama tampil</label><input id="curatorOnboardName" name="displayName" maxlength="80" required placeholder="Nama kamu" /></div><div class="curator-field"><label for="curatorOnboardHandle">Handle</label><input id="curatorOnboardHandle" name="handle" minlength="3" maxlength="32" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required placeholder="contoh: araedits" autocomplete="off" /><p class="curator-file-note">3–32 karakter: huruf kecil, angka, _ atau -.</p></div></div>
-      ${controlledTagPickerMarkup({ name:"jobTags", options:CURATOR_JOB_TAG_OPTIONS, selected:[], maximum:3, label:"Job tags", note:"Pilih maksimal 3 tag yang paling menggambarkan peranmu." })}
+      ${controlledTagPickerMarkup({ name:"profileTags", options:CURATOR_PROFILE_TAG_OPTIONS, selected:[], maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}
       <div class="curator-field"><label for="curatorOnboardBio">Tentang edit kamu</label><textarea id="curatorOnboardBio" name="bio" maxlength="500" placeholder="Ceritakan sedikit sudut pandang atau pendekatan styling-mu."></textarea></div>
       <p class="curator-form-status" data-curator-onboard-status role="alert"></p><button class="button" type="submit">Aktifkan profil curator ↗</button></form></div>`;
   }
@@ -442,10 +445,10 @@
 
   function profileEditorMarkup(curator) {
     const socialMap = Object.fromEntries(curator.socials.map((item) => [item.platform, item.url]));
-    return `<section class="curator-studio-panel" data-curator-studio-panel="profile"><p class="eyebrow" style="color:var(--clay)">YOUR PUBLIC PROFILE</p><h3>Make the profile<br />feel like you.</h3><p class="curator-studio-lede">Foto, job tags, bio, dan tautan sosial tampil di halaman shareable milikmu.</p>
+    return `<section class="curator-studio-panel" data-curator-studio-panel="profile"><p class="eyebrow" style="color:var(--clay)">YOUR PUBLIC PROFILE</p><h3>Make the profile<br />feel like you.</h3><p class="curator-studio-lede">Foto, tag fashion dan personal, bio, serta tautan sosial tampil di halaman shareable milikmu.</p>
       <form class="curator-form" data-curator-profile-form><div class="curator-profile-photo-row">${imageMarkup(curator.avatarPath, "", "curator-profile-avatar", curator.displayName)}<div class="curator-field" style="flex:1"><label for="curatorAvatarInput">Foto profil</label><input id="curatorAvatarInput" name="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" /><p class="curator-file-note">JPG, PNG, atau WebP. Maksimal 5 MB.</p></div></div>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorDisplayName">Nama tampil</label><input id="curatorDisplayName" name="displayName" maxlength="80" value="${esc(curator.displayName)}" required /></div><div class="curator-field"><label for="curatorHandle">Handle</label><input id="curatorHandle" name="handle" minlength="3" maxlength="32" value="${esc(curator.handle)}" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required /><p class="curator-file-note">Handle menjadi alamat profil kamu.</p></div></div>
-      ${controlledTagPickerMarkup({ name:"jobTags", options:CURATOR_JOB_TAG_OPTIONS, selected:curator.jobTags, maximum:3, label:"Job tags", note:"Pilih maksimal 3 tag yang paling menggambarkan peranmu." })}<div class="curator-field"><label for="curatorBio">Bio</label><textarea id="curatorBio" name="bio" maxlength="500" placeholder="Sudut pandang style kamu.">${esc(curator.bio)}</textarea></div>
+      ${controlledTagPickerMarkup({ name:"profileTags", options:CURATOR_PROFILE_TAG_OPTIONS, selected:curator.jobTags, maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}<div class="curator-field"><label for="curatorBio">Bio</label><textarea id="curatorBio" name="bio" maxlength="500" placeholder="Sudut pandang style kamu.">${esc(curator.bio)}</textarea></div>
       <div><p class="curator-inline-label">Social links</p><div class="curator-social-fields">${Object.entries(SOCIAL_LABELS).map(([platform, label]) => `<div class="curator-field"><label for="curatorSocial${platform}">${esc(label)}</label><input id="curatorSocial${platform}" name="social-${esc(platform)}" type="url" placeholder="https://" value="${esc(socialMap[platform] || "")}" /></div>`).join("")}</div></div>
       <div class="curator-form-actions"><p class="curator-form-status" data-curator-profile-status role="alert"></p><button class="button" type="submit">Simpan profil ↗</button></div></form></section>`;
   }
@@ -669,7 +672,7 @@
     const payload = {
       displayName: compact(form.elements.displayName?.value),
       handle: safeHandle(form.elements.handle?.value),
-      jobTags: controlledValuesFromForm(form, "jobTags", CURATOR_JOB_TAG_OPTIONS, 3),
+      profileTags: controlledValuesFromForm(form, "profileTags", CURATOR_PROFILE_TAG_OPTIONS, 5),
       bio: compact(form.elements.bio?.value)
     };
     if (!/^[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?$/.test(payload.handle) || payload.handle.length < 3 || payload.handle.length > 32) { setFormStatus(status, "Handle harus 3–32 karakter dan hanya memakai huruf kecil, angka, _ atau -."); return; }
@@ -700,7 +703,7 @@
       displayName: compact(form.elements.displayName?.value),
       handle: safeHandle(form.elements.handle?.value),
       bio: compact(form.elements.bio?.value),
-      jobTags: controlledValuesFromForm(form, "jobTags", CURATOR_JOB_TAG_OPTIONS, 3),
+      profileTags: controlledValuesFromForm(form, "profileTags", CURATOR_PROFILE_TAG_OPTIONS, 5),
       avatarFile,
       socials,
       socialLinks: socials

@@ -22,7 +22,15 @@
   ]);
   const PRODUCT_BADGE_OPTIONS = ["", "COMOOTD Pick", "High Rotation", "Wardrobe Staple", "New In", "Trending", "Best Value", "Limited"];
   const PRODUCT_BADGE_ALIASES = new Map([["populer", "High Rotation"], ["best seller", "High Rotation"], ["terlaris", "High Rotation"], ["termurah", "Best Value"]]);
-  const CURATOR_JOB_TAG_OPTIONS = ["Stylist", "Fashion Creator", "Content Creator", "Creative Director", "Photographer", "Model", "Designer", "Writer", "Visual Artist", "Fashion Student", "Brand / Marketing", "Marketing", "Student", "Fashion Enthusiast", "Hardworker"];
+  // The database column remains `job_tags` for compatibility, but the public
+  // experience treats these as one combined fashion-style and personal-profile
+  // tag group.
+  const CURATOR_PROFILE_TAG_OPTIONS = [
+    "Clean", "Casual", "Formal", "Streetwear", "Modest", "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party",
+    "Stylist", "Fashion Creator", "Content Creator", "Creative Director", "Photographer", "Model", "Designer", "Writer", "Visual Artist",
+    "Fashion Student", "Brand / Marketing", "Marketing", "Student", "Fashion Enthusiast", "Hardworker",
+    "Minimalist", "Thrift Hunter", "Sneakerhead", "Style Explorer", "Wardrobe Curator"
+  ];
   const DEFAULT_LOOK_TONE = "carbon";
 
   function validConfig() {
@@ -210,7 +218,7 @@
       displayName: name,
       name,
       bio: String(row.bio || "").trim(),
-      jobTags: controlledStoredList(row.job_tags, CURATOR_JOB_TAG_OPTIONS),
+      jobTags: controlledStoredList(row.job_tags, CURATOR_PROFILE_TAG_OPTIONS),
       avatarPath,
       avatar: publicUrl(avatarPath),
       maxPublishedLooks: Number(row.active_look_limit || 30),
@@ -688,9 +696,6 @@
     return {
       genderTarget: row?.gender_target || null,
       styleTags: asArray(row?.style_tags).map((tag) => String(tag || "").trim()).filter(Boolean),
-      occasionTags: asArray(row?.occasion_tags).map((tag) => String(tag || "").trim()).filter(Boolean),
-      preferredColors: asArray(row?.preferred_colors).map((tag) => String(tag || "").trim()).filter(Boolean),
-      avoidedColors: asArray(row?.avoided_colors).map((tag) => String(tag || "").trim()).filter(Boolean),
       budgetMin: optionalNumber(row?.budget_min_idr),
       budgetMax: optionalNumber(row?.budget_max_idr),
       onboardingCompleted: Boolean(row?.onboarding_completed)
@@ -703,7 +708,7 @@
     const db = getClient();
     const [profileResult, preferencesResult] = await Promise.all([
       db.from("profiles").select("id, display_name").eq("id", user.id).maybeSingle(),
-      db.from("user_preferences").select("user_id, gender_target, style_tags, occasion_tags, preferred_colors, avoided_colors, budget_min_idr, budget_max_idr, onboarding_completed").eq("user_id", user.id).maybeSingle()
+      db.from("user_preferences").select("user_id, gender_target, style_tags, budget_min_idr, budget_max_idr, onboarding_completed").eq("user_id", user.id).maybeSingle()
     ]);
     if (profileResult.error) throw profileResult.error;
     if (preferencesResult.error) throw preferencesResult.error;
@@ -746,9 +751,6 @@
       user_id: current.user.id,
       gender_target: normalizeGenderPreference(pickPreference(["genderTarget", "gender_target"], previous.genderTarget)),
       style_tags: normalizeMemberTagList(pickPreference(["styleTags", "style_tags"], previous.styleTags), "Pilihan gaya", { max: 10 }),
-      occasion_tags: normalizeMemberTagList(pickPreference(["occasionTags", "occasion_tags"], previous.occasionTags), "Pilihan occasion", { max: 10 }),
-      preferred_colors: normalizeMemberTagList(pickPreference(["preferredColors", "preferred_colors"], previous.preferredColors), "Warna favorit", { max: 10 }),
-      avoided_colors: normalizeMemberTagList(pickPreference(["avoidedColors", "avoided_colors"], previous.avoidedColors), "Warna yang dihindari", { max: 10 }),
       budget_min_idr: budgetMin,
       budget_max_idr: budgetMax,
       onboarding_completed: Boolean(onboardingCompleted)
@@ -1167,7 +1169,7 @@
   }
 
   function normalizeCuratorTags(value, label, { max = 5 } = {}) {
-    return controlledList(value, CURATOR_JOB_TAG_OPTIONS, { max: Math.min(max, 3), label });
+    return controlledList(value, CURATOR_PROFILE_TAG_OPTIONS, { max: Math.min(max, 5), label });
   }
 
   function normalizeCuratorSocialLinks(value) {
@@ -1286,7 +1288,7 @@
     if (!user) throw new Error("Masuk terlebih dahulu untuk menjadi Curator.");
     const handle = normalizeCuratorHandle(source.handle);
     const bio = normalizeUserText(source.bio, "Bio Curator", { max: 500 });
-    const jobTags = normalizeCuratorTags(source.jobTags ?? source.job_tags, "Tag pekerjaan", { max: 5 });
+    const jobTags = normalizeCuratorTags(source.profileTags ?? source.profile_tags ?? source.jobTags ?? source.job_tags, "Tag profil curator", { max: 5 });
     // Keep the member identity and the first public Curator identity in sync.
     // The activation RPC deliberately owns role/quota changes; this regular
     // owner-only update only persists the display name typed in onboarding.
@@ -1315,7 +1317,7 @@
     const displayName = normalizeDisplayName(source.displayName ?? source.display_name ?? current.profile?.display_name ?? current.curator.name);
     const handle = normalizeCuratorHandle(source.handle ?? current.curator.handle);
     const bio = normalizeUserText(source.bio ?? current.curator.bio, "Bio Curator", { max: 500 });
-    const jobTags = normalizeCuratorTags(source.jobTags ?? source.job_tags ?? current.curator.jobTags, "Tag pekerjaan", { max: 5 });
+    const jobTags = normalizeCuratorTags(source.profileTags ?? source.profile_tags ?? source.jobTags ?? source.job_tags ?? current.curator.jobTags, "Tag profil curator", { max: 5 });
     const socialLinks = normalizeCuratorSocialLinks(source.socialLinks ?? source.social_links ?? current.curator.socials);
     let uploadedAvatarPath = "";
     try {

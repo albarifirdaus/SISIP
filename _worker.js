@@ -239,7 +239,7 @@ async function errorPage(request, env, status) {
 function curatorMetadata(env, curator) {
   const displayName = clippedText(curator?.display_name || curator?.profile?.display_name || curator?.handle || "Curator", 80);
   const handle = clippedText(curator?.handle || "", 48);
-  const tags = Array.isArray(curator?.job_tags) ? curator.job_tags.filter(Boolean).slice(0, 3) : [];
+  const tags = Array.isArray(curator?.job_tags) ? curator.job_tags.filter(Boolean).slice(0, 5) : [];
   const bio = clippedText(curator?.bio, 210);
   const identity = handle ? `${displayName} (@${handle})` : displayName;
   const description = bio

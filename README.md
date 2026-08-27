@@ -7,8 +7,8 @@ SISIP adalah katalog fashion all-gender untuk Indonesia: satu look berisi 2–5 
 - Katalog responsive: pencarian, filter style/gender, urutan, detail look, link Shopee, dan Journal.
 - **SISIP Studio**: login admin, tambah produk + varian warna, tambah look, unggah gambar hingga 5 MB ke Supabase Storage, serta hapus data yang tidak dipakai look lain.
 - **New Series**: carousel beranda hingga lima look, lengkap dengan urutan yang dapat dipilih dari tab **New Series** di SISIP Studio.
-- **Akun member**: daftar/masuk dengan email, lalu pilih hingga 10 tag untuk style, occasion, warna yang disukai/dihindari, serta budget. Preferensi hanya dapat dibaca oleh pemilik akun dan admin.
-- **Untuk Kamu**: look dan produk published diurutkan dari kecocokan tag style, warna, gender preferensi, dan budget—tanpa AI atau data pihak ketiga.
+- **Akun member**: daftar/masuk dengan email, lalu pilih hingga 10 tag style, gender preferensi, serta budget. Preferensi hanya dapat dibaca oleh pemilik akun dan admin.
+- **Untuk Kamu**: look dan produk published diurutkan dari kecocokan tag style, gender preferensi, dan budget—tanpa AI atau data pihak ketiga.
 - **Request Outfit**: member yang sudah masuk dapat mengirim brief langsung ke antrean **SISIP Studio → Requests**. Admin dapat membalas, menyimpan catatan internal, dan memilih hingga enam Look/produk published sebagai jawaban.
 - Data cloud Supabase dengan Row Level Security: publik hanya dapat membaca konten published; hanya `albarifirdaus209@gmail.com` yang dapat mengelola data.
 - Tombol untuk mengimpor 12 look/produk sample ke cloud. Data sample ini dapat dihapus lagi dari Studio.
@@ -58,7 +58,7 @@ Form request tidak menyimpan draft lokal lagi. Pengunjung harus masuk terlebih d
 
 Di Studio, buka tab **Requests** untuk mengubah status, menulis jawaban yang terlihat member, menambahkan catatan internal, dan memilih Look/produk yang sudah published. Saat status menjadi **Rekomendasi siap** atau **Selesai**, jawabannya muncul di profil member.
 
-Rekomendasi pada bagian **Untuk Kamu** dihitung di browser dari data katalog published. Artinya kamu cukup menjaga tag style/warna/gender dan harga katalog tetap rapi; tidak ada biaya API AI tambahan.
+Rekomendasi pada bagian **Untuk Kamu** dihitung di browser dari data katalog published. Artinya kamu cukup menjaga tag style, gender, dan harga katalog tetap rapi; tidak ada biaya API AI tambahan.
 
 ## Deploy
 
