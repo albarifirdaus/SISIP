@@ -38,6 +38,7 @@ const SITE_DESCRIPTION = "Kurasi fashion all-gender untuk membantu menemukan loo
 const SITE_LOCALE = "id_ID";
 const SITEMAP_PAGE_SIZE = 1000;
 const SITEMAP_URLS_PER_FILE = 5000;
+const SITEMAP_CACHE_VERSION = "v2";
 const SITEMAP_CACHE_CONTROL = "public, max-age=300, s-maxage=900, stale-while-revalidate=86400";
 
 function escapeHtml(value) {
@@ -943,7 +944,7 @@ async function cachedSitemapResponse(env, pathname, build) {
   const cache = globalThis.caches?.default;
   let cacheKey = null;
   try {
-    cacheKey = new Request(canonicalUrl(env, pathname));
+    cacheKey = new Request(canonicalUrl(env, `/__comootd_sitemap_cache/${SITEMAP_CACHE_VERSION}${pathname}`));
     if (cache && cacheKey) {
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
