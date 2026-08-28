@@ -828,7 +828,7 @@ async function fetchSitemapRows(env, table, select, filters = {}) {
 async function fetchSitemapCount(env, table, filters = {}) {
   if (!hasPublicDatabase(env)) return 0;
   const endpoint = new URL(`/rest/v1/${table}`, String(env.SUPABASE_URL || ""));
-  endpoint.searchParams.set("select", "id");
+  endpoint.searchParams.set("select", table === "curator_profiles" ? "user_id" : "id");
   endpoint.searchParams.set("limit", "1");
   Object.entries(filters).forEach(([keyName, value]) => endpoint.searchParams.set(keyName, value));
   const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
