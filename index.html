@@ -243,13 +243,25 @@
       .text-link { display:inline-flex; align-items:center; gap:.5rem; padding-bottom:.2rem; border-bottom:1px solid currentColor; font-family:var(--mono); font-size:.64rem; letter-spacing:.06em; text-transform:uppercase; }
       .text-link:hover { color:var(--clay); }
 
-      .mood-list { display:grid; grid-template-columns:repeat(5, 1fr); border:1px solid var(--line); }
-      .mood-button { min-height:118px; padding:1rem; display:flex; align-items:end; justify-content:space-between; gap:.7rem; border:0; border-right:1px solid var(--line); background:transparent; cursor:pointer; text-align:left; transition:background .18s ease,color .18s ease; }
-      .mood-button:last-child { border-right:0; }
+      .mood-list { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(260px,.55fr); border:1px solid var(--line); background:var(--line); gap:1px; }
+      .mood-preview { position:relative; min-width:0; height:clamp(520px,46vw,660px); overflow:hidden; background:var(--ink); }
+      .mood-preview-button { position:absolute; inset:0; width:100%; padding:0; overflow:hidden; border:0; color:var(--white); background:var(--ink); cursor:pointer; text-align:left; }
+      .mood-preview-visual { position:absolute; inset:0; display:block; }
+      .mood-preview-visual::after { content:""; position:absolute; z-index:1; inset:0; pointer-events:none; background:linear-gradient(180deg,rgba(8,8,8,.05) 24%,rgba(8,8,8,.08) 48%,rgba(8,8,8,.78) 100%); }
+      .mood-preview-visual .look-art,.mood-preview-visual .look-uploaded-image,.mood-preview-visual .look-media-collage { width:100%; height:100%; }
+      .mood-preview-visual .look-uploaded-image { object-fit:cover; transition:transform .7s cubic-bezier(.2,.7,.2,1); }
+      .mood-preview-button:hover .look-uploaded-image,.mood-preview-button:hover .look-media-collage { transform:scale(1.025); }
+      .mood-preview-overlay { position:absolute; z-index:2; right:clamp(1rem,2.4vw,2rem); bottom:clamp(1rem,2.4vw,2rem); left:clamp(1rem,2.4vw,2rem); display:grid; gap:.4rem; max-width:520px; }
+      .mood-preview-overlay strong { max-width:480px; font-size:clamp(2.1rem,4.1vw,4.6rem); font-weight:850; letter-spacing:-.095em; line-height:.84; text-transform:uppercase; text-wrap:balance; }
+      .mood-preview-meta,.mood-preview-open { color:#f1e8df; font-family:var(--mono); font-size:.58rem; letter-spacing:.06em; line-height:1.45; text-transform:uppercase; }
+      .mood-preview-open { width:fit-content; margin-top:.25rem; padding-bottom:.18rem; border-bottom:1px solid currentColor; }
+      .mood-options { display:grid; min-width:0; grid-template-rows:repeat(var(--mood-count,5),minmax(0,1fr)); background:var(--white); }
+      .mood-button { min-height:84px; padding:1rem; display:flex; align-items:end; justify-content:space-between; gap:.7rem; border:0; border-bottom:1px solid var(--line); background:transparent; cursor:pointer; text-align:left; transition:background .18s ease,color .18s ease; }
+      .mood-button:last-child { border-bottom:0; }
       .mood-button strong { max-width:105px; font-size:clamp(1.05rem,1.65vw,1.45rem); letter-spacing:-.065em; line-height:.95; }
       .mood-button span { color:var(--clay); font-family:var(--mono); font-size:.72rem; }
-      .mood-button:hover { color:var(--white); background:var(--ink); }
-      .mood-button:hover span { color:var(--clay); }
+      .mood-button:hover,.mood-button.is-active { color:var(--white); background:var(--ink); }
+      .mood-button:hover span,.mood-button.is-active span { color:var(--clay); }
 
       .popular-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
       .popular-card { min-width:0; padding:1.05rem; color:var(--ink); background:var(--white); }
@@ -292,13 +304,13 @@
       .result-count { color:var(--taupe); white-space:nowrap; }
       .look-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1.25rem; }
       .look-card { min-width:0; background:var(--paper); }
-      .look-card-image { position:relative; width:100%; aspect-ratio:3 / 4; padding:0; overflow:hidden; border:0; cursor:pointer; background:var(--ink); text-align:left; isolation:isolate; }
-      .look-card-image.image-frame--square { aspect-ratio:1 / 1; }
+      .look-card-image { position:relative; width:100%; aspect-ratio:1 / 1; padding:0; overflow:hidden; border:0; cursor:pointer; background:var(--ink); text-align:left; isolation:isolate; }
+      .look-card-image.image-frame--square,.look-card-image.image-frame--portrait { aspect-ratio:1 / 1; }
       .look-card-image:hover .look-art, .look-card-image:hover .look-uploaded-image, .look-card-image:hover .look-media-collage { transform:scale(1.025); }
       .look-card-image:hover .open-look { opacity:1; transform:translateY(0); }
       .look-card-body { padding:1rem 1rem 1.15rem; }
       .look-card-meta { display:flex; align-items:center; justify-content:space-between; gap:.6rem; color:var(--taupe); }
-      .look-card-title { margin:.56rem 0 .78rem; font-size:clamp(1.25rem,1.8vw,1.7rem); font-weight:800; letter-spacing:-.07em; line-height:.93; }
+      .look-card-title { margin:.5rem 0 .72rem; font-size:clamp(1.05rem,1.35vw,1.42rem); font-weight:800; letter-spacing:-.06em; line-height:.95; }
       .look-card-tags { display:flex; flex-wrap:wrap; gap:.35rem; }
       .look-card-footer { display:flex; align-items:flex-end; justify-content:space-between; gap:.6rem; }
       .look-like-button { display:inline-flex; align-items:center; justify-content:center; gap:.32rem; min-height:36px; padding:.42rem .58rem; border:1px solid var(--line); color:var(--ink); background:var(--white); font-family:var(--mono); font-size:.57rem; letter-spacing:.03em; cursor:pointer; transition:.16s ease; }
@@ -421,11 +433,14 @@
       dialog { max-width:none; max-height:none; width:100%; height:100%; margin:0; padding:0; border:0; background:rgba(23,22,20,.68); }
       dialog::backdrop { background:rgba(23,22,20,.68); backdrop-filter:blur(4px); }
       .modal-shell { position:relative; width:min(1060px,calc(100vw - 2rem)); max-height:calc(100vh - 2rem); margin:1rem auto; overflow:auto; color:var(--ink); background:var(--white); box-shadow:var(--shadow); }
-      .look-modal-shell { width:min(1420px,calc(100vw - 2rem)); height:calc(100dvh - 2rem); max-height:none; overflow:hidden; }
+      .look-modal-shell { width:min(1240px,calc(100vw - 2rem)); height:min(900px,calc(100dvh - 2rem)); max-height:calc(100dvh - 2rem); overflow:hidden; }
+      .look-modal-shell #lookDetail { height:100%; }
+      .look-modal-shell > .modal-close { position:absolute; top:0; right:0; float:none; margin:1rem; }
       .modal-close { position:sticky; z-index:4; top:1rem; float:right; margin:1rem; background:var(--white); border-color:var(--line); }
-      .look-detail { display:grid; height:100%; min-height:0; grid-template-columns:minmax(0,1.06fr) minmax(355px,.94fr); }
-      .detail-visual { min-height:0; overflow:hidden; }
-      .detail-visual .look-art, .detail-visual .look-uploaded-image, .detail-visual .look-media-collage { height:100%; min-height:0; }
+      .look-detail { display:grid; height:100%; min-height:0; grid-template-columns:minmax(0,1fr) minmax(355px,.86fr); }
+      .detail-visual { width:min(100%,calc(100dvh - 2rem)); max-width:100%; aspect-ratio:1 / 1; align-self:center; min-height:0; overflow:hidden; background:var(--paper-deep); }
+      .detail-visual .look-art, .detail-visual .look-uploaded-image, .detail-visual .look-media-collage { width:100%; height:100%; min-height:0; }
+      .detail-visual .look-uploaded-image,.detail-visual .look-media-collage__primary,.detail-visual .look-media-collage__support img { object-fit:contain; background:var(--paper-deep); }
       .detail-content { min-height:0; padding:clamp(1.5rem,3.8vw,3.6rem); overflow:auto; }
       .detail-heading { padding-right:2rem; }
       .detail-heading h2 { margin:.75rem 0 1.2rem; font-size:clamp(2.6rem,5vw,5.4rem); font-weight:850; letter-spacing:-.1em; line-height:.83; text-transform:uppercase; }
@@ -651,9 +666,11 @@
       .catalogue-route-tabs a:hover,.catalogue-route-tabs a.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
       .catalogue-look-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px; background:var(--line); }
       .catalogue-look-card { min-width:0; background:var(--white); }
-      .catalogue-look-image { position:relative; width:100%; aspect-ratio:3/4; padding:0; overflow:hidden; border:0; background:var(--ink); cursor:pointer; isolation:isolate; }
-      .catalogue-look-image.image-frame--square { aspect-ratio:1; }
-      .catalogue-look-copy { display:grid; gap:.62rem; min-height:132px; padding:1rem; }
+      .catalogue-look-image { position:relative; width:100%; aspect-ratio:1/1; padding:0; overflow:hidden; border:0; background:var(--ink); cursor:pointer; isolation:isolate; }
+      .catalogue-look-image.image-frame--square,.catalogue-look-image.image-frame--portrait { aspect-ratio:1; }
+      .catalogue-look-copy { display:grid; gap:.62rem; min-height:154px; padding:1rem; }
+      .catalogue-look-attribution { margin:0; color:var(--taupe); font-family:var(--mono); font-size:.53rem; letter-spacing:.045em; text-transform:uppercase; }
+      .catalogue-look-title { margin:0; font-size:clamp(1.05rem,1.45vw,1.45rem); font-weight:820; letter-spacing:-.06em; line-height:.94; }
       .catalogue-look-copy > p,.catalogue-product-card p { margin:0; color:var(--taupe); font-family:var(--mono); font-size:.54rem; letter-spacing:.04em; text-transform:uppercase; }
       .catalogue-look-copy h2,.catalogue-product-card h2,.catalogue-journal-card h2 { margin:0; font-size:clamp(1.2rem,1.8vw,1.75rem); line-height:.94; letter-spacing:-.07em; }
       .catalogue-look-copy .look-like-button { justify-self:end; margin-top:auto; }
@@ -678,7 +695,7 @@
         .hero { grid-template-columns:1fr .9fr; }
         .look-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
         .popular-grid { grid-template-columns:repeat(2,1fr); }
-        .mood-list { grid-template-columns:repeat(5, minmax(115px, 1fr)); overflow:auto; }
+        .mood-list { grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr); }
         .mood-button { min-width:130px; }
         .journal-grid { grid-template-columns:1fr 1fr; }
         .journal-card:first-child { grid-column:1/-1; min-height:260px; }
@@ -753,8 +770,11 @@
         .footer-top p { margin-top:1.8rem; }
         .footer-bottom { flex-direction:column; }
         .look-modal-shell { width:100%; height:100dvh; max-height:none; margin:0; overflow:auto; }
+        .look-modal-shell #lookDetail { height:auto; }
         .look-modal-shell .look-detail { height:auto; min-height:100%; }
-        .detail-visual, .detail-visual .look-art, .detail-visual .look-uploaded-image, .detail-visual .look-media-collage { min-height:410px; height:410px; }
+        .detail-visual { width:100%; aspect-ratio:1 / 1; }
+        .detail-visual, .detail-visual .look-art, .detail-visual .look-uploaded-image, .detail-visual .look-media-collage { min-height:0; height:auto; }
+        .detail-visual .look-art, .detail-visual .look-uploaded-image, .detail-visual .look-media-collage { aspect-ratio:1 / 1; }
         .detail-content { overflow:visible; }
         .modal-shell:not(.look-modal-shell) { width:100%; max-height:100vh; margin:0; }
         .article-editorial-shell { width:100%; min-height:100dvh; padding:0; }
@@ -768,6 +788,12 @@
         .modal-close { top:.5rem; }
       }
       @media (max-width: 480px) {
+        .mood-list { grid-template-columns:1fr; }
+        .mood-preview { height:auto; aspect-ratio:1 / 1; }
+        .mood-options { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto; }
+        .mood-button { min-height:82px; border-right:1px solid var(--line); }
+        .mood-button:nth-child(even) { border-right:0; }
+        .mood-preview-overlay strong { font-size:clamp(1.8rem,9vw,2.8rem); }
         .brand-wordmark { width:112px; }
         .hero-copy h1 { font-size:clamp(2.55rem,11vw,3.4rem); letter-spacing:-.09em; line-height:.9; }
         .section-title { font-size:clamp(2.05rem,9.4vw,2.9rem); letter-spacing:-.07em; }
@@ -1188,6 +1214,14 @@
             <p class="form-error" id="newSeriesError" role="alert"></p>
             <button class="small-button" id="saveNewSeriesButton" type="button">Simpan carousel</button>
           </section>
+          <section class="studio-section">
+            <h3>Preview Match Your Vibe</h3>
+            <p>Pilih satu look untuk mewakili setiap style di beranda. Jika dikosongkan, COMOOTD memilih look relevan secara otomatis.</p>
+            <div class="new-series-slots" id="stylePreviewSlots"></div>
+            <p class="new-series-status" id="stylePreviewStatus" aria-live="polite"></p>
+            <p class="form-error" id="stylePreviewError" role="alert"></p>
+            <button class="small-button" id="saveStylePreviewsButton" type="button">Simpan preview style</button>
+          </section>
         </div>
 
         <div class="studio-panel" id="studioJournalPanel" data-studio-panel="journal">
@@ -1475,6 +1509,7 @@
         let bulkLookImportWarnings = [];
         let newSeriesIndex = 0;
         let newSeriesTimer;
+        let activeMoodStyle = "";
         let journalDraftBlocks = [makeJournalBlock("paragraph")];
         let journalDraftLookCtas = [];
         let journalDraftProductCtas = [];
@@ -1497,7 +1532,7 @@
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
           accountButton: document.getElementById("accountButton"), mobileAccountButton: document.getElementById("mobileAccountButton"), memberModal: document.getElementById("memberModal"), memberAuthView: document.getElementById("memberAuthView"), memberProfileView: document.getElementById("memberProfileView"), memberAuthTitle: document.getElementById("memberAuthTitle"), memberAuthCopy: document.getElementById("memberAuthCopy"), memberAuthForm: document.getElementById("memberAuthForm"), memberAuthError: document.getElementById("memberAuthError"), memberAuthSwitch: document.getElementById("memberAuthSwitch"), memberResendConfirmation: document.getElementById("memberResendConfirmation"), memberAuthSubmit: document.getElementById("memberAuthSubmit"), memberDisplayNameField: document.getElementById("memberDisplayNameField"), memberDisplayNameInput: document.getElementById("memberDisplayNameInput"), memberPasswordInput: document.getElementById("memberPasswordInput"), memberProfileForm: document.getElementById("memberProfileForm"), memberProfileError: document.getElementById("memberProfileError"), memberRequestList: document.getElementById("memberRequestList"), memberSignOutButton: document.getElementById("memberSignOutButton"),
           requestForm: document.getElementById("requestForm"), requestStatus: document.getElementById("requestStatus"), requestSubmitButton: document.getElementById("requestSubmitButton"),
-          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookForm: document.getElementById("lookForm"), lookFormHeading: document.getElementById("lookFormHeading"), lookFormCopy: document.getElementById("lookFormCopy"), lookCoverLabel: document.getElementById("lookCoverLabel"), lookEditActions: document.getElementById("lookEditActions"), cancelLookEditButton: document.getElementById("cancelLookEditButton"), lookSubmitButton: document.getElementById("lookSubmitButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productForm: document.getElementById("productForm"), productFormHeading: document.getElementById("productFormHeading"), productFormCopy: document.getElementById("productFormCopy"), productImageLabel: document.getElementById("productImageLabel"), productEditActions: document.getElementById("productEditActions"), cancelProductEditButton: document.getElementById("cancelProductEditButton"), productSubmitButton: document.getElementById("productSubmitButton"), productFormError: document.getElementById("productFormError"), studioLooksSearch: document.getElementById("studioLooksSearch"), studioLooksSearchMeta: document.getElementById("studioLooksSearchMeta"), studioLooksList: document.getElementById("studioLooksList"), loadMoreStudioLooks: document.getElementById("loadMoreStudioLooks"), studioProductsSearch: document.getElementById("studioProductsSearch"), studioProductsSearchMeta: document.getElementById("studioProductsSearchMeta"), studioProductsList: document.getElementById("studioProductsList"), loadMoreStudioProducts: document.getElementById("loadMoreStudioProducts"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), bulkLookFile: document.getElementById("bulkLookFile"), downloadBulkLookTemplateButton: document.getElementById("downloadBulkLookTemplateButton"), bulkLookImportButton: document.getElementById("bulkLookImportButton"), bulkLookImportStatus: document.getElementById("bulkLookImportStatus"), bulkLookImportPreview: document.getElementById("bulkLookImportPreview"), bulkLookImportPreviewSummary: document.getElementById("bulkLookImportPreviewSummary"), bulkLookImportPreviewList: document.getElementById("bulkLookImportPreviewList"), bulkLookImportError: document.getElementById("bulkLookImportError"), toast: document.getElementById("toast")
+          studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookForm: document.getElementById("lookForm"), lookFormHeading: document.getElementById("lookFormHeading"), lookFormCopy: document.getElementById("lookFormCopy"), lookCoverLabel: document.getElementById("lookCoverLabel"), lookEditActions: document.getElementById("lookEditActions"), cancelLookEditButton: document.getElementById("cancelLookEditButton"), lookSubmitButton: document.getElementById("lookSubmitButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productForm: document.getElementById("productForm"), productFormHeading: document.getElementById("productFormHeading"), productFormCopy: document.getElementById("productFormCopy"), productImageLabel: document.getElementById("productImageLabel"), productEditActions: document.getElementById("productEditActions"), cancelProductEditButton: document.getElementById("cancelProductEditButton"), productSubmitButton: document.getElementById("productSubmitButton"), productFormError: document.getElementById("productFormError"), studioLooksSearch: document.getElementById("studioLooksSearch"), studioLooksSearchMeta: document.getElementById("studioLooksSearchMeta"), studioLooksList: document.getElementById("studioLooksList"), loadMoreStudioLooks: document.getElementById("loadMoreStudioLooks"), studioProductsSearch: document.getElementById("studioProductsSearch"), studioProductsSearchMeta: document.getElementById("studioProductsSearchMeta"), studioProductsList: document.getElementById("studioProductsList"), loadMoreStudioProducts: document.getElementById("loadMoreStudioProducts"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), stylePreviewSlots: document.getElementById("stylePreviewSlots"), stylePreviewStatus: document.getElementById("stylePreviewStatus"), stylePreviewError: document.getElementById("stylePreviewError"), saveStylePreviewsButton: document.getElementById("saveStylePreviewsButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), bulkLookFile: document.getElementById("bulkLookFile"), downloadBulkLookTemplateButton: document.getElementById("downloadBulkLookTemplateButton"), bulkLookImportButton: document.getElementById("bulkLookImportButton"), bulkLookImportStatus: document.getElementById("bulkLookImportStatus"), bulkLookImportPreview: document.getElementById("bulkLookImportPreview"), bulkLookImportPreviewSummary: document.getElementById("bulkLookImportPreviewSummary"), bulkLookImportPreviewList: document.getElementById("bulkLookImportPreviewList"), bulkLookImportError: document.getElementById("bulkLookImportError"), toast: document.getElementById("toast")
         };
 
         function loadState() {
@@ -1969,8 +2004,20 @@
         }
 
         function renderMoodList() {
-          const moods = ["Clean", "Casual", "Formal", "Streetwear", "Modest"];
-          els.moodList.innerHTML = moods.map((mood, index) => `<button class="mood-button" type="button" data-style-jump="${esc(mood)}"><strong>${esc(mood)}</strong><span>0${index+1} ↘</span></button>`).join("");
+          const configured = (state.styleTags || []).filter((tag) => typeof tag === "object" && tag?.isExploreVisible).slice(0,5);
+          const fallback = ["Clean", "Casual", "Formal", "Streetwear", "Modest"].map((name) => ({ id:"", name, previewLookId:"" }));
+          const moods = (configured.length ? configured : fallback).map((tag) => typeof tag === "string" ? { id:"", name:tag, previewLookId:"" } : tag);
+          if (!moods.some((tag) => tag.name === activeMoodStyle)) activeMoodStyle = moods[0]?.name || "";
+          const activeTag = moods.find((tag) => tag.name === activeMoodStyle) || moods[0];
+          const styleKey = String(activeTag?.name || "").toLocaleLowerCase("id-ID");
+          const eligible = state.looks.filter((look) => isNewSeriesEligible(look) && (look.styles || []).some((style) => String(style).toLocaleLowerCase("id-ID") === styleKey));
+          const configuredLook = eligible.find((look) => look.id === activeTag?.previewLookId);
+          const preview = configuredLook || [...eligible].sort((a,b) => Number(b.popularity || 0) - Number(a.popularity || 0) || Number(b.createdOrder || 0) - Number(a.createdOrder || 0))[0] || getNewSeriesCandidates()[0];
+          const previewMarkup = preview
+            ? `<div class="mood-preview"><button class="mood-preview-button" type="button" data-open-look="${esc(preview.id)}" aria-label="Buka preview ${esc(activeTag.name)}: ${esc(preview.title)}"><span class="mood-preview-visual">${lookVisual(preview)}</span><span class="mood-preview-overlay"><span class="mood-preview-meta">${esc(lookAttribution(preview))} / ${esc(activeTag.name)}</span><strong>${esc(preview.title)}</strong><span class="mood-preview-meta">${esc(preview.gender)} · ${esc(preview.styles.slice(0,2).join(" / ") || activeTag.name)}</span><span class="mood-preview-open">Buka look ↗</span></span></button></div>`
+            : `<div class="mood-preview"><div class="new-series-empty"><p>Preview ${esc(activeTag?.name || "style")} akan hadir setelah look dipublikasikan.</p></div></div>`;
+          const buttons = moods.map((mood, index) => `<button class="mood-button${mood.name === activeMoodStyle ? " is-active" : ""}" type="button" data-mood-style="${esc(mood.name)}" aria-pressed="${String(mood.name === activeMoodStyle)}"><strong>${esc(mood.name)}</strong><span>${String(index+1).padStart(2,"0")} ↘</span></button>`).join("");
+          els.moodList.innerHTML = `${previewMarkup}<div class="mood-options" style="--mood-count:${moods.length}">${buttons}</div>`;
         }
         function renderPopular() {
           const counts = new Map();
@@ -2027,7 +2074,7 @@
             els.lookGrid.innerHTML = `<div class="empty-state"><h3>Belum ada look yang cocok.</h3><p>Coba ubah kata kunci atau reset filter untuk melihat seluruh kurasi.</p><button class="button-outline" id="clearFilterButton" type="button" style="margin-top:1rem">Reset filter</button></div>`;
             return;
           }
-          els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image ${imageFrameClass(entry.coverAspect || entry.coverImage, "portrait")}" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}<span class="look-cover-overlay"><span class="look-cover-overlay__eyebrow">${esc(lookAttribution(entry))}</span><strong class="look-cover-overlay__title">${esc(entry.title)}</strong><span class="look-cover-overlay__meta">${esc(entry.gender)} · ${esc(entry.styles.slice(0,2).join(" / ") || "CURATED LOOK")}</span><span class="look-cover-overlay__open">Buka look ↗</span></span></button><div class="look-card-body"><div class="look-card-footer"><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry,true)}</div></div></article>`).join("");
+          els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}</button><div class="look-card-body"><div class="look-card-meta"><span class="eyebrow">${esc(lookAttribution(entry))}</span><span class="meta">${esc(entry.gender)}</span></div><h3 class="look-card-title">${esc(entry.title)}</h3><div class="look-card-footer"><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry,true)}</div></div></article>`).join("");
         }
         function articleCategoryLabel(category) { return ARTICLE_CATEGORIES[category] || ARTICLE_CATEGORIES.editorial; }
         function makeJournalBlock(type) {
@@ -2112,6 +2159,25 @@
             ? `${selectedCount} dari 5 slot terisi. Kosongkan slot lalu simpan untuk melepas look dari carousel.`
             : "Belum ada look di carousel. Pilih hingga lima look, atau biarkan kosong sementara.";
           els.saveNewSeriesButton.disabled = false;
+        }
+        function renderStylePreviewStudio() {
+          const tags = (state.styleTags || []).filter((tag) => typeof tag === "object" && tag?.isExploreVisible).slice(0,5);
+          if (!tags.length) {
+            els.stylePreviewSlots.innerHTML = `<p class="microcopy" style="color:var(--taupe)">Aktifkan tag untuk Explore terlebih dahulu.</p>`;
+            els.stylePreviewStatus.textContent = "Belum ada style yang tampil di Match Your Vibe.";
+            els.saveStylePreviewsButton.disabled = true;
+            return;
+          }
+          els.stylePreviewSlots.innerHTML = tags.map((tag,index) => {
+            const key=String(tag.name||"").toLocaleLowerCase("id-ID");
+            const candidates=getNewSeriesCandidates().filter((look)=>(look.styles||[]).some((style)=>String(style).toLocaleLowerCase("id-ID")===key));
+            const selectedId=candidates.some((look)=>look.id===tag.previewLookId) ? tag.previewLookId : "";
+            const options=[`<option value="">Otomatis pilih look relevan</option>`,...candidates.map((look)=>`<option value="${esc(look.id)}" ${look.id===selectedId?"selected":""}>${esc(look.title)} · ${esc(look.gender)}</option>`)].join("");
+            return `<label class="new-series-slot"><span class="new-series-slot-number">${String(index+1).padStart(2,"0")}</span><span><span class="eyebrow" style="display:block;margin-bottom:.35rem;color:var(--clay)">${esc(tag.name)}</span><select data-style-preview-tag="${esc(tag.id||tag.name)}" data-style-preview-name="${esc(tag.name)}">${options}</select></span></label>`;
+          }).join("");
+          const customCount=tags.filter((tag)=>tag.previewLookId).length;
+          els.stylePreviewStatus.textContent=`${customCount} dari ${tags.length} style memakai pilihan khusus. Sisanya menggunakan fallback otomatis.`;
+          els.saveStylePreviewsButton.disabled=false;
         }
         function getRequestDraft(request) {
           const id = String(request?.id || "");
@@ -2245,6 +2311,7 @@
           renderVariantSelect();
           renderDraftItems();
           renderNewSeriesStudio();
+          renderStylePreviewStudio();
           renderJournalStudio();
           renderRequestsStudio();
           renderStudioLibraries();
@@ -2395,7 +2462,7 @@
           return `<header class="catalogue-route-bar"><a class="catalogue-route-brand" href="/" data-close-catalogue-route><img src="/assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="COMOOTD" /></a><a class="catalogue-route-back" href="/" data-close-catalogue-route>← Back to home</a></header>`;
         }
         function catalogueLookCard(entry) {
-          return `<article class="catalogue-look-card"><button class="catalogue-look-image ${imageFrameClass(entry.coverAspect || entry.coverImage,"portrait")}" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka ${esc(entry.title)}">${lookVisual(entry)}<span class="look-cover-overlay"><span class="look-cover-overlay__eyebrow">${esc(lookAttribution(entry))}</span><strong class="look-cover-overlay__title">${esc(entry.title)}</strong><span class="look-cover-overlay__meta">${esc(entry.gender)} · ${esc(entry.styles.slice(0,2).join(" / ") || "CURATED LOOK")}</span><span class="look-cover-overlay__open">Buka look ↗</span></span></button><div class="catalogue-look-copy"><div>${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry)}</div></article>`;
+          return `<article class="catalogue-look-card"><button class="catalogue-look-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka ${esc(entry.title)}">${lookVisual(entry)}</button><div class="catalogue-look-copy"><p class="catalogue-look-attribution">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2 class="catalogue-look-title">${esc(entry.title)}</h2><div>${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry)}</div></article>`;
         }
         function catalogueProductCard(entry) {
           return `<article class="catalogue-product-card"><button type="button" data-open-product="${esc(entry.id)}">${productArt(entry,entry.variants?.[0])}</button><div><p>${esc(entry.badge || "COMOOTD EDIT")}</p><h2>${esc(entry.name)}</h2><span>${money(entry.price)}</span></div></article>`;
@@ -2724,6 +2791,37 @@
           } finally {
             els.saveNewSeriesButton.textContent = buttonLabel;
             els.saveNewSeriesButton.disabled = false;
+          }
+        }
+        async function saveStylePreviews() {
+          els.stylePreviewError.textContent="";
+          const assignments=Array.from(els.stylePreviewSlots.querySelectorAll("[data-style-preview-tag]")).map((select)=>({
+            tagId:String(select.dataset.stylePreviewTag||"").trim(),
+            tagName:String(select.dataset.stylePreviewName||"").trim(),
+            lookId:String(select.value||"").trim()
+          }));
+          if (!assignments.length) return;
+          const label=els.saveStylePreviewsButton.textContent;
+          els.saveStylePreviewsButton.disabled=true;
+          els.saveStylePreviewsButton.textContent="Menyimpan…";
+          try {
+            if (cloudEnabled()) {
+              if (typeof cloud?.setStylePreviews!=="function") throw new Error("Pengaturan preview style belum tersedia pada katalog cloud.");
+              await cloud.setStylePreviews(assignments);
+              await refreshCloudState({admin:true});
+            } else {
+              state.styleTags=(state.styleTags||[]).map((tag)=>{
+                const assignment=assignments.find((item)=>item.tagId===String(tag?.id||tag?.name||tag));
+                return assignment && typeof tag==="object" ? {...tag,previewLookId:assignment.lookId} : tag;
+              });
+              saveState(); renderAll();
+            }
+            showToast("Preview Match Your Vibe berhasil diperbarui.");
+          } catch(error) {
+            els.stylePreviewError.textContent=error?.message||"Preview style belum dapat disimpan.";
+          } finally {
+            els.saveStylePreviewsButton.textContent=label;
+            els.saveStylePreviewsButton.disabled=false;
           }
         }
         function addDraftItem() {
@@ -3190,7 +3288,12 @@
           event.preventDefault(); history.pushState({},"",`${url.pathname}${url.search}`); applyContentRoute({notify:true}); ensureCatalogueRouteLayer().scrollTo({top:0,behavior:"auto"});
         });
         els.styleChips.addEventListener("click",(event)=>{ const button=event.target.closest("[data-style]"); if(!button)return; activeStyle=button.dataset.style; els.style.value="all"; renderStyleControls();renderLooks(); });
-        els.moodList.addEventListener("click",(event)=>{ const button=event.target.closest("[data-style-jump]"); if(!button)return; activeStyle=button.dataset.styleJump; els.style.value="all";renderStyleControls();renderLooks();document.getElementById("lookbook").scrollIntoView({behavior:"smooth",block:"start"}); });
+        els.moodList.addEventListener("click",(event)=>{
+          const like=event.target.closest("[data-toggle-main-like]"); if(like){event.preventDefault();void toggleMainLookLike(like.dataset.toggleMainLike);return;}
+          const look=event.target.closest("[data-open-look]"); if(look){openLook(look.dataset.openLook);return;}
+          const button=event.target.closest("[data-mood-style]"); if(!button)return;
+          activeMoodStyle=button.dataset.moodStyle; renderMoodList();
+        });
         document.getElementById("searchButton").addEventListener("click",()=>{ document.getElementById("lookbook").scrollIntoView({behavior:"smooth",block:"start"}); setTimeout(()=>els.search.focus(),500); });
         document.getElementById("menuButton").addEventListener("click",(event)=>{ const nav=document.getElementById("mobileNav"); const open=nav.classList.toggle("is-open"); event.currentTarget.setAttribute("aria-expanded",String(open)); });
         document.getElementById("mobileNav").addEventListener("click",(event)=>{ if(event.target.matches("a")){ event.currentTarget.classList.remove("is-open"); document.getElementById("menuButton").setAttribute("aria-expanded","false"); } });
@@ -3401,6 +3504,7 @@
           if (els.lookModal.open && entry) openLook(lookId,{navigate:false});
         });
         document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.addEventListener("click",()=>switchStudioTab(button.dataset.studioTab)));
+        els.saveStylePreviewsButton.addEventListener("click",()=>void saveStylePreviews());
         document.querySelectorAll("[data-add-journal-block]").forEach((button)=>button.addEventListener("click",()=>{ if(journalDraftBlocks.length>=JOURNAL_BLOCK_LIMIT){els.journalFormError.textContent=`Artikel maksimal memiliki ${JOURNAL_BLOCK_LIMIT} blok.`;return;} journalDraftBlocks.push(makeJournalBlock(button.dataset.addJournalBlock));els.journalFormError.textContent="";renderJournalBlockEditor(); }));
         els.saveNewSeriesButton.addEventListener("click",saveNewSeries);
         els.lookProduct.addEventListener("change",renderVariantSelect);

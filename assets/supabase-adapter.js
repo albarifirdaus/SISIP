@@ -509,7 +509,7 @@
 
     const styleTagsQuery = db
       .from("comootd_style_tags")
-      .select("id,name,is_active,is_explore_visible,sort_order")
+      .select("id,name,is_active,is_explore_visible,sort_order,preview_look_id")
       .eq("is_active", true)
       .order("is_explore_visible", { ascending: false })
       .order("sort_order", { ascending: true })
@@ -569,20 +569,20 @@
     const requests = admin
       ? outfitRequestRows.map((row) => mapOutfitRequest(row, { productMap, lookMap, includeAdminNote: true }))
       : [];
-    const styleTags = (styleTagRows || []).map((row) => ({ id:row.id, name:row.name, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0) }));
+    const styleTags = (styleTagRows || []).map((row) => ({ id:row.id, name:row.name, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0), previewLookId:row.preview_look_id || "" }));
     return { products, looks, articles, curators, styleTags, newSeriesSlots, newSeriesLookIds, requests };
   }
 
   async function getStyleTags() {
     const { data, error } = await getClient()
       .from("comootd_style_tags")
-      .select("id,name,is_explore_visible,sort_order")
+      .select("id,name,is_explore_visible,sort_order,preview_look_id")
       .eq("is_active", true)
       .order("is_explore_visible", { ascending: false })
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
     if (error) throw error;
-    return (data || []).map((row) => ({ id:row.id, name:row.name, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0) }));
+    return (data || []).map((row) => ({ id:row.id, name:row.name, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0), previewLookId:row.preview_look_id || "" }));
   }
 
   async function ensureStyleTag(value) {
@@ -590,7 +590,7 @@
     const { data, error } = await getClient().rpc("ensure_comootd_style_tag", { p_name: name });
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
-    return { id:row?.id || "", name:row?.name || name, isExploreVisible:Boolean(row?.is_explore_visible), sortOrder:Number(row?.sort_order || 0) };
+    return { id:row?.id || "", name:row?.name || name, isExploreVisible:Boolean(row?.is_explore_visible), sortOrder:Number(row?.sort_order || 0), previewLookId:row?.preview_look_id || "" };
   }
 
   async function getSession() {
@@ -2339,6 +2339,21 @@
     if (error) throw error;
   }
 
+  async function setStylePreviews(assignments) {
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk mengatur preview style.");
+    if (!Array.isArray(assignments) || !assignments.length || assignments.length > 20) throw new Error("Daftar preview style belum valid.");
+    const normalized = assignments.map((assignment, index) => {
+      const tagId = String(assignment?.tagId || assignment?.tag_id || "").trim();
+      const lookId = String(assignment?.lookId || assignment?.look_id || "").trim();
+      if (!uuidPattern.test(tagId)) throw new Error(`Tag style ke-${index + 1} belum valid.`);
+      if (lookId && !uuidPattern.test(lookId)) throw new Error(`Preview look ke-${index + 1} belum valid.`);
+      return { tag_id:tagId, look_id:lookId || null };
+    });
+    if (new Set(normalized.map((entry) => entry.tag_id)).size !== normalized.length) throw new Error("Satu tag style hanya boleh diatur sekali.");
+    const { error } = await getClient().rpc("set_comootd_style_previews", { p_assignments: normalized });
+    if (error) throw error;
+  }
+
   window.SISIPCloud = {
     isConfigured: validConfig,
     config,
@@ -2382,6 +2397,7 @@
     deleteProduct,
     deleteArticle,
     setNewSeries,
+    setStylePreviews,
     publicUrl
   };
 })();
