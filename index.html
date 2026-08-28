@@ -959,9 +959,9 @@
         </div>
         <div class="filter-toolbar" aria-label="Filter katalog look">
           <div class="field has-icon">
-            <label for="searchInput">Cari look atau produk</label>
+            <label for="searchInput">Cari look, produk, atau curator</label>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4.2 4.2"></path></svg>
-            <input id="searchInput" type="search" placeholder="Contoh: linen, formal, olive" autocomplete="off" />
+            <input id="searchInput" type="search" placeholder="Contoh: linen, formal, atau @curator" autocomplete="off" />
           </div>
           <div class="field">
             <label for="genderFilter">Gender</label>
@@ -1915,7 +1915,9 @@
             if (item?.affiliateUrl && !item?.productId) return `${item.name||""} ${item.category||""} ${item.colorLabel||item.variantName||""}`;
             const p=getProduct(item.productId); return `${p?.name||""} ${item.variantName||""} ${p?.styles?.join(" ")||""}`;
           }).join(" ");
-          return `${entry.title} ${entry.gender} ${entry.styles.join(" ")} ${itemText}`.toLowerCase();
+          const curator = entry.curator || {};
+          const curatorText = `${curator.displayName||curator.name||""} ${curator.handle||""} ${curator.bio||""} ${(curator.jobTags||[]).join(" ")}`;
+          return `${entry.title} ${entry.gender} ${entry.styles.join(" ")} ${itemText} ${curatorText}`.toLowerCase();
         }
         function filteredLooks() {
           const search = els.search.value.trim().toLowerCase();
@@ -2043,6 +2045,14 @@
           if (entry?.publisherType === "curator" || curator?.handle) return curator?.handle ? `CURATED BY @${curator.handle}` : "CURATED BY CURATOR";
           return "BY COMOOTD";
         }
+        function curatorMetricsMarkup(entry, compact = false) {
+          const curator = entry?.curator;
+          if (!(entry?.publisherType === "curator" || curator?.handle)) return "";
+          const metrics = [];
+          if (curator?.heightCm !== null && curator?.heightCm !== undefined) metrics.push(`${curator.heightCm} CM`);
+          if (curator?.weightKg !== null && curator?.weightKg !== undefined) metrics.push(`${curator.weightKg} KG`);
+          return metrics.length ? `<p class="look-curator-metrics${compact ? " is-compact" : ""}" aria-label="Tinggi dan berat curator">${metrics.map(esc).join(" · ")}</p>` : "";
+        }
         function lookLikeButton(entry, compact = false) {
           const liked = likedLookIds.has(entry.id);
           const label = liked ? "Disukai" : "Sukai look";
@@ -2075,7 +2085,7 @@
             els.lookGrid.innerHTML = `<div class="empty-state"><h3>Belum ada look yang cocok.</h3><p>Coba ubah kata kunci atau reset filter untuk melihat seluruh kurasi.</p><button class="button-outline" id="clearFilterButton" type="button" style="margin-top:1rem">Reset filter</button></div>`;
             return;
           }
-          els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}</button><div class="look-card-body"><div class="look-card-meta"><span class="eyebrow">${esc(lookAttribution(entry))}</span><span class="meta">${esc(entry.gender)}</span></div><h3 class="look-card-title">${esc(entry.title)}</h3><div class="look-card-footer"><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry,true)}</div></div></article>`).join("");
+          els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}</button><div class="look-card-body"><div class="look-card-meta"><span class="eyebrow">${esc(lookAttribution(entry))}</span><span class="meta">${esc(entry.gender)}</span></div><h3 class="look-card-title">${esc(entry.title)}</h3>${curatorMetricsMarkup(entry,true)}<div class="look-card-footer"><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry,true)}</div></div></article>`).join("");
         }
         function articleCategoryLabel(category) { return ARTICLE_CATEGORIES[category] || ARTICLE_CATEGORIES.editorial; }
         function makeJournalBlock(type) {
@@ -2463,7 +2473,7 @@
           return `<header class="catalogue-route-bar"><a class="catalogue-route-brand" href="/" data-close-catalogue-route><img src="/assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="COMOOTD" /></a><a class="catalogue-route-back" href="/" data-close-catalogue-route>← Back to home</a></header>`;
         }
         function catalogueLookCard(entry) {
-          return `<article class="catalogue-look-card"><button class="catalogue-look-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka ${esc(entry.title)}">${lookVisual(entry)}</button><div class="catalogue-look-copy"><p class="catalogue-look-attribution">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2 class="catalogue-look-title">${esc(entry.title)}</h2><div>${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry)}</div></article>`;
+          return `<article class="catalogue-look-card"><button class="catalogue-look-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka ${esc(entry.title)}">${lookVisual(entry)}</button><div class="catalogue-look-copy"><p class="catalogue-look-attribution">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2 class="catalogue-look-title">${esc(entry.title)}</h2>${curatorMetricsMarkup(entry,true)}<div>${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry)}</div></article>`;
         }
         function catalogueProductCard(entry) {
           return `<article class="catalogue-product-card"><button type="button" data-open-product="${esc(entry.id)}">${productArt(entry,entry.variants?.[0])}</button><div><p>${esc(entry.badge || "COMOOTD EDIT")}</p><h2>${esc(entry.name)}</h2><span>${money(entry.price)}</span></div></article>`;
@@ -2604,7 +2614,7 @@
           const curatorName = entry.curator?.displayName || entry.curator?.name || "";
           const curatorHandle = entry.curator?.handle || "";
           const curatorLine = curatorName ? `<p class="eyebrow" style="color:var(--taupe);margin:.5rem 0 0">CURATED BY ${esc(curatorName)}${curatorHandle ? ` / @${esc(curatorHandle)}` : ""}</p>` : "";
-          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">${esc(entry.excerpt || "Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.")}</p></div><div class="detail-actions">${lookLikeButton(entry)}<button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
+          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}${curatorMetricsMarkup(entry)}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">${esc(entry.excerpt || "Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.")}</p></div><div class="detail-actions">${lookLikeButton(entry)}<button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
           if (!els.lookModal.open) els.lookModal.showModal();
         }
         function openProduct(id, { navigate = true, variantId = "", replace = false } = {}) {

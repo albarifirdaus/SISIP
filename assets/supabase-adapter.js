@@ -289,8 +289,8 @@
       isActive: row.is_active !== false,
       heightCm: bodyMetrics?.height_cm === null || bodyMetrics?.height_cm === undefined ? null : Number(bodyMetrics.height_cm),
       weightKg: bodyMetrics?.weight_kg === null || bodyMetrics?.weight_kg === undefined ? null : Number(bodyMetrics.weight_kg),
-      bodyMetricsPublic: Boolean(bodyMetrics?.is_public),
-      bodyMetrics: bodyMetrics ? { heightCm: bodyMetrics.height_cm === null || bodyMetrics.height_cm === undefined ? null : Number(bodyMetrics.height_cm), weightKg: bodyMetrics.weight_kg === null || bodyMetrics.weight_kg === undefined ? null : Number(bodyMetrics.weight_kg), isPublic: Boolean(bodyMetrics.is_public) } : null,
+      bodyMetricsPublic: Boolean(bodyMetrics),
+      bodyMetrics: bodyMetrics ? { heightCm: bodyMetrics.height_cm === null || bodyMetrics.height_cm === undefined ? null : Number(bodyMetrics.height_cm), weightKg: bodyMetrics.weight_kg === null || bodyMetrics.weight_kg === undefined ? null : Number(bodyMetrics.weight_kg), isPublic: true } : null,
       socials: socialLinks
         .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
         .map((link) => ({ id: link.id, platform: link.platform, url: link.url, sortOrder: Number(link.sort_order || 0) }))
@@ -1486,13 +1486,8 @@
     };
     const heightInput = firstDefined(source, ["heightCm", "height_cm"]);
     const weightInput = firstDefined(source, ["weightKg", "weight_kg"]);
-    const visibilityInput = firstDefined(source, ["bodyMetricsPublic", "body_metrics_public"]);
     const heightCm = heightInput.provided ? normalizeMetric(heightInput.value, "Tinggi badan", 100, 250) : current.curator.heightCm ?? null;
     const weightKg = weightInput.provided ? normalizeMetric(weightInput.value, "Berat badan", 25, 300, 0.1) : current.curator.weightKg ?? null;
-    const bodyMetricsPublic = visibilityInput.provided
-      ? (visibilityInput.value === true || visibilityInput.value === 1 || String(visibilityInput.value).trim().toLowerCase() === "true")
-      : Boolean(current.curator.bodyMetricsPublic);
-    if (bodyMetricsPublic && heightCm === null && weightKg === null) throw new Error("Isi minimal tinggi atau berat badan sebelum menampilkannya di profil publik.");
     let uploadedAvatarPath = "";
     try {
       uploadedAvatarPath = await uploadCuratorImage(source.avatarFile || source.avatar_file, "avatar", userId, "square");
@@ -1519,7 +1514,7 @@
           user_id: userId,
           height_cm: heightCm,
           weight_kg: weightKg,
-          is_public: bodyMetricsPublic
+          is_public: true
         }, { onConflict: "user_id" });
         if (metricError) throw metricError;
       }

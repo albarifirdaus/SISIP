@@ -397,7 +397,6 @@
     return `<div class="curator-socials">${socials.map((social) => `<a href="${esc(social.url)}" target="_blank" rel="noopener noreferrer">${esc(socialLabel(social.platform))} ↗</a>`).join("")}<button type="button" class="curator-share-button" data-share-curator="${esc(curator.handle)}">Bagikan profil ↗</button></div>`;
   }
   function publicBodyMetricsMarkup(curator) {
-    if (!curator?.bodyMetricsPublic) return "";
     const metrics = [];
     if (curator.heightCm !== null && curator.heightCm !== undefined) metrics.push(`Tinggi ${curator.heightCm} cm`);
     if (curator.weightKg !== null && curator.weightKg !== undefined) metrics.push(`Berat ${curator.weightKg} kg`);
@@ -411,6 +410,7 @@
       <div class="curator-look-card-top"><span class="eyebrow">${esc(look.gender)}</span><span class="curator-look-card-meta">${esc(humanDate(look.publishedAt))}</span></div>
       <h3 class="curator-look-card-title">${esc(look.title)}</h3>
       <p class="curator-look-card-meta">${esc(look.styles.slice(0, 3).join(" · ") || "Curated look")}</p>
+      ${publicBodyMetricsMarkup(look.creator)}
       <div class="curator-look-card-actions">
         <a href="/looks/${encodeURIComponent(look.slug)}" aria-label="Buka ${esc(look.title)}">Lihat look ↗</a>
         <button type="button" data-toggle-curator-like="${esc(look.id)}" aria-pressed="${liked ? "true" : "false"}" aria-label="Sukai ${esc(look.title)}">♥ ${look.popularity}</button>
@@ -529,13 +529,12 @@
     const socialMap = Object.fromEntries(curator.socials.map((item) => [item.platform, item.url]));
     const heightValue = curator.heightCm ?? "";
     const weightValue = curator.weightKg ?? "";
-    const metricsChecked = curator.bodyMetricsPublic ? " checked" : "";
     return `<section class="curator-studio-panel" data-curator-studio-panel="profile"><p class="eyebrow" style="color:var(--clay)">YOUR PUBLIC PROFILE</p><h3>Make the profile<br />feel like you.</h3><p class="curator-studio-lede">Foto, tag fashion dan personal, bio, tautan sosial, serta detail tubuh opsional tampil di halaman shareable milikmu.</p>
       <form class="curator-form" data-curator-profile-form><div class="curator-profile-photo-row">${imageMarkup(curator.avatarPath, "", "curator-profile-avatar", curator.displayName)}<div class="curator-field" style="flex:1"><label for="curatorAvatarInput">Foto profil</label><input id="curatorAvatarInput" name="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" /><p class="curator-file-note">JPG, PNG, atau WebP. Maksimal 5 MB.</p></div></div>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorDisplayName">Nama tampil</label><input id="curatorDisplayName" name="displayName" maxlength="80" value="${esc(curator.displayName)}" required /></div><div class="curator-field"><label for="curatorHandle">Handle</label><input id="curatorHandle" name="handle" minlength="3" maxlength="32" value="${esc(curator.handle)}" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required /><p class="curator-file-note">Handle menjadi alamat profil kamu.</p></div></div>
       ${controlledTagPickerMarkup({ name:"profileTags", options:CURATOR_PROFILE_TAG_OPTIONS, selected:curator.jobTags, maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}<div class="curator-field"><label for="curatorBio">Bio</label><textarea id="curatorBio" name="bio" maxlength="500" placeholder="Sudut pandang style kamu.">${esc(curator.bio)}</textarea></div>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorHeightCm">Tinggi badan (cm)</label><input id="curatorHeightCm" name="heightCm" type="number" min="100" max="250" step="1" inputmode="numeric" value="${esc(heightValue)}" placeholder="Contoh: 170" /></div><div class="curator-field"><label for="curatorWeightKg">Berat badan (kg)</label><input id="curatorWeightKg" name="weightKg" type="number" min="25" max="300" step="0.1" inputmode="decimal" value="${esc(weightValue)}" placeholder="Contoh: 58" /></div></div>
-      <fieldset class="curator-choice-picker" data-curator-metrics-visibility><legend>Visibilitas tinggi &amp; berat</legend><div class="curator-choice-list"><label class="curator-choice${curator.bodyMetricsPublic ? " is-selected" : ""}"><input name="bodyMetricsPublic" type="checkbox" value="true"${metricsChecked} /><span>Tampilkan di profil publik</span></label></div><p class="curator-file-note">Opsional. Data hanya tampil bila pilihan ini aktif dan kamu mengisi minimal satu metrik.</p></fieldset>
+      <p class="curator-file-note">Tinggi dan berat badan bersifat opsional. Jika diisi, data akan otomatis tampil pada profil publik dan look yang kamu buat.</p>
       <div><p class="curator-inline-label">Social links</p><div class="curator-social-fields">${Object.entries(SOCIAL_LABELS).map(([platform, label]) => `<div class="curator-field"><label for="curatorSocial${platform}">${esc(label)}</label><input id="curatorSocial${platform}" name="social-${esc(platform)}" type="url" placeholder="https://" value="${esc(socialMap[platform] || "")}" /></div>`).join("")}</div></div>
       <div class="curator-form-actions"><p class="curator-form-status" data-curator-profile-status role="alert"></p><button class="button" type="submit">Simpan profil ↗</button></div></form></section>`;
   }
@@ -859,7 +858,6 @@
     const weightInput = form.elements.weightKg;
     const heightCm = optionalMetric(heightInput?.value, 100, 250);
     const weightKg = optionalMetric(weightInput?.value, 25, 300, 1);
-    const bodyMetricsPublic = Boolean(form.elements.bodyMetricsPublic?.checked);
     const socials = Object.keys(SOCIAL_LABELS).map((platform) => ({ platform, url: compact(form.elements[`social-${platform}`]?.value) })).filter((entry) => entry.url);
     const invalidSocial = socials.find((entry) => !/^https:\/\//i.test(entry.url));
     const payload = {
@@ -870,7 +868,7 @@
       avatarFile,
       heightCm,
       weightKg,
-      bodyMetricsPublic,
+      bodyMetricsPublic: true,
       socials,
       socialLinks: socials
     };
@@ -879,7 +877,6 @@
     if (avatarFile && avatarFile.size > 5 * 1024 * 1024) { setFormStatus(status, "Ukuran foto profil maksimal 5 MB."); return; }
     if (compact(heightInput?.value) && heightCm === null) { setFormStatus(status, "Tinggi badan harus berada di antara 100–250 cm."); return; }
     if (compact(weightInput?.value) && weightKg === null) { setFormStatus(status, "Berat badan harus berada di antara 25–300 kg."); return; }
-    if (bodyMetricsPublic && heightCm === null && weightKg === null) { setFormStatus(status, "Isi minimal tinggi atau berat badan sebelum menampilkannya di profil publik."); return; }
     if (invalidSocial) { setFormStatus(status, "Gunakan alamat lengkap yang dimulai dengan https:// untuk social link."); return; }
     submit.disabled = true;
     setFormStatus(status, "Menyimpan profil…");
