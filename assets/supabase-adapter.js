@@ -203,6 +203,7 @@
       image: publicUrl(row.cover_image_path),
       imageAspect: "square",
       genderTarget: row.gender_target || "unisex",
+      category: row.category || "other",
       status: row.status || "draft",
       publishedAt: row.published_at || "",
       variants
@@ -468,7 +469,7 @@
 
     if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka Studio.");
 
-    const productSelect = "id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, status, published_at, sort_order, created_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
+    const productSelect = "id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
     const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path))), look_curation_items(id, position, category, name, color_variant, affiliate_url)";
     const articleSelect = "id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)";
     const productsQuery = (from, to) => {
@@ -938,7 +939,7 @@
     const db = getClient();
     const [requestRows, productRows, lookRows] = await Promise.all([
       queryAllRows((from, to) => db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)),
-      queryAllRows((from, to) => db.from("products").select("id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, status, published_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)").order("sort_order", { ascending: true }).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)),
+      queryAllRows((from, to) => db.from("products").select("id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)").order("sort_order", { ascending: true }).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)),
       queryAllRows((from, to) => db.from("looks").select("id, slug, title, excerpt, cover_image_path, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order))").order("sort_order", { ascending: true }).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to))
     ]);
     const products = productRows.map(mapProduct);
@@ -1691,7 +1692,7 @@
     throw new Error("Gender produk harus pria, wanita, atau unisex.");
   }
 
-  function normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, importKey }) {
+  function normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, category, importKey }) {
     const name = String(title || "").trim();
     const amount = Number(price);
     const preparedVariants = Array.isArray(variants) ? variants.map((variant) => {
@@ -1718,6 +1719,7 @@
       variants: preparedVariants,
       imageUrl: assertImageUrl(imageUrl),
       genderTarget: normalizeGenderTarget(genderTarget),
+      category: ["top","bottom","outerwear","dress","footwear","bag","accessory","hijab","jewelry","other"].includes(String(category || "other")) ? String(category || "other") : "other",
       importKey: normalizeImportKey(importKey)
     };
   }
@@ -1731,9 +1733,9 @@
     return new Map((data || []).map((variant) => [variant.label, variant.image_path || ""]));
   }
 
-  async function saveProduct({ title, price, badge, styles, link, variants, imageFile, imageUrl, imageAspect, genderTarget, importKey }) {
+  async function saveProduct({ title, price, badge, styles, link, variants, imageFile, imageUrl, imageAspect, genderTarget, category, importKey }) {
     const db = getClient();
-    const payload = normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, importKey });
+    const payload = normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, category, importKey });
     payload.styles = await ensureStyleTags(db, payload.styles);
     let existing = null;
     if (payload.importKey) {
@@ -1759,6 +1761,7 @@
           badges: payload.badge ? [payload.badge] : [],
           style_tags: payload.styles,
           gender_target: payload.genderTarget,
+          category: payload.category,
           import_key: payload.importKey || null,
           cover_image_path: payload.imageUrl || null,
           status: "draft",
@@ -1784,6 +1787,7 @@
           badges: payload.badge ? [payload.badge] : [],
           style_tags: payload.styles,
           gender_target: payload.genderTarget,
+          category: payload.category,
           price_checked_at: new Date().toISOString()
         };
         if (suppliedCoverPath) updatePayload.cover_image_path = suppliedCoverPath;
@@ -1875,6 +1879,8 @@
         p_variants: variants
       });
       if (error) throw error;
+      const { error: categoryError } = await db.from("products").update({ category: payload.category }).eq("id", productId);
+      if (categoryError) throw categoryError;
 
       const oldCoverIsStillUsed = variants.some((variant) => variant.image_path === existing.cover_image_path);
       if (nextCoverPath !== existing.cover_image_path && !oldCoverIsStillUsed) {
@@ -1902,6 +1908,7 @@
           variants: group.variants,
           imageUrl: group.coverImageUrl,
           genderTarget: group.genderTarget,
+          category: group.category,
           importKey: group.key
         });
         const item = { key: group.key, name: group.name, ok: true, created: result.created };

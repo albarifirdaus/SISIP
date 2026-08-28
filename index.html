@@ -663,8 +663,8 @@
       .catalogue-route-heading h1 { margin:0; font-size:clamp(3rem,7vw,7.4rem); font-weight:900; letter-spacing:-.108em; line-height:.82; text-transform:uppercase; text-wrap:balance; }
       .catalogue-route-heading > p:last-child { max-width:32rem; margin:0; color:var(--ink-soft); font-size:clamp(.95rem,1.25vw,1.12rem); line-height:1.48; }
       .catalogue-route-tabs { display:flex; flex-wrap:wrap; gap:.42rem; padding:1rem 0 1.25rem; }
-      .catalogue-route-tabs a { padding:.42rem .58rem; border:1px solid var(--line); color:var(--ink-soft); background:var(--paper); font-family:var(--mono); font-size:.55rem; letter-spacing:.035em; text-transform:uppercase; }
-      .catalogue-route-tabs a:hover,.catalogue-route-tabs a.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
+      .catalogue-route-tabs a,.catalogue-route-tabs span { padding:.42rem .58rem; border:1px solid var(--line); color:var(--ink-soft); background:var(--paper); font-family:var(--mono); font-size:.55rem; letter-spacing:.035em; text-transform:uppercase; }
+      .catalogue-route-tabs a:hover,.catalogue-route-tabs a.is-active,.catalogue-route-tabs span.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
       .catalogue-filter { display:grid; grid-template-columns:minmax(260px,1.7fr) repeat(3,minmax(150px,.7fr)); gap:.55rem; padding:0 0 1rem; }
       .catalogue-filter label { display:grid; gap:.28rem; color:var(--ink-soft); font-family:var(--mono); font-size:.52rem; letter-spacing:.045em; text-transform:uppercase; }
       .catalogue-filter input,.catalogue-filter select { width:100%; min-height:48px; padding:0 .75rem; border:1px solid var(--line); color:var(--ink); background:var(--paper); font:inherit; font-size:.66rem; }
@@ -732,7 +732,7 @@
         .catalogue-route-heading h1 { font-size:clamp(2.8rem,14vw,4.6rem); }
         .catalogue-route-heading > p:last-child { font-size:.9rem; }
         .catalogue-route-tabs { flex-wrap:nowrap; overflow:auto; margin-right:-5vw; padding-right:5vw; }
-        .catalogue-route-tabs a { white-space:nowrap; }
+        .catalogue-route-tabs a,.catalogue-route-tabs span { white-space:nowrap; }
         .catalogue-filter { grid-template-columns:1fr 1fr; }
         .catalogue-filter label:first-child { grid-column:1/-1; }
         .catalogue-look-grid,.catalogue-product-grid,.catalogue-journal-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -1313,7 +1313,7 @@
                 <div class="field"><label for="productPriceInput">Harga referensi (manual)</label><input id="productPriceInput" name="price" required inputmode="numeric" placeholder="229000" /></div>
                 <div class="field"><label for="productBadgeInput">Badge (opsional)</label><select id="productBadgeInput" name="badge"><option value="">Tanpa badge</option><option>COMOOTD Pick</option><option>High Rotation</option><option>Wardrobe Staple</option><option>New In</option><option>Trending</option><option>Best Value</option><option>Limited</option></select></div>
               </div>
-              <div class="field"><label for="productGenderInput">Gender target</label><select id="productGenderInput" name="genderTarget"><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
+              <div class="compact-row"><div class="field"><label for="productGenderInput">Gender target</label><select id="productGenderInput" name="genderTarget"><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div><div class="field"><label for="productCategoryInput">Kategori</label><select id="productCategoryInput" name="category"><option value="top">Atasan</option><option value="bottom">Bawahan</option><option value="outerwear">Outerwear</option><option value="dress">Dress / Set</option><option value="footwear">Sepatu</option><option value="bag">Tas</option><option value="accessory">Aksesori</option><option value="hijab">Hijab</option><option value="jewelry">Perhiasan</option><option value="other" selected>Lainnya</option></select></div></div>
               <div class="field"><label for="productLinkInput">Link affiliate Shopee</label><input id="productLinkInput" name="link" required type="url" placeholder="https://shopee.co.id/..." /></div>
               <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Tag style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="productStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="productStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="productStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="productStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="productStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="productStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="productStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="productStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="productStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="productStyles" value="Party" /><span>Party</span></label></div><div class="taxonomy-custom-add"><input type="text" maxlength="48" data-custom-style-input placeholder="Tambah style kustom" /><button class="small-button muted" type="button" data-add-custom-style>+ Tag</button></div><p class="microcopy">Pilih maksimal tiga tag. Tag ini sama dengan filter yang dilihat pengunjung.</p></fieldset>
               <div class="field"><label for="productVariantsInput">Varian warna</label><select id="productVariantsInput" name="variants" required multiple size="8"><option value="Hitam|#151515">Hitam · #151515</option><option value="Putih|#F7F7F2">Putih · #F7F7F2</option><option value="Ivory|#F1EBDD">Ivory · #F1EBDD</option><option value="Cream|#E8D9C5">Cream · #E8D9C5</option><option value="Beige|#CBB89D">Beige · #CBB89D</option><option value="Taupe|#988477">Taupe · #988477</option><option value="Cokelat|#704B38">Cokelat · #704B38</option><option value="Abu-abu|#8B8D8F">Abu-abu · #8B8D8F</option><option value="Charcoal|#3F4143">Charcoal · #3F4143</option><option value="Navy|#1D2942">Navy · #1D2942</option><option value="Biru|#4F73A1">Biru · #4F73A1</option><option value="Denim|#6E87A5">Denim · #6E87A5</option><option value="Merah|#A43A32">Merah · #A43A32</option><option value="Burgundy|#6D2635">Burgundy · #6D2635</option><option value="Pink|#D8A3AD">Pink · #D8A3AD</option><option value="Oranye|#C86B32">Oranye · #C86B32</option><option value="Kuning|#D4AE3B">Kuning · #D4AE3B</option><option value="Hijau|#52705A">Hijau · #52705A</option><option value="Olive|#6C7047">Olive · #6C7047</option><option value="Ungu|#765A83">Ungu · #765A83</option><option value="Silver|#B9BBC0">Silver · #B9BBC0</option><option value="Gold|#B89A52">Gold · #B89A52</option><option value="Multicolor|#B8AEA1">Multicolor · #B8AEA1</option></select><p class="microcopy">Pilih satu atau beberapa warna. Nama dan kode HEX sudah otomatis.</p></div>
@@ -1385,12 +1385,12 @@
         };
         const JOURNAL_BLOCK_LIMIT = 20;
         const JOURNAL_CTA_LIMIT = 3;
-        const BULK_IMPORT_HEADERS = ["product_key", "name", "affiliate_url", "price_idr", "badge", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "gender_target", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
+        const BULK_IMPORT_HEADERS = ["product_key", "name", "affiliate_url", "price_idr", "badge", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "gender_target", "category", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
         const BULK_IMPORT_TEMPLATE_ROWS = [
-          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
-          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "https://cdn.contoh.com/oxford-cover.jpg", "Biru kabut", "#AAB7C7", "https://cdn.contoh.com/oxford-biru.jpg"],
-          ["TROUSER-001", "Pleated Straight Trousers", "https://shope.ee/contoh-link", "289000", "", "", "Clean", "Formal", "", "unisex", "https://cdn.contoh.com/trouser-cover.jpg", "Charcoal", "#3B3A38", ""],
-          ["LOAFER-001", "Leather Penny Loafers", "https://shope.ee/contoh-link", "319000", "High Rotation", "", "Formal", "Clean", "", "unisex", "https://cdn.contoh.com/loafer-cover.jpg", "Hitam", "#211F1D", ""]
+          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "top", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
+          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "top", "https://cdn.contoh.com/oxford-cover.jpg", "Biru kabut", "#AAB7C7", "https://cdn.contoh.com/oxford-biru.jpg"],
+          ["TROUSER-001", "Pleated Straight Trousers", "https://shope.ee/contoh-link", "289000", "", "", "Clean", "Formal", "", "unisex", "bottom", "https://cdn.contoh.com/trouser-cover.jpg", "Charcoal", "#3B3A38", ""],
+          ["LOAFER-001", "Leather Penny Loafers", "https://shope.ee/contoh-link", "319000", "High Rotation", "", "Formal", "Clean", "", "unisex", "footwear", "https://cdn.contoh.com/loafer-cover.jpg", "Hitam", "#211F1D", ""]
         ];
         const BULK_LOOK_IMPORT_HEADERS = ["look_key", "title", "excerpt", "gender_target", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "cover_image_url", "cover_alt_text", "item_position", "product_key", "variant_label"];
         const BULK_LOOK_IMPORT_TEMPLATE_ROWS = [
@@ -2396,6 +2396,7 @@
           els.productForm.elements.price.value=item.price||"";
           els.productForm.elements.badge.value=item.badge||"";
           els.productForm.elements.genderTarget.value=item.genderTarget||"unisex";
+          els.productForm.elements.category.value=item.category||"other";
           els.productForm.elements.link.value=item.affiliateUrl||"";
           setTaxonomyValues(els.productForm,"productStyles",item.styles||[]);
           const variantSelect=els.productForm.elements.variants;
@@ -2496,9 +2497,11 @@
         function catalogueJournalCard(entry) {
           return `<article class="catalogue-journal-card"><button type="button" data-open-article="${esc(entry.id)}">${entry.coverImage ? `<img src="${esc(safeImage(entry.coverImage))}" alt="${esc(entry.coverAlt || entry.title)}" />` : ""}<span>${esc(articleCategoryLabel(entry.category))}</span><h2>${esc(entry.title)}</h2><p>${esc(entry.excerpt || "Catatan style dari COMOOTD.")}</p></button></article>`;
         }
-        const directoryFilters={q:"",gender:"all",style:"all",sort:"popular"};
+        const PRODUCT_CATEGORIES={top:"Atasan",bottom:"Bawahan",outerwear:"Outerwear",dress:"Dress / Set",footwear:"Sepatu",bag:"Tas",accessory:"Aksesori",hijab:"Hijab",jewelry:"Perhiasan",other:"Lainnya"};
+        const directoryFilters={q:"",gender:"all",style:"all",sort:"popular",category:"all",price:"all"};
         function directoryFilterMarkup(route) {
           if(route.key==="journal") return "";
+          if(route.key==="products") return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(directoryFilters.q)}" placeholder="Cari nama, warna, atau kategori" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${directoryFilters.gender==="Pria"?" selected":""}>Pria</option><option value="Wanita"${directoryFilters.gender==="Wanita"?" selected":""}>Wanita</option><option value="Uniseks"${directoryFilters.gender==="Uniseks"?" selected":""}>Uniseks</option></select></label><label><span>Kategori</span><select data-directory-filter="category"><option value="all">Semua kategori</option>${Object.entries(PRODUCT_CATEGORIES).map(([value,label])=>`<option value="${value}"${directoryFilters.category===value?" selected":""}>${label}</option>`).join("")}</select></label><label><span>Harga</span><select data-directory-filter="price"><option value="all">Semua harga</option><option value="under100"${directoryFilters.price==="under100"?" selected":""}>Di bawah Rp100 ribu</option><option value="100to250"${directoryFilters.price==="100to250"?" selected":""}>Rp100–250 ribu</option><option value="250to500"${directoryFilters.price==="250to500"?" selected":""}>Rp250–500 ribu</option><option value="over500"${directoryFilters.price==="over500"?" selected":""}>Di atas Rp500 ribu</option></select></label></div>`;
           const styles=[...new Set((route.key==="products"?state.products:state.looks).flatMap((item)=>item.styles||[]))].sort();
           return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(directoryFilters.q)}" placeholder="Cari nama, style, warna, atau curator" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${directoryFilters.gender==="Pria"?" selected":""}>Pria</option><option value="Wanita"${directoryFilters.gender==="Wanita"?" selected":""}>Wanita</option><option value="Uniseks"${directoryFilters.gender==="Uniseks"?" selected":""}>Uniseks</option></select></label><label><span>Style</span><select data-directory-filter="style"><option value="all">Semua style</option>${styles.map((style)=>`<option value="${esc(style)}"${directoryFilters.style===style?" selected":""}>${esc(style)}</option>`).join("")}</select></label><label><span>Urutkan</span><select data-directory-filter="sort"><option value="popular"${directoryFilters.sort==="popular"?" selected":""}>Paling populer</option><option value="newest"${directoryFilters.sort==="newest"?" selected":""}>Terbaru</option><option value="az"${directoryFilters.sort==="az"?" selected":""}>A–Z</option></select></label></div>`;
         }
@@ -2506,9 +2509,11 @@
           let source=route.key==="products"?[...state.products]:route.key==="journal"?[...state.articles]:route.key==="comootd"?state.looks.filter((item)=>item.publisherType!=="curator"&&!item.curator?.handle):route.key==="curators"?state.looks.filter((item)=>item.publisherType==="curator"||item.curator?.handle):[...state.looks];
           if(route.key==="journal") return source;
           const q=directoryFilters.q.trim().toLowerCase();
-          if(q) source=source.filter((item)=>[item.title,item.name,item.gender,item.genderTarget,item.badge,item.curator?.displayName,item.curator?.handle,...(item.styles||[]),...(item.variants||[]).flatMap((variant)=>[variant.name,variant.hex])].filter(Boolean).join(" ").toLowerCase().includes(q));
+          if(q) source=source.filter((item)=>[item.title,item.name,item.gender,item.genderTarget,item.badge,item.category,PRODUCT_CATEGORIES[item.category],item.curator?.displayName,item.curator?.handle,...(item.styles||[]),...(item.variants||[]).flatMap((variant)=>[variant.name,variant.hex])].filter(Boolean).join(" ").toLowerCase().includes(q));
           if(directoryFilters.gender!=="all") source=source.filter((item)=>(item.gender||({pria:"Pria",wanita:"Wanita",unisex:"Uniseks"}[item.genderTarget]))===directoryFilters.gender);
-          if(directoryFilters.style!=="all") source=source.filter((item)=>(item.styles||[]).includes(directoryFilters.style));
+          if(route.key==="products"&&directoryFilters.category!=="all") source=source.filter((item)=>(item.category||"other")===directoryFilters.category);
+          if(route.key==="products"&&directoryFilters.price!=="all") source=source.filter((item)=>{const price=Number(item.price||0);return directoryFilters.price==="under100"?price<100000:directoryFilters.price==="100to250"?price>=100000&&price<250000:directoryFilters.price==="250to500"?price>=250000&&price<500000:price>=500000;});
+          if(route.key!=="products"&&directoryFilters.style!=="all") source=source.filter((item)=>(item.styles||[]).includes(directoryFilters.style));
           if(directoryFilters.sort==="az") source.sort((a,b)=>String(a.title||a.name).localeCompare(String(b.title||b.name),"id"));
           else if(directoryFilters.sort==="newest") source.sort((a,b)=>String(b.publishedAt||b.createdAt||"").localeCompare(String(a.publishedAt||a.createdAt||"")));
           else source.sort((a,b)=>Number(b.popularity||0)-Number(a.popularity||0));
@@ -2521,7 +2526,8 @@
           const source=filteredDirectoryEntries(route);
           let content=route.key==="products"?source.map(catalogueProductCard).join(""):route.key==="journal"?source.map(catalogueJournalCard).join(""):source.map(catalogueLookCard).join("");
           const className = route.key === "products" ? "catalogue-product-grid" : route.key === "journal" ? "catalogue-journal-grid" : "catalogue-look-grid";
-          layer.innerHTML = `<div class="catalogue-route-shell">${catalogueRouteBar()}<main class="catalogue-route-body"><div class="catalogue-route-heading"><p>COMOOTD / DIRECTORY</p><h1>${esc(route.title)}</h1><p>${esc(route.deck)}</p></div><nav class="catalogue-route-tabs" aria-label="Pilihan katalog"><a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a><a href="/products" class="${route.key === "products" ? "is-active" : ""}">Products</a><a href="/curators">Curators</a><a href="/journal" class="${route.key === "journal" ? "is-active" : ""}">Journal</a></nav>${directoryFilterMarkup(route)}${route.key!=="journal"?`<p class="catalogue-result-count">${source.length} hasil</p>`:""}<section class="${className}">${content || `<p class="catalogue-empty">Belum ada konten yang cocok dengan filter ini.</p>`}</section></main></div>`;
+          const tabs=route.key==="products"?`<span class="is-active">Products</span>`:route.key==="journal"?`<span class="is-active">Journal</span>`:`<a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a>`;
+          layer.innerHTML = `<div class="catalogue-route-shell">${catalogueRouteBar()}<main class="catalogue-route-body"><div class="catalogue-route-heading"><p>COMOOTD / DIRECTORY</p><h1>${esc(route.title)}</h1><p>${esc(route.deck)}</p></div><nav class="catalogue-route-tabs" aria-label="Pilihan katalog">${tabs}</nav>${directoryFilterMarkup(route)}${route.key!=="journal"?`<p class="catalogue-result-count">${source.length} hasil</p>`:""}<section class="${className}">${content || `<p class="catalogue-empty">Belum ada konten yang cocok dengan filter ini.</p>`}</section></main></div>`;
           layer.classList.add("is-open"); document.body.classList.add("catalogue-route-open");
           updateDirectoryMetadata(route);
           return true;
@@ -3044,6 +3050,7 @@
             let affiliateUrl = "";
             let price = 0;
             let genderTarget = "unisex";
+            let category = "other";
             let colorHex = "#B8AEA1";
             let coverImageUrl = "";
             let variantImageUrl = "";
@@ -3052,6 +3059,8 @@
             try { affiliateUrl = affiliateUrlFromBulk(row.affiliate_url); } catch (error) { problems.push(error.message); }
             try { price = parseBulkPrice(row.price_idr); } catch (error) { problems.push(error.message); }
             try { genderTarget = normalizeBulkGender(row.gender_target); } catch (error) { problems.push(error.message); }
+            category=String(row.category||"other").trim().toLowerCase();
+            if(!Object.prototype.hasOwnProperty.call(PRODUCT_CATEGORIES,category)) problems.push("category tidak sesuai pilihan template.");
             try { styles = parseBulkTags(row); } catch (error) { problems.push(error.message); }
             try { badge = parseBulkBadge(row.badge); } catch (error) { problems.push(error.message); }
             try { colorHex = normalizeBulkColorHex(row.color_hex) || "#B8AEA1"; if (!String(row.color_hex || "").trim()) warnings.push("Baris " + row.rowNumber + ": color_hex kosong, memakai #B8AEA1."); } catch (error) { problems.push(error.message); }
@@ -3066,6 +3075,7 @@
               badge,
               styles,
               genderTarget,
+              category,
               coverImageUrl,
               variants: [{ name: colorName, hex: colorHex, imageUrl: variantImageUrl }],
               variantNames: new Set([colorName.toLowerCase()])
@@ -3076,14 +3086,14 @@
               groups.set(key, candidate);
               return;
             }
-            const sameMetadata = existing.name === candidate.name && existing.affiliateUrl === candidate.affiliateUrl && existing.price === candidate.price && existing.badge === candidate.badge && existing.styles.join("|") === candidate.styles.join("|") && existing.genderTarget === candidate.genderTarget && existing.coverImageUrl === candidate.coverImageUrl;
+            const sameMetadata = existing.name === candidate.name && existing.affiliateUrl === candidate.affiliateUrl && existing.price === candidate.price && existing.badge === candidate.badge && existing.styles.join("|") === candidate.styles.join("|") && existing.genderTarget === candidate.genderTarget && existing.category === candidate.category && existing.coverImageUrl === candidate.coverImageUrl;
             if (!sameMetadata) { errors.push("Baris " + row.rowNumber + ": data produk untuk product_key " + key + " harus sama di setiap warna."); return; }
             if (existing.variantNames.has(colorName.toLowerCase())) { errors.push("Baris " + row.rowNumber + ": warna " + colorName + " tercatat dua kali untuk " + key + "."); return; }
             existing.variantNames.add(colorName.toLowerCase());
             existing.variants.push(candidate.variants[0]);
           });
           return {
-            groups: Array.from(groups.values()).map((group) => ({ key: group.key, name: group.name, affiliateUrl: group.affiliateUrl, price: group.price, badge: group.badge, styles: group.styles, genderTarget: group.genderTarget, coverImageUrl: group.coverImageUrl, variants: group.variants })),
+            groups: Array.from(groups.values()).map((group) => ({ key: group.key, name: group.name, affiliateUrl: group.affiliateUrl, price: group.price, badge: group.badge, styles: group.styles, genderTarget: group.genderTarget, category: group.category, coverImageUrl: group.coverImageUrl, variants: group.variants })),
             errors,
             warnings
           };
@@ -3876,12 +3886,13 @@
             const badge=String(form.get("badge")||"").trim();
             const styles=taxonomyValues(productForm,"productStyles");
             const genderTarget=String(form.get("genderTarget")||"unisex");
+            const category=String(form.get("category")||"other");
             const productImageInput=document.getElementById("productImageInput");
             const imageFile=preparedImageFile(productImageInput);
             const imageAspect=selectedImageAspect(productImageInput,"square");
             if(cloudEnabled()) {
-              if(editId) await cloud.updateProduct(editId,{ title, price, badge, styles, genderTarget, link, variants, imageUrl, imageFile, imageAspect });
-              else await cloud.createProduct({ title, price, badge, styles, genderTarget, link, variants, imageUrl, imageFile, imageAspect });
+              if(editId) await cloud.updateProduct(editId,{ title, price, badge, styles, genderTarget, category, link, variants, imageUrl, imageFile, imageAspect });
+              else await cloud.createProduct({ title, price, badge, styles, genderTarget, category, link, variants, imageUrl, imageFile, imageAspect });
               resetProductEditor();
               await refreshCloudState({admin:true});
               switchStudioTab("products");
@@ -3894,11 +3905,11 @@
             const suppliedImage=Boolean(imageUrl || uploadedImage);
             const localVariants=variants.map((variant)=>{const previous=existingProduct?.variants?.find((candidate)=>candidate.id===variant.id);return {...(previous||{}),id:variant.id||uid("variant"),name:variant.name,hex:variant.hex,image:suppliedImage ? image : previous?.image||image};});
             if(editId) {
-              Object.assign(existingProduct,{name:title,price,badge,styles,genderTarget,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect:imageFile || imageUrl ? imageAspect : existingProduct.imageAspect,variants:localVariants});
+              Object.assign(existingProduct,{name:title,price,badge,styles,genderTarget,category,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect:imageFile || imageUrl ? imageAspect : existingProduct.imageAspect,variants:localVariants});
               saveState();resetProductEditor();renderAll();switchStudioTab("products");showToast("Produk berhasil diperbarui di prototype.");
               return;
             }
-            const created={id:uid("product"),name:title,price,badge,styles,genderTarget,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect,variants:localVariants};
+            const created={id:uid("product"),name:title,price,badge,styles,genderTarget,category,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect,variants:localVariants};
             state.products.push(created);saveState();resetProductEditor();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
           } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
         });
