@@ -286,6 +286,7 @@
       .product-name-link:hover, .look-item-title:hover, .article-related-product-open:hover { color:var(--clay); }
 
       .lookbook-section { background:var(--white); }
+      .home-catalogue-controls[hidden] { display:none !important; }
       .filter-toolbar { display:grid; grid-template-columns:minmax(180px,1.35fr) repeat(3,minmax(126px,.45fr)); gap:.55rem; margin-bottom:1.25rem; }
       .field, .field select, .field input, .field textarea { width:100%; }
       .field { position:relative; }
@@ -664,6 +665,11 @@
       .catalogue-route-tabs { display:flex; flex-wrap:wrap; gap:.42rem; padding:1rem 0 1.25rem; }
       .catalogue-route-tabs a { padding:.42rem .58rem; border:1px solid var(--line); color:var(--ink-soft); background:var(--paper); font-family:var(--mono); font-size:.55rem; letter-spacing:.035em; text-transform:uppercase; }
       .catalogue-route-tabs a:hover,.catalogue-route-tabs a.is-active { color:var(--white); border-color:var(--ink); background:var(--ink); }
+      .catalogue-filter { display:grid; grid-template-columns:minmax(260px,1.7fr) repeat(3,minmax(150px,.7fr)); gap:.55rem; padding:0 0 1rem; }
+      .catalogue-filter label { display:grid; gap:.28rem; color:var(--ink-soft); font-family:var(--mono); font-size:.52rem; letter-spacing:.045em; text-transform:uppercase; }
+      .catalogue-filter input,.catalogue-filter select { width:100%; min-height:48px; padding:0 .75rem; border:1px solid var(--line); color:var(--ink); background:var(--paper); font:inherit; font-size:.66rem; }
+      .catalogue-filter input { text-transform:none; }
+      .catalogue-result-count { margin:0 0 .65rem; color:var(--taupe); font-family:var(--mono); font-size:.55rem; letter-spacing:.04em; text-transform:uppercase; }
       .catalogue-look-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px; background:var(--line); }
       .catalogue-look-card { min-width:0; background:var(--white); }
       .catalogue-look-image { position:relative; width:100%; aspect-ratio:1/1; padding:0; overflow:hidden; border:0; background:var(--ink); cursor:pointer; isolation:isolate; }
@@ -727,6 +733,8 @@
         .catalogue-route-heading > p:last-child { font-size:.9rem; }
         .catalogue-route-tabs { flex-wrap:nowrap; overflow:auto; margin-right:-5vw; padding-right:5vw; }
         .catalogue-route-tabs a { white-space:nowrap; }
+        .catalogue-filter { grid-template-columns:1fr 1fr; }
+        .catalogue-filter label:first-child { grid-column:1/-1; }
         .catalogue-look-grid,.catalogue-product-grid,.catalogue-journal-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
         .catalogue-look-copy { min-height:0; padding:.72rem; }
         .catalogue-look-copy h2,.catalogue-product-card h2,.catalogue-journal-card h2 { font-size:1.05rem; }
@@ -884,7 +892,7 @@
             <p class="hero-description">Kurasi outfit terkurator untuk tiap agenda—dari ngantor, hangout, sampai weekend getaway. Klik, pilih, and direct to buy.</p>
           </div>
           <div class="hero-bottom">
-            <a class="button" href="#lookbook">Explore looks <span aria-hidden="true">↘</span></a>
+            <a class="button" href="/looks">Explore looks <span aria-hidden="true">↘</span></a>
             <div class="hero-count meta"><strong id="heroLookCount">12</strong>look dikurasi</div>
           </div>
         </div>
@@ -927,7 +935,7 @@
           </div>
           <div class="section-lead">
             <p class="section-description">Koleksi <em>fashion statement</em> dan <em>basic pieces</em> paling serbaguna yang terbukti gampang di-<em>styling</em> berkali-kali.</p>
-            <a class="text-link" href="#lookbook">Explore all looks <span aria-hidden="true">↘</span></a>
+            <a class="text-link" href="/products">Explore products <span aria-hidden="true">↘</span></a>
           </div>
         </div>
         <div class="popular-grid" id="popularGrid"></div>
@@ -941,7 +949,7 @@
           </div>
           <div class="section-lead">
             <p class="section-description">Atur profil gayamu. Algoritma kurasi kami akan memfilter kombinasi outfit yang sesuai dengan karakter dan kebutuhan harianmu.</p>
-            <a class="text-link" href="#lookbook">Explore the curation <span aria-hidden="true">↘</span></a>
+            <a class="text-link" href="/looks">Explore the curation <span aria-hidden="true">↘</span></a>
           </div>
         </div>
         <div class="personal-grid" id="personalGrid"></div>
@@ -950,14 +958,14 @@
       <section class="section lookbook-section" id="lookbook" aria-labelledby="lookbookTitle">
         <div class="section-heading">
           <div>
-            <p class="section-number eyebrow">COMOOTD / Curated Catalogue</p>
-            <h2 class="section-title" id="lookbookTitle">Explore the Curation</h2>
+            <p class="section-number eyebrow">COMOOTD / TRENDING NOW</p>
+            <h2 class="section-title" id="lookbookTitle">Looks People<br />Keep Saving.</h2>
           </div>
           <div class="section-lead">
-            <p class="section-description">Setiap <em>lookbook</em> dilengkapi rincian <em>item-by-item</em> beserta akses langsung ke Shopee.</p>
+            <p class="section-description">Kurasi yang sedang paling banyak disukai—lengkap dengan rincian item dan akses langsung ke Shopee.</p><a class="text-link" href="/looks">Lihat semua look <span aria-hidden="true">↗</span></a>
           </div>
         </div>
-        <div class="filter-toolbar" aria-label="Filter katalog look">
+        <div class="filter-toolbar home-catalogue-controls" aria-label="Filter katalog look" hidden>
           <div class="field has-icon">
             <label for="searchInput">Cari look, produk, atau curator</label>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4.2 4.2"></path></svg>
@@ -976,7 +984,7 @@
             <select id="sortFilter"><option value="popular">Paling populer</option><option value="newest">Terbaru</option><option value="low">Harga terendah</option><option value="high">Harga tertinggi</option></select>
           </div>
         </div>
-        <div class="filter-row">
+        <div class="filter-row home-catalogue-controls" hidden>
           <div class="active-filter" id="styleChips" aria-label="Filter style cepat"></div>
           <span class="result-count microcopy" id="resultCount">12 look ditemukan</span>
         </div>
@@ -1175,6 +1183,7 @@
                 <div class="field"><label for="lookTitleInput">Nama look</label><input id="lookTitleInput" name="title" required placeholder="Contoh: Kota Setelah Hujan" /></div>
                 <div class="field"><label for="lookGenderInput">Gender</label><select id="lookGenderInput" name="gender"><option>Uniseks</option><option>Pria</option><option>Wanita</option></select></div>
               </div>
+              <div class="field"><label for="lookExcerptInput">Deskripsi kurasi (opsional)</label><textarea id="lookExcerptInput" name="excerpt" maxlength="240" placeholder="Ide, occasion, atau formula styling dalam maksimal 240 karakter."></textarea><p class="microcopy">Jika kosong, deskripsi tidak akan ditampilkan.</p></div>
               <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="lookStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="lookStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="lookStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="lookStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="lookStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="lookStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="lookStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="lookStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="lookStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="lookStyles" value="Party" /><span>Party</span></label></div><div class="taxonomy-custom-add"><input type="text" maxlength="48" data-custom-style-input placeholder="Tambah style kustom" /><button class="small-button muted" type="button" data-add-custom-style>+ Tag</button></div><p class="microcopy">Pilih maksimal tiga tag agar look mudah ditemukan.</p></fieldset>
               <div class="look-gallery-upload-grid"><div class="field"><label for="lookCoverInput" id="lookCoverLabel">Foto 1 / cover (opsional)</label><input id="lookCoverInput" type="file" accept="image/jpeg,image/png,image/webp" /></div><div class="field"><label for="lookMedia2Input">Foto 2 (opsional)</label><input id="lookMedia2Input" type="file" accept="image/jpeg,image/png,image/webp" /></div><div class="field"><label for="lookMedia3Input">Foto 3 (opsional)</label><input id="lookMedia3Input" type="file" accept="image/jpeg,image/png,image/webp" /></div></div><p class="image-upload-note">Unggah hingga tiga foto. Setiap foto dapat dicrop portrait 3:4 atau square 1:1.</p>
               <div class="editor-product-row">
@@ -1307,7 +1316,7 @@
               <div class="field"><label for="productGenderInput">Gender target</label><select id="productGenderInput" name="genderTarget"><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
               <div class="field"><label for="productLinkInput">Link affiliate Shopee</label><input id="productLinkInput" name="link" required type="url" placeholder="https://shopee.co.id/..." /></div>
               <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Tag style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="productStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="productStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="productStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="productStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="productStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="productStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="productStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="productStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="productStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="productStyles" value="Party" /><span>Party</span></label></div><div class="taxonomy-custom-add"><input type="text" maxlength="48" data-custom-style-input placeholder="Tambah style kustom" /><button class="small-button muted" type="button" data-add-custom-style>+ Tag</button></div><p class="microcopy">Pilih maksimal tiga tag. Tag ini sama dengan filter yang dilihat pengunjung.</p></fieldset>
-              <div class="field"><label for="productVariantsInput">Varian warna (Nama|#HEX, pisahkan koma)</label><input id="productVariantsInput" name="variants" required placeholder="Putih|#F1F0EC, Biru|#AAB7C7" /></div>
+              <div class="field"><label for="productVariantsInput">Varian warna</label><select id="productVariantsInput" name="variants" required multiple size="8"><option value="Hitam|#151515">Hitam · #151515</option><option value="Putih|#F7F7F2">Putih · #F7F7F2</option><option value="Ivory|#F1EBDD">Ivory · #F1EBDD</option><option value="Cream|#E8D9C5">Cream · #E8D9C5</option><option value="Beige|#CBB89D">Beige · #CBB89D</option><option value="Taupe|#988477">Taupe · #988477</option><option value="Cokelat|#704B38">Cokelat · #704B38</option><option value="Abu-abu|#8B8D8F">Abu-abu · #8B8D8F</option><option value="Charcoal|#3F4143">Charcoal · #3F4143</option><option value="Navy|#1D2942">Navy · #1D2942</option><option value="Biru|#4F73A1">Biru · #4F73A1</option><option value="Denim|#6E87A5">Denim · #6E87A5</option><option value="Merah|#A43A32">Merah · #A43A32</option><option value="Burgundy|#6D2635">Burgundy · #6D2635</option><option value="Pink|#D8A3AD">Pink · #D8A3AD</option><option value="Oranye|#C86B32">Oranye · #C86B32</option><option value="Kuning|#D4AE3B">Kuning · #D4AE3B</option><option value="Hijau|#52705A">Hijau · #52705A</option><option value="Olive|#6C7047">Olive · #6C7047</option><option value="Ungu|#765A83">Ungu · #765A83</option><option value="Silver|#B9BBC0">Silver · #B9BBC0</option><option value="Gold|#B89A52">Gold · #B89A52</option><option value="Multicolor|#B8AEA1">Multicolor · #B8AEA1</option></select><p class="microcopy">Pilih satu atau beberapa warna. Nama dan kode HEX sudah otomatis.</p></div>
               <div class="field"><label for="productImageUrlInput">URL foto cover (opsional)</label><input id="productImageUrlInput" name="imageUrl" type="url" placeholder="https://cdn.example.com/foto-produk.jpg" /></div>
               <p class="microcopy" style="margin:-.2rem 0 0;color:var(--taupe)">Link affiliate tidak diekstrak otomatis. Pakai URL gambar resmi dari Product Feed atau upload foto sendiri.</p>
               <div class="field"><label for="productImageInput" id="productImageLabel">Upload foto produk (opsional)</label><input id="productImageInput" type="file" accept="image/jpeg,image/png,image/webp" /><p class="image-upload-note">Foto produk selalu ditampilkan square 1:1. Atur crop sebelum menggunakan foto.</p></div>
@@ -2078,11 +2087,11 @@
           } catch (error) { showToast(error?.message || "Like belum dapat disimpan."); }
         }
         function renderLooks() {
-          const entries = filteredLooks();
+          const entries = [...state.looks].sort((a,b)=>Number(b.popularity||0)-Number(a.popularity||0)||Number(b.createdOrder||0)-Number(a.createdOrder||0)).slice(0,4);
           els.heroCount.textContent = state.looks.length;
-          els.resultCount.textContent = `${entries.length} look ditemukan`;
+          els.resultCount.textContent = `${state.looks.length} look tersedia`;
           if (!entries.length) {
-            els.lookGrid.innerHTML = `<div class="empty-state"><h3>Belum ada look yang cocok.</h3><p>Coba ubah kata kunci atau reset filter untuk melihat seluruh kurasi.</p><button class="button-outline" id="clearFilterButton" type="button" style="margin-top:1rem">Reset filter</button></div>`;
+            els.lookGrid.innerHTML = `<div class="empty-state"><h3>Kurasi sedang disiapkan.</h3><p>Look pilihan COMOOTD akan segera tampil di sini.</p></div>`;
             return;
           }
           els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}</button><div class="look-card-body"><div class="look-card-meta"><span class="eyebrow">${esc(lookAttribution(entry))}</span><span class="meta">${esc(entry.gender)}</span></div><h3 class="look-card-title">${esc(entry.title)}</h3>${curatorMetricsMarkup(entry,true)}<div class="look-card-footer"><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry,true)}</div></div></article>`).join("");
@@ -2355,6 +2364,7 @@
           editingLookId=entry.id;
           lookDraftItems=clone(entry.items||[]);
           els.lookForm.elements.title.value=entry.title||"";
+          els.lookForm.elements.excerpt.value=entry.excerpt||"";
           els.lookForm.elements.gender.value=entry.gender||"Uniseks";
           setTaxonomyValues(els.lookForm,"lookStyles",entry.styles||[]);
           els.lookFormHeading.textContent="Edit look";
@@ -2369,6 +2379,7 @@
         }
         function resetProductEditor() {
           editingProductId="";
+          [...els.productForm.elements.variants.querySelectorAll("[data-legacy-color]")].forEach((option)=>option.remove());
           els.productForm.reset();
           setTaxonomyValues(els.productForm,"productStyles",[]);
           els.productFormHeading.textContent="Tambah produk";
@@ -2387,7 +2398,11 @@
           els.productForm.elements.genderTarget.value=item.genderTarget||"unisex";
           els.productForm.elements.link.value=item.affiliateUrl||"";
           setTaxonomyValues(els.productForm,"productStyles",item.styles||[]);
-          els.productForm.elements.variants.value=(item.variants||[]).map((variant)=>`${variant.name}|${variant.hex}`).join(", ");
+          const variantSelect=els.productForm.elements.variants;
+          [...variantSelect.querySelectorAll("[data-legacy-color]")].forEach((option)=>option.remove());
+          const selectedVariants=new Set((item.variants||[]).map((variant)=>`${variant.name}|${String(variant.hex||"").toUpperCase()}`));
+          selectedVariants.forEach((value)=>{if(![...variantSelect.options].some((option)=>`${option.value.split("|")[0]}|${option.value.split("|")[1].toUpperCase()}`===value)){const option=document.createElement("option");option.value=value;option.textContent=`${value.replace("|"," · ")} · existing`;option.dataset.legacyColor="true";variantSelect.append(option);}});
+          [...variantSelect.options].forEach((option)=>{option.selected=selectedVariants.has(`${option.value.split("|")[0]}|${option.value.split("|")[1].toUpperCase()}`);});
           // Storage paths are intentionally not copied into this visible URL field.
           els.productForm.elements.imageUrl.value="";
           els.productFormHeading.textContent="Edit produk";
@@ -2481,19 +2496,32 @@
         function catalogueJournalCard(entry) {
           return `<article class="catalogue-journal-card"><button type="button" data-open-article="${esc(entry.id)}">${entry.coverImage ? `<img src="${esc(safeImage(entry.coverImage))}" alt="${esc(entry.coverAlt || entry.title)}" />` : ""}<span>${esc(articleCategoryLabel(entry.category))}</span><h2>${esc(entry.title)}</h2><p>${esc(entry.excerpt || "Catatan style dari COMOOTD.")}</p></button></article>`;
         }
+        const directoryFilters={q:"",gender:"all",style:"all",sort:"popular"};
+        function directoryFilterMarkup(route) {
+          if(route.key==="journal") return "";
+          const styles=[...new Set((route.key==="products"?state.products:state.looks).flatMap((item)=>item.styles||[]))].sort();
+          return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(directoryFilters.q)}" placeholder="Cari nama, style, warna, atau curator" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${directoryFilters.gender==="Pria"?" selected":""}>Pria</option><option value="Wanita"${directoryFilters.gender==="Wanita"?" selected":""}>Wanita</option><option value="Uniseks"${directoryFilters.gender==="Uniseks"?" selected":""}>Uniseks</option></select></label><label><span>Style</span><select data-directory-filter="style"><option value="all">Semua style</option>${styles.map((style)=>`<option value="${esc(style)}"${directoryFilters.style===style?" selected":""}>${esc(style)}</option>`).join("")}</select></label><label><span>Urutkan</span><select data-directory-filter="sort"><option value="popular"${directoryFilters.sort==="popular"?" selected":""}>Paling populer</option><option value="newest"${directoryFilters.sort==="newest"?" selected":""}>Terbaru</option><option value="az"${directoryFilters.sort==="az"?" selected":""}>A–Z</option></select></label></div>`;
+        }
+        function filteredDirectoryEntries(route) {
+          let source=route.key==="products"?[...state.products]:route.key==="journal"?[...state.articles]:route.key==="comootd"?state.looks.filter((item)=>item.publisherType!=="curator"&&!item.curator?.handle):route.key==="curators"?state.looks.filter((item)=>item.publisherType==="curator"||item.curator?.handle):[...state.looks];
+          if(route.key==="journal") return source;
+          const q=directoryFilters.q.trim().toLowerCase();
+          if(q) source=source.filter((item)=>[item.title,item.name,item.gender,item.genderTarget,item.badge,item.curator?.displayName,item.curator?.handle,...(item.styles||[]),...(item.variants||[]).flatMap((variant)=>[variant.name,variant.hex])].filter(Boolean).join(" ").toLowerCase().includes(q));
+          if(directoryFilters.gender!=="all") source=source.filter((item)=>(item.gender||({pria:"Pria",wanita:"Wanita",unisex:"Uniseks"}[item.genderTarget]))===directoryFilters.gender);
+          if(directoryFilters.style!=="all") source=source.filter((item)=>(item.styles||[]).includes(directoryFilters.style));
+          if(directoryFilters.sort==="az") source.sort((a,b)=>String(a.title||a.name).localeCompare(String(b.title||b.name),"id"));
+          else if(directoryFilters.sort==="newest") source.sort((a,b)=>String(b.publishedAt||b.createdAt||"").localeCompare(String(a.publishedAt||a.createdAt||"")));
+          else source.sort((a,b)=>Number(b.popularity||0)-Number(a.popularity||0));
+          return source;
+        }
         function renderDirectoryRoute() {
           const route = readDirectoryRoute();
           const layer = ensureCatalogueRouteLayer();
           if (!route) { layer.classList.remove("is-open"); layer.innerHTML=""; document.body.classList.remove("catalogue-route-open"); return false; }
-          let content="";
-          if (route.key === "products") content = state.products.map(catalogueProductCard).join("");
-          else if (route.key === "journal") content = state.articles.map(catalogueJournalCard).join("");
-          else {
-            const source = route.key === "comootd" ? state.looks.filter((item)=>item.publisherType !== "curator" && !item.curator?.handle) : route.key === "curators" ? state.looks.filter((item)=>item.publisherType === "curator" || item.curator?.handle) : state.looks;
-            content = source.map(catalogueLookCard).join("");
-          }
+          const source=filteredDirectoryEntries(route);
+          let content=route.key==="products"?source.map(catalogueProductCard).join(""):route.key==="journal"?source.map(catalogueJournalCard).join(""):source.map(catalogueLookCard).join("");
           const className = route.key === "products" ? "catalogue-product-grid" : route.key === "journal" ? "catalogue-journal-grid" : "catalogue-look-grid";
-          layer.innerHTML = `<div class="catalogue-route-shell">${catalogueRouteBar()}<main class="catalogue-route-body"><div class="catalogue-route-heading"><p>COMOOTD / DIRECTORY</p><h1>${esc(route.title)}</h1><p>${esc(route.deck)}</p></div><nav class="catalogue-route-tabs" aria-label="Pilihan katalog"><a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a><a href="/products" class="${route.key === "products" ? "is-active" : ""}">Products</a><a href="/journal" class="${route.key === "journal" ? "is-active" : ""}">Journal</a></nav><section class="${className}">${content || `<p class="catalogue-empty">Belum ada konten yang diterbitkan di kategori ini.</p>`}</section></main></div>`;
+          layer.innerHTML = `<div class="catalogue-route-shell">${catalogueRouteBar()}<main class="catalogue-route-body"><div class="catalogue-route-heading"><p>COMOOTD / DIRECTORY</p><h1>${esc(route.title)}</h1><p>${esc(route.deck)}</p></div><nav class="catalogue-route-tabs" aria-label="Pilihan katalog"><a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a><a href="/products" class="${route.key === "products" ? "is-active" : ""}">Products</a><a href="/curators">Curators</a><a href="/journal" class="${route.key === "journal" ? "is-active" : ""}">Journal</a></nav>${directoryFilterMarkup(route)}${route.key!=="journal"?`<p class="catalogue-result-count">${source.length} hasil</p>`:""}<section class="${className}">${content || `<p class="catalogue-empty">Belum ada konten yang cocok dengan filter ini.</p>`}</section></main></div>`;
           layer.classList.add("is-open"); document.body.classList.add("catalogue-route-open");
           updateDirectoryMetadata(route);
           return true;
@@ -2614,7 +2642,7 @@
           const curatorName = entry.curator?.displayName || entry.curator?.name || "";
           const curatorHandle = entry.curator?.handle || "";
           const curatorLine = curatorName ? `<p class="eyebrow" style="color:var(--taupe);margin:.5rem 0 0">CURATED BY ${esc(curatorName)}${curatorHandle ? ` / @${esc(curatorHandle)}` : ""}</p>` : "";
-          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}${curatorMetricsMarkup(entry)}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div><p class="detail-description">${esc(entry.excerpt || "Potongan yang tenang, mudah disesuaikan, dan dipilih untuk bekerja sebagai satu look atau berdiri sendiri.")}</p></div><div class="detail-actions">${lookLikeButton(entry)}<button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
+          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}${curatorMetricsMarkup(entry)}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div>${entry.excerpt ? `<p class="detail-description">${esc(entry.excerpt)}</p>` : ""}</div><div class="detail-actions">${lookLikeButton(entry)}<button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
           if (!els.lookModal.open) els.lookModal.showModal();
         }
         function openProduct(id, { navigate = true, variantId = "", replace = false } = {}) {
@@ -3838,7 +3866,8 @@
           const form=new FormData(productForm);
           const title=String(form.get("title")||"").trim();
           const price=Number(String(form.get("price")||"").replace(/[^0-9]/g,""));
-          const parsedVariants=parseVariants(form.get("variants"));
+          const variantSelect=productForm.elements.variants;
+          const parsedVariants=parseVariants([...variantSelect.selectedOptions].map((option)=>option.value).join(","));
           const variants=editId?reconcileProductVariantIds(parsedVariants,existingProduct):parsedVariants;
           let link, imageUrl;
           try { link=affiliateUrl(form.get("link")); imageUrl=normalizeBulkImageUrl(form.get("imageUrl")); } catch(error) { els.productFormError.textContent=error.message; return; }
@@ -3874,7 +3903,7 @@
           } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
         });
         els.lookForm.addEventListener("submit",async(event)=>{
-          event.preventDefault();els.lookFormError.textContent="";const lookForm=event.currentTarget;const form=new FormData(lookForm);const title=String(form.get("title")||"").trim();const styles=taxonomyValues(lookForm,"lookStyles");
+          event.preventDefault();els.lookFormError.textContent="";const lookForm=event.currentTarget;const form=new FormData(lookForm);const title=String(form.get("title")||"").trim();const excerpt=String(form.get("excerpt")||"").trim().slice(0,240);const styles=taxonomyValues(lookForm,"lookStyles");
           const editId=editingLookId;const existingLook=editId?getLook(editId):null;
           if(editId&&!existingLook){els.lookFormError.textContent="Look ini sudah tidak tersedia. Muat ulang Studio lalu coba lagi.";resetLookEditor();return;}
           if(lookDraftItems.length<2||lookDraftItems.length>5){els.lookFormError.textContent="Satu look harus berisi 2–5 item.";return;} if(!title||!styles.length){els.lookFormError.textContent="Nama look dan minimal satu style wajib diisi.";return;}
@@ -3887,8 +3916,8 @@
             const coverFile=galleryFiles[0];
             const coverAspect=galleryAspects[0];
             if(cloudEnabled()) {
-              if(editId) await cloud.updateLook({id:editId,title,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect,galleryFiles,gallery});
-              else await cloud.createLook({title,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect,galleryFiles,gallery});
+              if(editId) await cloud.updateLook({id:editId,title,excerpt,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect,galleryFiles,gallery});
+              else await cloud.createLook({title,excerpt,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect,galleryFiles,gallery});
               resetLookEditor();
               await refreshCloudState({admin:true});
               switchStudioTab("looks");
@@ -3899,11 +3928,11 @@
             const media=localMedia.filter(Boolean).slice(0,3);
             const coverImage=media[0]?.image||existingLook?.coverImage||"";
             if(editId) {
-              Object.assign(existingLook,{title,gender:String(form.get("gender")),styles,tone:"carbon",coverImage,coverAspect:media[0]?.aspect || existingLook.coverAspect,media,items:clone(lookDraftItems)});
+              Object.assign(existingLook,{title,excerpt,gender:String(form.get("gender")),styles,tone:"carbon",coverImage,coverAspect:media[0]?.aspect || existingLook.coverAspect,media,items:clone(lookDraftItems)});
               saveState();resetLookEditor();renderAll();switchStudioTab("looks");showToast("Look berhasil diperbarui di prototype.");
               return;
             }
-            const created={id:uid("look"),title,gender:String(form.get("gender")),styles,tone:"carbon",popularity:0,createdOrder:Math.max(0,...state.looks.map((item)=>Number(item.createdOrder)||0))+1,coverImage,coverAspect:media[0]?.aspect || coverAspect,media,items:clone(lookDraftItems)};
+            const created={id:uid("look"),title,excerpt,gender:String(form.get("gender")),styles,tone:"carbon",popularity:0,createdOrder:Math.max(0,...state.looks.map((item)=>Number(item.createdOrder)||0))+1,coverImage,coverAspect:media[0]?.aspect || coverAspect,media,items:clone(lookDraftItems)};
             state.looks.push(created);saveState();resetLookEditor();renderAll();switchStudioTab("looks");showToast("Look baru dipublikasikan di prototype.");
           } catch(error){els.lookFormError.textContent=error.message||"Look belum dapat disimpan.";}
         });
@@ -3976,6 +4005,20 @@
             if(error?.name!=="AbortError") showToast("Link belum dapat disalin. Coba lagi dari browser ini.");
           }
         }
+        let directoryFilterTimer=0;
+        document.addEventListener("input",(event)=>{
+          const input=event.target.closest('[data-directory-filter="q"]');
+          if(!input)return;
+          directoryFilters.q=input.value;
+          clearTimeout(directoryFilterTimer);
+          directoryFilterTimer=setTimeout(renderDirectoryRoute,180);
+        });
+        document.addEventListener("change",(event)=>{
+          const input=event.target.closest("[data-directory-filter]");
+          if(!input||input.dataset.directoryFilter==="q")return;
+          directoryFilters[input.dataset.directoryFilter]=input.value;
+          renderDirectoryRoute();
+        });
       })();
     </script>
     <script src="/assets/curator-experience.js"></script>

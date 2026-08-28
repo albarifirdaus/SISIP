@@ -153,6 +153,17 @@
     return normalizeStyleTags(canonical);
   }
 
+  async function existingStyleTags(db, styles) {
+    const requested = normalizeStyleTags(styles);
+    if (!requested.length) return [];
+    const { data, error } = await db.from("comootd_style_tags").select("name,normalized_name").eq("is_active", true);
+    if (error) throw error;
+    const active = new Map((data || []).map((row) => [String(row.normalized_name || row.name || "").toLowerCase(), row.name]));
+    const canonical = requested.map((style) => active.get(style.toLowerCase())).filter(Boolean);
+    if (canonical.length !== requested.length) throw new Error("Pilih tag style yang tersedia. Style baru hanya dapat dibuat oleh admin COMOOTD.");
+    return canonical;
+  }
+
   function normalizeImageAspect(value, fallback = "portrait") {
     const source = String(value || "").trim().toLowerCase();
     if (source === "square" || source === "1:1" || source === "1x1") return "square";
@@ -1370,7 +1381,7 @@
   function normalizeCuratorLookInput(input) {
     const source = assertObject(input, "Look Curator");
     const title = normalizeUserText(source.title, "Judul look", { required: true, min: 1, max: 160 });
-    const excerpt = normalizeUserText(source.excerpt, "Deskripsi look", { max: 600 });
+    const excerpt = normalizeUserText(source.excerpt, "Deskripsi look", { max: 240 });
     const genderTarget = String(source.genderTarget ?? source.gender ?? "unisex").trim().toLowerCase();
     if (!memberGenderTargets.has(genderTarget)) throw new Error("Gender look harus pria, wanita, atau unisex.");
     const tone = DEFAULT_LOOK_TONE;
@@ -1537,7 +1548,7 @@
     const id = lookId || createBrowserUuid();
     if (!uuidPattern.test(id)) throw new Error("Look Curator belum valid.");
     const db = getClient();
-    normalized.styles = await ensureStyleTags(db, normalized.styles);
+    normalized.styles = await existingStyleTags(db, normalized.styles);
     let existing = { cover_image_path: String(input.currentCoverPath || input.coverImagePath || "").trim(), look_media: [] };
     if (lookId) {
       const { data, error } = await db.from("looks").select("id, cover_image_path, look_media(position,image_path,alt_text)").eq("id", id).maybeSingle();
@@ -2019,7 +2030,7 @@
   }
 
   async function createLook(input) {
-    const { title, gender, styles, items, popularity = 0 } = input || {};
+    const { title, excerpt, gender, styles, items, popularity = 0 } = input || {};
     if (!Array.isArray(items) || items.length < 2 || items.length > 5) throw new Error("Satu look harus berisi 2–5 item.");
     const variantIds = items.map((item) => String(item?.variantId || "").trim());
     if (variantIds.some((variantId) => !uuidPattern.test(variantId)) || new Set(variantIds).size !== variantIds.length) throw new Error("Item look belum valid. Muat ulang Studio lalu coba lagi.");
@@ -2028,7 +2039,7 @@
     if (!controlledStyles.length) throw new Error("Look memerlukan minimal satu tag style.");
     const { data: look, error: lookError } = await db
       .from("looks")
-      .insert({ slug: uniqueSlug(title), title: String(title || "").trim(), gender_target: genderToDb[gender] || "unisex", style_tags: controlledStyles, tone: DEFAULT_LOOK_TONE, popularity, status: "draft" })
+      .insert({ slug: uniqueSlug(title), title: String(title || "").trim(), excerpt: normalizeUserText(excerpt, "Deskripsi look", { max: 240 }) || null, gender_target: genderToDb[gender] || "unisex", style_tags: controlledStyles, tone: DEFAULT_LOOK_TONE, popularity, status: "draft" })
       .select("id")
       .single();
     if (lookError) throw lookError;
@@ -2052,7 +2063,7 @@
   }
 
   async function updateLook(input) {
-    const { id, title, gender, styles, items } = input || {};
+    const { id, title, excerpt, gender, styles, items } = input || {};
     if (!uuidPattern.test(String(id || ""))) throw new Error("Look yang akan diedit belum valid.");
     if (!Array.isArray(items) || items.length < 2 || items.length > 5) throw new Error("Satu look harus berisi 2–5 item.");
     const variantIds = items.map((item) => String(item?.variantId || "").trim());
@@ -2078,6 +2089,8 @@
         p_cover_image_path: nextCoverPath
       });
       if (error) throw error;
+      const { error: excerptError } = await db.from("looks").update({ excerpt: normalizeUserText(excerpt, "Deskripsi look", { max: 240 }) || null }).eq("id", id);
+      if (excerptError) throw excerptError;
       await replaceLookGallery(db, id, galleryResult.media, { shouldWrite: galleryResult.hasExplicitGallery || galleryResult.hasChanges });
       if (galleryResult.hasExplicitGallery || galleryResult.hasChanges) {
         const previousPaths = [...(existing.look_media || []).map((item) => item.image_path), existing.cover_image_path].filter(Boolean);
