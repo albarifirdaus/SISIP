@@ -90,6 +90,29 @@
     const values = [...(form?.querySelectorAll(`input[name="${name}"]:checked`) || [])].map((input) => input.value);
     return controlledTagList(values, options, maximum);
   }
+  function normaliseCustomStyleTag(value) {
+    const tag = compact(value).slice(0, 48);
+    return tag && /[\p{L}\p{N}]/u.test(tag) ? tag : "";
+  }
+  function normaliseLookStyleTags(value, maximum = 3) {
+    const presets = optionMap(STYLE_OPTIONS);
+    const seen = new Set();
+    const output = [];
+    tagList(value, 24).forEach((rawTag) => {
+      const tag = presets.get(rawTag.toLowerCase()) || normaliseCustomStyleTag(rawTag);
+      const key = tag.toLowerCase();
+      if (!tag || seen.has(key) || output.length >= maximum) return;
+      seen.add(key);
+      output.push(tag);
+    });
+    return output;
+  }
+  function lookStylePickerMarkup(selected = []) {
+    const selectedStyles = normaliseLookStyleTags(selected, 3);
+    const presets = optionMap(STYLE_OPTIONS);
+    const customOptions = selectedStyles.filter((tag) => !presets.has(tag.toLowerCase()));
+    return `<div data-curator-look-style-field>${controlledTagPickerMarkup({ name:"styles", options:[...STYLE_OPTIONS, ...customOptions], selected:selectedStyles, maximum:3, label:"Tag style", note:"Pilih maksimal 3 tag agar look mudah ditemukan melalui filter." })}<div class="curator-form-grid"><div class="curator-field"><label for="curatorCustomStyle">Tambah style</label><input id="curatorCustomStyle" data-curator-custom-style-input maxlength="48" placeholder="Contoh: Dark Academia" /></div><div class="curator-field"><label aria-hidden="true">&nbsp;</label><button class="curator-small-button" type="button" data-add-curator-custom-style>Tambah style</button></div></div></div>`;
+  }
 
   function cloud() { return window.SISIPCloud || null; }
   function publicImage(path) {
@@ -117,6 +140,48 @@
   }
   function bindImageCropper(input, options) {
     if (input && window.COMOOTDImageCropper?.bind) window.COMOOTDImageCropper.bind(input, options);
+  }
+  function optionalMetric(value, minimum, maximum, decimals = 0) {
+    const source = compact(value);
+    if (!source) return null;
+    const numeric = Number(source);
+    if (!Number.isFinite(numeric) || numeric < minimum || numeric > maximum) return null;
+    const factor = 10 ** decimals;
+    return Math.round(numeric * factor) / factor;
+  }
+  function truthyFlag(value) {
+    if (value === true) return true;
+    return ["1", "true", "yes", "on"].includes(compact(value).toLowerCase());
+  }
+  function normaliseGalleryEntry(raw, fallbackAspect = "portrait") {
+    if (typeof raw === "string") {
+      const path = compact(raw);
+      return path ? { path, aspect: imageAspect("", fallbackAspect), alt: "" } : null;
+    }
+    if (!raw || typeof raw !== "object") return null;
+    const path = compact(raw.path || raw.imagePath || raw.image_path || raw.url || raw.imageUrl || raw.image_url || raw.coverImage || raw.cover_image_path || "");
+    if (!path) return null;
+    return {
+      id: compact(raw.id || raw.imageId || raw.image_id || ""),
+      path,
+      aspect: imageAspect(raw.aspect || raw.imageAspect || raw.image_aspect || raw.coverAspect || raw.cover_aspect, fallbackAspect),
+      alt: compact(raw.alt || raw.imageAlt || raw.image_alt || raw.coverAlt || raw.cover_alt || "")
+    };
+  }
+  function normaliseLookGallery(raw = {}, coverImage = "", coverAspect = "portrait") {
+    const source = raw.gallery ?? raw.galleryImages ?? raw.gallery_images ?? raw.lookImages ?? raw.look_images ?? raw.images ?? [];
+    const entries = Array.isArray(source) ? source : (Array.isArray(source?.images) ? source.images : asArray(source));
+    const output = [];
+    const paths = new Set();
+    const add = (entry) => {
+      const normalised = normaliseGalleryEntry(entry, coverAspect);
+      if (!normalised || paths.has(normalised.path)) return;
+      paths.add(normalised.path);
+      output.push(normalised);
+    };
+    if (coverImage) add({ path: coverImage, aspect: coverAspect, alt: raw.coverAlt || raw.cover_alt || raw.title || "" });
+    entries.forEach(add);
+    return output.slice(0, 3);
   }
   function initials(value) {
     const chars = compact(value).split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("");
@@ -147,6 +212,7 @@
   }
   function normaliseCurator(raw = {}) {
     const profile = raw.profile || raw.profiles || raw.user_profile || {};
+    const bodyMetrics = raw.bodyMetrics || raw.body_metrics || profile.bodyMetrics || profile.body_metrics || {};
     const userId = raw.userId || raw.user_id || raw.id || profile.id || "";
     const displayName = compact(raw.displayName || raw.display_name || profile.displayName || profile.display_name || raw.name || "") || "COMOOTD Curator";
     const handle = compact(raw.handle || raw.username || "").replace(/^@+/, "").toLowerCase();
@@ -158,6 +224,9 @@
       avatarPath: raw.avatarPath || raw.avatar_path || profile.avatarPath || profile.avatar_path || "",
       bio: compact(raw.bio || raw.description || ""),
       jobTags: controlledTagList(raw.jobTags ?? raw.job_tags ?? raw.tags, CURATOR_PROFILE_TAG_OPTIONS, 5),
+      heightCm: optionalMetric(raw.heightCm ?? raw.height_cm ?? bodyMetrics.heightCm ?? bodyMetrics.height_cm ?? bodyMetrics.height, 100, 250),
+      weightKg: optionalMetric(raw.weightKg ?? raw.weight_kg ?? bodyMetrics.weightKg ?? bodyMetrics.weight_kg ?? bodyMetrics.weight, 25, 300, 1),
+      bodyMetricsPublic: truthyFlag(raw.bodyMetricsPublic ?? raw.body_metrics_public ?? bodyMetrics.public ?? bodyMetrics.isPublic),
       socials: normaliseSocialLinks(raw),
       isActive: raw.isActive ?? raw.is_active ?? true,
       maxPublishedLooks: Number(raw.maxPublishedLooks ?? raw.max_published_looks ?? DEFAULT_QUOTA) || DEFAULT_QUOTA
@@ -174,6 +243,9 @@
   }
   function normaliseLook(raw = {}) {
     const creator = raw.creator || raw.contributor || raw.contributor_profile || raw.contributor_profiles || null;
+    const coverImage = raw.coverImage || raw.cover_image_path || raw.cover_image || "";
+    const coverAspect = imageAspect(raw.coverAspect || raw.cover_aspect || raw.coverImageAspect || raw.cover_image_aspect, "portrait");
+    const gallery = normaliseLookGallery(raw, coverImage, coverAspect);
     return {
       raw,
       id: String(raw.id || ""),
@@ -181,11 +253,13 @@
       creator: creator ? normaliseCurator(creator) : null,
       title: compact(raw.title || "Untitled look") || "Untitled look",
       slug: compact(raw.slug || raw.id || ""),
-      styles: controlledTagList(raw.styles || raw.styleTags || raw.style_tags, STYLE_OPTIONS, 3),
+      styles: normaliseLookStyleTags(raw.styles || raw.styleTags || raw.style_tags, 3),
       gender: compact(raw.gender || "Uniseks") || "Uniseks",
       tone: compact(raw.tone || raw.mood || ""),
-      coverImage: raw.coverImage || raw.cover_image_path || raw.cover_image || "",
+      coverImage: coverImage || gallery[0]?.path || "",
+      coverAspect,
       coverAlt: compact(raw.coverAlt || raw.cover_alt || raw.title || ""),
+      gallery,
       status: compact(raw.status || "published").toLowerCase(),
       popularity: Number(raw.popularity || raw.likeCount || raw.like_count || 0) || 0,
       publishedAt: raw.publishedAt || raw.published_at || raw.createdAt || raw.created_at || "",
@@ -322,6 +396,13 @@
     const socials = curator.socials.filter((social) => /^https:\/\//i.test(social.url));
     return `<div class="curator-socials">${socials.map((social) => `<a href="${esc(social.url)}" target="_blank" rel="noopener noreferrer">${esc(socialLabel(social.platform))} ↗</a>`).join("")}<button type="button" class="curator-share-button" data-share-curator="${esc(curator.handle)}">Bagikan profil ↗</button></div>`;
   }
+  function publicBodyMetricsMarkup(curator) {
+    if (!curator?.bodyMetricsPublic) return "";
+    const metrics = [];
+    if (curator.heightCm !== null && curator.heightCm !== undefined) metrics.push(`Tinggi ${curator.heightCm} cm`);
+    if (curator.weightKg !== null && curator.weightKg !== undefined) metrics.push(`Berat ${curator.weightKg} kg`);
+    return metrics.length ? `<div class="curator-profile-tags curator-profile-metrics" aria-label="Informasi tinggi dan berat curator">${metrics.map((metric) => `<span class="curator-tag">${esc(metric)}</span>`).join("")}</div>` : "";
+  }
   function lookCardMarkup(look) {
     const cover = publicImage(look.coverImage);
     const liked = state.liked.has(look.id);
@@ -362,6 +443,7 @@
         <div class="curator-profile-side">
           <p class="curator-profile-bio">${esc(curator.bio || "Personal edits, styled with intention.")}</p>
           ${curator.jobTags.length ? `<div class="curator-profile-tags">${curator.jobTags.map((tag) => `<span class="curator-tag">${esc(tag)}</span>`).join("")}</div>` : ""}
+          ${publicBodyMetricsMarkup(curator)}
           ${profileSocialMarkup(curator)}
           <div class="curator-profile-stats"><div class="curator-profile-stat"><strong>${looks.length}</strong><span>Published looks</span></div><div class="curator-profile-stat"><strong>${totalLikes}</strong><span>Community likes</span></div></div>
         </div>
@@ -445,10 +527,15 @@
 
   function profileEditorMarkup(curator) {
     const socialMap = Object.fromEntries(curator.socials.map((item) => [item.platform, item.url]));
-    return `<section class="curator-studio-panel" data-curator-studio-panel="profile"><p class="eyebrow" style="color:var(--clay)">YOUR PUBLIC PROFILE</p><h3>Make the profile<br />feel like you.</h3><p class="curator-studio-lede">Foto, tag fashion dan personal, bio, serta tautan sosial tampil di halaman shareable milikmu.</p>
+    const heightValue = curator.heightCm ?? "";
+    const weightValue = curator.weightKg ?? "";
+    const metricsChecked = curator.bodyMetricsPublic ? " checked" : "";
+    return `<section class="curator-studio-panel" data-curator-studio-panel="profile"><p class="eyebrow" style="color:var(--clay)">YOUR PUBLIC PROFILE</p><h3>Make the profile<br />feel like you.</h3><p class="curator-studio-lede">Foto, tag fashion dan personal, bio, tautan sosial, serta detail tubuh opsional tampil di halaman shareable milikmu.</p>
       <form class="curator-form" data-curator-profile-form><div class="curator-profile-photo-row">${imageMarkup(curator.avatarPath, "", "curator-profile-avatar", curator.displayName)}<div class="curator-field" style="flex:1"><label for="curatorAvatarInput">Foto profil</label><input id="curatorAvatarInput" name="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" /><p class="curator-file-note">JPG, PNG, atau WebP. Maksimal 5 MB.</p></div></div>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorDisplayName">Nama tampil</label><input id="curatorDisplayName" name="displayName" maxlength="80" value="${esc(curator.displayName)}" required /></div><div class="curator-field"><label for="curatorHandle">Handle</label><input id="curatorHandle" name="handle" minlength="3" maxlength="32" value="${esc(curator.handle)}" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required /><p class="curator-file-note">Handle menjadi alamat profil kamu.</p></div></div>
       ${controlledTagPickerMarkup({ name:"profileTags", options:CURATOR_PROFILE_TAG_OPTIONS, selected:curator.jobTags, maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}<div class="curator-field"><label for="curatorBio">Bio</label><textarea id="curatorBio" name="bio" maxlength="500" placeholder="Sudut pandang style kamu.">${esc(curator.bio)}</textarea></div>
+      <div class="curator-form-grid"><div class="curator-field"><label for="curatorHeightCm">Tinggi badan (cm)</label><input id="curatorHeightCm" name="heightCm" type="number" min="100" max="250" step="1" inputmode="numeric" value="${esc(heightValue)}" placeholder="Contoh: 170" /></div><div class="curator-field"><label for="curatorWeightKg">Berat badan (kg)</label><input id="curatorWeightKg" name="weightKg" type="number" min="25" max="300" step="0.1" inputmode="decimal" value="${esc(weightValue)}" placeholder="Contoh: 58" /></div></div>
+      <fieldset class="curator-choice-picker" data-curator-metrics-visibility><legend>Visibilitas tinggi &amp; berat</legend><div class="curator-choice-list"><label class="curator-choice${curator.bodyMetricsPublic ? " is-selected" : ""}"><input name="bodyMetricsPublic" type="checkbox" value="true"${metricsChecked} /><span>Tampilkan di profil publik</span></label></div><p class="curator-file-note">Opsional. Data hanya tampil bila pilihan ini aktif dan kamu mengisi minimal satu metrik.</p></fieldset>
       <div><p class="curator-inline-label">Social links</p><div class="curator-social-fields">${Object.entries(SOCIAL_LABELS).map(([platform, label]) => `<div class="curator-field"><label for="curatorSocial${platform}">${esc(label)}</label><input id="curatorSocial${platform}" name="social-${esc(platform)}" type="url" placeholder="https://" value="${esc(socialMap[platform] || "")}" /></div>`).join("")}</div></div>
       <div class="curator-form-actions"><p class="curator-form-status" data-curator-profile-status role="alert"></p><button class="button" type="submit">Simpan profil ↗</button></div></form></section>`;
   }
@@ -469,8 +556,10 @@
       <form class="curator-form" data-curator-look-form data-curator-edit-id="${esc(editing?.id || "")}"><div class="curator-form-grid">
         <div class="curator-field curator-field-full"><label for="curatorLookTitle">Nama mix &amp; match</label><input id="curatorLookTitle" name="title" maxlength="160" value="${esc(editing?.title || "")}" placeholder="Contoh: Monday in Olive" required /></div>
         <div class="curator-field"><label for="curatorLookGender">Gender</label><select id="curatorLookGender" name="gender"><option value="Uniseks"${editing?.gender === "Uniseks" ? " selected" : ""}>Uniseks</option><option value="Pria"${editing?.gender === "Pria" ? " selected" : ""}>Pria</option><option value="Wanita"${editing?.gender === "Wanita" ? " selected" : ""}>Wanita</option></select></div>
-        ${controlledTagPickerMarkup({ name:"styles", options:STYLE_OPTIONS, selected:editing?.styles || [], maximum:3, label:"Tag style", note:"Pilih maksimal 3 tag agar look mudah ditemukan melalui filter." })}
-        <div class="curator-field curator-field-full"><label for="curatorLookCover">Foto cover look${isExistingLook ? " (opsional)" : ""}</label><input id="curatorLookCover" name="coverFile" type="file" accept="image/jpeg,image/png,image/webp"${isExistingLook ? "" : " required"} /><p class="curator-file-note">${isExistingLook ? "Pilih foto baru hanya bila ingin mengganti cover. Jika memilih foto, atur crop lalu pilih Gunakan foto." : "Wajib untuk look baru. Pilih foto, atur crop, lalu pilih Gunakan foto. JPG, PNG, atau WebP, maksimal 5 MB."}</p></div>
+        ${lookStylePickerMarkup(editing?.styles || [])}
+        <div class="curator-field curator-field-full"><label for="curatorLookCover">Foto 1 · Cover look${isExistingLook ? " (opsional)" : ""}</label><input id="curatorLookCover" name="coverFile" type="file" accept="image/jpeg,image/png,image/webp" data-curator-gallery-input data-curator-gallery-slot="1"${isExistingLook ? "" : " required"} /><p class="curator-file-note">${isExistingLook ? "Pilih foto baru hanya bila ingin mengganti cover. Foto yang tidak diganti tetap disimpan." : "Wajib untuk look baru."} Atur crop lalu pilih Gunakan foto. Unggah hingga 3 foto; foto pertama selalu menjadi cover. JPG, PNG, atau WebP, maksimal 5 MB per foto.</p></div>
+        <div class="curator-field"><label for="curatorLookGallery2">Foto 2 · Detail (opsional)</label><input id="curatorLookGallery2" name="galleryFile2" type="file" accept="image/jpeg,image/png,image/webp" data-curator-gallery-input data-curator-gallery-slot="2" /><p class="curator-file-note">Tambahkan detail pendukung untuk gallery look.</p></div>
+        <div class="curator-field"><label for="curatorLookGallery3">Foto 3 · Detail (opsional)</label><input id="curatorLookGallery3" name="galleryFile3" type="file" accept="image/jpeg,image/png,image/webp" data-curator-gallery-input data-curator-gallery-slot="3" /><p class="curator-file-note">Atur crop foto ini sebelum disimpan.</p></div>
       </div>
       <div class="curator-reference-head"><h4>Products in this look</h4><span class="curator-reference-count" data-curator-reference-count>${references.length} / ${MAX_REFERENCES}</span></div>
       <div class="curator-reference-list" data-curator-reference-list>${references.map(productReferenceMarkup).join("")}</div>
@@ -495,9 +584,10 @@
     const body = state.editingLook ? lookEditorMarkup(state.editingLook) : (tab === "profile" ? profileEditorMarkup(state.curator) : studioLibraryMarkup());
     window.requestAnimationFrame(() => {
       const avatarInput = dialog.querySelector("#curatorAvatarInput");
-      const lookCoverInput = dialog.querySelector("#curatorLookCover");
       bindImageCropper(avatarInput, { defaultAspect:"square", lockedAspect:"square", label:"foto profil" });
-      bindImageCropper(lookCoverInput, { defaultAspect:"portrait", label:"foto cover look" });
+      [...dialog.querySelectorAll("[data-curator-gallery-input]")].forEach((input, index) => {
+        bindImageCropper(input, { defaultAspect:"portrait", label:index === 0 ? "foto cover look" : `foto look ${index + 1}` });
+      });
     });
     dialog.innerHTML = `<button class="icon-button curator-studio-close" type="button" data-close-curator-studio aria-label="Tutup Curator Studio">×</button><div class="curator-studio-shell"><aside class="curator-studio-side"><p class="eyebrow">COMOOTD / CURATOR</p><h2>Studio<br />${esc(state.curator.displayName.split(" ")[0])}</h2><div class="curator-studio-quota"><strong>${count} / ${quota}</strong><span>Look aktif di Starter</span></div><nav class="curator-studio-tabs" aria-label="Menu Curator Studio"><button class="curator-studio-tab${tab === "looks" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="looks">Look library</button><button class="curator-studio-tab${tab === "profile" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="profile">Profile</button></nav></aside><div class="curator-studio-main">${body}</div></div>`;
   }
@@ -525,6 +615,75 @@
       if (remove) remove.disabled = count <= MIN_REFERENCES;
     });
   }
+  function refreshChoicePicker(picker) {
+    if (!picker) return;
+    const maximum = Number(picker.dataset.maxSelections || 3);
+    const active = picker.querySelectorAll("input:checked");
+    picker.querySelector("[data-curator-choice-count]")?.replaceChildren(`${active.length} / ${maximum}`);
+    picker.querySelectorAll(".curator-choice").forEach((choice) => choice.classList.toggle("is-selected", Boolean(choice.querySelector("input")?.checked)));
+  }
+  function addCuratorCustomStyle(form) {
+    const field = form?.querySelector("[data-curator-custom-style-input]");
+    const picker = form?.querySelector("[data-curator-look-style-field] [data-curator-choice-picker]");
+    const list = picker?.querySelector(".curator-choice-list");
+    const tag = normaliseCustomStyleTag(field?.value);
+    if (!field || !picker || !list) return;
+    if (!tag) { showToast("Masukkan nama style terlebih dahulu."); field.focus(); return; }
+    const inputs = [...picker.querySelectorAll('input[name="styles"]')];
+    const existing = inputs.find((input) => input.value.toLowerCase() === tag.toLowerCase());
+    const maximum = Number(picker.dataset.maxSelections || 3);
+    const selected = inputs.filter((input) => input.checked);
+    if (existing) {
+      if (!existing.checked && selected.length >= maximum) { showToast(`Pilih maksimal ${maximum} tag.`); return; }
+      existing.checked = true;
+    } else {
+      if (selected.length >= maximum) { showToast(`Pilih maksimal ${maximum} tag.`); return; }
+      const choice = document.createElement("label");
+      choice.className = "curator-choice is-selected";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.name = "styles";
+      checkbox.value = tag;
+      checkbox.checked = true;
+      const label = document.createElement("span");
+      label.textContent = tag;
+      choice.append(checkbox, label);
+      list.append(choice);
+    }
+    field.value = "";
+    refreshChoicePicker(picker);
+    field.focus();
+  }
+  function collectGalleryPayload(form) {
+    const existingGallery = asArray(state.editingLook?.gallery).slice(0, 3);
+    const slots = [...form.querySelectorAll("[data-curator-gallery-input]")]
+      .sort((left, right) => Number(left.dataset.curatorGallerySlot || 0) - Number(right.dataset.curatorGallerySlot || 0))
+      .map((input, index) => {
+        const slot = Number(input.dataset.curatorGallerySlot || index + 1);
+        const current = normaliseGalleryEntry(existingGallery[slot - 1], "portrait");
+        const file = preparedImageFile(input);
+        return {
+          sortOrder: slot,
+          role: slot === 1 ? "cover" : "gallery",
+          file,
+          aspect: selectedImageAspect(input, current?.aspect || "portrait"),
+          currentPath: current?.path || "",
+          path: current?.path || "",
+          alt: current?.alt || ""
+        };
+      });
+    const cover = slots.find((entry) => entry.sortOrder === 1) || null;
+    const gallery = slots.filter((entry) => entry.file || entry.path);
+    return {
+      // Existing adapter versions still use these two cover fields.
+      coverFile: cover?.file || null,
+      coverAspect: cover?.aspect || "portrait",
+      // New adapter versions can retain the slot order and replace only the
+      // files that are present, while preserving `currentPath` for the rest.
+      galleryFiles: slots.map((entry) => entry.file).filter(Boolean),
+      gallery
+    };
+  }
   function collectLookPayload(form) {
     const references = [...form.querySelectorAll("[data-curator-reference-row]")].map((row) => ({
       category: compact(row.querySelector("[name=referenceCategory]")?.value || "other"),
@@ -532,22 +691,21 @@
       colorLabel: compact(row.querySelector("[name=referenceColor]")?.value),
       affiliateUrl: compact(row.querySelector("[name=referenceUrl]")?.value)
     }));
-    const coverInput = form.querySelector("[name=coverFile]");
-    const coverFile = preparedImageFile(coverInput);
+    const galleryPayload = collectGalleryPayload(form);
     return {
       title: compact(form.elements.title?.value),
       gender: compact(form.elements.gender?.value || "Uniseks"),
       tone: DEFAULT_LOOK_TONE,
-      styles: controlledValuesFromForm(form, "styles", STYLE_OPTIONS, 3),
-      coverFile,
-      coverAspect: selectedImageAspect(coverInput, "portrait"),
+      styles: normaliseLookStyleTags([...form.querySelectorAll('input[name="styles"]:checked')].map((input) => input.value), 3),
+      ...galleryPayload,
       items: references
     };
   }
   function validateLookPayload(payload, editing) {
     if (!payload.title) return "Nama look wajib diisi.";
+    if (!payload.styles.length) return "Pilih minimal satu tag style.";
     if (!editing && !payload.coverFile) return "Tambahkan foto cover untuk look baru.";
-    if (payload.coverFile && payload.coverFile.size > 5 * 1024 * 1024) return "Ukuran foto cover maksimal 5 MB.";
+    if ((payload.galleryFiles || []).some((file) => file.size > 5 * 1024 * 1024)) return "Ukuran setiap foto look maksimal 5 MB.";
     if (payload.items.length < MIN_REFERENCES || payload.items.length > MAX_REFERENCES) return `Tambahkan ${MIN_REFERENCES}–${MAX_REFERENCES} produk ke dalam look.`;
     if (payload.items.some((item) => !item.name || !item.affiliateUrl)) return "Setiap produk membutuhkan nama dan link affiliate Shopee.";
     if (payload.items.some((item) => !isShopeeLink(item.affiliateUrl))) return "Gunakan link Shopee yang valid untuk setiap produk.";
@@ -697,6 +855,11 @@
     if (!api || typeof api.saveCuratorProfile !== "function") { setFormStatus(status, "Profil belum tersambung. Coba lagi sesaat lagi."); return; }
     const avatarInput = form.elements.avatarFile;
     const avatarFile = preparedImageFile(avatarInput);
+    const heightInput = form.elements.heightCm;
+    const weightInput = form.elements.weightKg;
+    const heightCm = optionalMetric(heightInput?.value, 100, 250);
+    const weightKg = optionalMetric(weightInput?.value, 25, 300, 1);
+    const bodyMetricsPublic = Boolean(form.elements.bodyMetricsPublic?.checked);
     const socials = Object.keys(SOCIAL_LABELS).map((platform) => ({ platform, url: compact(form.elements[`social-${platform}`]?.value) })).filter((entry) => entry.url);
     const invalidSocial = socials.find((entry) => !/^https:\/\//i.test(entry.url));
     const payload = {
@@ -705,12 +868,18 @@
       bio: compact(form.elements.bio?.value),
       profileTags: controlledValuesFromForm(form, "profileTags", CURATOR_PROFILE_TAG_OPTIONS, 5),
       avatarFile,
+      heightCm,
+      weightKg,
+      bodyMetricsPublic,
       socials,
       socialLinks: socials
     };
     if (!payload.displayName || !payload.handle) { setFormStatus(status, "Nama tampil dan handle wajib diisi."); return; }
     if (!/^[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?$/.test(payload.handle) || payload.handle.length < 3 || payload.handle.length > 32) { setFormStatus(status, "Handle harus 3–32 karakter dan hanya memakai huruf kecil, angka, _ atau -."); return; }
     if (avatarFile && avatarFile.size > 5 * 1024 * 1024) { setFormStatus(status, "Ukuran foto profil maksimal 5 MB."); return; }
+    if (compact(heightInput?.value) && heightCm === null) { setFormStatus(status, "Tinggi badan harus berada di antara 100–250 cm."); return; }
+    if (compact(weightInput?.value) && weightKg === null) { setFormStatus(status, "Berat badan harus berada di antara 25–300 kg."); return; }
+    if (bodyMetricsPublic && heightCm === null && weightKg === null) { setFormStatus(status, "Isi minimal tinggi atau berat badan sebelum menampilkannya di profil publik."); return; }
     if (invalidSocial) { setFormStatus(status, "Gunakan alamat lengkap yang dimulai dengan https:// untuk social link."); return; }
     submit.disabled = true;
     setFormStatus(status, "Menyimpan profil…");
@@ -778,6 +947,7 @@
     const removeReference = event.target.closest("[data-remove-curator-reference]");
     if (removeReference) { const form = removeReference.closest("form"); const rows = form?.querySelectorAll("[data-curator-reference-row]") || []; if (rows.length > MIN_REFERENCES) { removeReference.closest("[data-curator-reference-row]")?.remove(); updateReferenceControls(form); } return; }
     if (event.target.closest("[data-add-curator-reference]")) { const form = event.target.closest("form"); const list = form?.querySelector("[data-curator-reference-list]"); if (list && list.querySelectorAll("[data-curator-reference-row]").length < MAX_REFERENCES) { list.insertAdjacentHTML("beforeend", productReferenceMarkup({}, list.children.length)); updateReferenceControls(form); } return; }
+    if (event.target.closest("[data-add-curator-custom-style]")) { addCuratorCustomStyle(event.target.closest("form")); return; }
     const remove = event.target.closest("[data-delete-curator-look]");
     if (remove) { deleteLook(remove.dataset.deleteCuratorLook); return; }
     const like = event.target.closest("[data-toggle-curator-like]");
@@ -796,6 +966,11 @@
     if (look) { event.preventDefault(); submitLook(look); }
   }
   function onChange(event) {
+    const metricsVisibility = event.target.closest("[data-curator-metrics-visibility] input[type=checkbox]");
+    if (metricsVisibility) {
+      metricsVisibility.closest(".curator-choice")?.classList.toggle("is-selected", metricsVisibility.checked);
+      return;
+    }
     const input = event.target.closest("[data-curator-choice-picker] input[type=checkbox]");
     if (!input) return;
     const picker = input.closest("[data-curator-choice-picker]");
@@ -805,11 +980,14 @@
       input.checked = false;
       showToast(`Pilih maksimal ${maximum} tag.`);
     }
-    const active = picker.querySelectorAll("input:checked");
-    picker.querySelector("[data-curator-choice-count]")?.replaceChildren(`${active.length} / ${maximum}`);
-    picker.querySelectorAll(".curator-choice").forEach((choice) => choice.classList.toggle("is-selected", Boolean(choice.querySelector("input")?.checked)));
+    refreshChoicePicker(picker);
   }
   function onKeydown(event) {
+    if (event.key === "Enter" && event.target?.matches("[data-curator-custom-style-input]")) {
+      event.preventDefault();
+      addCuratorCustomStyle(event.target.closest("form"));
+      return;
+    }
     if (event.key === "Escape" && state.routeOpen) {
       event.preventDefault();
       closeRoute({ navigate: true });

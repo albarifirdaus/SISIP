@@ -28,7 +28,7 @@
   var statusCounter = 0;
   var styleId = "comootd-image-cropper-styles";
 
-  function normalizeAspect(value, fallback) {
+  function aspectName(value) {
     var normalized = String(value || "").trim().toLowerCase().replace(/\s+/g, "");
     if (normalized === "square" || normalized === "1:1" || normalized === "1x1") {
       return "square";
@@ -41,7 +41,34 @@
     ) {
       return "portrait";
     }
+    return "";
+  }
+
+  function normalizeAspect(value, fallback) {
+    var resolved = aspectName(value);
+    if (resolved) {
+      return resolved;
+    }
     return fallback === "square" ? "square" : "portrait";
+  }
+
+  // New callers can use allowedAspects: ["square"] for a product image that
+  // must always be exported at 1:1. Existing callers without this option keep
+  // the original portrait + square picker.
+  function allowedAspectsFor(options) {
+    var configured = options && options.allowedAspects;
+    if (configured === undefined || configured === null || configured === "") {
+      return ["portrait", "square"];
+    }
+    var source = Array.isArray(configured) ? configured : [configured];
+    var aspects = [];
+    source.forEach(function (value) {
+      var aspect = aspectName(value);
+      if (aspect && aspects.indexOf(aspect) === -1) {
+        aspects.push(aspect);
+      }
+    });
+    return aspects.length ? aspects : ["portrait", "square"];
   }
 
   function lockedAspectFor(options, fallback) {
@@ -258,7 +285,9 @@
       {
         input: state.input,
         file: state.preparedFile,
-        aspect: state.aspect
+        aspect: state.aspect,
+        allowedAspects: state.allowedAspects.slice(),
+        isAspectLocked: Boolean(state.lockedAspect)
       },
       detail || {}
     );
@@ -290,12 +319,25 @@
 
   function makeState(input, options) {
     var settings = options || {};
+    var allowedAspects = allowedAspectsFor(settings);
     var defaultAspect = normalizeAspect(settings.defaultAspect, "portrait");
+    if (allowedAspects.indexOf(defaultAspect) === -1) {
+      defaultAspect = allowedAspects[0];
+    }
+    var lockedAspect = lockedAspectFor(settings, defaultAspect);
+    // lockedAspect predates allowedAspects and remains the authoritative
+    // backwards-compatible option when both are supplied.
+    if (lockedAspect) {
+      allowedAspects = [lockedAspect];
+    } else if (allowedAspects.length === 1) {
+      lockedAspect = allowedAspects[0];
+    }
     var state = {
       input: input,
       options: settings,
       aspectSelect: resolveElement(settings.aspectSelect),
-      lockedAspect: lockedAspectFor(settings, defaultAspect),
+      allowedAspects: allowedAspects,
+      lockedAspect: lockedAspect,
       aspect: null,
       rawFile: null,
       preparedFile: null,
@@ -352,6 +394,10 @@
           return;
         }
         var next = normalizeAspect(state.aspectSelect.value, state.aspect);
+        if (state.allowedAspects.indexOf(next) === -1) {
+          updateAspectControl(state);
+          return;
+        }
         if (next === state.aspect) {
           return;
         }
@@ -404,7 +450,13 @@
     var header = element("header", "ci-cropper-header");
     var title = element("h2", "ci-cropper-title", "Atur crop " + label);
     title.id = titleId;
-    var copy = element("p", "ci-cropper-copy", "Geser foto untuk menentukan fokus. Gunakan slider untuk memperbesar.");
+    var copy = element(
+      "p",
+      "ci-cropper-copy",
+      session.state.lockedAspect
+        ? "Geser foto untuk menentukan fokus. Foto ini akan disimpan sebagai " + PRESETS[session.aspect].label + "."
+        : "Geser foto untuk menentukan fokus. Gunakan slider untuk memperbesar."
+    );
     header.appendChild(title);
     header.appendChild(copy);
 
@@ -428,9 +480,11 @@
     squareButton.type = "button";
     portraitButton.dataset.aspect = "portrait";
     squareButton.dataset.aspect = "square";
+    portraitButton.hidden = session.state.allowedAspects.indexOf("portrait") === -1;
+    squareButton.hidden = session.state.allowedAspects.indexOf("square") === -1;
     aspectGroup.appendChild(portraitButton);
     aspectGroup.appendChild(squareButton);
-    if (session.state.lockedAspect) {
+    if (session.state.lockedAspect || session.state.allowedAspects.length < 2) {
       aspectGroup.hidden = true;
     }
 
@@ -722,6 +776,9 @@
       return;
     }
     var next = normalizeAspect(aspect, session.aspect);
+    if (session.state.allowedAspects.indexOf(next) === -1) {
+      return;
+    }
     if (next === session.aspect) {
       return;
     }
@@ -969,6 +1026,11 @@
     return state ? state.aspect : "portrait";
   }
 
+  function getAllowedAspects(input) {
+    var state = getState(input);
+    return state ? state.allowedAspects.slice() : ["portrait", "square"];
+  }
+
   function clear(input) {
     var state = getState(input);
     if (!state) {
@@ -988,6 +1050,7 @@
     bind: bind,
     getFile: getFile,
     getAspect: getAspect,
+    getAllowedAspects: getAllowedAspects,
     clear: clear
   };
 })();

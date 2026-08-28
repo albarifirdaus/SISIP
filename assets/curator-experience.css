@@ -201,7 +201,7 @@
 .curator-profile-stat span { color:#6e655c; font-family:var(--mono,monospace); font-size:.56rem; letter-spacing:.04em; text-transform:uppercase; }
 .curator-profile-looks-head { display:flex; align-items:end; justify-content:space-between; gap:1rem; margin:clamp(1.8rem,4vw,4rem) 0 1rem; }
 .curator-profile-looks-head h2 { margin:0; font-size:clamp(1.75rem,3.4vw,3.2rem); letter-spacing:-.08em; }
-.curator-look-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; background:var(--curator-line); }
+.curator-look-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px; background:var(--curator-line); }
 .curator-look-card { position:relative; display:flex; flex-direction:column; min-height:360px; padding:1rem; overflow:hidden; color:var(--curator-white); background:#282522; isolation:isolate; }
 .curator-look-card::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.87)); }
 .curator-look-card .curator-card-media { z-index:-2; }

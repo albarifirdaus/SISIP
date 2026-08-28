@@ -104,6 +104,55 @@
     }).filter(Boolean);
   }
 
+  function normalizeStyleTagName(value, { label = "Tag style" } = {}) {
+    const raw = String(value || "").trim().replace(/\s+/g, " ");
+    if (!raw || raw.length > 48 || /[\u0000-\u001F\u007F]/.test(raw)) {
+      throw new Error(`${label} harus berisi 1 sampai 48 karakter.`);
+    }
+    const key = raw.toLowerCase();
+    return STYLE_ALIASES.get(key) || STYLE_OPTIONS.find((option) => option.toLowerCase() === key) || raw;
+  }
+
+  function normalizeStyleTags(value, { max = 3, label = "Tag style" } = {}) {
+    const source = Array.isArray(value) ? value : String(value || "").split(/[,;\n|]/);
+    const seen = new Set();
+    const result = [];
+    for (const sourceValue of source) {
+      if (!String(sourceValue || "").trim()) continue;
+      const tag = normalizeStyleTagName(sourceValue, { label });
+      const key = tag.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push(tag);
+    }
+    if (result.length > max) throw new Error(`${label} maksimal ${max} pilihan.`);
+    return result;
+  }
+
+  function storedStyleTags(value) {
+    const seen = new Set();
+    const result = [];
+    for (const sourceValue of Array.isArray(value) ? value : []) {
+      try {
+        const tag = normalizeStyleTagName(sourceValue);
+        const key = tag.toLowerCase();
+        if (!seen.has(key)) { seen.add(key); result.push(tag); }
+      } catch { /* Ignore malformed legacy values instead of hiding content. */ }
+    }
+    return result;
+  }
+
+  async function ensureStyleTags(db, styles) {
+    const canonical = [];
+    for (const style of normalizeStyleTags(styles)) {
+      const { data, error } = await db.rpc("ensure_comootd_style_tag", { p_name: style });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      canonical.push(row?.name || style);
+    }
+    return normalizeStyleTags(canonical);
+  }
+
   function normalizeImageAspect(value, fallback = "portrait") {
     const source = String(value || "").trim().toLowerCase();
     if (source === "square" || source === "1:1" || source === "1x1") return "square";
@@ -127,7 +176,7 @@
         name: variant.label,
         hex: variant.color_hex || "#B8AEA1",
         image: publicUrl(variant.image_path),
-        imageAspect: imageAspectFromPath(variant.image_path, "square")
+        imageAspect: "square"
       }));
 
     return {
@@ -136,12 +185,12 @@
       name: row.name,
       price: Number(row.price_idr || 0),
       badge: controlledStoredList(row.badges, PRODUCT_BADGE_OPTIONS, PRODUCT_BADGE_ALIASES)[0] || "",
-      styles: controlledStoredList(row.style_tags, STYLE_OPTIONS, STYLE_ALIASES),
+      styles: storedStyleTags(row.style_tags),
       affiliateUrl: row.affiliate_url,
       artBg: "#D8D0C6",
       artInk: variants[0]?.hex || "#242220",
       image: publicUrl(row.cover_image_path),
-      imageAspect: imageAspectFromPath(row.cover_image_path, "square"),
+      imageAspect: "square",
       genderTarget: row.gender_target || "unisex",
       status: row.status || "draft",
       publishedAt: row.published_at || "",
@@ -181,20 +230,35 @@
       .filter((item) => Boolean(item.name && item.affiliateUrl));
     const creatorId = row.creator_id || "";
 
+    const media = (row.look_media || [])
+      .sort((a, b) => Number(a.position || 0) - Number(b.position || 0))
+      .map((entry) => ({
+        id: entry.id,
+        position: Number(entry.position || 0),
+        path: entry.image_path || "",
+        image: publicUrl(entry.image_path),
+        alt: entry.alt_text || "",
+        aspect: imageAspectFromPath(entry.image_path, "portrait")
+      }))
+      .filter((entry) => Boolean(entry.image));
+    const firstMedia = media[0] || null;
+
     return {
       id: row.id,
       slug: row.slug,
       title: row.title,
       gender: genderToUi[row.gender_target] || "Uniseks",
-      styles: controlledStoredList(row.style_tags, STYLE_OPTIONS, STYLE_ALIASES),
+      styles: storedStyleTags(row.style_tags),
       tone: row.tone || "carbon",
       status: row.status || "draft",
       publishedAt: row.published_at || "",
       popularity: Number(row.popularity || 0),
       createdOrder: Number(row.sort_order || fallbackOrder),
-      coverImage: publicUrl(row.cover_image_path),
-      coverImagePath: row.cover_image_path || "",
-      coverAspect: imageAspectFromPath(row.cover_image_path, "portrait"),
+      coverImage: firstMedia?.image || publicUrl(row.cover_image_path),
+      coverImagePath: firstMedia?.path || row.cover_image_path || "",
+      coverAlt: firstMedia?.alt || row.cover_alt_text || "",
+      coverAspect: firstMedia?.aspect || imageAspectFromPath(row.cover_image_path, "portrait"),
+      media,
       excerpt: row.excerpt || "",
       creatorId,
       // Inline reference items are the durable distinction: Curator looks
@@ -208,7 +272,7 @@
     };
   }
 
-  function mapCurator(row, profile, socialLinks = []) {
+  function mapCurator(row, profile, socialLinks = [], bodyMetrics = null) {
     const name = String(row.display_name || profile?.display_name || row.handle || "COMOOTD Curator").trim();
     const avatarPath = row.avatar_path || profile?.avatar_path || "";
     return {
@@ -223,6 +287,10 @@
       avatar: publicUrl(avatarPath),
       maxPublishedLooks: Number(row.active_look_limit || 30),
       isActive: row.is_active !== false,
+      heightCm: bodyMetrics?.height_cm === null || bodyMetrics?.height_cm === undefined ? null : Number(bodyMetrics.height_cm),
+      weightKg: bodyMetrics?.weight_kg === null || bodyMetrics?.weight_kg === undefined ? null : Number(bodyMetrics.weight_kg),
+      bodyMetricsPublic: Boolean(bodyMetrics?.is_public),
+      bodyMetrics: bodyMetrics ? { heightCm: bodyMetrics.height_cm === null || bodyMetrics.height_cm === undefined ? null : Number(bodyMetrics.height_cm), weightKg: bodyMetrics.weight_kg === null || bodyMetrics.weight_kg === undefined ? null : Number(bodyMetrics.weight_kg), isPublic: Boolean(bodyMetrics.is_public) } : null,
       socials: socialLinks
         .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
         .map((link) => ({ id: link.id, platform: link.platform, url: link.url, sortOrder: Number(link.sort_order || 0) }))
@@ -273,8 +341,8 @@
       excerpt: row.excerpt || "",
       body: row.body_markdown || row.excerpt || "",
       category: row.category || "editorial",
-      styles: controlledStoredList(row.style_tags, STYLE_OPTIONS, STYLE_ALIASES),
-      tags: controlledStoredList(row.style_tags, STYLE_OPTIONS, STYLE_ALIASES),
+      styles: storedStyleTags(row.style_tags),
+      tags: storedStyleTags(row.style_tags),
       coverImage: publicUrl(row.cover_image_path),
       coverAspect: imageAspectFromPath(row.cover_image_path, "portrait"),
       coverAlt: row.cover_alt_text || "",
@@ -390,7 +458,7 @@
     if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka Studio.");
 
     const productSelect = "id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, status, published_at, sort_order, created_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
-    const lookSelect = "id, slug, title, excerpt, cover_image_path, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path))), look_curation_items(id, position, category, name, color_variant, affiliate_url)";
+    const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path))), look_curation_items(id, position, category, name, color_variant, affiliate_url)";
     const articleSelect = "id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)";
     const productsQuery = (from, to) => {
       let query = db
@@ -439,22 +507,34 @@
       return query.range(from, to);
     };
 
-    const [productRows, lookRows, articleRows, newSeriesSlotRows, outfitRequestRows, curatorRows] = await Promise.all([
+    const styleTagsQuery = db
+      .from("comootd_style_tags")
+      .select("id,name,is_active,is_explore_visible,sort_order")
+      .eq("is_active", true)
+      .order("is_explore_visible", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    const [productRows, lookRows, articleRows, newSeriesSlotRows, outfitRequestRows, curatorRows, styleTagRows] = await Promise.all([
       queryAllRows(productsQuery),
       queryAllRows(looksQuery),
       queryAllRows(articlesQuery),
       queryRows(newSeriesSlotsQuery),
       outfitRequestsQuery ? queryAllRows(outfitRequestsQuery) : Promise.resolve([]),
-      queryAllRows(curatorProfilesQuery)
+      queryAllRows(curatorProfilesQuery),
+      queryRows(styleTagsQuery)
     ]);
 
     const curatorIds = curatorRows.map((row) => row.user_id).filter(Boolean);
-    const [profileRows, socialRows] = await Promise.all([
+    const [profileRows, socialRows, bodyMetricRows] = await Promise.all([
       // The member `profiles` table deliberately remains private. Public
       // identity is fully contained in `curator_profiles`.
       Promise.resolve([]),
       curatorIds.length
         ? queryRows(db.from("contributor_social_links").select("id, contributor_id, platform, url, sort_order").in("contributor_id", curatorIds).order("sort_order", { ascending: true }))
+        : Promise.resolve([]),
+      curatorIds.length
+        ? queryRows(db.from("curator_body_metrics").select("user_id,height_cm,weight_kg,is_public").in("user_id", curatorIds))
         : Promise.resolve([])
     ]);
     const profileMap = new Map(profileRows.map((row) => [row.id, row]));
@@ -464,7 +544,8 @@
       links.push(row);
       socialsByContributor.set(row.contributor_id, links);
     });
-    const curators = curatorRows.map((row) => mapCurator(row, profileMap.get(row.user_id), socialsByContributor.get(row.user_id) || []));
+    const bodyMetricsByCurator = new Map(bodyMetricRows.map((row) => [row.user_id, row]));
+    const curators = curatorRows.map((row) => mapCurator(row, profileMap.get(row.user_id), socialsByContributor.get(row.user_id) || [], bodyMetricsByCurator.get(row.user_id) || null));
     const curatorMap = new Map(curators.map((curator) => [curator.userId, curator]));
 
     const products = productRows.map(mapProduct);
@@ -488,7 +569,28 @@
     const requests = admin
       ? outfitRequestRows.map((row) => mapOutfitRequest(row, { productMap, lookMap, includeAdminNote: true }))
       : [];
-    return { products, looks, articles, curators, newSeriesSlots, newSeriesLookIds, requests };
+    const styleTags = (styleTagRows || []).map((row) => ({ id:row.id, name:row.name, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0) }));
+    return { products, looks, articles, curators, styleTags, newSeriesSlots, newSeriesLookIds, requests };
+  }
+
+  async function getStyleTags() {
+    const { data, error } = await getClient()
+      .from("comootd_style_tags")
+      .select("id,name,is_explore_visible,sort_order")
+      .eq("is_active", true)
+      .order("is_explore_visible", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+    if (error) throw error;
+    return (data || []).map((row) => ({ id:row.id, name:row.name, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0) }));
+  }
+
+  async function ensureStyleTag(value) {
+    const name = normalizeStyleTagName(value);
+    const { data, error } = await getClient().rpc("ensure_comootd_style_tag", { p_name: name });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return { id:row?.id || "", name:row?.name || name, isExploreVisible:Boolean(row?.is_explore_visible), sortOrder:Number(row?.sort_order || 0) };
   }
 
   async function getSession() {
@@ -988,7 +1090,7 @@
     if (!/^image\/(jpeg|png|webp)$/.test(file.type || "")) throw new Error("Gunakan gambar JPEG, PNG, atau WebP.");
     if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran gambar maksimal 5 MB.");
     const fallbackAspect = folder === "products" ? "square" : "portrait";
-    const imageAspect = normalizeImageAspect(aspect, fallbackAspect);
+    const imageAspect = folder === "products" ? "square" : normalizeImageAspect(aspect, fallbackAspect);
     const path = `${folder}/${parentId}/${imageAspect}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${extensionFor(file)}`;
     const { error } = await getClient().storage.from(bucket).upload(path, file, {
       cacheControl: "3600",
@@ -1010,6 +1112,61 @@
     if (!ownedPath) return;
     const { error } = await getClient().storage.from(bucket).remove([ownedPath]);
     if (error) console.warn("Foto lama tidak dapat dibersihkan dari Storage.", error);
+  }
+
+  function normalizeLookGalleryInput(input, existingMedia = [], fallbackCoverPath = "") {
+    const existingByPosition = new Map((existingMedia || []).map((entry, index) => [Number(entry.position || entry.sortOrder || index + 1), entry]));
+    const rawGallery = Array.isArray(input?.gallery) ? input.gallery : [];
+    const rawByPosition = new Map(rawGallery.map((entry, index) => [Number(entry?.position || entry?.sortOrder || index + 1), entry]).filter(([position]) => Number.isInteger(position) && position >= 1 && position <= 3));
+    const galleryFiles = Array.isArray(input?.galleryFiles) ? input.galleryFiles : [];
+    if (!rawByPosition.size && (input?.coverFile || input?.cover_file)) rawByPosition.set(1, { file: input.coverFile || input.cover_file, aspect: input.coverAspect || input.cover_aspect || "portrait" });
+    if (!rawByPosition.size && galleryFiles.length) galleryFiles.slice(0, 3).forEach((file, index) => rawByPosition.set(index + 1, { file, aspect: index === 0 ? (input?.coverAspect || input?.cover_aspect || "portrait") : "portrait" }));
+    if (!existingByPosition.size && fallbackCoverPath) existingByPosition.set(1, { image_path: fallbackCoverPath, path: fallbackCoverPath, alt_text: "" });
+
+    const entries = [];
+    for (let position = 1; position <= 3; position += 1) {
+      const supplied = rawByPosition.get(position);
+      const existing = existingByPosition.get(position);
+      const currentPath = String(supplied?.currentPath || supplied?.current_path || supplied?.path || supplied?.imagePath || existing?.image_path || existing?.path || "").trim();
+      const file = supplied?.file || (position === 1 ? input?.coverFile || input?.cover_file || null : null);
+      if (!file && !currentPath) continue;
+      entries.push({
+        position,
+        file,
+        currentPath,
+        aspect: normalizeImageAspect(supplied?.aspect || supplied?.imageAspect || (position === 1 ? input?.coverAspect || input?.cover_aspect : "portrait"), "portrait"),
+        alt: String(supplied?.alt || supplied?.altText || supplied?.alt_text || existing?.alt_text || existing?.alt || "").trim().slice(0, 250)
+      });
+    }
+    return { entries, hasExplicitGallery: rawByPosition.size > 0 };
+  }
+
+  async function uploadLookGallery({ input, lookId, existingMedia, fallbackCoverPath, upload }) {
+    const prepared = normalizeLookGalleryInput(input, existingMedia, fallbackCoverPath);
+    const uploadedPaths = [];
+    const media = [];
+    try {
+      for (const entry of prepared.entries) {
+        const path = entry.file ? await upload(entry.file, entry.aspect) : entry.currentPath;
+        if (entry.file && path) uploadedPaths.push(path);
+        if (path) media.push({ image_path: path, alt_text: entry.alt || null });
+      }
+      return { media, uploadedPaths, hasExplicitGallery: prepared.hasExplicitGallery, hasChanges: uploadedPaths.length > 0 };
+    } catch (error) {
+      throw Object.assign(error, { uploadedPaths });
+    }
+  }
+
+  async function replaceLookGallery(db, lookId, media, { shouldWrite = false } = {}) {
+    if (!shouldWrite) return;
+    const { error } = await db.rpc("replace_comootd_look_media", { p_look_id: lookId, p_media: media });
+    if (error) throw error;
+  }
+
+  async function removeLookStoragePaths(paths, removePath) {
+    for (const path of new Set((paths || []).filter(Boolean))) {
+      try { await removePath(path); } catch (error) { console.warn("Foto lama tidak dapat dibersihkan dari Storage.", error); }
+    }
   }
 
   const articleCategories = new Set([
@@ -1037,7 +1194,7 @@
   }
 
   function normalizeArticleStyles(styles) {
-    return controlledList(styles, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style artikel" });
+    return normalizeStyleTags(styles, { max: 3, label: "Tag style artikel" });
   }
 
   function normalizeArticleBlocks(blocks) {
@@ -1218,7 +1375,7 @@
     if (!memberGenderTargets.has(genderTarget)) throw new Error("Gender look harus pria, wanita, atau unisex.");
     const tone = DEFAULT_LOOK_TONE;
     if (!curatorTones.has(tone)) throw new Error("Konfigurasi look belum valid.");
-    const styles = controlledList(source.styles ?? source.styleTags, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style" });
+    const styles = normalizeStyleTags(source.styles ?? source.styleTags, { max: 3, label: "Tag style" });
     if (!styles.length) throw new Error("Tambahkan minimal satu tag style.");
     return {
       title,
@@ -1261,16 +1418,18 @@
     const user = await getCurrentUser();
     if (!user) return null;
     const db = getClient();
-    const [profileResult, curatorResult, socialResult] = await Promise.all([
+    const [profileResult, curatorResult, socialResult, metricsResult] = await Promise.all([
       db.from("profiles").select("id, display_name, avatar_path").eq("id", user.id).maybeSingle(),
       db.from("curator_profiles").select("user_id, handle, display_name, bio, job_tags, avatar_path, active_look_limit, is_active").eq("user_id", user.id).maybeSingle(),
-      db.from("contributor_social_links").select("id, contributor_id, platform, url, sort_order").eq("contributor_id", user.id).order("sort_order", { ascending: true })
+      db.from("contributor_social_links").select("id, contributor_id, platform, url, sort_order").eq("contributor_id", user.id).order("sort_order", { ascending: true }),
+      db.from("curator_body_metrics").select("user_id,height_cm,weight_kg,is_public").eq("user_id", user.id).maybeSingle()
     ]);
     if (profileResult.error) throw profileResult.error;
     if (curatorResult.error) throw curatorResult.error;
     if (socialResult.error) throw socialResult.error;
+    if (metricsResult.error) throw metricsResult.error;
     const curator = curatorResult.data
-      ? mapCurator(curatorResult.data, profileResult.data, socialResult.data || [])
+      ? mapCurator(curatorResult.data, profileResult.data, socialResult.data || [], metricsResult.data || null)
       : null;
     // Return the curator fields at the top level for the public Curator UI,
     // while retaining `user`, `profile`, and `curator` for internal callers.
@@ -1319,6 +1478,21 @@
     const bio = normalizeUserText(source.bio ?? current.curator.bio, "Bio Curator", { max: 500 });
     const jobTags = normalizeCuratorTags(source.profileTags ?? source.profile_tags ?? source.jobTags ?? source.job_tags ?? current.curator.jobTags, "Tag profil curator", { max: 5 });
     const socialLinks = normalizeCuratorSocialLinks(source.socialLinks ?? source.social_links ?? current.curator.socials);
+    const normalizeMetric = (value, label, min, max, precision = 1) => {
+      if (value === null || value === undefined || String(value).trim() === "") return null;
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed) || parsed < min || parsed > max) throw new Error(`${label} harus berada di antara ${min}–${max}.`);
+      return precision === 1 ? Math.round(parsed) : Number(parsed.toFixed(1));
+    };
+    const heightInput = firstDefined(source, ["heightCm", "height_cm"]);
+    const weightInput = firstDefined(source, ["weightKg", "weight_kg"]);
+    const visibilityInput = firstDefined(source, ["bodyMetricsPublic", "body_metrics_public"]);
+    const heightCm = heightInput.provided ? normalizeMetric(heightInput.value, "Tinggi badan", 100, 250) : current.curator.heightCm ?? null;
+    const weightKg = weightInput.provided ? normalizeMetric(weightInput.value, "Berat badan", 25, 300, 0.1) : current.curator.weightKg ?? null;
+    const bodyMetricsPublic = visibilityInput.provided
+      ? (visibilityInput.value === true || visibilityInput.value === 1 || String(visibilityInput.value).trim().toLowerCase() === "true")
+      : Boolean(current.curator.bodyMetricsPublic);
+    if (bodyMetricsPublic && heightCm === null && weightKg === null) throw new Error("Isi minimal tinggi atau berat badan sebelum menampilkannya di profil publik.");
     let uploadedAvatarPath = "";
     try {
       uploadedAvatarPath = await uploadCuratorImage(source.avatarFile || source.avatar_file, "avatar", userId, "square");
@@ -1336,6 +1510,18 @@
           sort_order: link.sortOrder
         })));
         if (linksError) throw linksError;
+      }
+      if (heightCm === null && weightKg === null) {
+        const { error: metricDeleteError } = await db.from("curator_body_metrics").delete().eq("user_id", userId);
+        if (metricDeleteError) throw metricDeleteError;
+      } else {
+        const { error: metricError } = await db.from("curator_body_metrics").upsert({
+          user_id: userId,
+          height_cm: heightCm,
+          weight_kg: weightKg,
+          is_public: bodyMetricsPublic
+        }, { onConflict: "user_id" });
+        if (metricError) throw metricError;
       }
       if (uploadedAvatarPath && current.curator.avatarPath && current.curator.avatarPath !== uploadedAvatarPath) {
         const oldPath = ownedCuratorPath(userId, current.curator.avatarPath);
@@ -1356,17 +1542,25 @@
     const id = lookId || createBrowserUuid();
     if (!uuidPattern.test(id)) throw new Error("Look Curator belum valid.");
     const db = getClient();
-    let currentCoverPath = String(input.currentCoverPath || input.coverImagePath || "").trim();
-    if (lookId && !currentCoverPath) {
-      const { data: existing, error: existingError } = await db.from("looks").select("id, cover_image_path").eq("id", id).maybeSingle();
-      if (existingError) throw existingError;
-      if (!existing) throw new Error("Look ini sudah tidak tersedia.");
-      currentCoverPath = existing.cover_image_path || "";
+    normalized.styles = await ensureStyleTags(db, normalized.styles);
+    let existing = { cover_image_path: String(input.currentCoverPath || input.coverImagePath || "").trim(), look_media: [] };
+    if (lookId) {
+      const { data, error } = await db.from("looks").select("id, cover_image_path, look_media(position,image_path,alt_text)").eq("id", id).maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("Look ini sudah tidak tersedia.");
+      existing = data;
     }
-    let uploadedCoverPath = "";
+    let uploadedPaths = [];
     try {
-      uploadedCoverPath = await uploadCuratorImage(input.coverFile || input.cover_file, "looks", id, input.coverAspect || input.cover_aspect || "portrait");
-      const coverPath = uploadedCoverPath || currentCoverPath || null;
+      const galleryResult = await uploadLookGallery({
+        input,
+        lookId: id,
+        existingMedia: existing.look_media || [],
+        fallbackCoverPath: existing.cover_image_path || "",
+        upload: (file, aspect) => uploadCuratorImage(file, "looks", id, aspect)
+      });
+      uploadedPaths = galleryResult.uploadedPaths;
+      const coverPath = galleryResult.media[0]?.image_path || existing.cover_image_path || null;
       const { data, error } = await db.rpc("save_contributor_look", {
         // Generate the UUID client-side so the Storage path and database row
         // always describe the same look on first publish.
@@ -1381,14 +1575,22 @@
         p_items: normalized.items
       });
       if (error) throw error;
-      if (uploadedCoverPath && currentCoverPath && currentCoverPath !== uploadedCoverPath) {
-        const oldPath = ownedCuratorPath(current.user.id, currentCoverPath);
-        if (oldPath) await getClient().storage.from(bucket).remove([oldPath]);
+      await replaceLookGallery(db, id, galleryResult.media, { shouldWrite: galleryResult.hasExplicitGallery || galleryResult.hasChanges });
+      if (galleryResult.hasExplicitGallery || galleryResult.hasChanges) {
+        const previousPaths = [...(existing.look_media || []).map((item) => item.image_path), existing.cover_image_path].filter(Boolean);
+        const nextPaths = new Set(galleryResult.media.map((item) => item.image_path));
+        await removeLookStoragePaths(previousPaths.filter((path) => !nextPaths.has(path)), async (path) => {
+          const ownedPath = ownedCuratorPath(current.user.id, path);
+          if (ownedPath) await getClient().storage.from(bucket).remove([ownedPath]);
+        });
       }
       return data || id;
     } catch (error) {
-      const path = ownedCuratorPath(current.user.id, uploadedCoverPath);
-      if (path) await getClient().storage.from(bucket).remove([path]);
+      const cleanupPaths = [...uploadedPaths, ...(error?.uploadedPaths || [])];
+      await removeLookStoragePaths(cleanupPaths, async (path) => {
+        const ownedPath = ownedCuratorPath(current.user.id, path);
+        if (ownedPath) await getClient().storage.from(bucket).remove([ownedPath]);
+      });
       throw error;
     }
   }
@@ -1505,7 +1707,7 @@
       title: name,
       price: amount,
       badge: controlledList([badge], PRODUCT_BADGE_OPTIONS.slice(1), { max: 1, aliases: PRODUCT_BADGE_ALIASES, label: "Badge produk" })[0] || "",
-      styles: controlledList(styles, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style produk" }),
+      styles: normalizeStyleTags(styles, { max: 3, label: "Tag style produk" }),
       link: assertShopeeAffiliateUrl(link),
       variants: preparedVariants,
       imageUrl: assertImageUrl(imageUrl),
@@ -1526,6 +1728,7 @@
   async function saveProduct({ title, price, badge, styles, link, variants, imageFile, imageUrl, imageAspect, genderTarget, importKey }) {
     const db = getClient();
     const payload = normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, importKey });
+    payload.styles = await ensureStyleTags(db, payload.styles);
     let existing = null;
     if (payload.importKey) {
       const { data, error } = await db
@@ -1627,6 +1830,7 @@
     if (!uuidPattern.test(String(productId || ""))) throw new Error("Produk yang akan diedit belum valid.");
     const db = getClient();
     const payload = normalizeProductPayload({ ...input, importKey: "" });
+    payload.styles = await ensureStyleTags(db, payload.styles);
     const { data: existing, error: existingError } = await db
       .from("products")
       .select("id, cover_image_path, product_variants(id, label, image_path, is_active, sort_order)")
@@ -1784,6 +1988,7 @@
     for (let index = 0; index < preparedGroups.length; index += 1) {
       const group = preparedGroups[index];
       try {
+        group.styles = await ensureStyleTags(db, group.styles);
         const variantIds = group.items.map((item) => {
           const product = productsByKey.get(item.productKey);
           if (!product) throw new Error(`Produk dengan product_key ${item.productKey} belum ditemukan. Import produk terlebih dahulu.`);
@@ -1818,79 +2023,56 @@
     return { createdCount, updatedCount, failedCount, results };
   }
 
-  async function createLook({ title, gender, styles, tone = DEFAULT_LOOK_TONE, items, coverFile, coverAspect, popularity = 0 }) {
-    const controlledStyles = controlledList(styles, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style look" });
-    if (!controlledStyles.length) throw new Error("Look memerlukan minimal satu tag style.");
+  async function createLook(input) {
+    const { title, gender, styles, items, popularity = 0 } = input || {};
+    if (!Array.isArray(items) || items.length < 2 || items.length > 5) throw new Error("Satu look harus berisi 2–5 item.");
+    const variantIds = items.map((item) => String(item?.variantId || "").trim());
+    if (variantIds.some((variantId) => !uuidPattern.test(variantId)) || new Set(variantIds).size !== variantIds.length) throw new Error("Item look belum valid. Muat ulang Studio lalu coba lagi.");
     const db = getClient();
+    const controlledStyles = await ensureStyleTags(db, normalizeStyleTags(styles, { max: 3, label: "Tag style look" }));
+    if (!controlledStyles.length) throw new Error("Look memerlukan minimal satu tag style.");
     const { data: look, error: lookError } = await db
       .from("looks")
-      .insert({
-        slug: uniqueSlug(title),
-        title,
-        gender_target: genderToDb[gender] || "unisex",
-        style_tags: controlledStyles,
-        tone: DEFAULT_LOOK_TONE,
-        popularity,
-        status: "draft"
-      })
+      .insert({ slug: uniqueSlug(title), title: String(title || "").trim(), gender_target: genderToDb[gender] || "unisex", style_tags: controlledStyles, tone: DEFAULT_LOOK_TONE, popularity, status: "draft" })
       .select("id")
       .single();
     if (lookError) throw lookError;
 
-    let coverPath = "";
+    let uploadedPaths = [];
     try {
-      coverPath = await uploadImage(coverFile, "looks", look.id, coverAspect || "portrait");
-      if (coverPath) {
-        const { error } = await db.from("looks").update({ cover_image_path: coverPath }).eq("id", look.id);
-        if (error) throw error;
-      }
-
-      const lookItems = items.map((item, index) => ({
-        look_id: look.id,
-        product_variant_id: item.variantId,
-        position: index + 1
-      }));
-      if (lookItems.some((item) => !item.product_variant_id)) throw new Error("Varian produk belum sinkron. Muat ulang Studio lalu coba lagi.");
+      const galleryResult = await uploadLookGallery({ input, lookId: look.id, existingMedia: [], fallbackCoverPath: "", upload: (file, aspect) => uploadImage(file, "looks", look.id, aspect) });
+      uploadedPaths = galleryResult.uploadedPaths;
+      await replaceLookGallery(db, look.id, galleryResult.media, { shouldWrite: galleryResult.hasExplicitGallery || galleryResult.hasChanges });
+      const lookItems = variantIds.map((variantId, index) => ({ look_id: look.id, product_variant_id: variantId, position: index + 1 }));
       const { error: itemsError } = await db.from("look_items").insert(lookItems);
       if (itemsError) throw itemsError;
-
-      const { error: publishError } = await db
-        .from("looks")
-        .update({ status: "published", published_at: new Date().toISOString() })
-        .eq("id", look.id);
+      const { error: publishError } = await db.from("looks").update({ status: "published", published_at: new Date().toISOString() }).eq("id", look.id);
       if (publishError) throw publishError;
       return look.id;
     } catch (error) {
-      if (coverPath) await getClient().storage.from(bucket).remove([coverPath]);
+      await removeLookStoragePaths([...uploadedPaths, ...(error?.uploadedPaths || [])], (path) => removeOwnedMedia("looks", look.id, path));
       await db.from("looks").delete().eq("id", look.id);
       throw error;
     }
   }
 
-  async function updateLook({ id, title, gender, styles, tone = DEFAULT_LOOK_TONE, items, coverFile, coverAspect }) {
+  async function updateLook(input) {
+    const { id, title, gender, styles, items } = input || {};
     if (!uuidPattern.test(String(id || ""))) throw new Error("Look yang akan diedit belum valid.");
-    if (!Array.isArray(items) || items.length < 2 || items.length > 5) {
-      throw new Error("Satu look harus berisi 2–5 item.");
-    }
+    if (!Array.isArray(items) || items.length < 2 || items.length > 5) throw new Error("Satu look harus berisi 2–5 item.");
     const variantIds = items.map((item) => String(item?.variantId || "").trim());
-    if (variantIds.some((variantId) => !uuidPattern.test(variantId)) || new Set(variantIds).size !== variantIds.length) {
-      throw new Error("Item look belum valid. Muat ulang Studio lalu coba lagi.");
-    }
-    const controlledStyles = controlledList(styles, STYLE_OPTIONS, { max: 3, aliases: STYLE_ALIASES, label: "Tag style look" });
-    if (!controlledStyles.length) throw new Error("Look memerlukan minimal satu tag style.");
-
+    if (variantIds.some((variantId) => !uuidPattern.test(variantId)) || new Set(variantIds).size !== variantIds.length) throw new Error("Item look belum valid. Muat ulang Studio lalu coba lagi.");
     const db = getClient();
-    const { data: existing, error: existingError } = await db
-      .from("looks")
-      .select("id, cover_image_path")
-      .eq("id", id)
-      .single();
+    const controlledStyles = await ensureStyleTags(db, normalizeStyleTags(styles, { max: 3, label: "Tag style look" }));
+    if (!controlledStyles.length) throw new Error("Look memerlukan minimal satu tag style.");
+    const { data: existing, error: existingError } = await db.from("looks").select("id, cover_image_path, look_media(position,image_path,alt_text)").eq("id", id).single();
     if (existingError) throw existingError;
 
-    let uploadedCoverPath = "";
+    let uploadedPaths = [];
     try {
-      uploadedCoverPath = await uploadImage(coverFile, "looks", id, coverAspect || "portrait");
-      const nextCoverPath = uploadedCoverPath || existing.cover_image_path || null;
+      const galleryResult = await uploadLookGallery({ input, lookId: id, existingMedia: existing.look_media || [], fallbackCoverPath: existing.cover_image_path || "", upload: (file, aspect) => uploadImage(file, "looks", id, aspect) });
+      uploadedPaths = galleryResult.uploadedPaths;
+      const nextCoverPath = galleryResult.media[0]?.image_path || existing.cover_image_path || null;
       const { error } = await db.rpc("update_sisip_look", {
         p_look_id: id,
         p_title: String(title || "").trim(),
@@ -1901,13 +2083,15 @@
         p_cover_image_path: nextCoverPath
       });
       if (error) throw error;
-
-      if (uploadedCoverPath && existing.cover_image_path !== uploadedCoverPath) {
-        await removeOwnedMedia("looks", id, existing.cover_image_path);
+      await replaceLookGallery(db, id, galleryResult.media, { shouldWrite: galleryResult.hasExplicitGallery || galleryResult.hasChanges });
+      if (galleryResult.hasExplicitGallery || galleryResult.hasChanges) {
+        const previousPaths = [...(existing.look_media || []).map((item) => item.image_path), existing.cover_image_path].filter(Boolean);
+        const nextPaths = new Set(galleryResult.media.map((item) => item.image_path));
+        await removeLookStoragePaths(previousPaths.filter((path) => !nextPaths.has(path)), (path) => removeOwnedMedia("looks", id, path));
       }
       return id;
     } catch (error) {
-      if (uploadedCoverPath) await removeOwnedMedia("looks", id, uploadedCoverPath);
+      await removeLookStoragePaths([...uploadedPaths, ...(error?.uploadedPaths || [])], (path) => removeOwnedMedia("looks", id, path));
       throw error;
     }
   }
@@ -2020,7 +2204,7 @@
     const articleTitle = normalizeArticleText(title, "Judul artikel", { min: 1, max: 180, required: true });
     const articleExcerpt = normalizeArticleText(excerpt, "Ringkasan artikel", { max: 600 });
     const articleCategory = normalizeArticleCategory(category);
-    const articleStyles = normalizeArticleStyles(styles);
+    const articleStyles = await ensureStyleTags(db, normalizeArticleStyles(styles));
     const articleBlocks = normalizeArticleBlocks(blocks);
     const articleCtas = normalizeArticleCtas(lookCtas, productCtas);
     const articleCoverAlt = normalizeArticleText(coverAlt, "Alt text cover", { max: 240 });
@@ -2159,6 +2343,8 @@
     isConfigured: validConfig,
     config,
     loadState,
+    getStyleTags,
+    ensureStyleTag,
     getSession,
     getCurrentUser,
     onAuthStateChange,
