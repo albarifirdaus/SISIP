@@ -253,6 +253,7 @@
       category: compact(raw.category || raw.category_label || "other") || "other",
       name: compact(raw.name || raw.productName || raw.product_name || raw.label || ""),
       colorLabel: compact(raw.colorLabel || raw.color_label || raw.variantName || raw.variant_name || ""),
+      price: Number(raw.price ?? raw.priceIdr ?? raw.price_idr ?? 0) || 0,
       affiliateUrl: compact(raw.affiliateUrl || raw.affiliate_url || raw.url || raw.link || "")
     };
   }
@@ -567,6 +568,7 @@
       <div class="curator-field"><label>Kategori</label><select name="referenceCategory">${PRODUCT_CATEGORIES.map(([value, label]) => `<option value="${value}"${reference.category === value ? " selected" : ""}>${esc(label)}</option>`).join("")}</select></div>
       <div class="curator-field"><label>Nama produk</label><input name="referenceName" maxlength="160" value="${esc(reference.name)}" placeholder="Contoh: Linen Relaxed Shirt" required /></div>
       <div class="curator-field"><label>Warna / varian</label><select name="referenceColor"><option value="">Pilih warna</option>${COLOR_OPTIONS.map(([name, hex]) => `<option value="${esc(name)}"${name === selectedColor ? " selected" : ""}>${esc(name)} · ${esc(hex)}</option>`).join("")}</select><span class="curator-color-preview" data-curator-color-preview style="--curator-color:${esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1] || "transparent")}">${selectedColor ? esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1]) : "Opsional"}</span></div>
+      <div class="curator-field"><label>Harga referensi</label><input name="referencePrice" type="number" min="1" step="1" inputmode="numeric" value="${reference.price || ""}" placeholder="Contoh: 159000" required /></div>
       <div class="curator-field"><label>Link affiliate Shopee</label><input name="referenceUrl" type="url" value="${esc(reference.affiliateUrl)}" placeholder="https://shopee.co.id/..." required /></div>
       <button class="curator-remove-reference" type="button" data-remove-curator-reference aria-label="Hapus produk ${index + 1}">×</button>
     </div>`;
@@ -680,6 +682,7 @@
       category: compact(row.querySelector("[name=referenceCategory]")?.value || "other"),
       name: compact(row.querySelector("[name=referenceName]")?.value),
       colorLabel: compact(row.querySelector("[name=referenceColor]")?.value),
+      price: Number(String(row.querySelector("[name=referencePrice]")?.value || "").replace(/[^0-9]/g, "")),
       affiliateUrl: compact(row.querySelector("[name=referenceUrl]")?.value)
     }));
     const galleryPayload = collectGalleryPayload(form);
@@ -699,7 +702,7 @@
     if (!editing && !payload.coverFile) return "Tambahkan foto cover untuk look baru.";
     if ((payload.galleryFiles || []).some((file) => file.size > 5 * 1024 * 1024)) return "Ukuran setiap foto look maksimal 5 MB.";
     if (payload.items.length < MIN_REFERENCES || payload.items.length > MAX_REFERENCES) return `Tambahkan ${MIN_REFERENCES}–${MAX_REFERENCES} produk ke dalam look.`;
-    if (payload.items.some((item) => !item.name || !item.affiliateUrl)) return "Setiap produk membutuhkan nama dan link affiliate Shopee.";
+    if (payload.items.some((item) => !item.name || !item.affiliateUrl || !Number.isSafeInteger(item.price) || item.price <= 0)) return "Setiap produk membutuhkan nama, harga, dan link affiliate Shopee.";
     if (payload.items.some((item) => !isShopeeLink(item.affiliateUrl))) return "Gunakan link Shopee yang valid untuk setiap produk.";
     return "";
   }

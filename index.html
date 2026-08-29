@@ -2639,7 +2639,7 @@
           closeContentDialogs(els.lookModal);
           const itemsHtml = entry.items.map((item)=>{
             if (item?.affiliateUrl && !item?.productId) {
-              return `<li class="look-item"><div class="look-item-art" aria-hidden="true" style="display:grid;place-items:center;background:var(--paper-deep);color:var(--clay-dark)"><span class="meta">${esc(String(item.category||"item").slice(0,4))}</span></div><div><p class="look-item-title">${esc(item.name||"Item pilihan")}</p><div class="look-item-info"><span>${esc(item.colorLabel||item.variantName||"Warna pilihan")}</span><span>·</span><span>Curator pick</span></div></div><a class="item-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></li>`;
+              return `<li class="look-item"><div class="look-item-art" aria-hidden="true" style="display:grid;place-items:center;background:var(--paper-deep);color:var(--clay-dark)"><span class="meta">${esc(String(item.category||"item").slice(0,4))}</span></div><div><p class="look-item-title">${esc(item.name||"Item pilihan")}</p><div class="look-item-info"><span>${esc(item.colorLabel||item.variantName||"Warna pilihan")}</span><span>·</span><span>${Number(item.price)>0?money(item.price):"Harga belum dicantumkan"}</span></div></div><a class="item-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></li>`;
             }
             const productItem=getProduct(item.productId); if (!productItem) return "";
             const variant=getVariant(productItem,item.variantName);

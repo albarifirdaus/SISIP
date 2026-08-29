@@ -237,6 +237,7 @@
         variantId: "",
         variantName: item.color_variant || "Warna pilihan",
         colorLabel: item.color_variant || "",
+        price: Number(item.price_idr || 0),
         affiliateUrl: item.affiliate_url || ""
       }))
       .filter((item) => Boolean(item.name && item.affiliateUrl));
@@ -470,7 +471,7 @@
     if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka Studio.");
 
     const productSelect = "id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
-    const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path))), look_curation_items(id, position, category, name, color_variant, affiliate_url)";
+    const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path))), look_curation_items(id, position, category, name, color_variant, price_idr, affiliate_url)";
     const articleSelect = "id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)";
     const productsQuery = (from, to) => {
       let query = db
@@ -1372,10 +1373,12 @@
       const name = normalizeUserText(raw?.name, `Nama item ke-${index + 1}`, { required: true, min: 1, max: 160 });
       const colorLabel = normalizeUserText(raw?.colorLabel ?? raw?.color_label, `Warna item ke-${index + 1}`, { max: 80 });
       const affiliateUrl = assertShopeeAffiliateUrl(raw?.affiliateUrl ?? raw?.affiliate_url ?? raw?.url);
+      const price = Number(raw?.price ?? raw?.priceIdr ?? raw?.price_idr);
+      if (!Number.isSafeInteger(price) || price <= 0) throw new Error(`Harga item ke-${index + 1} harus berupa angka IDR lebih dari nol.`);
       const key = `${name.toLowerCase()}|${affiliateUrl}`;
       if (duplicateKeys.has(key)) throw new Error("Item yang sama tidak perlu ditambahkan dua kali.");
       duplicateKeys.add(key);
-      return { category, name, color_variant: colorLabel || null, affiliate_url: affiliateUrl };
+      return { category, name, color_variant: colorLabel || null, price_idr: price, affiliate_url: affiliateUrl };
     });
   }
 
@@ -1582,6 +1585,11 @@
         p_items: normalized.items
       });
       if (error) throw error;
+      const { error: priceError } = await db.rpc("set_contributor_look_prices", {
+        p_look_id: id,
+        p_prices: normalized.items.map((item) => item.price_idr)
+      });
+      if (priceError) throw priceError;
       await replaceLookGallery(db, id, galleryResult.media, { shouldWrite: galleryResult.hasExplicitGallery || galleryResult.hasChanges });
       if (galleryResult.hasExplicitGallery || galleryResult.hasChanges) {
         const previousPaths = [...(existing.look_media || []).map((item) => item.image_path), existing.cover_image_path].filter(Boolean);

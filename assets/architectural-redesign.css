@@ -563,7 +563,8 @@ dialog::backdrop { background:rgba(17,17,17,.58); backdrop-filter:blur(7px); }
   .mood-list { gap:var(--space-1); }
   .mood-options { gap:1px; }
   .mood-button { min-height:76px; }
-  .look-card-meta .eyebrow { max-width:9ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .look-card-meta { align-items:flex-start; }
+  .look-card-meta .eyebrow { max-width:calc(100% - 4.2ch); overflow:visible; white-space:normal; line-height:1.22; }
   .look-card-footer { align-items:flex-start; flex-direction:column; }
   .look-like-button.is-compact { align-self:flex-end; }
   .look-curator-metrics.is-compact { font-size:.45rem; }
