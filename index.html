@@ -1346,7 +1346,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/vendor/supabase-2.112.4.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="/assets/image-cropper.js"></script>
     <script src="/config.js"></script>
@@ -1546,6 +1546,16 @@
         };
 
         function loadState() {
+          const config = window.SISIP_CONFIG || {};
+          const hasCloudConfig = /^https:\/\//i.test(String(config.supabaseUrl || ""))
+            && Boolean(String(config.supabasePublishableKey || "").trim());
+          // A configured public site must never expose prototype data while the
+          // database request is still in flight (or when a network request
+          // fails). Start with an empty cloud catalogue, then hydrate it from
+          // Supabase. The sample library remains available only in local mode.
+          if (hasCloudConfig) {
+            return { products: [], looks: [], articles: [], curators: [], styleTags: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: true };
+          }
           try {
             const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
             if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES), styleTags: Array.isArray(saved.styleTags) ? saved.styleTags : [], newSeriesSlots: Array.isArray(saved.newSeriesSlots) ? saved.newSeriesSlots : [], newSeriesLookIds: Array.isArray(saved.newSeriesLookIds) ? saved.newSeriesLookIds : [], newSeriesConfigured: typeof saved.newSeriesConfigured === "boolean" ? saved.newSeriesConfigured : Array.isArray(saved.newSeriesLookIds) && saved.newSeriesLookIds.length > 0 };
@@ -3315,6 +3325,19 @@
           }
         } else applyContentRoute({ notify: true });
 
+        let lastPublicCloudRefresh = Date.now();
+        function refreshPublicCatalogueWhenActive() {
+          if (!cloudEnabled() || cloudAdmin || document.visibilityState === "hidden") return;
+          if (els.studioDrawer?.classList.contains("is-open")) return;
+          const now = Date.now();
+          if (now - lastPublicCloudRefresh < 60000) return;
+          lastPublicCloudRefresh = now;
+          void refreshCloudState({ quiet: true });
+        }
+        window.addEventListener("focus", refreshPublicCatalogueWhenActive);
+        window.addEventListener("pageshow", refreshPublicCatalogueWhenActive);
+        document.addEventListener("visibilitychange", refreshPublicCatalogueWhenActive);
+
         els.search.addEventListener("input",()=>{ activeStyle="all"; renderStyleControls(); renderLooks(); });
         els.gender.addEventListener("change",renderLooks);
         els.style.addEventListener("change",()=>{ activeStyle="all"; renderStyleControls(); renderLooks(); });
@@ -4035,3 +4058,4 @@
     <script src="/assets/curator-experience.js"></script>
   </body>
 </html>
+
