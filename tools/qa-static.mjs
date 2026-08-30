@@ -60,8 +60,12 @@ check(marketplaceMigration.includes("products_affiliate_url_marketplace_check") 
 check(marketplaceMigration.includes("save_contributor_look_v2") && marketplaceMigration.includes("update_comootd_product"), "RPC kompatibilitas multi-marketplace belum tersedia");
 check(read("assets/supabase-adapter.js").includes('rpc("save_contributor_look_v2"') && read("assets/supabase-adapter.js").includes('rpc("update_comootd_product"'), "Adapter belum memakai RPC multi-marketplace");
 check(index.includes('href="/styles/${esc(slugify(activeTag.name))}"'), "Explore style belum menautkan SEO landing page");
+check(index.includes("background:var(--clay)") && !index.includes("background:var(--signal)"), "Tombol landing style belum memiliki warna kontras yang valid");
+check(index.includes('candidatePool(state.looks, "look")') && index.includes('gender === preference.genderTarget || gender === "unisex"'), "Feed personal belum menyaring kandidat berdasarkan profil member");
 check(worker.includes('type:"style-directory"') && worker.includes("comootd_style_tags") && worker.includes("sitemap-(looks|products|journal|curators|styles)"), "Style landing page atau sitemap style belum lengkap");
 check(index.includes('value="tiktok_shop"') && index.includes('data-directory-filter="marketplace"'), "Input dan filter TikTok Shop belum tersedia");
+const curatorExperience = read("assets/curator-experience.js");
+check(curatorExperience.includes('dataset.archiveConfirmed') && curatorExperience.includes('textContent = "Mengarsipkan…"'), "Arsip curator belum memakai konfirmasi dan status proses yang terlihat");
 
 for (const file of ["index.html", "_worker.js", "config.js", "assets/supabase-adapter.js", "assets/curator-experience.js"]) {
   if (!existsSync(resolve(root, file))) continue;

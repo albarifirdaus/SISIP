@@ -920,17 +920,38 @@
       setFormStatus(status, error?.message || "Look belum dapat disimpan.");
     } finally { if (submit) submit.disabled = false; }
   }
-  async function deleteLook(id) {
+  async function deleteLook(id, trigger) {
     const api = cloud();
     const look = ownCuratorLooks().find((entry) => entry.id === String(id));
     if (!look || !api || typeof api.deleteCuratorLook !== "function") return;
-    if (!window.confirm(`Arsipkan look “${look.title}”? Look akan hilang dari publik dan satu slot kuota akan tersedia lagi.`)) return;
+    if (trigger?.dataset.archiveConfirmed !== "true") {
+      trigger.dataset.archiveConfirmed = "true";
+      trigger.textContent = "Konfirmasi arsip";
+      trigger.classList.add("is-confirming");
+      showToast(`Klik sekali lagi untuk mengarsipkan “${look.title}”.`);
+      window.setTimeout(() => {
+        if (!trigger?.isConnected || trigger.dataset.archiveConfirmed !== "true") return;
+        delete trigger.dataset.archiveConfirmed;
+        trigger.textContent = "Arsipkan";
+        trigger.classList.remove("is-confirming");
+      }, 6000);
+      return;
+    }
+    trigger.disabled = true;
+    trigger.textContent = "Mengarsipkan…";
     try {
       await api.deleteCuratorLook(look.id);
+      state.catalogue.looks = asArray(state.catalogue.looks).filter((entry) => String(entry?.id) !== look.id);
       await refresh({ quiet: false });
       renderStudio("looks");
       showToast("Look diarsipkan.");
-    } catch (error) { showToast(error?.message || "Look belum dapat diarsipkan."); }
+    } catch (error) {
+      trigger.disabled = false;
+      delete trigger.dataset.archiveConfirmed;
+      trigger.textContent = "Arsipkan";
+      trigger.classList.remove("is-confirming");
+      showToast(error?.message || "Look belum dapat diarsipkan.");
+    }
   }
 
   function onClick(event) {
@@ -953,7 +974,7 @@
     if (removeReference) { const form = removeReference.closest("form"); const rows = form?.querySelectorAll("[data-curator-reference-row]") || []; if (rows.length > MIN_REFERENCES) { removeReference.closest("[data-curator-reference-row]")?.remove(); updateReferenceControls(form); } return; }
     if (event.target.closest("[data-add-curator-reference]")) { const form = event.target.closest("form"); const list = form?.querySelector("[data-curator-reference-list]"); if (list && list.querySelectorAll("[data-curator-reference-row]").length < MAX_REFERENCES) { list.insertAdjacentHTML("beforeend", productReferenceMarkup({}, list.children.length)); updateReferenceControls(form); } return; }
     const remove = event.target.closest("[data-delete-curator-look]");
-    if (remove) { deleteLook(remove.dataset.deleteCuratorLook); return; }
+    if (remove) { void deleteLook(remove.dataset.deleteCuratorLook, remove); return; }
     const like = event.target.closest("[data-toggle-curator-like]");
     if (like) { toggleLike(like.dataset.toggleCuratorLike, like); return; }
     const shareCurator = event.target.closest("[data-share-curator]");
