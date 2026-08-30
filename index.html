@@ -1200,7 +1200,9 @@
               </div>
               <div class="field"><label for="lookExcerptInput">Deskripsi kurasi (opsional)</label><textarea id="lookExcerptInput" name="excerpt" maxlength="240" placeholder="Ide, occasion, atau formula styling dalam maksimal 240 karakter."></textarea><p class="microcopy">Jika kosong, deskripsi tidak akan ditampilkan.</p></div>
               <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="lookStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="lookStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="lookStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="lookStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="lookStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="lookStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="lookStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="lookStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="lookStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="lookStyles" value="Party" /><span>Party</span></label></div><div class="taxonomy-custom-add"><input type="text" maxlength="48" data-custom-style-input placeholder="Tambah style kustom" /><button class="small-button muted" type="button" data-add-custom-style>+ Tag</button></div><p class="microcopy">Pilih maksimal tiga tag agar look mudah ditemukan.</p></fieldset>
-              <div class="look-gallery-upload-grid"><div class="field"><label for="lookCoverInput" id="lookCoverLabel">Foto 1 / cover (opsional)</label><input id="lookCoverInput" type="file" accept="image/jpeg,image/png,image/webp" /></div><div class="field"><label for="lookMedia2Input">Foto 2 (opsional)</label><input id="lookMedia2Input" type="file" accept="image/jpeg,image/png,image/webp" /></div><div class="field"><label for="lookMedia3Input">Foto 3 (opsional)</label><input id="lookMedia3Input" type="file" accept="image/jpeg,image/png,image/webp" /></div></div><p class="image-upload-note">Unggah hingga tiga foto. Setiap foto dapat dicrop portrait 3:4 atau square 1:1.</p>
+              <div class="field look-gallery-uploader"><label for="lookGalleryInput" id="lookCoverLabel">Foto look (opsional, maksimal 3)</label><input id="lookGalleryInput" type="file" accept="image/jpeg,image/png,image/webp" multiple /><p class="image-upload-note">Pilih hingga tiga foto sekaligus. Foto akan dicrop satu per satu, lalu dapat diurutkan; foto pertama otomatis menjadi cover.</p></div>
+              <div class="look-gallery-slot-inputs" aria-hidden="true"><input id="lookCoverInput" type="file" accept="image/jpeg,image/png,image/webp" tabindex="-1" /><input id="lookMedia2Input" type="file" accept="image/jpeg,image/png,image/webp" tabindex="-1" /><input id="lookMedia3Input" type="file" accept="image/jpeg,image/png,image/webp" tabindex="-1" /></div>
+              <div class="look-gallery-organizer" id="lookGalleryOrganizer" aria-live="polite"></div>
               <div class="editor-product-row">
                 <div class="field"><label for="lookProductInput">Tambahkan produk</label><select id="lookProductInput"></select></div>
                 <div class="field"><label for="lookVariantInput">Warna pilihan</label><select id="lookVariantInput"></select></div>
@@ -1238,6 +1240,13 @@
             <p class="new-series-status" id="newSeriesStatus" aria-live="polite"></p>
             <p class="form-error" id="newSeriesError" role="alert"></p>
             <button class="small-button" id="saveNewSeriesButton" type="button">Simpan carousel</button>
+          </section>
+          <section class="studio-section">
+            <h3>Style taxonomy</h3>
+            <p>Kelola satu daftar style untuk filter publik, upload look dan produk, preferensi member, serta profil Curator. Perubahan nama diterapkan ke data yang sudah memakai style tersebut.</p>
+            <form class="style-taxonomy-add" id="styleTaxonomyAddForm"><label for="styleTaxonomyNewName">Style baru</label><div><input id="styleTaxonomyNewName" maxlength="48" placeholder="Contoh: Scandinavian Minimal" required /><button class="small-button muted" type="submit">+ Tambah style</button></div></form>
+            <div class="style-taxonomy-list" id="styleTaxonomyList"></div>
+            <p class="form-error" id="styleTaxonomyError" role="alert"></p>
           </section>
           <section class="studio-section">
             <h3>Preview Match Your Vibe</h3>
@@ -1331,7 +1340,7 @@
               <div class="compact-row"><div class="field"><label for="productGenderInput">Gender target</label><select id="productGenderInput" name="genderTarget"><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div><div class="field"><label for="productCategoryInput">Kategori</label><select id="productCategoryInput" name="category"><option value="top">Atasan</option><option value="bottom">Bawahan</option><option value="outerwear">Outerwear</option><option value="dress">Dress / Set</option><option value="footwear">Sepatu</option><option value="bag">Tas</option><option value="accessory">Aksesori</option><option value="hijab">Hijab</option><option value="jewelry">Perhiasan</option><option value="other" selected>Lainnya</option></select></div></div>
               <div class="field"><label for="productLinkInput">Link affiliate Shopee</label><input id="productLinkInput" name="link" required type="url" placeholder="https://shopee.co.id/..." /></div>
               <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Tag style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="productStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="productStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="productStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="productStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="productStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="productStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="productStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="productStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="productStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="productStyles" value="Party" /><span>Party</span></label></div><div class="taxonomy-custom-add"><input type="text" maxlength="48" data-custom-style-input placeholder="Tambah style kustom" /><button class="small-button muted" type="button" data-add-custom-style>+ Tag</button></div><p class="microcopy">Pilih maksimal tiga tag. Tag ini sama dengan filter yang dilihat pengunjung.</p></fieldset>
-              <div class="field"><label for="productVariantsInput">Varian warna</label><select id="productVariantsInput" name="variants" required multiple size="8"><option value="Hitam|#151515">Hitam · #151515</option><option value="Putih|#F7F7F2">Putih · #F7F7F2</option><option value="Ivory|#F1EBDD">Ivory · #F1EBDD</option><option value="Cream|#E8D9C5">Cream · #E8D9C5</option><option value="Beige|#CBB89D">Beige · #CBB89D</option><option value="Taupe|#988477">Taupe · #988477</option><option value="Cokelat|#704B38">Cokelat · #704B38</option><option value="Abu-abu|#8B8D8F">Abu-abu · #8B8D8F</option><option value="Charcoal|#3F4143">Charcoal · #3F4143</option><option value="Navy|#1D2942">Navy · #1D2942</option><option value="Biru|#4F73A1">Biru · #4F73A1</option><option value="Denim|#6E87A5">Denim · #6E87A5</option><option value="Merah|#A43A32">Merah · #A43A32</option><option value="Burgundy|#6D2635">Burgundy · #6D2635</option><option value="Pink|#D8A3AD">Pink · #D8A3AD</option><option value="Oranye|#C86B32">Oranye · #C86B32</option><option value="Kuning|#D4AE3B">Kuning · #D4AE3B</option><option value="Hijau|#52705A">Hijau · #52705A</option><option value="Olive|#6C7047">Olive · #6C7047</option><option value="Ungu|#765A83">Ungu · #765A83</option><option value="Silver|#B9BBC0">Silver · #B9BBC0</option><option value="Gold|#B89A52">Gold · #B89A52</option><option value="Multicolor|#B8AEA1">Multicolor · #B8AEA1</option></select><p class="microcopy">Pilih satu atau beberapa warna. Nama dan kode HEX sudah otomatis.</p></div>
+              <div class="field product-color-field"><label for="productColorSearch">Varian warna</label><div class="product-color-picker"><div class="product-color-picker-head"><input id="productColorSearch" type="search" autocomplete="off" placeholder="Cari warna atau kode HEX…" /><span id="productColorCount">0 dipilih</span></div><div class="product-color-options" id="productColorOptions" role="group" aria-label="Pilih satu atau beberapa warna"></div></div><select id="productVariantsInput" name="variants" multiple hidden><option value="Hitam|#151515">Hitam · #151515</option><option value="Putih|#F7F7F2">Putih · #F7F7F2</option><option value="Ivory|#F1EBDD">Ivory · #F1EBDD</option><option value="Cream|#E8D9C5">Cream · #E8D9C5</option><option value="Beige|#CBB89D">Beige · #CBB89D</option><option value="Taupe|#988477">Taupe · #988477</option><option value="Cokelat|#704B38">Cokelat · #704B38</option><option value="Abu-abu|#8B8D8F">Abu-abu · #8B8D8F</option><option value="Charcoal|#3F4143">Charcoal · #3F4143</option><option value="Navy|#1D2942">Navy · #1D2942</option><option value="Biru|#4F73A1">Biru · #4F73A1</option><option value="Denim|#6E87A5">Denim · #6E87A5</option><option value="Merah|#A43A32">Merah · #A43A32</option><option value="Burgundy|#6D2635">Burgundy · #6D2635</option><option value="Pink|#D8A3AD">Pink · #D8A3AD</option><option value="Oranye|#C86B32">Oranye · #C86B32</option><option value="Kuning|#D4AE3B">Kuning · #D4AE3B</option><option value="Hijau|#52705A">Hijau · #52705A</option><option value="Olive|#6C7047">Olive · #6C7047</option><option value="Ungu|#765A83">Ungu · #765A83</option><option value="Silver|#B9BBC0">Silver · #B9BBC0</option><option value="Gold|#B89A52">Gold · #B89A52</option><option value="Multicolor|#B8AEA1">Multicolor · #B8AEA1</option></select><p class="microcopy">Klik kartu warna untuk memilih beberapa varian. Pilihan aktif diberi tanda centang.</p></div>
               <div class="field"><label for="productImageUrlInput">URL foto cover (opsional)</label><input id="productImageUrlInput" name="imageUrl" type="url" placeholder="https://cdn.example.com/foto-produk.jpg" /></div>
               <p class="microcopy" style="margin:-.2rem 0 0;color:var(--taupe)">Link affiliate tidak diekstrak otomatis. Pakai URL gambar resmi dari Product Feed atau upload foto sendiri.</p>
               <div class="field"><label for="productImageInput" id="productImageLabel">Upload foto produk (opsional)</label><input id="productImageInput" type="file" accept="image/jpeg,image/png,image/webp" /><p class="image-upload-note">Foto produk selalu ditampilkan square 1:1. Atur crop sebelum menggunakan foto.</p></div>
@@ -1546,6 +1555,11 @@
         let resendConfirmationCooldownUntil = 0;
         let resendConfirmationTimer;
         let resendConfirmationInFlight = false;
+        let lookGallerySlotOrder = [0, 1, 2];
+        let lookGalleryRemovedSlots = new Set();
+        let lookGalleryQueue = [];
+        let lookGalleryQueueIndex = 0;
+        let lookGalleryPreviewUrls = [];
         const memberProfileTagState = Object.fromEntries(Object.keys(MEMBER_PROFILE_TAG_FIELDS).map((key) => [key, []]));
         const requestDrafts = new Map();
 
@@ -1559,6 +1573,18 @@
           requestForm: document.getElementById("requestForm"), requestStatus: document.getElementById("requestStatus"), requestSubmitButton: document.getElementById("requestSubmitButton"),
           studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookForm: document.getElementById("lookForm"), lookFormHeading: document.getElementById("lookFormHeading"), lookFormCopy: document.getElementById("lookFormCopy"), lookCoverLabel: document.getElementById("lookCoverLabel"), lookEditActions: document.getElementById("lookEditActions"), cancelLookEditButton: document.getElementById("cancelLookEditButton"), lookSubmitButton: document.getElementById("lookSubmitButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productForm: document.getElementById("productForm"), productFormHeading: document.getElementById("productFormHeading"), productFormCopy: document.getElementById("productFormCopy"), productImageLabel: document.getElementById("productImageLabel"), productEditActions: document.getElementById("productEditActions"), cancelProductEditButton: document.getElementById("cancelProductEditButton"), productSubmitButton: document.getElementById("productSubmitButton"), productFormError: document.getElementById("productFormError"), studioLooksSearch: document.getElementById("studioLooksSearch"), studioLooksSearchMeta: document.getElementById("studioLooksSearchMeta"), studioLooksList: document.getElementById("studioLooksList"), loadMoreStudioLooks: document.getElementById("loadMoreStudioLooks"), studioProductsSearch: document.getElementById("studioProductsSearch"), studioProductsSearchMeta: document.getElementById("studioProductsSearchMeta"), studioProductsList: document.getElementById("studioProductsList"), loadMoreStudioProducts: document.getElementById("loadMoreStudioProducts"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), stylePreviewSlots: document.getElementById("stylePreviewSlots"), stylePreviewStatus: document.getElementById("stylePreviewStatus"), stylePreviewError: document.getElementById("stylePreviewError"), saveStylePreviewsButton: document.getElementById("saveStylePreviewsButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), bulkLookFile: document.getElementById("bulkLookFile"), downloadBulkLookTemplateButton: document.getElementById("downloadBulkLookTemplateButton"), bulkLookImportButton: document.getElementById("bulkLookImportButton"), bulkLookImportStatus: document.getElementById("bulkLookImportStatus"), bulkLookImportPreview: document.getElementById("bulkLookImportPreview"), bulkLookImportPreviewSummary: document.getElementById("bulkLookImportPreviewSummary"), bulkLookImportPreviewList: document.getElementById("bulkLookImportPreviewList"), bulkLookImportError: document.getElementById("bulkLookImportError"), toast: document.getElementById("toast")
         };
+        Object.assign(els, {
+          lookGalleryInput: document.getElementById("lookGalleryInput"),
+          lookGalleryOrganizer: document.getElementById("lookGalleryOrganizer"),
+          styleTaxonomyAddForm: document.getElementById("styleTaxonomyAddForm"),
+          styleTaxonomyNewName: document.getElementById("styleTaxonomyNewName"),
+          styleTaxonomyList: document.getElementById("styleTaxonomyList"),
+          styleTaxonomyError: document.getElementById("styleTaxonomyError"),
+          productColorSearch: document.getElementById("productColorSearch"),
+          productColorOptions: document.getElementById("productColorOptions"),
+          productColorCount: document.getElementById("productColorCount"),
+          productVariantsInput: document.getElementById("productVariantsInput")
+        });
 
         function loadState() {
           const config = window.SISIP_CONFIG || {};
@@ -1622,8 +1648,9 @@
           });
         }
         function getAllStyles() {
-          const remote=(state.styleTags || []).map((tag)=>typeof tag === "string" ? tag : tag?.name).filter(Boolean);
+          const remote=(state.styleTags || []).filter((tag)=>typeof tag === "string" || tag?.isActive !== false).map((tag)=>typeof tag === "string" ? tag : tag?.name).filter(Boolean);
           const used=[...(state.looks || []).flatMap((entry)=>entry.styles||[]), ...(state.products || []).flatMap((entry)=>entry.styles||[]), ...(state.articles || []).flatMap((entry)=>entry.styles||[])];
+          if (cloudEnabled() && remote.length) return uniqueStyleTags(remote);
           return uniqueStyleTags([...STYLE_ORDER,...remote,...used]);
         }
         function appendTaxonomyOption(picker, rawValue, selected = false) {
@@ -1642,7 +1669,12 @@
         }
         function hydrateTaxonomyPickers() {
           const values=getAllStyles();
+          const allowed=new Set(values.map((value)=>value.toLocaleLowerCase("id-ID")));
           document.querySelectorAll("[data-taxonomy-picker]").forEach((picker)=>{
+            picker.querySelectorAll(".taxonomy-options label").forEach((label)=>{
+              const input=label.querySelector("input[type=checkbox]");
+              if(input&&!input.checked&&!allowed.has(String(input.value).toLocaleLowerCase("id-ID")))label.remove();
+            });
             values.forEach((value)=>appendTaxonomyOption(picker,value));
             refreshTaxonomyPicker(picker);
           });
@@ -1690,7 +1722,11 @@
             try {
               const saved=cloudEnabled() && typeof cloud?.ensureStyleTag === "function" ? await cloud.ensureStyleTag(value) : { name:value };
               const canonical=normaliseStyleTag(saved?.name || value);
-              state.styleTags=uniqueStyleTags([...(state.styleTags || []).map((tag)=>typeof tag === "string" ? tag : tag?.name),canonical]);
+              if (cloudEnabled()) {
+                await refreshCloudState({admin:true,quiet:true});
+              } else {
+                state.styleTags=uniqueStyleTags([...(state.styleTags || []).map((tag)=>typeof tag === "string" ? tag : tag?.name),canonical]);
+              }
               appendTaxonomyOption(picker,canonical,true);
               input.value="";
               hydrateTaxonomyPickers(); renderStyleControls(); refreshTaxonomyPicker(picker);
@@ -1708,7 +1744,8 @@
         function memberProfileTags(value) { return memberTags(value).slice(0, MEMBER_PROFILE_TAG_LIMIT); }
         function memberProfileTagLabel(name, value) {
           const field = MEMBER_PROFILE_TAG_FIELDS[name];
-          return field?.options.find((option) => memberTerm(option) === value) || value;
+          const choices = name === "styleTags" ? getAllStyles() : (field?.options || []);
+          return choices.find((option) => memberTerm(option) === value) || value;
         }
         function renderMemberProfileTagPicker(name) {
           const field = MEMBER_PROFILE_TAG_FIELDS[name];
@@ -1720,7 +1757,8 @@
           if (input) input.value = selected.join(", ");
           if (count) count.textContent = `${selected.length} / ${MEMBER_PROFILE_TAG_LIMIT}`;
           if (!options) return;
-          const knownOptions = field.options.map((label) => ({ label, value: memberTerm(label), legacy: false }));
+          const availableOptions = name === "styleTags" ? getAllStyles() : field.options;
+          const knownOptions = availableOptions.map((label) => ({ label, value: memberTerm(label), legacy: false }));
           const knownValues = new Set(knownOptions.map((option) => option.value));
           const tags = [...knownOptions, ...selected.filter((value) => !knownValues.has(value)).map((value) => ({ label: memberProfileTagLabel(name, value), value, legacy: true }))];
           options.innerHTML = tags.map((tag) => {
@@ -2224,6 +2262,29 @@
           els.stylePreviewStatus.textContent=`${customCount} dari ${tags.length} style memakai pilihan khusus. Sisanya menggunakan fallback otomatis.`;
           els.saveStylePreviewsButton.disabled=false;
         }
+        function renderStyleTaxonomyStudio() {
+          if (!els.styleTaxonomyList) return;
+          const tags = (state.styleTags || []).filter((tag) => typeof tag === "object").sort((a,b)=>Number(a.sortOrder||0)-Number(b.sortOrder||0)||String(a.name||"").localeCompare(String(b.name||""),"id"));
+          els.styleTaxonomyList.innerHTML = tags.length ? tags.map((tag) => `<form class="style-taxonomy-row${tag.isActive === false ? " is-inactive" : ""}" data-style-taxonomy-row="${esc(tag.id)}">
+            <label><span>Nama style</span><input name="name" maxlength="48" value="${esc(tag.name)}" required /></label>
+            <label class="style-taxonomy-order"><span>Urutan</span><input name="sortOrder" type="number" min="0" max="1000" step="1" value="${Number(tag.sortOrder||0)}" /></label>
+            <label class="style-taxonomy-check"><input name="isActive" type="checkbox"${tag.isActive === false ? "" : " checked"} /><span>Aktif</span></label>
+            <label class="style-taxonomy-check"><input name="isExploreVisible" type="checkbox"${tag.isExploreVisible ? " checked" : ""} /><span>Match Your Vibe</span></label>
+            <button class="small-button muted" type="submit">Simpan</button>
+          </form>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada style resmi. Tambahkan style pertama di atas.</p>`;
+        }
+        function renderProductColorPicker() {
+          if (!els.productColorOptions || !els.productVariantsInput) return;
+          const query=String(els.productColorSearch?.value||"").trim().toLocaleLowerCase("id-ID");
+          const options=[...els.productVariantsInput.options];
+          const visible=options.filter((option)=>!query || String(option.textContent||option.value).toLocaleLowerCase("id-ID").includes(query));
+          els.productColorOptions.innerHTML=visible.map((option)=>{
+            const [name,rawHex]=String(option.value||"").split("|");
+            const hex=/^#[0-9a-f]{6}$/i.test(rawHex||"")?rawHex:"#B8AEA1";
+            return `<button class="product-color-option${option.selected?" is-selected":""}" type="button" data-product-color-value="${esc(option.value)}" aria-pressed="${String(option.selected)}"><span class="product-color-swatch" style="--product-color:${esc(hex)}"></span><span><strong>${esc(name)}</strong><small>${esc(hex.toUpperCase())}</small></span><span class="product-color-check" aria-hidden="true">${option.selected?"✓":"+"}</span></button>`;
+          }).join("") || `<p class="product-color-empty">Warna tidak ditemukan.</p>`;
+          if (els.productColorCount) els.productColorCount.textContent=`${options.filter((option)=>option.selected).length} dipilih`;
+        }
         function getRequestDraft(request) {
           const id = String(request?.id || "");
           if (!id) return { status:"new", responseMessage:"", adminNote:"", recommendations:[] };
@@ -2356,11 +2417,13 @@
           renderVariantSelect();
           renderDraftItems();
           renderNewSeriesStudio();
+          renderStyleTaxonomyStudio();
           renderStylePreviewStudio();
           renderJournalStudio();
           renderRequestsStudio();
           renderStudioLibraries();
           renderCuratorAdmin();
+          renderProductColorPicker();
           els.studioArticlesList.innerHTML = state.articles.length ? [...state.articles].map((article)=>`<div class="studio-row"><p><strong>${esc(article.title)}</strong><span>${esc(articleCategoryLabel(article.category))} · ${(article.blocks || []).length || "teks"} blok · ${(article.ctas || []).length} CTA</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-article="${esc(article.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada artikel tersimpan.</p>`;
         }
         function renderVariantSelect() {
@@ -2370,6 +2433,86 @@
         function renderDraftItems() {
           els.lookDraftItems.innerHTML = lookDraftItems.length ? lookDraftItems.map((item,index)=>{ const productItem=getProduct(item.productId); return `<div class="draft-item"><p><strong>${esc(productItem?.name || "Produk dihapus")}</strong><span>Warna pilihan: ${esc(item.variantName)}</span></p><button class="small-button danger" type="button" data-remove-draft="${index}">×</button></div>`; }).join("") : `<p class="microcopy" style="color:var(--taupe);margin:0">Masukkan 2–5 item untuk mempublikasikan look.</p>`;
         }
+        function getLookImageInputs() {
+          return [document.getElementById("lookCoverInput"),document.getElementById("lookMedia2Input"),document.getElementById("lookMedia3Input")];
+        }
+        function currentLookPriorMedia() {
+          const entry=editingLookId?getLook(editingLookId):null;
+          return Array.isArray(entry?.media)&&entry.media.length ? entry.media : entry?.coverImage ? [{path:entry.coverImage,image:entry.coverImage,alt:entry.coverAlt||"",aspect:entry.coverAspect||"portrait"}] : [];
+        }
+        function clearLookGalleryPreviewUrls() {
+          lookGalleryPreviewUrls.forEach((url)=>URL.revokeObjectURL(url));
+          lookGalleryPreviewUrls=[];
+        }
+        function lookGallerySlot(slot) {
+          if (lookGalleryRemovedSlots.has(slot)) return null;
+          const input=getLookImageInputs()[slot];
+          const file=window.COMOOTDImageCropper?.getFile?.(input) || (input?.files?.[0] || null);
+          const prior=currentLookPriorMedia()[slot] || null;
+          if (!file && !prior?.image && !prior?.path) return null;
+          let image=safeImage(prior?.image || prior?.path || "");
+          if (file) { image=URL.createObjectURL(file); lookGalleryPreviewUrls.push(image); }
+          return {slot,input,file,prior,image,aspect:file?selectedImageAspect(input,"portrait"):imageAspect(prior?.aspect||prior?.path||prior?.image,"portrait")};
+        }
+        function renderLookGalleryOrganizer() {
+          if (!els.lookGalleryOrganizer) return;
+          clearLookGalleryPreviewUrls();
+          const entries=lookGallerySlotOrder.map(lookGallerySlot).filter(Boolean);
+          if (!entries.length) {
+            els.lookGalleryOrganizer.innerHTML=`<div class="look-gallery-empty"><strong>Belum ada foto</strong><span>Pilih hingga tiga foto sekaligus. Setelah crop, atur urutan cover di sini.</span></div>`;
+            return;
+          }
+          els.lookGalleryOrganizer.innerHTML=entries.map((entry,index)=>`<article class="look-gallery-card${index===0?" is-cover":""}" data-look-gallery-slot="${entry.slot}">
+            <div class="look-gallery-preview ${imageFrameClass(entry.aspect,"portrait")}">${entry.image?`<img src="${esc(entry.image)}" alt="Preview foto look ${index+1}" />`:""}<span>${index===0?"COVER":`FOTO ${index+1}`}</span></div>
+            <div class="look-gallery-card-actions"><button type="button" data-gallery-move="left" aria-label="Geser foto ke kiri"${index===0?" disabled":""}>←</button><button type="button" data-gallery-cover${index===0?" disabled":""}>Jadikan cover</button><button type="button" data-gallery-move="right" aria-label="Geser foto ke kanan"${index===entries.length-1?" disabled":""}>→</button><button class="is-danger" type="button" data-gallery-remove aria-label="Hapus foto">×</button></div>
+          </article>`).join("");
+        }
+        function resetLookGallery({ preserveExisting = false } = {}) {
+          lookGalleryQueue=[]; lookGalleryQueueIndex=0; lookGallerySlotOrder=[0,1,2];
+          lookGalleryRemovedSlots=preserveExisting?new Set():new Set([0,1,2]);
+          getLookImageInputs().forEach((input)=>window.COMOOTDImageCropper?.clear?.(input));
+          if (els.lookGalleryInput) els.lookGalleryInput.value="";
+          renderLookGalleryOrganizer();
+        }
+        function processNextLookGalleryFile() {
+          if (lookGalleryQueueIndex>=lookGalleryQueue.length) { lookGalleryQueue=[]; lookGalleryQueueIndex=0; if(els.lookGalleryInput) els.lookGalleryInput.value=""; renderLookGalleryOrganizer(); return; }
+          const slot=lookGalleryQueueIndex;
+          const file=lookGalleryQueue[lookGalleryQueueIndex++];
+          const input=getLookImageInputs()[slot];
+          try {
+            const transfer=new DataTransfer(); transfer.items.add(file); input.files=transfer.files;
+            input.dispatchEvent(new Event("change",{bubbles:true}));
+          } catch(error) {
+            els.lookFormError.textContent="Perangkat ini belum mendukung pemilihan beberapa foto sekaligus. Coba gunakan browser terbaru.";
+            lookGalleryQueue=[];
+          }
+        }
+        function setupLookGalleryInput() {
+          els.lookGalleryInput?.addEventListener("change",()=>{
+            const files=[...(els.lookGalleryInput.files||[])];
+            if(files.length>3){els.lookFormError.textContent="Pilih maksimal tiga foto untuk satu look.";els.lookGalleryInput.value="";return;}
+            if(!files.length)return;
+            getLookImageInputs().forEach((input)=>window.COMOOTDImageCropper?.clear?.(input));
+            lookGalleryRemovedSlots=new Set([0,1,2]);
+            files.forEach((_,slot)=>lookGalleryRemovedSlots.delete(slot));
+            lookGallerySlotOrder=[0,1,2]; lookGalleryQueue=files; lookGalleryQueueIndex=0;
+            els.lookFormError.textContent=""; processNextLookGalleryFile();
+          });
+          getLookImageInputs().forEach((input)=>{
+            input?.addEventListener("comootd:image-ready",()=>{renderLookGalleryOrganizer();processNextLookGalleryFile();});
+            input?.addEventListener("comootd:image-clear",(event)=>{if(event.detail?.reason==="cancelled")processNextLookGalleryFile();renderLookGalleryOrganizer();});
+            input?.addEventListener("comootd:image-error",()=>{processNextLookGalleryFile();renderLookGalleryOrganizer();});
+          });
+          els.lookGalleryOrganizer?.addEventListener("click",(event)=>{
+            const card=event.target.closest("[data-look-gallery-slot]"); if(!card)return;
+            const slot=Number(card.dataset.lookGallerySlot); const position=lookGallerySlotOrder.indexOf(slot);
+            if(event.target.closest("[data-gallery-cover]")){lookGallerySlotOrder.splice(position,1);lookGallerySlotOrder.unshift(slot);renderLookGalleryOrganizer();return;}
+            const move=event.target.closest("[data-gallery-move]")?.dataset.galleryMove;
+            if(move){const next=move==="left"?position-1:position+1;if(next>=0&&next<lookGallerySlotOrder.length){[lookGallerySlotOrder[position],lookGallerySlotOrder[next]]=[lookGallerySlotOrder[next],lookGallerySlotOrder[position]];renderLookGalleryOrganizer();}return;}
+            if(event.target.closest("[data-gallery-remove]")){lookGalleryRemovedSlots.add(slot);window.COMOOTDImageCropper?.clear?.(getLookImageInputs()[slot]);renderLookGalleryOrganizer();}
+          });
+          renderLookGalleryOrganizer();
+        }
         function resetLookEditor() {
           editingLookId="";
           lookDraftItems=[];
@@ -2377,10 +2520,11 @@
           setTaxonomyValues(els.lookForm,"lookStyles",[]);
           els.lookFormHeading.textContent="Tambah look";
           els.lookFormCopy.textContent="Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link Shopee-nya sama.";
-          els.lookCoverLabel.textContent="Foto 1 / cover (opsional)";
+          els.lookCoverLabel.textContent="Foto look (opsional, maksimal 3)";
           els.lookSubmitButton.textContent="Publikasikan look";
           els.lookEditActions.hidden=true;
           els.lookFormError.textContent="";
+          resetLookGallery();
           renderVariantSelect();
           renderDraftItems();
         }
@@ -2394,10 +2538,11 @@
           setTaxonomyValues(els.lookForm,"lookStyles",entry.styles||[]);
           els.lookFormHeading.textContent="Edit look";
           els.lookFormCopy.textContent="Perbarui detail dan item look tanpa mengubah ID atau relasi New Series, Journal, dan request outfit.";
-          els.lookCoverLabel.textContent="Ganti foto 1 / cover (opsional)";
+          els.lookCoverLabel.textContent="Ganti atau atur foto look (maksimal 3)";
           els.lookSubmitButton.textContent="Simpan perubahan look";
           els.lookEditActions.hidden=false;
           els.lookFormError.textContent="";
+          lookGallerySlotOrder=[0,1,2]; lookGalleryRemovedSlots=new Set(); renderLookGalleryOrganizer();
           renderVariantSelect();
           renderDraftItems();
           els.lookFormHeading.scrollIntoView?.({behavior:"smooth",block:"start"});
@@ -2413,6 +2558,8 @@
           els.productSubmitButton.textContent="Simpan produk";
           els.productEditActions.hidden=true;
           els.productFormError.textContent="";
+          if (els.productColorSearch) els.productColorSearch.value="";
+          renderProductColorPicker();
         }
         function startProductEdit(item) {
           if(!item) return;
@@ -2429,6 +2576,8 @@
           const selectedVariants=new Set((item.variants||[]).map((variant)=>`${variant.name}|${String(variant.hex||"").toUpperCase()}`));
           selectedVariants.forEach((value)=>{if(![...variantSelect.options].some((option)=>`${option.value.split("|")[0]}|${option.value.split("|")[1].toUpperCase()}`===value)){const option=document.createElement("option");option.value=value;option.textContent=`${value.replace("|"," · ")} · existing`;option.dataset.legacyColor="true";variantSelect.append(option);}});
           [...variantSelect.options].forEach((option)=>{option.selected=selectedVariants.has(`${option.value.split("|")[0]}|${option.value.split("|")[1].toUpperCase()}`);});
+          if (els.productColorSearch) els.productColorSearch.value="";
+          renderProductColorPicker();
           // Storage paths are intentionally not copied into this visible URL field.
           els.productForm.elements.imageUrl.value="";
           els.productFormHeading.textContent="Edit produk";
@@ -3324,9 +3473,43 @@
             input?.form?.addEventListener("reset", () => window.COMOOTDImageCropper?.clear?.(input));
           });
         }
+        function setupStudioEnhancements() {
+          setupLookGalleryInput();
+          els.productColorSearch?.addEventListener("input",renderProductColorPicker);
+          els.productColorOptions?.addEventListener("click",(event)=>{
+            const button=event.target.closest("[data-product-color-value]"); if(!button)return;
+            const option=[...els.productVariantsInput.options].find((item)=>item.value===button.dataset.productColorValue);
+            if(!option)return; option.selected=!option.selected; renderProductColorPicker();
+          });
+          els.styleTaxonomyAddForm?.addEventListener("submit",async(event)=>{
+            event.preventDefault(); els.styleTaxonomyError.textContent="";
+            const name=normaliseStyleTag(els.styleTaxonomyNewName.value); if(!name)return;
+            const button=event.currentTarget.querySelector("button[type=submit]"); button.disabled=true;
+            try {
+              if(cloudEnabled()) { await cloud.ensureStyleTag(name); await refreshCloudState({admin:true,quiet:true}); }
+              else { state.styleTags.push({id:uid("style"),name,isActive:true,isExploreVisible:false,sortOrder:state.styleTags.length+1,previewLookId:""});saveState();renderAll(); }
+              els.styleTaxonomyNewName.value=""; showToast(`Style ${name} ditambahkan.`);
+            } catch(error){els.styleTaxonomyError.textContent=error?.message||"Style belum dapat ditambahkan.";}
+            finally{button.disabled=false;}
+          });
+          els.styleTaxonomyList?.addEventListener("submit",async(event)=>{
+            const form=event.target.closest("[data-style-taxonomy-row]"); if(!form)return; event.preventDefault(); els.styleTaxonomyError.textContent="";
+            const id=form.dataset.styleTaxonomyRow; const name=normaliseStyleTag(form.elements.name.value);
+            const payload={id,name,isActive:form.elements.isActive.checked,isExploreVisible:form.elements.isExploreVisible.checked,sortOrder:Number(form.elements.sortOrder.value)||0};
+            if(!name){els.styleTaxonomyError.textContent="Nama style wajib diisi.";return;}
+            const button=form.querySelector("button[type=submit]"); button.disabled=true;
+            try {
+              if(cloudEnabled()) { if(typeof cloud?.updateStyleTag!=="function")throw new Error("Pembaruan style belum tersedia."); await cloud.updateStyleTag(payload); await refreshCloudState({admin:true,quiet:true}); }
+              else { const tag=state.styleTags.find((item)=>item?.id===id); if(tag)Object.assign(tag,payload);saveState();renderAll(); }
+              showToast(`Style ${name} diperbarui.`);
+            } catch(error){els.styleTaxonomyError.textContent=error?.message||"Style belum dapat diperbarui.";}
+            finally{button.disabled=false;}
+          });
+        }
 
         document.getElementById("currentYear").textContent=new Date().getFullYear();
         setupImageCropperInputs();
+        setupStudioEnhancements();
         setupTaxonomyPickers();
         updateStudioMode();
         renderAll();
@@ -3988,23 +4171,28 @@
           if(editId&&!existingLook){els.lookFormError.textContent="Look ini sudah tidak tersedia. Muat ulang Studio lalu coba lagi.";resetLookEditor();return;}
           if(lookDraftItems.length<2||lookDraftItems.length>5){els.lookFormError.textContent="Satu look harus berisi 2–5 item.";return;} if(!title||!styles.length){els.lookFormError.textContent="Nama look dan minimal satu style wajib diisi.";return;}
           try {
-            const lookImageInputs=[document.getElementById("lookCoverInput"),document.getElementById("lookMedia2Input"),document.getElementById("lookMedia3Input")];
-            const galleryFiles=lookImageInputs.map((input)=>preparedImageFile(input));
-            const galleryAspects=lookImageInputs.map((input)=>selectedImageAspect(input,"portrait"));
+            const lookImageInputs=getLookImageInputs();
             const priorMedia=Array.isArray(existingLook?.media) ? existingLook.media : existingLook?.coverImage ? [{path:existingLook.coverImage,image:existingLook.coverImage,alt:existingLook.coverAlt||"",aspect:existingLook.coverAspect||"portrait"}] : [];
-            const gallery=lookImageInputs.map((input,index)=>({ sortOrder:index+1, file:galleryFiles[index], aspect:galleryAspects[index], currentPath:priorMedia[index]?.path || priorMedia[index]?.image || "", path:priorMedia[index]?.path || "", alt:priorMedia[index]?.alt || "" }));
-            const coverFile=galleryFiles[0];
-            const coverAspect=galleryAspects[0];
+            const gallery=lookGallerySlotOrder.map((slot)=>{
+              if(lookGalleryRemovedSlots.has(slot))return null;
+              const input=lookImageInputs[slot]; const file=preparedImageFile(input); const previous=priorMedia[slot]||{};
+              if(!file&&!previous?.path&&!previous?.image)return null;
+              return {file,aspect:file?selectedImageAspect(input,"portrait"):imageAspect(previous.aspect||previous.path||previous.image,"portrait"),currentPath:previous.path||previous.image||"",path:previous.path||"",alt:previous.alt||""};
+            }).filter(Boolean).map((entry,index)=>({...entry,sortOrder:index+1}));
+            const explicitGallery=gallery.length?gallery:(editId&&lookGalleryRemovedSlots.size?[{sortOrder:1,currentPath:"",path:"",alt:""}]:[]);
+            const galleryFiles=gallery.map((entry)=>entry.file||null);
+            const coverFile=gallery[0]?.file||null;
+            const coverAspect=gallery[0]?.aspect||"portrait";
             if(cloudEnabled()) {
-              if(editId) await cloud.updateLook({id:editId,title,excerpt,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect,galleryFiles,gallery});
-              else await cloud.createLook({title,excerpt,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect,galleryFiles,gallery});
+              if(editId) await cloud.updateLook({id:editId,title,excerpt,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect,galleryFiles,gallery:explicitGallery});
+              else await cloud.createLook({title,excerpt,gender:String(form.get("gender")),styles,tone:"carbon",items:clone(lookDraftItems),coverFile,coverAspect,galleryFiles,gallery:explicitGallery});
               resetLookEditor();
               await refreshCloudState({admin:true});
               switchStudioTab("looks");
               showToast(editId?"Look berhasil diperbarui di cloud.":"Look baru dipublikasikan ke cloud.");
               return;
             }
-            const localMedia=await Promise.all(lookImageInputs.map(async(input,index)=>{const image=await readImage(input);const previous=priorMedia[index]||{};return image ? {image,path:image,alt:"",aspect:galleryAspects[index]} : previous?.image ? previous : null;}));
+            const localMedia=await Promise.all(lookGallerySlotOrder.map(async(slot)=>{if(lookGalleryRemovedSlots.has(slot))return null;const input=lookImageInputs[slot];const image=await readImage(input);const previous=priorMedia[slot]||{};return image ? {image,path:image,alt:"",aspect:selectedImageAspect(input,"portrait")} : previous?.image ? previous : null;}));
             const media=localMedia.filter(Boolean).slice(0,3);
             const coverImage=media[0]?.image||existingLook?.coverImage||"";
             if(editId) {
