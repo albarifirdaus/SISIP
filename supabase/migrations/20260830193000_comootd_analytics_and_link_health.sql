@@ -127,18 +127,18 @@ begin
   select jsonb_build_object(
     'days',v_days,
     'totals',jsonb_build_object(
-      'lookViews',count(*) filter(where event_type='look_view'),
-      'productClicks',count(*) filter(where event_type='product_click'),
-      'shares',count(*) filter(where event_type in ('look_share','product_share')),
-      'profileViews',count(*) filter(where event_type='curator_profile_view'),
+      'lookViews',count(*) filter (where event_type='look_view'),
+      'productClicks',count(*) filter (where event_type='product_click'),
+      'shares',count(*) filter (where event_type in ('look_share','product_share')),
+      'profileViews',count(*) filter (where event_type='curator_profile_view'),
       'uniqueSessions',count(distinct session_id)
     ),
-    'daily',coalesce((select jsonb_agg(row_to_json(d) order by d.day) from (
-      select created_at::date day,count(*) filter(where event_type='look_view') views,count(*) filter(where event_type='product_click') clicks
+    'daily',coalesce((select jsonb_agg(row_to_json(d) order by d.event_day) from (
+      select created_at::date as event_day,count(*) filter (where event_type='look_view') views,count(*) filter (where event_type='product_click') clicks
       from public.comootd_analytics_events where owner_id=v_user and created_at>=now()-(v_days||' days')::interval group by 1
     ) d),'[]'::jsonb),
     'topLooks',coalesce((select jsonb_agg(row_to_json(t) order by t.views desc) from (
-      select l.id,l.title,l.slug,count(*) filter(where e.event_type='look_view') views,count(*) filter(where e.event_type='product_click') clicks
+      select l.id,l.title,l.slug,count(*) filter (where e.event_type='look_view') views,count(*) filter (where e.event_type='product_click') clicks
       from public.looks l left join public.comootd_analytics_events e on e.target_type='look' and e.target_id=l.id and e.created_at>=now()-(v_days||' days')::interval
       where l.creator_id=v_user group by l.id,l.title,l.slug order by views desc limit 10
     ) t),'[]'::jsonb),
@@ -168,14 +168,14 @@ begin
   select jsonb_build_object(
     'days',v_days,
     'totals',jsonb_build_object(
-      'pageViews',count(*) filter(where event_type='page_view'),
-      'lookViews',count(*) filter(where event_type='look_view'),
-      'productClicks',count(*) filter(where event_type='product_click'),
-      'shares',count(*) filter(where event_type in ('look_share','product_share')),
+      'pageViews',count(*) filter (where event_type='page_view'),
+      'lookViews',count(*) filter (where event_type='look_view'),
+      'productClicks',count(*) filter (where event_type='product_click'),
+      'shares',count(*) filter (where event_type in ('look_share','product_share')),
       'uniqueSessions',count(distinct session_id)
     ),
     'topCurators',coalesce((select jsonb_agg(row_to_json(c) order by c.events desc) from (
-      select cp.handle,cp.display_name,count(e.id) events,count(*) filter(where e.event_type='product_click') clicks
+      select cp.handle,cp.display_name,count(e.id) events,count(*) filter (where e.event_type='product_click') clicks
       from public.curator_profiles cp left join public.comootd_analytics_events e on e.owner_id=cp.user_id and e.created_at>=now()-(v_days||' days')::interval
       where cp.is_active group by cp.user_id,cp.handle,cp.display_name order by events desc limit 10
     ) c),'[]'::jsonb),
