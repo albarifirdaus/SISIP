@@ -39,11 +39,19 @@ for (const path of ["/about", "/privacy", "/terms", "/curator-policy", "/communi
   check(worker.includes(`"${path}"`), `${path} belum masuk sitemap`);
 }
 
-for (const file of ["_worker.js", "assets/supabase-adapter.js", "assets/curator-experience.js", "assets/public-content-pages.js"]) {
+for (const file of ["_worker.js", "assets/supabase-adapter.js", "assets/curator-experience.js", "assets/platform-insights.js", "assets/public-content-pages.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const result = spawnSync(process.execPath, ["--check", resolve(root, file)], { encoding: "utf8" });
   check(result.status === 0, `${file} gagal syntax check: ${(result.stderr || result.stdout).trim()}`);
 }
+
+const insights = read("assets/platform-insights.js");
+const analyticsMigration = read("supabase/migrations/20260830193000_comootd_analytics_and_link_health.sql");
+check(!/userAgent|user_agent|ip_address|inet\s/i.test(analyticsMigration), "Migration analytics tidak boleh menyimpan IP atau user-agent");
+check(analyticsMigration.includes("enable row level security"), "Tabel Milestone 2 belum mengaktifkan RLS");
+check(analyticsMigration.includes("revoke all on table public.comootd_analytics_events"), "Akses langsung ke event analytics belum ditutup");
+check(insights.includes("sessionStorage") && !insights.includes("localStorage"), "Analytics harus memakai sesi sementara, bukan identifier persisten");
+check(index.includes('data-studio-tab="insights"'), "Tab Insights admin belum tersedia");
 
 for (const file of ["index.html", "_worker.js", "config.js", "assets/supabase-adapter.js", "assets/curator-experience.js"]) {
   if (!existsSync(resolve(root, file))) continue;

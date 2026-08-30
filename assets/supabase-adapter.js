@@ -197,13 +197,15 @@
       price: Number(row.price_idr || 0),
       badge: controlledStoredList(row.badges, PRODUCT_BADGE_OPTIONS, PRODUCT_BADGE_ALIASES)[0] || "",
       styles: storedStyleTags(row.style_tags),
-      affiliateUrl: row.affiliate_url,
+      affiliateUrl: row.link_status === "disabled" ? "" : row.affiliate_url,
+      linkStatus: row.link_status || "active",
       artBg: "#D8D0C6",
       artInk: variants[0]?.hex || "#242220",
       image: publicUrl(row.cover_image_path),
       imageAspect: "square",
       genderTarget: row.gender_target || "unisex",
       category: row.category || "other",
+      isAvailable: row.is_available !== false,
       status: row.status || "draft",
       publishedAt: row.published_at || "",
       variants
@@ -238,9 +240,10 @@
         variantName: item.color_variant || "Warna pilihan",
         colorLabel: item.color_variant || "",
         price: Number(item.price_idr || 0),
-        affiliateUrl: item.affiliate_url || ""
+        affiliateUrl: item.link_status === "disabled" ? "" : (item.affiliate_url || ""),
+        linkStatus: item.link_status || "active"
       }))
-      .filter((item) => Boolean(item.name && item.affiliateUrl));
+      .filter((item) => Boolean(item.name));
     const creatorId = row.creator_id || "";
 
     const media = (row.look_media || [])
@@ -470,8 +473,8 @@
 
     if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka Studio.");
 
-    const productSelect = "id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
-    const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path))), look_curation_items(id, position, category, name, color_variant, price_idr, affiliate_url)";
+    const productSelect = "id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, is_available, link_status, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
+    const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, is_available, link_status))), look_curation_items(id, position, category, name, color_variant, price_idr, affiliate_url, link_status)";
     const articleSelect = "id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)";
     const productsQuery = (from, to) => {
       let query = db
@@ -480,7 +483,7 @@
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: false })
         .order("id", { ascending: true });
-      if (!admin) query = query.eq("status", "published").lte("published_at", now);
+      if (!admin) query = query.eq("status", "published").eq("is_available", true).lte("published_at", now);
       return query.range(from, to);
     };
     const looksQuery = (from, to) => {
@@ -2422,6 +2425,72 @@
     if (error) throw error;
   }
 
+  async function recordAnalyticsEvent(event) {
+    if (!validConfig() || !event) return false;
+    const sessionId = String(event.sessionId || "").trim();
+    if (!uuidPattern.test(sessionId)) return false;
+    const targetId = String(event.targetId || "").trim();
+    const { error } = await getClient().rpc("record_comootd_analytics_event", {
+      p_event_type: String(event.eventType || ""),
+      p_target_type: String(event.targetType || "site"),
+      p_target_id: uuidPattern.test(targetId) ? targetId : null,
+      p_session_id: sessionId,
+      p_source: String(event.source || "").slice(0, 64) || null,
+      p_referrer_host: String(event.referrerHost || "").slice(0, 160) || null,
+      p_utm_source: String(event.utmSource || "").slice(0, 100) || null,
+      p_utm_medium: String(event.utmMedium || "").slice(0, 100) || null,
+      p_utm_campaign: String(event.utmCampaign || "").slice(0, 120) || null
+    });
+    if (error) {
+      // Older production schemas may not have Milestone 2 yet. Analytics must
+      // never block navigation or affiliate clicks.
+      console.warn("COMOOTD analytics event was not recorded", error.message || error);
+      return false;
+    }
+    return true;
+  }
+
+  async function loadMyAnalytics(days = 30) {
+    const { data, error } = await getClient().rpc("get_my_comootd_analytics", { p_days: Number(days) || 30 });
+    if (error) throw error;
+    return data || {};
+  }
+
+  async function loadAdminAnalytics(days = 30) {
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk melihat analytics.");
+    const { data, error } = await getClient().rpc("get_admin_comootd_analytics", { p_days: Number(days) || 30 });
+    if (error) throw error;
+    return data || {};
+  }
+
+  async function reportLink(targetType, targetId, reason, message = "") {
+    const { data, error } = await getClient().rpc("report_comootd_link", {
+      p_target_type: String(targetType || ""),
+      p_target_id: String(targetId || ""),
+      p_reason: String(reason || ""),
+      p_message: String(message || "").slice(0, 500) || null
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async function loadLinkReports() {
+    const { data, error } = await getClient().from("comootd_link_reports")
+      .select("id,reporter_id,owner_id,target_type,target_id,reason,message,status,created_at,updated_at")
+      .order("created_at", { ascending:false });
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function resolveLinkReport(reportId, action, replacementUrl = "") {
+    const { error } = await getClient().rpc("resolve_comootd_link_report", {
+      p_report_id: String(reportId || ""),
+      p_action: String(action || ""),
+      p_replacement_url: String(replacementUrl || "").trim() || null
+    });
+    if (error) throw error;
+  }
+
   window.SISIPCloud = {
     isConfigured: validConfig,
     config,
@@ -2468,7 +2537,12 @@
     deleteArticle,
     setNewSeries,
     setStylePreviews,
+    recordAnalyticsEvent,
+    loadMyAnalytics,
+    loadAdminAnalytics,
+    reportLink,
+    loadLinkReports,
+    resolveLinkReport,
     publicUrl
   };
 })();
-

@@ -843,6 +843,7 @@
       }
     </style>
     <link rel="stylesheet" href="/assets/architectural-redesign.css" />
+    <link rel="stylesheet" href="/assets/platform-insights.css" />
   </head>
   <body>
     <div class="utility-bar" aria-label="Informasi COMOOTD">
@@ -1177,6 +1178,7 @@
           <button class="studio-tab" type="button" data-studio-tab="requests" role="tab">Requests</button>
           <button class="studio-tab" type="button" data-studio-tab="products" role="tab">Produk</button>
           <button class="studio-tab" type="button" data-studio-tab="curators" role="tab">Curators</button>
+          <button class="studio-tab" type="button" data-studio-tab="insights" role="tab">Insights</button>
         </div>
 
         <div class="studio-panel is-active" id="studioLooksPanel" data-studio-panel="looks">
@@ -1366,6 +1368,10 @@
             <div class="studio-list" id="studioCuratorsList"></div>
           </section>
         </div>
+
+        <div class="studio-panel" id="studioInsightsPanel" data-studio-panel="insights">
+          <section class="studio-section"><h3>Platform insights</h3><p>Lihat jangkauan, klik keluar, sumber kunjungan, curator dengan traffic tinggi, dan laporan tautan dalam satu tempat.</p><div data-insights-dashboard="admin"><div class="insights-loading">Memuat analytics COMOOTD…</div></div></section>
+        </div>
       </div>
     </aside>
 
@@ -1376,6 +1382,7 @@
     <script src="/assets/image-cropper.js"></script>
     <script src="/config.js"></script>
     <script src="/assets/supabase-adapter.js"></script>
+    <script src="/assets/platform-insights.js"></script>
     <script>
       (() => {
         "use strict";
@@ -1943,7 +1950,7 @@
           }
           const matches = getMemberMatches();
           const looks = matches.looks.map((entry) => `<article class="personal-look"><button class="personal-look-open" type="button" data-open-look="${esc(entry.id)}">${lookVisual(entry)}<span class="personal-look-copy"><strong>${esc(entry.title)}</strong><span>${esc(entry.styles.slice(0,2).join(" / ") || "Kurasi COMOOTD")}</span></span></button>${lookLikeButton(entry,true)}</article>`).join("");
-          const products = matches.products.map((item) => { const variant = item.variants?.[0]; return `<article class="personal-product"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item,variant,true)}</button><button class="product-name-link" type="button" data-open-product="${esc(item.id)}"><h5>${esc(item.name)}</h5></button><p>${money(item.price)}</p><a href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></article>`; }).join("");
+          const products = matches.products.map((item) => { const variant = item.variants?.[0]; return `<article class="personal-product"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item,variant,true)}</button><button class="product-name-link" type="button" data-open-product="${esc(item.id)}"><h5>${esc(item.name)}</h5></button><p>${money(item.price)}</p><a href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(item.id)}">Shopee ↗</a></article>`; }).join("");
           els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">UNTUK ${esc(memberDisplayName().toUpperCase())}</p><h3>Kurasi yang dimulai dari pilihanmu.</h3></div><p>Urutan ini memakai kecocokan tag style, gender preferensi, dan budget dari profil COMOOTD-mu.</p><button class="button-outline" type="button" data-open-member>Ubah preferensi ↗</button></div><div class="personal-results"><div class="personal-group"><div class="personal-group-head"><h4>Look yang mungkin kamu suka</h4><span class="eyebrow">${matches.looks.length} pilihan</span></div><div class="personal-looks">${looks || `<p class="personal-empty">Belum ada look yang cukup cocok.</p>`}</div></div><div class="personal-group"><div class="personal-group-head"><h4>Pieces untuk disisipkan</h4><span class="eyebrow">${matches.products.length} pilihan</span></div><div class="personal-products">${products || `<p class="personal-empty">Belum ada produk yang cukup cocok.</p>`}</div></div></div>`;
         }
 
@@ -2103,7 +2110,7 @@
           const popular = [...state.products].sort((a,b) => (counts.get(b.id)||0)-(counts.get(a.id)||0)).slice(0,4);
           els.popularGrid.innerHTML = popular.map((item) => {
             const variant = item.variants[0];
-            return `<article class="popular-card"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item, variant)}</button><p class="eyebrow" style="color:var(--taupe);margin:.1rem 0 .45rem">${esc(item.badge || "COMOOTD PICK")}</p><h3 class="product-name"><button class="product-name-link" type="button" data-open-product="${esc(item.id)}">${esc(item.name)}</button></h3><p class="product-price">${money(item.price)}</p><div class="product-meta"><span class="swatch" style="--swatch:${esc(variant?.hex || "#ccc")}" title="${esc(variant?.name || "")}"></span><a class="product-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></div></article>`;
+            return `<article class="popular-card"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item, variant)}</button><p class="eyebrow" style="color:var(--taupe);margin:.1rem 0 .45rem">${esc(item.badge || "COMOOTD PICK")}</p><h3 class="product-name"><button class="product-name-link" type="button" data-open-product="${esc(item.id)}">${esc(item.name)}</button></h3><p class="product-price">${money(item.price)}</p><div class="product-meta"><span class="swatch" style="--swatch:${esc(variant?.hex || "#ccc")}" title="${esc(variant?.name || "")}"></span><a class="product-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(item.id)}">Shopee ↗</a></div></article>`;
           }).join("") || `<div class="empty-state"><h3>Belum ada produk</h3><p>Tambahkan dari COMOOTD Studio.</p></div>`;
         }
         function renderStyleControls() {
@@ -2622,7 +2629,7 @@
           if (parsed.protocol !== "https:" || !isShopee) throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://.");
           return parsed.href;
         }
-        function safeUrl(value) { try { return affiliateUrl(value); } catch { return "https://shopee.co.id/"; } }
+        function safeUrl(value) { try { return affiliateUrl(value); } catch { return "#"; } }
         let contentRouteSyncing = false;
         function contentRouteSegment(type) { return type === "look" ? "looks" : type === "product" ? "products" : "journal"; }
         function contentEntitySlug(entry, type) { return String(entry?.slug || slugify(entry?.title || entry?.name || type || "comootd")).trim(); }
@@ -2809,16 +2816,18 @@
         function openLook(id, { navigate = true } = {}) {
           const entry = state.looks.find((lookItem)=>lookItem.id===id);
           if (!entry) return;
+          void window.COMOOTDInsights?.track?.("look_view", "look", entry.id, `look:${entry.id}:${location.pathname}`);
           if (navigate) { navigateToContent("look", entry); renderDirectoryRoute(); }
           else updateClientMetadata({ type:"look", slug:contentEntitySlug(entry,"look") }, entry);
           closeContentDialogs(els.lookModal);
           const itemsHtml = entry.items.map((item)=>{
-            if (item?.affiliateUrl && !item?.productId) {
-              return `<li class="look-item"><div class="look-item-art" aria-hidden="true" style="display:grid;place-items:center;background:var(--paper-deep);color:var(--clay-dark)"><span class="meta">${esc(String(item.category||"item").slice(0,4))}</span></div><div><p class="look-item-title">${esc(item.name||"Item pilihan")}</p><div class="look-item-info"><span>${esc(item.colorLabel||item.variantName||"Warna pilihan")}</span><span>·</span><span>${Number(item.price)>0?money(item.price):"Harga belum dicantumkan"}</span></div></div><a class="item-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></li>`;
+            if (!item?.productId) {
+              const itemAction=item.affiliateUrl?`<a class="item-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="curator_item" data-insight-id="${esc(item.id||"")}">Shopee ↗</a>`:`<span class="item-link" aria-disabled="true">Link nonaktif</span>`;
+              return `<li class="look-item"><div class="look-item-art" aria-hidden="true" style="display:grid;place-items:center;background:var(--paper-deep);color:var(--clay-dark)"><span class="meta">${esc(String(item.category||"item").slice(0,4))}</span></div><div><p class="look-item-title">${esc(item.name||"Item pilihan")}</p><div class="look-item-info"><span>${esc(item.colorLabel||item.variantName||"Warna pilihan")}</span><span>·</span><span>${Number(item.price)>0?money(item.price):"Harga belum dicantumkan"}</span></div></div>${itemAction}</li>`;
             }
             const productItem=getProduct(item.productId); if (!productItem) return "";
             const variant=getVariant(productItem,item.variantName);
-            return `<li class="look-item"><button class="look-item-art product-card-open" type="button" data-open-product="${esc(productItem.id)}" aria-label="Buka detail ${esc(productItem.name)}">${productArt(productItem,variant,true)}</button><div><button class="look-item-title" type="button" data-open-product="${esc(productItem.id)}">${esc(productItem.name)}</button><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div><a class="item-link" href="${esc(safeUrl(productItem.affiliateUrl))}" target="_blank" rel="sponsored noopener">Shopee ↗</a></li>`;
+            return `<li class="look-item"><button class="look-item-art product-card-open" type="button" data-open-product="${esc(productItem.id)}" aria-label="Buka detail ${esc(productItem.name)}">${productArt(productItem,variant,true)}</button><div><button class="look-item-title" type="button" data-open-product="${esc(productItem.id)}">${esc(productItem.name)}</button><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div><a class="item-link" href="${esc(safeUrl(productItem.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(productItem.id)}">Shopee ↗</a></li>`;
           }).join("");
           const curatorName = entry.curator?.displayName || entry.curator?.name || "";
           const curatorHandle = entry.curator?.handle || "";
@@ -2837,7 +2846,7 @@
           const gender = ({ pria:"Pria", wanita:"Wanita", unisex:"Uniseks" })[String(entry.genderTarget || "").toLowerCase()] || "Uniseks";
           const relatedLooks=state.looks.filter((look)=>look.items?.some((item)=>item.productId===entry.id)).slice(0,4);
           const relatedLooksMarkup=relatedLooks.length ? `<section class="product-related-looks"><h3>Dipakai dalam kurasi</h3><div class="product-related-look-list">${relatedLooks.map((look)=>`<button class="product-related-look" type="button" data-open-product-look="${esc(look.id)}">${lookVisual(look)}<span class="product-related-look-copy"><span>${esc(lookAttribution(look))}</span><strong>${esc(look.title)}</strong></span></button>`).join("")}</div></section>` : "";
-          els.productDetail.innerHTML = `<div class="product-detail"><div>${productArt(entry, selectedVariant)}</div><div><p class="eyebrow" style="color:var(--clay)">COMOOTD / ${esc(gender)}</p><h2>${esc(entry.name)}</h2>${entry.badge ? `<p class="eyebrow" style="color:var(--taupe)">${esc(entry.badge)}</p>` : ""}<p class="product-detail-price">${money(entry.price)}</p><div class="look-card-tags">${(entry.styles || []).map((style) => `<span class="tag">${esc(style)}</span>`).join("")}</div>${variants ? `<div class="product-variant-options" aria-label="Pilih warna">${variants}</div>` : ""}<div class="detail-actions"><a class="button" href="${esc(safeUrl(entry.affiliateUrl))}" target="_blank" rel="sponsored noopener">Lihat di Shopee ↗</a><button class="button-outline" type="button" data-share-product="${esc(entry.id)}" data-share-variant="${esc(selectedVariant?.id || "")}">Bagikan</button></div><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p>${relatedLooksMarkup}</div></div>`;
+          els.productDetail.innerHTML = `<div class="product-detail"><div>${productArt(entry, selectedVariant)}</div><div><p class="eyebrow" style="color:var(--clay)">COMOOTD / ${esc(gender)}</p><h2>${esc(entry.name)}</h2>${entry.badge ? `<p class="eyebrow" style="color:var(--taupe)">${esc(entry.badge)}</p>` : ""}<p class="product-detail-price">${money(entry.price)}</p><div class="look-card-tags">${(entry.styles || []).map((style) => `<span class="tag">${esc(style)}</span>`).join("")}</div>${variants ? `<div class="product-variant-options" aria-label="Pilih warna">${variants}</div>` : ""}<div class="detail-actions"><a class="button" href="${esc(safeUrl(entry.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(entry.id)}">Lihat di Shopee ↗</a><button class="button-outline" type="button" data-share-product="${esc(entry.id)}" data-share-variant="${esc(selectedVariant?.id || "")}">Bagikan</button></div><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p>${relatedLooksMarkup}</div></div>`;
           if (!els.productModal.open) els.productModal.showModal();
         }
         function articlePlainText(blocks) {

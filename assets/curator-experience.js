@@ -459,7 +459,7 @@
     const looks = curatorLooks(curator).sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt)));
     const totalLikes = looks.reduce((total, look) => total + look.popularity, 0);
     return `<div class="curator-route-shell">${routeBarMarkup()}<main class="curator-route-body">
-      <section class="curator-profile-hero" aria-labelledby="curatorProfileTitle">
+      <section class="curator-profile-hero" aria-labelledby="curatorProfileTitle" data-insight-curator-id="${esc(curator.userId)}">
         <div class="curator-profile-identity">
           ${imageMarkup(curator.avatarPath, `Foto ${curator.displayName}`, "curator-profile-avatar", curator.displayName)}
           <div><p class="eyebrow" style="color:var(--clay)">COMOOTD CURATOR</p><h1 class="curator-profile-title" id="curatorProfileTitle">${esc(curator.displayName)}</h1><p class="curator-profile-handle">@${esc(curator.handle)}</p></div>
@@ -601,13 +601,16 @@
       ${looks.length ? `<div class="curator-studio-library">${looks.map((look) => `<article class="curator-studio-look-row"><div>${publicImage(look.coverImage) ? `<img class="curator-studio-thumb" src="${esc(publicImage(look.coverImage))}" alt="" />` : `<div class="curator-studio-thumb"></div>`}</div><div><h4>${esc(look.title)}</h4><p>${esc(look.status)} · ${esc(humanDate(look.publishedAt))} · ${look.items.length} items</p></div><div class="curator-studio-row-actions"><a class="curator-small-button" href="/looks/${encodeURIComponent(look.slug)}">Lihat ↗</a><button class="curator-small-button" type="button" data-edit-curator-look="${esc(look.id)}">Edit</button><button class="curator-small-button danger" type="button" data-delete-curator-look="${esc(look.id)}">Arsipkan</button></div></article>`).join("")}</div>` : `<div class="curator-studio-placeholder">Belum ada look. Mulai dari satu kombinasi yang paling ingin kamu bagikan.</div>`}
     </section>`;
   }
+  function studioInsightsMarkup() {
+    return `<section class="curator-studio-panel" data-curator-studio-panel="analytics"><p class="eyebrow" style="color:var(--clay)">YOUR PERFORMANCE</p><h3>See what<br />moves people.</h3><p class="curator-studio-lede">Lihat berapa kali kurasimu dibuka, dibagikan, dan mengirim pengunjung ke produk—tanpa menampilkan identitas pengunjung.</p><div data-insights-dashboard="curator"><div class="insights-loading">Memuat analytics curator…</div></div></section>`;
+  }
   function renderStudio(tab = state.studioTab) {
     const dialog = document.getElementById("curatorStudioDialog");
     if (!dialog || !state.curator) return;
     state.studioTab = tab;
     const quota = state.curator.maxPublishedLooks || DEFAULT_QUOTA;
     const count = publishedOwnLookCount();
-    const body = state.editingLook ? lookEditorMarkup(state.editingLook) : (tab === "profile" ? profileEditorMarkup(state.curator) : studioLibraryMarkup());
+    const body = state.editingLook ? lookEditorMarkup(state.editingLook) : (tab === "profile" ? profileEditorMarkup(state.curator) : tab === "analytics" ? studioInsightsMarkup() : studioLibraryMarkup());
     window.requestAnimationFrame(() => {
       const avatarInput = dialog.querySelector("#curatorAvatarInput");
       bindImageCropper(avatarInput, { defaultAspect:"square", lockedAspect:"square", label:"foto profil" });
@@ -615,7 +618,7 @@
         bindImageCropper(input, { defaultAspect:"portrait", label:index === 0 ? "foto cover look" : `foto look ${index + 1}` });
       });
     });
-    dialog.innerHTML = `<button class="icon-button curator-studio-close" type="button" data-close-curator-studio aria-label="Tutup Curator Studio">×</button><div class="curator-studio-shell"><aside class="curator-studio-side"><p class="eyebrow">COMOOTD / CURATOR</p><h2>Studio<br />${esc(state.curator.displayName.split(" ")[0])}</h2><div class="curator-studio-quota"><strong>${count} / ${quota}</strong><span>Look aktif di Starter</span></div><nav class="curator-studio-tabs" aria-label="Menu Curator Studio"><button class="curator-studio-tab${tab === "looks" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="looks">Look library</button><button class="curator-studio-tab${tab === "profile" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="profile">Profile</button></nav></aside><div class="curator-studio-main">${body}</div></div>`;
+    dialog.innerHTML = `<button class="icon-button curator-studio-close" type="button" data-close-curator-studio aria-label="Tutup Curator Studio">×</button><div class="curator-studio-shell"><aside class="curator-studio-side"><p class="eyebrow">COMOOTD / CURATOR</p><h2>Studio<br />${esc(state.curator.displayName.split(" ")[0])}</h2><div class="curator-studio-quota"><strong>${count} / ${quota}</strong><span>Look aktif di Starter</span></div><nav class="curator-studio-tabs" aria-label="Menu Curator Studio"><button class="curator-studio-tab${tab === "looks" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="looks">Look library</button><button class="curator-studio-tab${tab === "profile" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="profile">Profile</button><button class="curator-studio-tab${tab === "analytics" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="analytics">Analytics</button></nav></aside><div class="curator-studio-main">${body}</div></div>`;
   }
   function openStudio() {
     if (!state.user) { showToast("Masuk terlebih dahulu untuk membuka Curator Studio."); openAccount(); return; }

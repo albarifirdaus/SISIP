@@ -72,6 +72,7 @@ Dokumen operasional Milestone 1:
 - [Alur rilis](docs/RELEASE_WORKFLOW.md)
 - [Rollback dan pemulihan](docs/ROLLBACK.md)
 - [Tata kelola data](docs/DATA_GOVERNANCE.md)
+- [Milestone 2: analytics dan link health](docs/MILESTONE_2.md)
 
 Jalankan `npm test` sebelum setiap pull request. Quality gate yang sama dijalankan otomatis untuk branch `develop`, `main`, dan pull request.
 
