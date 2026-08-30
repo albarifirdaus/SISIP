@@ -29,6 +29,10 @@
     ["dress", "Dress / Set"], ["footwear", "Sepatu"], ["bag", "Tas"],
     ["accessory", "Aksesori"], ["hijab", "Hijab"], ["jewelry", "Perhiasan"], ["other", "Lainnya"]
   ];
+  const MARKETPLACES = {
+    shopee: { label:"Shopee", placeholder:"https://shopee.co.id/..." },
+    tiktok_shop: { label:"TikTok Shop", placeholder:"https://www.tiktok.com/..." }
+  };
   // Keep these in lock-step with the public COMOOTD filter taxonomy. A curator
   // can only publish with the same language that visitors can actually search.
   const STYLE_OPTIONS = [
@@ -255,6 +259,7 @@
       name: compact(raw.name || raw.productName || raw.product_name || raw.label || ""),
       colorLabel: compact(raw.colorLabel || raw.color_label || raw.variantName || raw.variant_name || ""),
       price: Number(raw.price ?? raw.priceIdr ?? raw.price_idr ?? 0) || 0,
+      affiliatePlatform: compact(raw.affiliatePlatform || raw.affiliate_platform || "shopee"),
       affiliateUrl: compact(raw.affiliateUrl || raw.affiliate_url || raw.url || raw.link || "")
     };
   }
@@ -320,11 +325,13 @@
   function safeHandle(handle) { return compact(handle).toLowerCase().replace(/[^a-z0-9_-]/g, ""); }
   function socialLabel(platform) { return SOCIAL_LABELS[platform] || platform; }
   function categoryLabel(category) { return PRODUCT_CATEGORIES.find(([value]) => value === category)?.[1] || "Produk"; }
-  function isShopeeLink(value) {
+  function marketplaceFromUrl(value) {
     try {
       const host = new URL(value).hostname.toLowerCase();
-      return host === "shopee.co.id" || host.endsWith(".shopee.co.id") || host === "shope.ee";
-    } catch { return false; }
+      if (host === "shopee.co.id" || host.endsWith(".shopee.co.id") || host === "shope.ee") return "shopee";
+      if (host === "tiktok.com" || host.endsWith(".tiktok.com")) return "tiktok_shop";
+      return "";
+    } catch { return ""; }
   }
 
   function ensureLayers() {
@@ -403,7 +410,7 @@
           <h2 class="section-title" id="curatorsTitle">Curated by People<br />with <em>Point of View.</em></h2>
         </div>
         <div class="section-lead">
-          <p class="section-description">Temukan kurasi dari para fashion people dengan selera, referensi, dan tautan Shopee mereka sendiri.</p>
+          <p class="section-description">Temukan kurasi dari para fashion people dengan selera, referensi, dan tautan marketplace mereka sendiri.</p>
           <div class="curator-heading-actions"><a class="text-link" href="${ROUTE_ROOT}" data-curator-directory>Meet all curators <span aria-hidden="true">↗</span></a>${leadAction}</div>
         </div>
       </div>
@@ -530,7 +537,7 @@
   }
 
   function onboardMarkup() {
-    return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / OPEN CURATOR</p><h2>Show Your<br />Point of View.</h2><p class="curator-onboard-copy">Buka profil curator gratis untuk membagikan hingga ${DEFAULT_QUOTA} look aktif. Tautan Shopee yang kamu cantumkan tetap milikmu.</p><form class="curator-form" data-curator-onboard-form>
+    return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / OPEN CURATOR</p><h2>Show Your<br />Point of View.</h2><p class="curator-onboard-copy">Buka profil curator gratis untuk membagikan hingga ${DEFAULT_QUOTA} look aktif. Tautan marketplace yang kamu cantumkan tetap milikmu.</p><form class="curator-form" data-curator-onboard-form>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorOnboardName">Nama tampil</label><input id="curatorOnboardName" name="displayName" maxlength="80" required placeholder="Nama kamu" /></div><div class="curator-field"><label for="curatorOnboardHandle">Handle</label><input id="curatorOnboardHandle" name="handle" minlength="3" maxlength="32" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required placeholder="contoh: araedits" autocomplete="off" /><p class="curator-file-note">3–32 karakter: huruf kecil, angka, _ atau -.</p></div></div>
       ${controlledTagPickerMarkup({ name:"profileTags", options:curatorProfileTagOptions(), selected:[], maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}
       <div class="curator-field"><label for="curatorOnboardBio">Tentang edit kamu</label><textarea id="curatorOnboardBio" name="bio" maxlength="500" placeholder="Ceritakan sedikit sudut pandang atau pendekatan styling-mu."></textarea></div>
@@ -570,14 +577,14 @@
       <div class="curator-field"><label>Nama produk</label><input name="referenceName" maxlength="160" value="${esc(reference.name)}" placeholder="Contoh: Linen Relaxed Shirt" required /></div>
       <div class="curator-field"><label>Warna / varian</label><select name="referenceColor"><option value="">Pilih warna</option>${COLOR_OPTIONS.map(([name, hex]) => `<option value="${esc(name)}"${name === selectedColor ? " selected" : ""}>${esc(name)} · ${esc(hex)}</option>`).join("")}</select><span class="curator-color-preview" data-curator-color-preview style="--curator-color:${esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1] || "transparent")}">${selectedColor ? esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1]) : "Opsional"}</span></div>
       <div class="curator-field"><label>Harga referensi</label><input name="referencePrice" type="number" min="1" step="1" inputmode="numeric" value="${reference.price || ""}" placeholder="Contoh: 159000" required /></div>
-      <div class="curator-field"><label>Link affiliate Shopee</label><input name="referenceUrl" type="url" value="${esc(reference.affiliateUrl)}" placeholder="https://shopee.co.id/..." required /></div>
+      <div class="curator-form-grid curator-field-full"><div class="curator-field"><label>Marketplace</label><select name="referenceMarketplace">${Object.entries(MARKETPLACES).map(([value, option]) => `<option value="${value}"${reference.affiliatePlatform === value ? " selected" : ""}>${esc(option.label)}</option>`).join("")}</select></div><div class="curator-field"><label>Link affiliate</label><input name="referenceUrl" type="url" value="${esc(reference.affiliateUrl)}" placeholder="${esc(MARKETPLACES[reference.affiliatePlatform]?.placeholder || MARKETPLACES.shopee.placeholder)}" required /></div></div>
       <button class="curator-remove-reference" type="button" data-remove-curator-reference aria-label="Hapus produk ${index + 1}">×</button>
     </div>`;
   }
   function lookEditorMarkup(editing = null) {
     const isExistingLook = Boolean(editing?.id);
     const references = editing?.items?.length ? editing.items.slice(0, MAX_REFERENCES) : [{}, {}];
-    return `<section class="curator-studio-panel" data-curator-studio-panel="editor"><p class="eyebrow" style="color:var(--clay)">${isExistingLook ? "EDIT LOOK" : "NEW CURATION"}</p><h3>${isExistingLook ? "Refine this\nlook." : "Build a look\nworth sharing."}</h3><p class="curator-studio-lede">Kamu bisa menerbitkan langsung—tanpa review admin. Tambahkan 2 hingga 5 produk dengan tautan affiliate Shopee-mu sendiri.</p>
+    return `<section class="curator-studio-panel" data-curator-studio-panel="editor"><p class="eyebrow" style="color:var(--clay)">${isExistingLook ? "EDIT LOOK" : "NEW CURATION"}</p><h3>${isExistingLook ? "Refine this\nlook." : "Build a look\nworth sharing."}</h3><p class="curator-studio-lede">Kamu bisa menerbitkan langsung—tanpa review admin. Tambahkan 2 hingga 5 produk dengan tautan affiliate Shopee atau TikTok Shop milikmu.</p>
       <form class="curator-form" data-curator-look-form data-curator-edit-id="${esc(editing?.id || "")}"><div class="curator-form-grid">
         <div class="curator-field curator-field-full"><label for="curatorLookTitle">Nama mix &amp; match</label><input id="curatorLookTitle" name="title" maxlength="160" value="${esc(editing?.title || "")}" placeholder="Contoh: Monday in Olive" required /></div>
         <div class="curator-field curator-field-full"><label for="curatorLookExcerpt">Deskripsi kurasi (opsional)</label><textarea id="curatorLookExcerpt" name="excerpt" maxlength="240" placeholder="Jelaskan ide, occasion, atau formula styling dalam maksimal 240 karakter.">${esc(editing?.excerpt || "")}</textarea><p class="curator-file-note">Kosongkan jika judul dan visual sudah cukup menjelaskan look.</p></div>
@@ -687,6 +694,7 @@
       name: compact(row.querySelector("[name=referenceName]")?.value),
       colorLabel: compact(row.querySelector("[name=referenceColor]")?.value),
       price: Number(String(row.querySelector("[name=referencePrice]")?.value || "").replace(/[^0-9]/g, "")),
+      affiliatePlatform: compact(row.querySelector("[name=referenceMarketplace]")?.value || "shopee"),
       affiliateUrl: compact(row.querySelector("[name=referenceUrl]")?.value)
     }));
     const galleryPayload = collectGalleryPayload(form);
@@ -706,8 +714,8 @@
     if (!editing && !payload.coverFile) return "Tambahkan foto cover untuk look baru.";
     if ((payload.galleryFiles || []).some((file) => file.size > 5 * 1024 * 1024)) return "Ukuran setiap foto look maksimal 5 MB.";
     if (payload.items.length < MIN_REFERENCES || payload.items.length > MAX_REFERENCES) return `Tambahkan ${MIN_REFERENCES}–${MAX_REFERENCES} produk ke dalam look.`;
-    if (payload.items.some((item) => !item.name || !item.affiliateUrl || !Number.isSafeInteger(item.price) || item.price <= 0)) return "Setiap produk membutuhkan nama, harga, dan link affiliate Shopee.";
-    if (payload.items.some((item) => !isShopeeLink(item.affiliateUrl))) return "Gunakan link Shopee yang valid untuk setiap produk.";
+    if (payload.items.some((item) => !item.name || !item.affiliateUrl || !Number.isSafeInteger(item.price) || item.price <= 0)) return "Setiap produk membutuhkan nama, harga, dan link affiliate.";
+    if (payload.items.some((item) => marketplaceFromUrl(item.affiliateUrl) !== item.affiliatePlatform)) return "Pastikan setiap link sesuai dengan marketplace yang dipilih.";
     return "";
   }
 
@@ -777,7 +785,7 @@
     const prompt = document.createElement("div");
     prompt.id = "curatorMemberPrompt";
     prompt.className = "curator-callout";
-    prompt.innerHTML = `<p><strong>Sudah punya sudut pandang sendiri?</strong><br />Buka profil Curator gratis untuk membagikan hingga ${DEFAULT_QUOTA} look dan tautan affiliate Shopee-mu.</p><button class="button-outline" type="button" data-open-curator-onboard>Jadi Curator ↗</button>`;
+    prompt.innerHTML = `<p><strong>Sudah punya sudut pandang sendiri?</strong><br />Buka profil Curator gratis untuk membagikan hingga ${DEFAULT_QUOTA} look dan tautan affiliate marketplace-mu.</p><button class="button-outline" type="button" data-open-curator-onboard>Jadi Curator ↗</button>`;
     profile.prepend(prompt);
   }
   function updateLookPopularity(id, amount) {
@@ -962,6 +970,12 @@
     if (look) { event.preventDefault(); submitLook(look); }
   }
   function onChange(event) {
+    const marketplace = event.target.closest('select[name="referenceMarketplace"]');
+    if (marketplace) {
+      const link = marketplace.closest("[data-curator-reference-row]")?.querySelector('input[name="referenceUrl"]');
+      if (link) link.placeholder = MARKETPLACES[marketplace.value]?.placeholder || "https://";
+      return;
+    }
     const directoryFilter = event.target.closest("[data-curator-directory-filter]");
     if (directoryFilter) {
       curatorFilters[directoryFilter.dataset.curatorDirectoryFilter] = directoryFilter.value;

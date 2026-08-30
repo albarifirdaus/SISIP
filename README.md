@@ -4,7 +4,7 @@ COMOOTD adalah platform kurasi fashion all-gender untuk Indonesia: satu Look ber
 
 ## Yang sudah siap
 
-- Katalog responsive: pencarian, filter style/gender, urutan, detail look, link Shopee, dan Journal.
+- Katalog responsive: pencarian, filter style/gender/marketplace, urutan, detail look, link Shopee atau TikTok Shop, dan Journal.
 - **SISIP Studio**: login admin, tambah produk + varian warna, tambah look, unggah gambar hingga 5 MB ke Supabase Storage, serta hapus data yang tidak dipakai look lain.
 - **New Series**: carousel beranda hingga lima look, lengkap dengan urutan yang dapat dipilih dari tab **New Series** di SISIP Studio.
 - **Akun member**: masuk dengan Google atau daftar/masuk dengan email, lalu pilih hingga 10 tag style, gender preferensi, serta budget. Preferensi hanya dapat dibaca oleh pemilik akun dan admin.
@@ -38,13 +38,13 @@ Profil dan baris preferensi dibuat otomatis oleh trigger saat akun Auth dibuat. 
 ## Struktur data
 
 ```text
-products (1 affiliate link Shopee)
+products (1 affiliate link Shopee atau TikTok Shop)
   └─ product_variants (warna / foto warna)
        └─ look_items
             └─ looks (2–5 item)
 ```
 
-Harga adalah harga referensi yang dapat diedit saat kurasi. Mengambil harga/nama otomatis dari halaman Shopee tidak diaktifkan karena harus memakai API/feed affiliate resmi, bukan scraping browser.
+Harga adalah harga referensi yang dapat diedit saat kurasi. Mengambil harga/nama otomatis dari halaman marketplace tidak diaktifkan karena harus memakai API/feed affiliate resmi, bukan scraping browser.
 
 ## Mengatur New Series
 
@@ -73,6 +73,7 @@ Dokumen operasional Milestone 1:
 - [Rollback dan pemulihan](docs/ROLLBACK.md)
 - [Tata kelola data](docs/DATA_GOVERNANCE.md)
 - [Milestone 2: analytics dan link health](docs/MILESTONE_2.md)
+- [Milestone 3: discovery, marketplace, dan SEO](docs/MILESTONE_3.md)
 
 Jalankan `npm test` sebelum setiap pull request. Quality gate yang sama dijalankan otomatis untuk branch `develop`, `main`, dan pull request.
 

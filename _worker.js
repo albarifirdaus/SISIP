@@ -12,7 +12,7 @@ const CONTENT_SPECS = {
   },
   product: {
     table: "products",
-    select: "id,slug,name,brand,item_type,price_idr,cover_image_path,style_tags,gender_target,is_available,published_at,updated_at",
+    select: "id,slug,name,brand,item_type,price_idr,affiliate_platform,cover_image_path,style_tags,gender_target,is_available,published_at,updated_at",
     title: (row) => `${row.name || "Produk"} — COMOOTD`,
     description: (row) => {
       const price = Number(row.price_idr || 0);
@@ -38,7 +38,7 @@ const SITE_DESCRIPTION = "Kurasi fashion all-gender untuk membantu menemukan loo
 const SITE_LOCALE = "id_ID";
 const SITEMAP_PAGE_SIZE = 1000;
 const SITEMAP_URLS_PER_FILE = 5000;
-const SITEMAP_CACHE_VERSION = "v2";
+const SITEMAP_CACHE_VERSION = "v3";
 const SITEMAP_CACHE_CONTROL = "public, max-age=300, s-maxage=900, stale-while-revalidate=86400";
 
 function escapeHtml(value) {
@@ -71,6 +71,10 @@ function routeFromRequest(request) {
     return directories[parts[0]] ? { type: directories[parts[0]] } : null;
   }
   if (parts.length !== 2) return null;
+  if (parts[0] === "styles") {
+    const slug = parts[1].trim().toLowerCase();
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? { type:"style-directory", slug } : null;
+  }
   if (parts[0] === "looks" && parts[1] === "comootd") return { type: "comootd-look-directory" };
   if (parts[0] === "looks" && parts[1] === "curators") return { type: "curator-look-directory" };
   const type = parts[0] === "looks"
@@ -380,7 +384,8 @@ function organisationSchema(env) {
     "@type": "Organization",
     "@id": `${origin}/#organization`,
     name: SITE_NAME,
-    url: canonicalUrl(env, "/")
+    url: canonicalUrl(env, "/"),
+    sameAs: ["https://www.instagram.com/comootd.id/"]
   };
 }
 
@@ -724,7 +729,7 @@ function directoryMetadata(env, type) {
   const metadata = {
     "curator-directory": {
       title: "Curators — COMOOTD",
-      description: "Temukan sudut pandang, kurasi outfit, dan tautan Shopee dari Curator COMOOTD.",
+      description: "Temukan sudut pandang, kurasi outfit, dan tautan marketplace dari Curator COMOOTD.",
       canonical: `${origin}/curators`
     },
     "look-directory": {
@@ -734,7 +739,7 @@ function directoryMetadata(env, type) {
     },
     "comootd-look-directory": {
       title: "Looks by COMOOTD — COMOOTD",
-      description: "Kurasi editorial resmi COMOOTD. Setiap look dilengkapi item-by-item dan tautan Shopee.",
+      description: "Kurasi editorial resmi COMOOTD. Setiap look dilengkapi item-by-item dan tautan marketplace.",
       canonical: `${origin}/looks/comootd`
     },
     "curator-look-directory": {
@@ -744,7 +749,7 @@ function directoryMetadata(env, type) {
     },
     "product-directory": {
       title: "Products — COMOOTD",
-      description: "Produk fashion pilihan yang muncul dalam kurasi COMOOTD dan siap dibeli lewat Shopee.",
+      description: "Produk fashion pilihan yang muncul dalam kurasi COMOOTD dan siap ditemukan di marketplace.",
       canonical: `${origin}/products`
     },
     "journal-directory": {
@@ -777,6 +782,48 @@ async function renderDirectoryPage(request, env, type) {
   }
 }
 
+function styleSlug(value) {
+  return String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+async function findActiveStyleTag(env, slug) {
+  const endpoint = new URL("/rest/v1/comootd_style_tags", String(env.SUPABASE_URL || ""));
+  endpoint.searchParams.set("select", "name,updated_at");
+  endpoint.searchParams.set("is_active", "eq.true");
+  endpoint.searchParams.set("order", "sort_order.asc,name.asc");
+  endpoint.searchParams.set("limit", "100");
+  const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
+  const response = await fetch(endpoint, { headers:{ apikey:key, Authorization:`Bearer ${key}`, Accept:"application/json" } });
+  if (!response.ok) throw new Error("Style taxonomy unavailable.");
+  const rows = await response.json();
+  return (Array.isArray(rows) ? rows : []).find((row) => styleSlug(row?.name) === slug) || null;
+}
+
+async function renderStyleDirectoryPage(request, env, route) {
+  if (!hasPublicDatabase(env)) return errorPage(request, env, 503);
+  try {
+    const [shell, style] = await Promise.all([getStaticShell(request, env), findActiveStyleTag(env, route.slug)]);
+    if (!style) return errorPage(request, env, 404);
+    const canonical = canonicalUrl(env, `/styles/${encodeURIComponent(route.slug)}`);
+    const metadata = {
+      title:`${clippedText(style.name,48)} Style — Outfit & Produk Kurasi Indonesia | COMOOTD`,
+      description:`Jelajahi look ${clippedText(style.name,48)} dari COMOOTD dan curator Indonesia, lengkap dengan rincian item dan tautan marketplace.`,
+      canonical,
+      type:"website",
+      image:"",
+      imageAlt:`Kurasi ${clippedText(style.name,48)} COMOOTD`,
+      indexable:true,
+      modifiedTime:style.updated_at || ""
+    };
+    metadata.jsonLd = schemaGraph(env, metadata, "CollectionPage", null, [
+      {name:SITE_NAME,url:canonicalUrl(env,"/")},
+      {name:"Looks",url:canonicalUrl(env,"/looks")},
+      {name:`${style.name} Style`,url:canonical}
+    ]);
+    return new Response(injectMetadata(shell, metadata, env), {headers:responseHeaders()});
+  } catch { return errorPage(request, env, 502); }
+}
+
 async function renderContentPage(request, env, route) {
   if (route.type === "home") {
     try {
@@ -786,6 +833,7 @@ async function renderContentPage(request, env, route) {
       return errorPage(request, env, 502);
     }
   }
+  if (route.type === "style-directory") return renderStyleDirectoryPage(request, env, route);
   if (route.type.endsWith("directory")) return renderDirectoryPage(request, env, route.type);
   if (route.type === "curator") return renderCuratorPage(request, env, route);
   const spec = CONTENT_SPECS[route.type];
@@ -830,7 +878,7 @@ async function fetchSitemapRows(env, table, select, filters = {}) {
   for (let offset = start; rows.length < total; offset += SITEMAP_PAGE_SIZE) {
     const endpoint = new URL(`/rest/v1/${table}`, String(env.SUPABASE_URL || ""));
     endpoint.searchParams.set("select", select);
-    endpoint.searchParams.set("order", table === "curator_profiles" ? "updated_at.desc.nullslast" : "published_at.desc.nullslast,updated_at.desc.nullslast");
+    endpoint.searchParams.set("order", table === "curator_profiles" ? "updated_at.desc.nullslast" : table === "comootd_style_tags" ? "sort_order.asc,name.asc" : "published_at.desc.nullslast,updated_at.desc.nullslast");
     endpoint.searchParams.set("limit", String(Math.min(SITEMAP_PAGE_SIZE, total - rows.length)));
     endpoint.searchParams.set("offset", String(offset));
     Object.entries(queryFilters).forEach(([keyName, value]) => endpoint.searchParams.set(keyName, value));
@@ -935,6 +983,18 @@ function sitemapCatalogues() {
       lastmod: (row) => row.updated_at || row.created_at,
       changefreq: "weekly",
       priority: "0.6"
+    },
+    styles: {
+      table: "comootd_style_tags",
+      select: "name,updated_at",
+      filters: () => ({ is_active:"eq.true" }),
+      path: (row) => {
+        const slug = safeSitemapSlug(styleSlug(row?.name));
+        return slug ? `/styles/${encodeURIComponent(slug)}` : "";
+      },
+      lastmod: (row) => row.updated_at,
+      changefreq: "weekly",
+      priority: "0.7"
     }
   };
 }
@@ -1078,7 +1138,7 @@ export default {
     else if (isReadRequest && pathname === "/sitemap.xml") response = await renderSitemapIndex(env);
     else if (isReadRequest && pathname === "/sitemap-static.xml") response = await renderStaticSitemap(env);
     else {
-      const sitemapMatch = isReadRequest && pathname.match(/^\/sitemap-(looks|products|journal|curators)-(\d+)\.xml$/);
+      const sitemapMatch = isReadRequest && pathname.match(/^\/sitemap-(looks|products|journal|curators|styles)-(\d+)\.xml$/);
       if (sitemapMatch) response = await renderContentSitemap(env, sitemapMatch[1], sitemapMatch[2]);
       else {
         const route = isReadRequest ? routeFromRequest(request) : null;

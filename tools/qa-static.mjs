@@ -53,11 +53,45 @@ check(analyticsMigration.includes("revoke all on table public.comootd_analytics_
 check(insights.includes("sessionStorage") && !insights.includes("localStorage"), "Analytics harus memakai sesi sementara, bukan identifier persisten");
 check(index.includes('data-studio-tab="insights"'), "Tab Insights admin belum tersedia");
 
+const marketplaceMigration = read("supabase/migrations/20260831090000_comootd_multi_marketplace.sql");
+check(marketplaceMigration.includes("private.comootd_marketplace_for_url"), "Validasi marketplace di database belum tersedia");
+check(marketplaceMigration.includes("tiktok_shop") && marketplaceMigration.includes("shopee"), "Marketplace Shopee dan TikTok Shop belum sama-sama didukung");
+check(marketplaceMigration.includes("products_affiliate_url_marketplace_check") && marketplaceMigration.includes("look_curation_items_affiliate_url_marketplace_check"), "Konsistensi URL marketplace belum dikunci constraint");
+check(marketplaceMigration.includes("save_contributor_look_v2") && marketplaceMigration.includes("update_comootd_product"), "RPC kompatibilitas multi-marketplace belum tersedia");
+check(read("assets/supabase-adapter.js").includes('rpc("save_contributor_look_v2"') && read("assets/supabase-adapter.js").includes('rpc("update_comootd_product"'), "Adapter belum memakai RPC multi-marketplace");
+check(index.includes('href="/styles/${esc(slugify(activeTag.name))}"'), "Explore style belum menautkan SEO landing page");
+check(worker.includes('type:"style-directory"') && worker.includes("comootd_style_tags") && worker.includes("sitemap-(looks|products|journal|curators|styles)"), "Style landing page atau sitemap style belum lengkap");
+check(index.includes('value="tiktok_shop"') && index.includes('data-directory-filter="marketplace"'), "Input dan filter TikTok Shop belum tersedia");
+
 for (const file of ["index.html", "_worker.js", "config.js", "assets/supabase-adapter.js", "assets/curator-experience.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const content = read(file);
   check(!/(service_role\s*[:=]\s*["'][A-Za-z0-9._-]{20,})/i.test(content), `${file} tampak memuat service role key`);
   check(!/(localhost:\d+\/#[^\s"']*access_token)/i.test(content), `${file} memuat redirect token ke localhost`);
+}
+
+try {
+  const workerModule = await import(`${new URL("../_worker.js", import.meta.url).href}?qa=${Date.now()}`);
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    const url = String(input?.url || input || "");
+    if (url.includes("/rest/v1/comootd_style_tags")) return new Response(JSON.stringify([{ name:"Clean", updated_at:"2026-08-31T00:00:00Z" }]), { status:200, headers:{ "content-type":"application/json" } });
+    return new Response("[]", { status:200, headers:{ "content-type":"application/json", "content-range":"0-0/0" } });
+  };
+  try {
+    const response = await workerModule.default.fetch(new Request("https://preview.comootd.test/styles/clean"), {
+      SUPABASE_URL:"https://example.supabase.co",
+      SUPABASE_PUBLISHABLE_KEY:"public-test-key",
+      SITE_ORIGIN:"https://preview.comootd.test",
+      APP_ENV:"staging",
+      ASSETS:{ fetch:async () => new Response(index, { headers:{ "content-type":"text/html" } }) }
+    });
+    const html = await response.text();
+    check(response.status === 200 && html.includes("Clean Style — Outfit &amp; Produk Kurasi Indonesia | COMOOTD"), "Worker gagal merender metadata landing page style");
+    check(String(response.headers.get("x-robots-tag") || "").startsWith("noindex, nofollow"), "Landing page staging tidak dilindungi noindex");
+  } finally { globalThis.fetch = previousFetch; }
+} catch (error) {
+  failures.push(`Worker route test gagal: ${error?.message || error}`);
 }
 
 if (failures.length) {

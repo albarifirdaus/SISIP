@@ -255,6 +255,7 @@
       .mood-preview-overlay strong { max-width:480px; font-size:clamp(2.1rem,4.1vw,4.6rem); font-weight:850; letter-spacing:-.095em; line-height:.84; text-transform:uppercase; text-wrap:balance; }
       .mood-preview-meta,.mood-preview-open { color:#f1e8df; font-family:var(--mono); font-size:.58rem; letter-spacing:.06em; line-height:1.45; text-transform:uppercase; }
       .mood-preview-open { width:fit-content; margin-top:.25rem; padding-bottom:.18rem; border-bottom:1px solid currentColor; }
+      .mood-style-link { position:absolute; z-index:3; right:clamp(1rem,2.4vw,2rem); top:clamp(1rem,2.4vw,2rem); padding:.65rem .8rem; color:var(--ink); background:var(--signal); border:1px solid rgba(0,0,0,.2); font-family:var(--mono); font-size:.62rem; letter-spacing:.05em; text-decoration:none; text-transform:uppercase; }
       .mood-options { display:grid; min-width:0; grid-template-rows:repeat(var(--mood-count,5),minmax(0,1fr)); background:var(--white); }
       .mood-button { min-height:84px; padding:1rem; display:flex; align-items:end; justify-content:space-between; gap:.7rem; border:0; border-bottom:1px solid var(--line); background:transparent; cursor:pointer; text-align:left; transition:background .18s ease,color .18s ease; }
       .mood-button:last-child { border-bottom:0; }
@@ -919,7 +920,7 @@
 
       <div class="ticker" aria-hidden="true">
         <div class="ticker-track">
-          <span>Curated Fits</span><span>Effortless Layering</span><span>Mix &amp; Match Ready</span><span>Smart Wardrobe</span><span>Direct Shopee Links</span><span>No More Style Paralysis</span><span>Curated Fits</span><span>Effortless Layering</span><span>Mix &amp; Match Ready</span><span>Smart Wardrobe</span><span>Direct Shopee Links</span><span>No More Style Paralysis</span>
+          <span>Curated Fits</span><span>Effortless Layering</span><span>Mix &amp; Match Ready</span><span>Smart Wardrobe</span><span>Direct Marketplace Links</span><span>No More Style Paralysis</span><span>Curated Fits</span><span>Effortless Layering</span><span>Mix &amp; Match Ready</span><span>Smart Wardrobe</span><span>Direct Marketplace Links</span><span>No More Style Paralysis</span>
         </div>
       </div>
 
@@ -971,7 +972,7 @@
             <h2 class="section-title" id="lookbookTitle">Looks People<br />Keep Saving.</h2>
           </div>
           <div class="section-lead">
-            <p class="section-description">Kurasi yang sedang paling banyak disukai—lengkap dengan rincian item dan akses langsung ke Shopee.</p><a class="text-link" href="/looks">Lihat semua look <span aria-hidden="true">↗</span></a>
+            <p class="section-description">Kurasi yang sedang paling banyak disukai—lengkap dengan rincian item dan akses langsung ke marketplace.</p><a class="text-link" href="/looks">Lihat semua look <span aria-hidden="true">↗</span></a>
           </div>
         </div>
         <div class="filter-toolbar home-catalogue-controls" aria-label="Filter katalog look" hidden>
@@ -1057,7 +1058,7 @@
     <footer class="footer">
       <div class="footer-top">
         <div class="footer-brand">COMOOTD</div>
-        <p>Outfit check, done right.<br />Curated looks, direct Shopee links.</p>
+        <p>Outfit check, done right.<br />Curated looks, direct marketplace links.</p>
       </div>
       <div class="footer-bottom">
         <span>© <span id="currentYear"></span> COMOOTD</span>
@@ -1195,7 +1196,7 @@
           </section>
           <section class="studio-section">
             <h3 id="lookFormHeading">Tambah look</h3>
-            <p id="lookFormCopy">Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link Shopee-nya sama.</p>
+            <p id="lookFormCopy">Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link marketplace-nya sama.</p>
             <form class="form-stack" id="lookForm">
               <div class="compact-row">
                 <div class="field"><label for="lookTitleInput">Nama look</label><input id="lookTitleInput" name="title" required placeholder="Contoh: Kota Setelah Hujan" /></div>
@@ -1299,7 +1300,7 @@
                   <div class="journal-cta-list" id="journalProductCtas"></div>
                 </div>
               </div>
-              <p class="microcopy" style="margin:0;color:var(--taupe)">CTA menggunakan data katalog COMOOTD: harga dan link Shopee selalu mengikuti produk yang dipilih.</p>
+              <p class="microcopy" style="margin:0;color:var(--taupe)">CTA menggunakan data katalog COMOOTD: harga dan link marketplace selalu mengikuti produk yang dipilih.</p>
               <p class="form-error" id="journalFormError" role="alert"></p>
               <button class="small-button" data-journal-submit type="submit">Publikasikan artikel</button>
             </form>
@@ -1341,11 +1342,11 @@
                 <div class="field"><label for="productBadgeInput">Badge (opsional)</label><select id="productBadgeInput" name="badge"><option value="">Tanpa badge</option><option>COMOOTD Pick</option><option>High Rotation</option><option>Wardrobe Staple</option><option>New In</option><option>Trending</option><option>Best Value</option><option>Limited</option></select></div>
               </div>
               <div class="compact-row"><div class="field"><label for="productGenderInput">Gender target</label><select id="productGenderInput" name="genderTarget"><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div><div class="field"><label for="productCategoryInput">Kategori</label><select id="productCategoryInput" name="category"><option value="top">Atasan</option><option value="bottom">Bawahan</option><option value="outerwear">Outerwear</option><option value="dress">Dress / Set</option><option value="footwear">Sepatu</option><option value="bag">Tas</option><option value="accessory">Aksesori</option><option value="hijab">Hijab</option><option value="jewelry">Perhiasan</option><option value="other" selected>Lainnya</option></select></div></div>
-              <div class="field"><label for="productLinkInput">Link affiliate Shopee</label><input id="productLinkInput" name="link" required type="url" placeholder="https://shopee.co.id/..." /></div>
+              <div class="compact-row"><div class="field"><label for="productMarketplaceInput">Marketplace</label><select id="productMarketplaceInput" name="marketplace"><option value="shopee">Shopee</option><option value="tiktok_shop">TikTok Shop</option></select></div><div class="field"><label for="productLinkInput">Link affiliate</label><input id="productLinkInput" name="link" required type="url" placeholder="https://shopee.co.id/..." /></div></div>
               <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Tag style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="productStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="productStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="productStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="productStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="productStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="productStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="productStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="productStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="productStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="productStyles" value="Party" /><span>Party</span></label></div><div class="taxonomy-custom-add"><input type="text" maxlength="48" data-custom-style-input placeholder="Tambah style kustom" /><button class="small-button muted" type="button" data-add-custom-style>+ Tag</button></div><p class="microcopy">Pilih maksimal tiga tag. Tag ini sama dengan filter yang dilihat pengunjung.</p></fieldset>
               <div class="field product-color-field"><label for="productColorSearch">Varian warna</label><div class="product-color-picker"><div class="product-color-picker-head"><input id="productColorSearch" type="search" autocomplete="off" placeholder="Cari warna atau kode HEX…" /><span id="productColorCount">0 dipilih</span></div><div class="product-color-options" id="productColorOptions" role="group" aria-label="Pilih satu atau beberapa warna"></div></div><select id="productVariantsInput" name="variants" multiple hidden><option value="Hitam|#151515">Hitam · #151515</option><option value="Putih|#F7F7F2">Putih · #F7F7F2</option><option value="Ivory|#F1EBDD">Ivory · #F1EBDD</option><option value="Cream|#E8D9C5">Cream · #E8D9C5</option><option value="Beige|#CBB89D">Beige · #CBB89D</option><option value="Taupe|#988477">Taupe · #988477</option><option value="Cokelat|#704B38">Cokelat · #704B38</option><option value="Abu-abu|#8B8D8F">Abu-abu · #8B8D8F</option><option value="Charcoal|#3F4143">Charcoal · #3F4143</option><option value="Navy|#1D2942">Navy · #1D2942</option><option value="Biru|#4F73A1">Biru · #4F73A1</option><option value="Denim|#6E87A5">Denim · #6E87A5</option><option value="Merah|#A43A32">Merah · #A43A32</option><option value="Burgundy|#6D2635">Burgundy · #6D2635</option><option value="Pink|#D8A3AD">Pink · #D8A3AD</option><option value="Oranye|#C86B32">Oranye · #C86B32</option><option value="Kuning|#D4AE3B">Kuning · #D4AE3B</option><option value="Hijau|#52705A">Hijau · #52705A</option><option value="Olive|#6C7047">Olive · #6C7047</option><option value="Ungu|#765A83">Ungu · #765A83</option><option value="Silver|#B9BBC0">Silver · #B9BBC0</option><option value="Gold|#B89A52">Gold · #B89A52</option><option value="Multicolor|#B8AEA1">Multicolor · #B8AEA1</option></select><p class="microcopy">Klik kartu warna untuk memilih beberapa varian. Pilihan aktif diberi tanda centang.</p></div>
               <div class="field"><label for="productImageUrlInput">URL foto cover (opsional)</label><input id="productImageUrlInput" name="imageUrl" type="url" placeholder="https://cdn.example.com/foto-produk.jpg" /></div>
-              <p class="microcopy" style="margin:-.2rem 0 0;color:var(--taupe)">Link affiliate tidak diekstrak otomatis. Pakai URL gambar resmi dari Product Feed atau upload foto sendiri.</p>
+              <p class="microcopy" style="margin:-.2rem 0 0;color:var(--taupe)">Link affiliate Shopee maupun TikTok Shop tidak diekstrak otomatis. Pakai URL gambar resmi dari product feed atau upload foto sendiri.</p>
               <div class="field"><label for="productImageInput" id="productImageLabel">Upload foto produk (opsional)</label><input id="productImageInput" type="file" accept="image/jpeg,image/png,image/webp" /><p class="image-upload-note">Foto produk selalu ditampilkan square 1:1. Atur crop sebelum menggunakan foto.</p></div>
               <div class="form-mode-actions" id="productEditActions" hidden><p class="microcopy">Pertahankan urutan warna saat mengganti nama warna. Warna yang sudah dipakai look tidak dapat dihapus.</p><button class="small-button muted" id="cancelProductEditButton" type="button">Batal edit</button></div>
               <p class="form-error" id="productFormError" role="alert"></p>
@@ -1397,6 +1398,10 @@
         };
         const STYLE_ORDER = ["Clean", "Casual", "Formal", "Streetwear", "Modest", "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party"];
         const PRODUCT_BADGE_OPTIONS = ["", "COMOOTD Pick", "High Rotation", "Wardrobe Staple", "New In", "Trending", "Best Value", "Limited"];
+        const MARKETPLACES = {
+          shopee: { label:"Shopee", placeholder:"https://shopee.co.id/..." },
+          tiktok_shop: { label:"TikTok Shop", placeholder:"https://shop.tiktok.com/..." }
+        };
         const ARTICLE_CATEGORIES = {
           "style-guide": "Style guide",
           "occasion-guide": "Occasion guide",
@@ -1417,12 +1422,12 @@
         };
         const JOURNAL_BLOCK_LIMIT = 20;
         const JOURNAL_CTA_LIMIT = 3;
-        const BULK_IMPORT_HEADERS = ["product_key", "name", "affiliate_url", "price_idr", "badge", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "gender_target", "category", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
+        const BULK_IMPORT_HEADERS = ["product_key", "name", "marketplace", "affiliate_url", "price_idr", "badge", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "gender_target", "category", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
         const BULK_IMPORT_TEMPLATE_ROWS = [
-          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "top", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
-          ["OXFORD-001", "Relaxed Oxford Shirt", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "top", "https://cdn.contoh.com/oxford-cover.jpg", "Biru kabut", "#AAB7C7", "https://cdn.contoh.com/oxford-biru.jpg"],
-          ["TROUSER-001", "Pleated Straight Trousers", "https://shope.ee/contoh-link", "289000", "", "", "Clean", "Formal", "", "unisex", "bottom", "https://cdn.contoh.com/trouser-cover.jpg", "Charcoal", "#3B3A38", ""],
-          ["LOAFER-001", "Leather Penny Loafers", "https://shope.ee/contoh-link", "319000", "High Rotation", "", "Formal", "Clean", "", "unisex", "footwear", "https://cdn.contoh.com/loafer-cover.jpg", "Hitam", "#211F1D", ""]
+          ["OXFORD-001", "Relaxed Oxford Shirt", "shopee", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "top", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
+          ["OXFORD-001", "Relaxed Oxford Shirt", "shopee", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "top", "https://cdn.contoh.com/oxford-cover.jpg", "Biru kabut", "#AAB7C7", "https://cdn.contoh.com/oxford-biru.jpg"],
+          ["TROUSER-001", "Pleated Straight Trousers", "tiktok_shop", "https://shop.tiktok.com/view/product/contoh", "289000", "", "", "Clean", "Formal", "", "unisex", "bottom", "https://cdn.contoh.com/trouser-cover.jpg", "Charcoal", "#3B3A38", ""],
+          ["LOAFER-001", "Leather Penny Loafers", "shopee", "https://shope.ee/contoh-link", "319000", "High Rotation", "", "Formal", "Clean", "", "unisex", "footwear", "https://cdn.contoh.com/loafer-cover.jpg", "Hitam", "#211F1D", ""]
         ];
         const BULK_LOOK_IMPORT_HEADERS = ["look_key", "title", "excerpt", "gender_target", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "cover_image_url", "cover_alt_text", "item_position", "product_key", "variant_label"];
         const BULK_LOOK_IMPORT_TEMPLATE_ROWS = [
@@ -1497,7 +1502,7 @@
         ];
 
         function product(id, name, price, badge, styles, variants, artBg, artInk) {
-          return { id, slug: slugify(name), name, price, badge, styles, affiliateUrl: "https://shopee.co.id/", artBg, artInk, image: "", variants: variants.map(([name, hex]) => ({ id: slugify(name), name, hex })) };
+          return { id, slug: slugify(name), name, price, badge, styles, affiliatePlatform:"shopee", affiliateUrl: "https://shopee.co.id/", artBg, artInk, image: "", variants: variants.map(([name, hex]) => ({ id: slugify(name), name, hex })) };
         }
         function look(id, title, gender, styles, tone, popularity, createdOrder, items) {
           return { id, slug: slugify(title), title, gender, styles, tone, popularity, createdOrder, coverImage: "", items: items.map(([productId, variantName]) => ({ productId, variantName })) };
@@ -1591,7 +1596,9 @@
           productColorSearch: document.getElementById("productColorSearch"),
           productColorOptions: document.getElementById("productColorOptions"),
           productColorCount: document.getElementById("productColorCount"),
-          productVariantsInput: document.getElementById("productVariantsInput")
+          productVariantsInput: document.getElementById("productVariantsInput"),
+          productMarketplaceInput: document.getElementById("productMarketplaceInput"),
+          productLinkInput: document.getElementById("productLinkInput")
         });
 
         function loadState() {
@@ -1950,7 +1957,7 @@
           }
           const matches = getMemberMatches();
           const looks = matches.looks.map((entry) => `<article class="personal-look"><button class="personal-look-open" type="button" data-open-look="${esc(entry.id)}">${lookVisual(entry)}<span class="personal-look-copy"><strong>${esc(entry.title)}</strong><span>${esc(entry.styles.slice(0,2).join(" / ") || "Kurasi COMOOTD")}</span></span></button>${lookLikeButton(entry,true)}</article>`).join("");
-          const products = matches.products.map((item) => { const variant = item.variants?.[0]; return `<article class="personal-product"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item,variant,true)}</button><button class="product-name-link" type="button" data-open-product="${esc(item.id)}"><h5>${esc(item.name)}</h5></button><p>${money(item.price)}</p><a href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(item.id)}">Shopee ↗</a></article>`; }).join("");
+          const products = matches.products.map((item) => { const variant = item.variants?.[0]; return `<article class="personal-product"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item,variant,true)}</button><button class="product-name-link" type="button" data-open-product="${esc(item.id)}"><h5>${esc(item.name)}</h5></button><p>${money(item.price)}</p><a href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(item.id)}">${esc(marketplaceLabel(item))} ↗</a></article>`; }).join("");
           els.personalGrid.innerHTML = `<div class="personal-intro"><div><p class="eyebrow">UNTUK ${esc(memberDisplayName().toUpperCase())}</p><h3>Kurasi yang dimulai dari pilihanmu.</h3></div><p>Urutan ini memakai kecocokan tag style, gender preferensi, dan budget dari profil COMOOTD-mu.</p><button class="button-outline" type="button" data-open-member>Ubah preferensi ↗</button></div><div class="personal-results"><div class="personal-group"><div class="personal-group-head"><h4>Look yang mungkin kamu suka</h4><span class="eyebrow">${matches.looks.length} pilihan</span></div><div class="personal-looks">${looks || `<p class="personal-empty">Belum ada look yang cukup cocok.</p>`}</div></div><div class="personal-group"><div class="personal-group-head"><h4>Pieces untuk disisipkan</h4><span class="eyebrow">${matches.products.length} pilihan</span></div><div class="personal-products">${products || `<p class="personal-empty">Belum ada produk yang cukup cocok.</p>`}</div></div></div>`;
         }
 
@@ -2097,7 +2104,7 @@
           const configuredLook = eligible.find((look) => look.id === activeTag?.previewLookId);
           const preview = configuredLook || [...eligible].sort((a,b) => Number(b.popularity || 0) - Number(a.popularity || 0) || Number(b.createdOrder || 0) - Number(a.createdOrder || 0))[0] || getNewSeriesCandidates()[0];
           const previewMarkup = preview
-            ? `<div class="mood-preview"><button class="mood-preview-button" type="button" data-open-look="${esc(preview.id)}" aria-label="Buka preview ${esc(activeTag.name)}: ${esc(preview.title)}"><span class="mood-preview-visual">${lookVisual(preview)}</span><span class="mood-preview-overlay"><span class="mood-preview-meta">${esc(lookAttribution(preview))} / ${esc(activeTag.name)}</span><strong>${esc(preview.title)}</strong><span class="mood-preview-meta">${esc(preview.gender)} · ${esc(preview.styles.slice(0,2).join(" / ") || activeTag.name)}</span><span class="mood-preview-open">Buka look ↗</span></span></button></div>`
+            ? `<div class="mood-preview"><button class="mood-preview-button" type="button" data-open-look="${esc(preview.id)}" aria-label="Buka preview ${esc(activeTag.name)}: ${esc(preview.title)}"><span class="mood-preview-visual">${lookVisual(preview)}</span><span class="mood-preview-overlay"><span class="mood-preview-meta">${esc(lookAttribution(preview))} / ${esc(activeTag.name)}</span><strong>${esc(preview.title)}</strong><span class="mood-preview-meta">${esc(preview.gender)} · ${esc(preview.styles.slice(0,2).join(" / ") || activeTag.name)}</span><span class="mood-preview-open">Buka look ↗</span></span></button><a class="mood-style-link" href="/styles/${esc(slugify(activeTag.name))}">Semua ${esc(activeTag.name)} ↗</a></div>`
             : `<div class="mood-preview"><div class="new-series-empty"><p>Preview ${esc(activeTag?.name || "style")} akan hadir setelah look dipublikasikan.</p></div></div>`;
           const buttons = moods.map((mood, index) => `<button class="mood-button${mood.name === activeMoodStyle ? " is-active" : ""}" type="button" data-mood-style="${esc(mood.name)}" aria-pressed="${String(mood.name === activeMoodStyle)}"><strong>${esc(mood.name)}</strong><span>${String(index+1).padStart(2,"0")} ↘</span></button>`).join("");
           els.moodList.innerHTML = `${previewMarkup}<div class="mood-options" style="--mood-count:${moods.length}">${buttons}</div>`;
@@ -2110,7 +2117,7 @@
           const popular = [...state.products].sort((a,b) => (counts.get(b.id)||0)-(counts.get(a.id)||0)).slice(0,4);
           els.popularGrid.innerHTML = popular.map((item) => {
             const variant = item.variants[0];
-            return `<article class="popular-card"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item, variant)}</button><p class="eyebrow" style="color:var(--taupe);margin:.1rem 0 .45rem">${esc(item.badge || "COMOOTD PICK")}</p><h3 class="product-name"><button class="product-name-link" type="button" data-open-product="${esc(item.id)}">${esc(item.name)}</button></h3><p class="product-price">${money(item.price)}</p><div class="product-meta"><span class="swatch" style="--swatch:${esc(variant?.hex || "#ccc")}" title="${esc(variant?.name || "")}"></span><a class="product-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(item.id)}">Shopee ↗</a></div></article>`;
+            return `<article class="popular-card"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item, variant)}</button><p class="eyebrow" style="color:var(--taupe);margin:.1rem 0 .45rem">${esc(item.badge || "COMOOTD PICK")}</p><h3 class="product-name"><button class="product-name-link" type="button" data-open-product="${esc(item.id)}">${esc(item.name)}</button></h3><p class="product-price">${money(item.price)}</p><div class="product-meta"><span class="swatch" style="--swatch:${esc(variant?.hex || "#ccc")}" title="${esc(variant?.name || "")}"></span><a class="product-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(item.id)}">${esc(marketplaceLabel(item))} ↗</a></div></article>`;
           }).join("") || `<div class="empty-state"><h3>Belum ada produk</h3><p>Tambahkan dari COMOOTD Studio.</p></div>`;
         }
         function renderStyleControls() {
@@ -2178,7 +2185,7 @@
         }
         function journalLookCandidates() { return state.looks.filter(isPublishedCatalogueEntry); }
         function journalProductCandidates() { return state.products.filter(isPublishedCatalogueEntry); }
-        function defaultJournalCtaLabel(type) { return type === "look" ? "Lihat look lengkap" : "Lihat di Shopee"; }
+        function defaultJournalCtaLabel(type) { return type === "look" ? "Lihat look lengkap" : "Lihat produk"; }
         function renderJournalBlockEditor() {
           els.journalBlocks.innerHTML = journalDraftBlocks.length ? journalDraftBlocks.map((block,index) => {
             const typeLabel = block.type === "paragraph" ? "Paragraf" : block.type === "heading" ? "Heading" : block.type === "quote" ? "Kutipan" : "Foto";
@@ -2527,7 +2534,7 @@
           els.lookForm.reset();
           setTaxonomyValues(els.lookForm,"lookStyles",[]);
           els.lookFormHeading.textContent="Tambah look";
-          els.lookFormCopy.textContent="Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link Shopee-nya sama.";
+          els.lookFormCopy.textContent="Pilih 2–5 produk dari library. Warna dapat dipilih berbeda meski link marketplace-nya sama.";
           els.lookCoverLabel.textContent="Foto look (opsional, maksimal 3)";
           els.lookSubmitButton.textContent="Publikasikan look";
           els.lookEditActions.hidden=true;
@@ -2577,6 +2584,7 @@
           els.productForm.elements.badge.value=item.badge||"";
           els.productForm.elements.genderTarget.value=item.genderTarget||"unisex";
           els.productForm.elements.category.value=item.category||"other";
+          els.productForm.elements.marketplace.value=marketplaceOf(item);
           els.productForm.elements.link.value=item.affiliateUrl||"";
           setTaxonomyValues(els.productForm,"productStyles",item.styles||[]);
           const variantSelect=els.productForm.elements.variants;
@@ -2620,15 +2628,23 @@
         }
         function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderNewSeries(); renderJournal(); renderStudio(); renderPersonalized(); }
 
-        function affiliateUrl(value) {
+        function marketplaceFromUrl(value) {
           let parsed;
-          try { parsed = new URL(String(value || "")); }
-          catch { throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://."); }
+          try { parsed = new URL(String(value || "").trim()); }
+          catch { throw new Error("Gunakan link affiliate Shopee atau TikTok Shop yang lengkap."); }
+          if (parsed.protocol !== "https:") throw new Error("Link affiliate harus menggunakan https://.");
           const host = parsed.hostname.toLowerCase();
-          const isShopee = host === "shopee.co.id" || host.endsWith(".shopee.co.id") || host === "shope.ee";
-          if (parsed.protocol !== "https:" || !isShopee) throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://.");
-          return parsed.href;
+          if (host === "shope.ee" || host === "shopee.co.id" || host.endsWith(".shopee.co.id")) return "shopee";
+          if (host === "tiktok.com" || host.endsWith(".tiktok.com")) return "tiktok_shop";
+          throw new Error("Saat ini COMOOTD mendukung link affiliate Shopee dan TikTok Shop.");
         }
+        function affiliateUrl(value, expectedMarketplace = "") {
+          const marketplace = marketplaceFromUrl(value);
+          if (expectedMarketplace && marketplace !== expectedMarketplace) throw new Error(`Link tidak sesuai marketplace yang dipilih (${MARKETPLACES[expectedMarketplace]?.label || expectedMarketplace}).`);
+          return new URL(String(value).trim()).href;
+        }
+        function marketplaceOf(item) { try { return item?.affiliatePlatform || marketplaceFromUrl(item?.affiliateUrl); } catch { return "shopee"; } }
+        function marketplaceLabel(item) { return MARKETPLACES[marketplaceOf(item)]?.label || "Marketplace"; }
         function safeUrl(value) { try { return affiliateUrl(value); } catch { return "#"; } }
         let contentRouteSyncing = false;
         function contentRouteSegment(type) { return type === "look" ? "looks" : type === "product" ? "products" : "journal"; }
@@ -2660,7 +2676,13 @@
             "/products": { key:"products", title:"Products", deck:"Produk pilihan COMOOTD yang siap menjadi bagian dari rotasi wardrobe-mu." },
             "/journal": { key:"journal", title:"Style Journal", deck:"Catatan praktis tentang proporsi, warna, dan strategi mix-and-match." }
           };
-          return entries[pathname] || null;
+          if (entries[pathname]) return entries[pathname];
+          const styleMatch=pathname.match(/^\/styles\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
+          if(styleMatch){
+            const style=(state.styleTags||[]).map((item)=>typeof item==="string"?item:item?.name).find((name)=>slugify(name)===styleMatch[1]);
+            if(style) return {key:"style",styleName:style,title:`${style} Style`,deck:`Look kurasi ${style} dari COMOOTD dan para curator—lengkap dengan rincian item yang bisa langsung ditemukan.`};
+          }
+          return null;
         }
         function ensureCatalogueRouteLayer() {
           let layer = document.getElementById("catalogueRouteLayer");
@@ -2674,26 +2696,28 @@
           return `<article class="catalogue-look-card"><button class="catalogue-look-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka ${esc(entry.title)}">${lookVisual(entry)}</button><div class="catalogue-look-copy"><p class="catalogue-look-attribution">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2 class="catalogue-look-title">${esc(entry.title)}</h2>${curatorMetricsMarkup(entry,true)}<div>${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry)}</div></article>`;
         }
         function catalogueProductCard(entry) {
-          return `<article class="catalogue-product-card"><button type="button" data-open-product="${esc(entry.id)}">${productArt(entry,entry.variants?.[0])}</button><div><p>${esc(entry.badge || "COMOOTD EDIT")}</p><h2>${esc(entry.name)}</h2><span>${money(entry.price)}</span></div></article>`;
+          return `<article class="catalogue-product-card"><button type="button" data-open-product="${esc(entry.id)}">${productArt(entry,entry.variants?.[0])}</button><div><p>${esc(entry.badge || "COMOOTD EDIT")} · ${esc(marketplaceLabel(entry))}</p><h2>${esc(entry.name)}</h2><span>${money(entry.price)}</span></div></article>`;
         }
         function catalogueJournalCard(entry) {
           return `<article class="catalogue-journal-card"><button type="button" data-open-article="${esc(entry.id)}">${entry.coverImage ? `<img src="${esc(safeImage(entry.coverImage))}" alt="${esc(entry.coverAlt || entry.title)}" />` : ""}<span>${esc(articleCategoryLabel(entry.category))}</span><h2>${esc(entry.title)}</h2><p>${esc(entry.excerpt || "Catatan style dari COMOOTD.")}</p></button></article>`;
         }
         const PRODUCT_CATEGORIES={top:"Atasan",bottom:"Bawahan",outerwear:"Outerwear",dress:"Dress / Set",footwear:"Sepatu",bag:"Tas",accessory:"Aksesori",hijab:"Hijab",jewelry:"Perhiasan",other:"Lainnya"};
-        const directoryFilters={q:"",gender:"all",style:"all",sort:"popular",category:"all",price:"all"};
+        const directoryFilters={q:"",gender:"all",style:"all",sort:"popular",category:"all",price:"all",marketplace:"all"};
         function directoryFilterMarkup(route) {
           if(route.key==="journal") return "";
-          if(route.key==="products") return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(directoryFilters.q)}" placeholder="Cari nama, warna, atau kategori" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${directoryFilters.gender==="Pria"?" selected":""}>Pria</option><option value="Wanita"${directoryFilters.gender==="Wanita"?" selected":""}>Wanita</option><option value="Uniseks"${directoryFilters.gender==="Uniseks"?" selected":""}>Uniseks</option></select></label><label><span>Kategori</span><select data-directory-filter="category"><option value="all">Semua kategori</option>${Object.entries(PRODUCT_CATEGORIES).map(([value,label])=>`<option value="${value}"${directoryFilters.category===value?" selected":""}>${label}</option>`).join("")}</select></label><label><span>Harga</span><select data-directory-filter="price"><option value="all">Semua harga</option><option value="under100"${directoryFilters.price==="under100"?" selected":""}>Di bawah Rp100 ribu</option><option value="100to250"${directoryFilters.price==="100to250"?" selected":""}>Rp100–250 ribu</option><option value="250to500"${directoryFilters.price==="250to500"?" selected":""}>Rp250–500 ribu</option><option value="over500"${directoryFilters.price==="over500"?" selected":""}>Di atas Rp500 ribu</option></select></label></div>`;
+          if(route.key==="products") return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(directoryFilters.q)}" placeholder="Cari nama, warna, atau kategori" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${directoryFilters.gender==="Pria"?" selected":""}>Pria</option><option value="Wanita"${directoryFilters.gender==="Wanita"?" selected":""}>Wanita</option><option value="Uniseks"${directoryFilters.gender==="Uniseks"?" selected":""}>Uniseks</option></select></label><label><span>Kategori</span><select data-directory-filter="category"><option value="all">Semua kategori</option>${Object.entries(PRODUCT_CATEGORIES).map(([value,label])=>`<option value="${value}"${directoryFilters.category===value?" selected":""}>${label}</option>`).join("")}</select></label><label><span>Marketplace</span><select data-directory-filter="marketplace"><option value="all">Semua marketplace</option>${Object.entries(MARKETPLACES).map(([value,item])=>`<option value="${value}"${directoryFilters.marketplace===value?" selected":""}>${esc(item.label)}</option>`).join("")}</select></label><label><span>Harga</span><select data-directory-filter="price"><option value="all">Semua harga</option><option value="under100"${directoryFilters.price==="under100"?" selected":""}>Di bawah Rp100 ribu</option><option value="100to250"${directoryFilters.price==="100to250"?" selected":""}>Rp100–250 ribu</option><option value="250to500"${directoryFilters.price==="250to500"?" selected":""}>Rp250–500 ribu</option><option value="over500"${directoryFilters.price==="over500"?" selected":""}>Di atas Rp500 ribu</option></select></label></div>`;
           const styles=[...new Set((route.key==="products"?state.products:state.looks).flatMap((item)=>item.styles||[]))].sort();
           return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(directoryFilters.q)}" placeholder="Cari nama, style, warna, atau curator" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${directoryFilters.gender==="Pria"?" selected":""}>Pria</option><option value="Wanita"${directoryFilters.gender==="Wanita"?" selected":""}>Wanita</option><option value="Uniseks"${directoryFilters.gender==="Uniseks"?" selected":""}>Uniseks</option></select></label><label><span>Style</span><select data-directory-filter="style"><option value="all">Semua style</option>${styles.map((style)=>`<option value="${esc(style)}"${directoryFilters.style===style?" selected":""}>${esc(style)}</option>`).join("")}</select></label><label><span>Urutkan</span><select data-directory-filter="sort"><option value="popular"${directoryFilters.sort==="popular"?" selected":""}>Paling populer</option><option value="newest"${directoryFilters.sort==="newest"?" selected":""}>Terbaru</option><option value="az"${directoryFilters.sort==="az"?" selected":""}>A–Z</option></select></label></div>`;
         }
         function filteredDirectoryEntries(route) {
           let source=route.key==="products"?[...state.products]:route.key==="journal"?[...state.articles]:route.key==="comootd"?state.looks.filter((item)=>item.publisherType!=="curator"&&!item.curator?.handle):route.key==="curators"?state.looks.filter((item)=>item.publisherType==="curator"||item.curator?.handle):[...state.looks];
+          if(route.key==="style") source=source.filter((item)=>(item.styles||[]).some((style)=>String(style).toLowerCase()===String(route.styleName).toLowerCase()));
           if(route.key==="journal") return source;
           const q=directoryFilters.q.trim().toLowerCase();
           if(q) source=source.filter((item)=>[item.title,item.name,item.gender,item.genderTarget,item.badge,item.category,PRODUCT_CATEGORIES[item.category],item.curator?.displayName,item.curator?.handle,...(item.styles||[]),...(item.variants||[]).flatMap((variant)=>[variant.name,variant.hex])].filter(Boolean).join(" ").toLowerCase().includes(q));
           if(directoryFilters.gender!=="all") source=source.filter((item)=>(item.gender||({pria:"Pria",wanita:"Wanita",unisex:"Uniseks"}[item.genderTarget]))===directoryFilters.gender);
           if(route.key==="products"&&directoryFilters.category!=="all") source=source.filter((item)=>(item.category||"other")===directoryFilters.category);
+          if(route.key==="products"&&directoryFilters.marketplace!=="all") source=source.filter((item)=>marketplaceOf(item)===directoryFilters.marketplace);
           if(route.key==="products"&&directoryFilters.price!=="all") source=source.filter((item)=>{const price=Number(item.price||0);return directoryFilters.price==="under100"?price<100000:directoryFilters.price==="100to250"?price>=100000&&price<250000:directoryFilters.price==="250to500"?price>=250000&&price<500000:price>=500000;});
           if(route.key!=="products"&&directoryFilters.style!=="all") source=source.filter((item)=>(item.styles||[]).includes(directoryFilters.style));
           if(directoryFilters.sort==="az") source.sort((a,b)=>String(a.title||a.name).localeCompare(String(b.title||b.name),"id"));
@@ -2708,7 +2732,7 @@
           const source=filteredDirectoryEntries(route);
           let content=route.key==="products"?source.map(catalogueProductCard).join(""):route.key==="journal"?source.map(catalogueJournalCard).join(""):source.map(catalogueLookCard).join("");
           const className = route.key === "products" ? "catalogue-product-grid" : route.key === "journal" ? "catalogue-journal-grid" : "catalogue-look-grid";
-          const tabs=route.key==="products"?`<span class="is-active">Products</span>`:route.key==="journal"?`<span class="is-active">Journal</span>`:`<a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a>`;
+          const tabs=route.key==="products"?`<span class="is-active">Products</span>`:route.key==="journal"?`<span class="is-active">Journal</span>`:`<a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a>${route.key==="style"?`<span class="is-active">${esc(route.styleName)}</span>`:""}`;
           layer.innerHTML = `<div class="catalogue-route-shell">${catalogueRouteBar()}<main class="catalogue-route-body"><div class="catalogue-route-heading"><p>COMOOTD / DIRECTORY</p><h1>${esc(route.title)}</h1><p>${esc(route.deck)}</p></div><nav class="catalogue-route-tabs" aria-label="Pilihan katalog">${tabs}</nav>${directoryFilterMarkup(route)}${route.key!=="journal"?`<p class="catalogue-result-count">${source.length} hasil</p>`:""}<section class="${className}">${content || `<p class="catalogue-empty">Belum ada konten yang cocok dengan filter ini.</p>`}</section></main></div>`;
           layer.classList.add("is-open"); document.body.classList.add("catalogue-route-open");
           updateDirectoryMetadata(route);
@@ -2822,17 +2846,17 @@
           closeContentDialogs(els.lookModal);
           const itemsHtml = entry.items.map((item)=>{
             if (!item?.productId) {
-              const itemAction=item.affiliateUrl?`<a class="item-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="curator_item" data-insight-id="${esc(item.id||"")}">Shopee ↗</a>`:`<span class="item-link" aria-disabled="true">Link nonaktif</span>`;
+              const itemAction=item.affiliateUrl?`<a class="item-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="curator_item" data-insight-id="${esc(item.id||"")}">${esc(marketplaceLabel(item))} ↗</a>`:`<span class="item-link" aria-disabled="true">Link nonaktif</span>`;
               return `<li class="look-item"><div class="look-item-art" aria-hidden="true" style="display:grid;place-items:center;background:var(--paper-deep);color:var(--clay-dark)"><span class="meta">${esc(String(item.category||"item").slice(0,4))}</span></div><div><p class="look-item-title">${esc(item.name||"Item pilihan")}</p><div class="look-item-info"><span>${esc(item.colorLabel||item.variantName||"Warna pilihan")}</span><span>·</span><span>${Number(item.price)>0?money(item.price):"Harga belum dicantumkan"}</span></div></div>${itemAction}</li>`;
             }
             const productItem=getProduct(item.productId); if (!productItem) return "";
             const variant=getVariant(productItem,item.variantName);
-            return `<li class="look-item"><button class="look-item-art product-card-open" type="button" data-open-product="${esc(productItem.id)}" aria-label="Buka detail ${esc(productItem.name)}">${productArt(productItem,variant,true)}</button><div><button class="look-item-title" type="button" data-open-product="${esc(productItem.id)}">${esc(productItem.name)}</button><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div><a class="item-link" href="${esc(safeUrl(productItem.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(productItem.id)}">Shopee ↗</a></li>`;
+            return `<li class="look-item"><button class="look-item-art product-card-open" type="button" data-open-product="${esc(productItem.id)}" aria-label="Buka detail ${esc(productItem.name)}">${productArt(productItem,variant,true)}</button><div><button class="look-item-title" type="button" data-open-product="${esc(productItem.id)}">${esc(productItem.name)}</button><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div><a class="item-link" href="${esc(safeUrl(productItem.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(productItem.id)}">${esc(marketplaceLabel(productItem))} ↗</a></li>`;
           }).join("");
           const curatorName = entry.curator?.displayName || entry.curator?.name || "";
           const curatorHandle = entry.curator?.handle || "";
           const curatorLine = curatorName ? `<p class="eyebrow" style="color:var(--taupe);margin:.5rem 0 0">CURATED BY ${esc(curatorName)}${curatorHandle ? ` / @${esc(curatorHandle)}` : ""}</p>` : "";
-          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}${curatorMetricsMarkup(entry)}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div>${entry.excerpt ? `<p class="detail-description">${esc(entry.excerpt)}</p>` : ""}</div><div class="detail-actions">${lookLikeButton(entry)}<button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p></div></div>`;
+          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}${curatorMetricsMarkup(entry)}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div>${entry.excerpt ? `<p class="detail-description">${esc(entry.excerpt)}</p>` : ""}</div><div class="detail-actions">${lookLikeButton(entry)}<button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di marketplace.</p></div></div>`;
           if (!els.lookModal.open) els.lookModal.showModal();
         }
         function openProduct(id, { navigate = true, variantId = "", replace = false } = {}) {
@@ -2846,7 +2870,7 @@
           const gender = ({ pria:"Pria", wanita:"Wanita", unisex:"Uniseks" })[String(entry.genderTarget || "").toLowerCase()] || "Uniseks";
           const relatedLooks=state.looks.filter((look)=>look.items?.some((item)=>item.productId===entry.id)).slice(0,4);
           const relatedLooksMarkup=relatedLooks.length ? `<section class="product-related-looks"><h3>Dipakai dalam kurasi</h3><div class="product-related-look-list">${relatedLooks.map((look)=>`<button class="product-related-look" type="button" data-open-product-look="${esc(look.id)}">${lookVisual(look)}<span class="product-related-look-copy"><span>${esc(lookAttribution(look))}</span><strong>${esc(look.title)}</strong></span></button>`).join("")}</div></section>` : "";
-          els.productDetail.innerHTML = `<div class="product-detail"><div>${productArt(entry, selectedVariant)}</div><div><p class="eyebrow" style="color:var(--clay)">COMOOTD / ${esc(gender)}</p><h2>${esc(entry.name)}</h2>${entry.badge ? `<p class="eyebrow" style="color:var(--taupe)">${esc(entry.badge)}</p>` : ""}<p class="product-detail-price">${money(entry.price)}</p><div class="look-card-tags">${(entry.styles || []).map((style) => `<span class="tag">${esc(style)}</span>`).join("")}</div>${variants ? `<div class="product-variant-options" aria-label="Pilih warna">${variants}</div>` : ""}<div class="detail-actions"><a class="button" href="${esc(safeUrl(entry.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(entry.id)}">Lihat di Shopee ↗</a><button class="button-outline" type="button" data-share-product="${esc(entry.id)}" data-share-variant="${esc(selectedVariant?.id || "")}">Bagikan</button></div><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di Shopee.</p>${relatedLooksMarkup}</div></div>`;
+          els.productDetail.innerHTML = `<div class="product-detail"><div>${productArt(entry, selectedVariant)}</div><div><p class="eyebrow" style="color:var(--clay)">COMOOTD / ${esc(gender)}</p><h2>${esc(entry.name)}</h2>${entry.badge ? `<p class="eyebrow" style="color:var(--taupe)">${esc(entry.badge)}</p>` : ""}<p class="product-detail-price">${money(entry.price)}</p><div class="look-card-tags">${(entry.styles || []).map((style) => `<span class="tag">${esc(style)}</span>`).join("")}</div>${variants ? `<div class="product-variant-options" aria-label="Pilih warna">${variants}</div>` : ""}<div class="detail-actions"><a class="button" href="${esc(safeUrl(entry.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(entry.id)}">Lihat di ${esc(marketplaceLabel(entry))} ↗</a><button class="button-outline" type="button" data-share-product="${esc(entry.id)}" data-share-variant="${esc(selectedVariant?.id || "")}">Bagikan</button></div><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di marketplace.</p>${relatedLooksMarkup}</div></div>`;
           if (!els.productModal.open) els.productModal.showModal();
         }
         function articlePlainText(blocks) {
@@ -3232,6 +3256,7 @@
             if (!name) problems.push("name wajib diisi.");
             if (!colorName) problems.push("color_name wajib diisi.");
             let affiliateUrl = "";
+            let affiliatePlatform = "shopee";
             let price = 0;
             let genderTarget = "unisex";
             let category = "other";
@@ -3240,7 +3265,11 @@
             let variantImageUrl = "";
             let styles = [];
             let badge = "";
-            try { affiliateUrl = affiliateUrlFromBulk(row.affiliate_url); } catch (error) { problems.push(error.message); }
+            try {
+              affiliatePlatform = String(row.marketplace || "").trim().toLowerCase() || marketplaceFromUrl(row.affiliate_url);
+              if (!MARKETPLACES[affiliatePlatform]) throw new Error("marketplace harus shopee atau tiktok_shop.");
+              affiliateUrl = affiliateUrlFromBulk(row.affiliate_url, affiliatePlatform);
+            } catch (error) { problems.push(error.message); }
             try { price = parseBulkPrice(row.price_idr); } catch (error) { problems.push(error.message); }
             try { genderTarget = normalizeBulkGender(row.gender_target); } catch (error) { problems.push(error.message); }
             category=String(row.category||"other").trim().toLowerCase();
@@ -3255,6 +3284,7 @@
               key,
               name,
               affiliateUrl,
+              affiliatePlatform,
               price,
               badge,
               styles,
@@ -3270,14 +3300,14 @@
               groups.set(key, candidate);
               return;
             }
-            const sameMetadata = existing.name === candidate.name && existing.affiliateUrl === candidate.affiliateUrl && existing.price === candidate.price && existing.badge === candidate.badge && existing.styles.join("|") === candidate.styles.join("|") && existing.genderTarget === candidate.genderTarget && existing.category === candidate.category && existing.coverImageUrl === candidate.coverImageUrl;
+            const sameMetadata = existing.name === candidate.name && existing.affiliateUrl === candidate.affiliateUrl && existing.affiliatePlatform === candidate.affiliatePlatform && existing.price === candidate.price && existing.badge === candidate.badge && existing.styles.join("|") === candidate.styles.join("|") && existing.genderTarget === candidate.genderTarget && existing.category === candidate.category && existing.coverImageUrl === candidate.coverImageUrl;
             if (!sameMetadata) { errors.push("Baris " + row.rowNumber + ": data produk untuk product_key " + key + " harus sama di setiap warna."); return; }
             if (existing.variantNames.has(colorName.toLowerCase())) { errors.push("Baris " + row.rowNumber + ": warna " + colorName + " tercatat dua kali untuk " + key + "."); return; }
             existing.variantNames.add(colorName.toLowerCase());
             existing.variants.push(candidate.variants[0]);
           });
           return {
-            groups: Array.from(groups.values()).map((group) => ({ key: group.key, name: group.name, affiliateUrl: group.affiliateUrl, price: group.price, badge: group.badge, styles: group.styles, genderTarget: group.genderTarget, category: group.category, coverImageUrl: group.coverImageUrl, variants: group.variants })),
+            groups: Array.from(groups.values()).map((group) => ({ key: group.key, name: group.name, affiliateUrl: group.affiliateUrl, affiliatePlatform: group.affiliatePlatform, price: group.price, badge: group.badge, styles: group.styles, genderTarget: group.genderTarget, category: group.category, coverImageUrl: group.coverImageUrl, variants: group.variants })),
             errors,
             warnings
           };
@@ -3350,7 +3380,7 @@
           if (!normalizedGroups.length && groups.size && !errors.length) warnings.push("Tidak ada look yang siap diimpor.");
           return { groups: normalizedGroups, errors, warnings };
         }
-        function affiliateUrlFromBulk(value) { return affiliateUrl(value); }
+        function affiliateUrlFromBulk(value, marketplace = "") { return affiliateUrl(value, marketplace); }
         async function readBulkMatrix(file, expectedSheet) {
           const extension = String(file?.name || "").split(".").pop().toLowerCase();
           if (extension === "csv" || file?.type === "text/csv") return parseCsvMatrix(await file.text());
@@ -4006,6 +4036,9 @@
         });
         els.downloadBulkTemplateButton.addEventListener("click", downloadBulkTemplate);
         els.bulkProductFile.addEventListener("change", () => { void inspectBulkProductFile(); });
+        els.productMarketplaceInput?.addEventListener("change", () => {
+          els.productLinkInput.placeholder=MARKETPLACES[els.productMarketplaceInput.value]?.placeholder || "https://";
+        });
         els.bulkImportButton.addEventListener("click", async (event) => {
           if (!cloudEnabled()) { els.bulkImportError.textContent = "Import banyak hanya tersedia setelah Supabase cloud aktif."; return; }
           if (!bulkImportGroups.length || bulkImportErrors.length) return;
@@ -4141,8 +4174,9 @@
           const variantSelect=productForm.elements.variants;
           const parsedVariants=parseVariants([...variantSelect.selectedOptions].map((option)=>option.value).join(","));
           const variants=editId?reconcileProductVariantIds(parsedVariants,existingProduct):parsedVariants;
+          const marketplace=String(form.get("marketplace")||"shopee");
           let link, imageUrl;
-          try { link=affiliateUrl(form.get("link")); imageUrl=normalizeBulkImageUrl(form.get("imageUrl")); } catch(error) { els.productFormError.textContent=error.message; return; }
+          try { link=affiliateUrl(form.get("link"),marketplace); imageUrl=normalizeBulkImageUrl(form.get("imageUrl")); } catch(error) { els.productFormError.textContent=error.message; return; }
           if(!title || !price || variants.length===0){els.productFormError.textContent="Nama, harga, link, dan minimal satu varian warna wajib diisi.";return;}
           try {
             const badge=String(form.get("badge")||"").trim();
@@ -4153,8 +4187,8 @@
             const imageFile=preparedImageFile(productImageInput);
             const imageAspect=selectedImageAspect(productImageInput,"square");
             if(cloudEnabled()) {
-              if(editId) await cloud.updateProduct(editId,{ title, price, badge, styles, genderTarget, category, link, variants, imageUrl, imageFile, imageAspect });
-              else await cloud.createProduct({ title, price, badge, styles, genderTarget, category, link, variants, imageUrl, imageFile, imageAspect });
+              if(editId) await cloud.updateProduct(editId,{ title, price, badge, styles, genderTarget, category, marketplace, link, variants, imageUrl, imageFile, imageAspect });
+              else await cloud.createProduct({ title, price, badge, styles, genderTarget, category, marketplace, link, variants, imageUrl, imageFile, imageAspect });
               resetProductEditor();
               await refreshCloudState({admin:true});
               switchStudioTab("products");
@@ -4167,11 +4201,11 @@
             const suppliedImage=Boolean(imageUrl || uploadedImage);
             const localVariants=variants.map((variant)=>{const previous=existingProduct?.variants?.find((candidate)=>candidate.id===variant.id);return {...(previous||{}),id:variant.id||uid("variant"),name:variant.name,hex:variant.hex,image:suppliedImage ? image : previous?.image||image};});
             if(editId) {
-              Object.assign(existingProduct,{name:title,price,badge,styles,genderTarget,category,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect:imageFile || imageUrl ? imageAspect : existingProduct.imageAspect,variants:localVariants});
+              Object.assign(existingProduct,{name:title,price,badge,styles,genderTarget,category,affiliatePlatform:marketplace,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect:imageFile || imageUrl ? imageAspect : existingProduct.imageAspect,variants:localVariants});
               saveState();resetProductEditor();renderAll();switchStudioTab("products");showToast("Produk berhasil diperbarui di prototype.");
               return;
             }
-            const created={id:uid("product"),name:title,price,badge,styles,genderTarget,category,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect,variants:localVariants};
+            const created={id:uid("product"),name:title,price,badge,styles,genderTarget,category,affiliatePlatform:marketplace,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect,variants:localVariants};
             state.products.push(created);saveState();resetProductEditor();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
           } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
         });

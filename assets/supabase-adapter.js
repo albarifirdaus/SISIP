@@ -22,6 +22,10 @@
   ]);
   const PRODUCT_BADGE_OPTIONS = ["", "COMOOTD Pick", "High Rotation", "Wardrobe Staple", "New In", "Trending", "Best Value", "Limited"];
   const PRODUCT_BADGE_ALIASES = new Map([["populer", "High Rotation"], ["best seller", "High Rotation"], ["terlaris", "High Rotation"], ["termurah", "Best Value"]]);
+  const MARKETPLACE_OPTIONS = new Map([
+    ["shopee", { label: "Shopee" }],
+    ["tiktok_shop", { label: "TikTok Shop" }]
+  ]);
   // The database column remains `job_tags` for compatibility, but the public
   // experience treats these as one combined fashion-style and personal-profile
   // tag group.
@@ -178,6 +182,26 @@
     return normalizeImageAspect("", fallback);
   }
 
+  function marketplaceFromAffiliateUrl(value) {
+    let parsed;
+    try { parsed = new URL(String(value || "").trim()); }
+    catch { throw new Error("Gunakan link affiliate Shopee atau TikTok Shop yang lengkap."); }
+    if (parsed.protocol !== "https:") throw new Error("Link affiliate harus menggunakan https://.");
+    const host = parsed.hostname.toLowerCase();
+    if (host === "shope.ee" || host === "shopee.co.id" || host.endsWith(".shopee.co.id")) return "shopee";
+    if (host === "tiktok.com" || host.endsWith(".tiktok.com")) return "tiktok_shop";
+    throw new Error("Saat ini COMOOTD mendukung link affiliate Shopee dan TikTok Shop.");
+  }
+
+  function normalizeAffiliateLink(value, expectedMarketplace = "") {
+    const raw = String(value || "").trim();
+    const marketplace = marketplaceFromAffiliateUrl(raw);
+    if (expectedMarketplace && expectedMarketplace !== marketplace) {
+      throw new Error(`Link tidak sesuai marketplace yang dipilih (${MARKETPLACE_OPTIONS.get(expectedMarketplace)?.label || expectedMarketplace}).`);
+    }
+    return { url: new URL(raw).href, marketplace };
+  }
+
   function mapProduct(row) {
     const variants = (row.product_variants || [])
       .filter((variant) => variant.is_active !== false)
@@ -198,6 +222,7 @@
       badge: controlledStoredList(row.badges, PRODUCT_BADGE_OPTIONS, PRODUCT_BADGE_ALIASES)[0] || "",
       styles: storedStyleTags(row.style_tags),
       affiliateUrl: row.link_status === "disabled" ? "" : row.affiliate_url,
+      affiliatePlatform: row.affiliate_platform || "shopee",
       linkStatus: row.link_status || "active",
       artBg: "#D8D0C6",
       artInk: variants[0]?.hex || "#242220",
@@ -241,6 +266,7 @@
         colorLabel: item.color_variant || "",
         price: Number(item.price_idr || 0),
         affiliateUrl: item.link_status === "disabled" ? "" : (item.affiliate_url || ""),
+        affiliatePlatform: item.affiliate_platform || "shopee",
         linkStatus: item.link_status || "active"
       }))
       .filter((item) => Boolean(item.name));
@@ -473,8 +499,8 @@
 
     if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka Studio.");
 
-    const productSelect = "id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, is_available, link_status, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
-    const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, is_available, link_status))), look_curation_items(id, position, category, name, color_variant, price_idr, affiliate_url, link_status)";
+    const productSelect = "id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, is_available, link_status, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
+    const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, is_available, link_status))), look_curation_items(id, position, category, name, color_variant, price_idr, affiliate_platform, affiliate_url, link_status)";
     const articleSelect = "id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)";
     const productsQuery = (from, to) => {
       let query = db
@@ -986,7 +1012,7 @@
     const db = getClient();
     const [requestRows, productRows, lookRows] = await Promise.all([
       queryAllRows((from, to) => db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)),
-      queryAllRows((from, to) => db.from("products").select("id, slug, name, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)").order("sort_order", { ascending: true }).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)),
+      queryAllRows((from, to) => db.from("products").select("id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)").order("sort_order", { ascending: true }).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)),
       queryAllRows((from, to) => db.from("looks").select("id, slug, title, excerpt, cover_image_path, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order))").order("sort_order", { ascending: true }).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to))
     ]);
     const products = productRows.map(mapProduct);
@@ -1350,19 +1376,8 @@
     return [...new Set((paths || []).filter((path) => typeof path === "string" && path.startsWith(prefix)))];
   }
 
-  function assertShopeeAffiliateUrl(value) {
-    let parsed;
-    try {
-      parsed = new URL(String(value || ""));
-    } catch {
-      throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://.");
-    }
-    const host = parsed.hostname.toLowerCase();
-    const isShopeeIndonesia = host === "shopee.co.id" || host.endsWith(".shopee.co.id") || host === "shope.ee";
-    if (parsed.protocol !== "https:" || !isShopeeIndonesia) {
-      throw new Error("Gunakan link affiliate Shopee Indonesia yang diawali https://.");
-    }
-    return parsed.href;
+  function assertAffiliateUrl(value, marketplace = "") {
+    return normalizeAffiliateLink(value, marketplace).url;
   }
 
   const curatorReferenceCategories = new Set([
@@ -1418,13 +1433,14 @@
       if (!curatorReferenceCategories.has(category)) throw new Error(`Kategori item ke-${index + 1} belum valid.`);
       const name = normalizeUserText(raw?.name, `Nama item ke-${index + 1}`, { required: true, min: 1, max: 160 });
       const colorLabel = normalizeUserText(raw?.colorLabel ?? raw?.color_label, `Warna item ke-${index + 1}`, { max: 80 });
-      const affiliateUrl = assertShopeeAffiliateUrl(raw?.affiliateUrl ?? raw?.affiliate_url ?? raw?.url);
+      const affiliatePlatform = String(raw?.affiliatePlatform ?? raw?.affiliate_platform ?? "").trim().toLowerCase();
+      const affiliate = normalizeAffiliateLink(raw?.affiliateUrl ?? raw?.affiliate_url ?? raw?.url, affiliatePlatform);
       const price = Number(raw?.price ?? raw?.priceIdr ?? raw?.price_idr);
       if (!Number.isSafeInteger(price) || price <= 0) throw new Error(`Harga item ke-${index + 1} harus berupa angka IDR lebih dari nol.`);
-      const key = `${name.toLowerCase()}|${affiliateUrl}`;
+      const key = `${name.toLowerCase()}|${affiliate.url}`;
       if (duplicateKeys.has(key)) throw new Error("Item yang sama tidak perlu ditambahkan dua kali.");
       duplicateKeys.add(key);
-      return { category, name, color_variant: colorLabel || null, price_idr: price, affiliate_url: affiliateUrl };
+      return { category, name, color_variant: colorLabel || null, price_idr: price, affiliate_url: affiliate.url, affiliate_platform: affiliate.marketplace };
     });
   }
 
@@ -1617,7 +1633,7 @@
       });
       uploadedPaths = galleryResult.uploadedPaths;
       const coverPath = galleryResult.media[0]?.image_path || existing.cover_image_path || null;
-      const { data, error } = await db.rpc("save_contributor_look", {
+      const { data, error } = await db.rpc("save_contributor_look_v2", {
         // Generate the UUID client-side so the Storage path and database row
         // always describe the same look on first publish.
         p_look_id: id,
@@ -1746,7 +1762,7 @@
     throw new Error("Gender produk harus pria, wanita, atau unisex.");
   }
 
-  function normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, category, importKey }) {
+  function normalizeProductPayload({ title, price, badge, styles, link, marketplace, variants, imageUrl, genderTarget, category, importKey }) {
     const name = String(title || "").trim();
     const amount = Number(price);
     const preparedVariants = Array.isArray(variants) ? variants.map((variant) => {
@@ -1764,12 +1780,14 @@
     if (!Number.isInteger(amount) || amount <= 0) throw new Error("Harga referensi harus berupa angka IDR yang lebih dari nol.");
     if (!preparedVariants.length) throw new Error("Produk memerlukan minimal satu varian warna.");
 
+    const affiliate = normalizeAffiliateLink(link, String(marketplace || "").trim().toLowerCase());
     return {
       title: name,
       price: amount,
       badge: controlledList([badge], PRODUCT_BADGE_OPTIONS.slice(1), { max: 1, aliases: PRODUCT_BADGE_ALIASES, label: "Badge produk" })[0] || "",
       styles: normalizeStyleTags(styles, { max: 3, label: "Tag style produk" }),
-      link: assertShopeeAffiliateUrl(link),
+      link: affiliate.url,
+      marketplace: affiliate.marketplace,
       variants: preparedVariants,
       imageUrl: assertImageUrl(imageUrl),
       genderTarget: normalizeGenderTarget(genderTarget),
@@ -1787,9 +1805,9 @@
     return new Map((data || []).map((variant) => [variant.label, variant.image_path || ""]));
   }
 
-  async function saveProduct({ title, price, badge, styles, link, variants, imageFile, imageUrl, imageAspect, genderTarget, category, importKey }) {
+  async function saveProduct({ title, price, badge, styles, link, marketplace, variants, imageFile, imageUrl, imageAspect, genderTarget, category, importKey }) {
     const db = getClient();
-    const payload = normalizeProductPayload({ title, price, badge, styles, link, variants, imageUrl, genderTarget, category, importKey });
+    const payload = normalizeProductPayload({ title, price, badge, styles, link, marketplace, variants, imageUrl, genderTarget, category, importKey });
     payload.styles = await ensureStyleTags(db, payload.styles);
     let existing = null;
     if (payload.importKey) {
@@ -1810,6 +1828,7 @@
         .insert({
           slug: uniqueSlug(payload.title),
           name: payload.title,
+          affiliate_platform: payload.marketplace,
           affiliate_url: payload.link,
           price_idr: payload.price,
           badges: payload.badge ? [payload.badge] : [],
@@ -1836,6 +1855,7 @@
       if (!created) {
         const updatePayload = {
           name: payload.title,
+          affiliate_platform: payload.marketplace,
           affiliate_url: payload.link,
           price_idr: payload.price,
           badges: payload.badge ? [payload.badge] : [],
@@ -1921,10 +1941,11 @@
           image_path: variant.imageUrl || (inheritsPreviousCover ? nextCoverPath : previous?.image_path) || nextCoverPath || null
         };
       });
-      const { error } = await db.rpc("update_sisip_product", {
+      const { error } = await db.rpc("update_comootd_product", {
         p_product_id: productId,
         p_title: payload.title,
         p_affiliate_url: payload.link,
+        p_affiliate_platform: payload.marketplace,
         p_price_idr: payload.price,
         p_badges: payload.badge ? [payload.badge] : [],
         p_style_tags: payload.styles,
@@ -1959,6 +1980,7 @@
           badge: group.badge,
           styles: group.styles,
           link: group.affiliateUrl,
+          marketplace: group.affiliatePlatform,
           variants: group.variants,
           imageUrl: group.coverImageUrl,
           genderTarget: group.genderTarget,
@@ -2189,7 +2211,8 @@
         .upsert({
           slug: productSlug,
           name: sourceProduct.name,
-          affiliate_url: assertShopeeAffiliateUrl(sourceProduct.affiliateUrl),
+          affiliate_platform: marketplaceFromAffiliateUrl(sourceProduct.affiliateUrl),
+          affiliate_url: assertAffiliateUrl(sourceProduct.affiliateUrl),
           price_idr: Number(sourceProduct.price || 0),
           badges: sourceProduct.badge ? [sourceProduct.badge] : [],
           style_tags: sourceProduct.styles || [],
