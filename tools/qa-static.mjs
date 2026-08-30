@@ -64,6 +64,10 @@ check(index.includes("background:var(--clay)") && !index.includes("background:va
 check(index.includes('candidatePool(state.looks, "look")') && index.includes('gender === preference.genderTarget || gender === "unisex"'), "Feed personal belum menyaring kandidat berdasarkan profil member");
 check(worker.includes('type:"style-directory"') && worker.includes("comootd_style_tags") && worker.includes("sitemap-(looks|products|journal|curators|styles)"), "Style landing page atau sitemap style belum lengkap");
 check(index.includes('value="tiktok_shop"') && index.includes('data-directory-filter="marketplace"'), "Input dan filter TikTok Shop belum tersedia");
+const styleNormalizationMigration = read("supabase/migrations/20260831103000_fix_style_taxonomy_whitespace_normalization.sql");
+check(styleNormalizationMigration.includes("'[[:space:]]+'"), "Normalisasi style harus memakai kelas whitespace POSIX");
+check(!styleNormalizationMigration.includes("E'\\s+'"), "Migration style masih berisiko menghapus huruf s");
+check(styleNormalizationMigration.includes("('Ca ual', 'Casual')") && styleNormalizationMigration.includes("('Japane e', 'Japanese')"), "Data style yang telanjur rusak belum dipulihkan");
 const curatorExperience = read("assets/curator-experience.js");
 check(curatorExperience.includes('dataset.archiveConfirmed') && curatorExperience.includes('textContent = "Mengarsipkan…"'), "Arsip curator belum memakai konfirmasi dan status proses yang terlihat");
 
