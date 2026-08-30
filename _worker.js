@@ -614,6 +614,26 @@ function responseHeaders({ cacheControl, indexable = true, contentType = "text/h
   };
 }
 
+function isProductionEnvironment(env) {
+  return String(env?.APP_ENV || "production").trim().toLowerCase() === "production";
+}
+
+function withOperationalHeaders(response, env) {
+  const headers = new Headers(response.headers);
+  headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  headers.set("X-Frame-Options", "SAMEORIGIN");
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("X-COMOOTD-Environment", isProductionEnvironment(env) ? "production" : "staging");
+  if (!isProductionEnvironment(env)) headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+}
+
 async function errorPage(request, env, status) {
   const title = status === 404 ? "Konten tidak tersedia — COMOOTD" : "COMOOTD sedang menyiapkan halaman ini";
   const description = status === 404 ? "Konten ini belum tersedia atau sudah tidak dipublikasikan." : "Coba muat ulang beberapa saat lagi.";
@@ -927,7 +947,13 @@ function staticSitemapEntries(env) {
     sitemapEntry(canonicalUrl(env, "/looks/curators"), { changefreq: "daily", priority: "0.8" }),
     sitemapEntry(canonicalUrl(env, "/products"), { changefreq: "daily", priority: "0.8" }),
     sitemapEntry(canonicalUrl(env, "/journal"), { changefreq: "weekly", priority: "0.8" }),
-    sitemapEntry(canonicalUrl(env, "/curators"), { changefreq: "weekly", priority: "0.7" })
+    sitemapEntry(canonicalUrl(env, "/curators"), { changefreq: "weekly", priority: "0.7" }),
+    sitemapEntry(canonicalUrl(env, "/about"), { changefreq: "monthly", priority: "0.6" }),
+    sitemapEntry(canonicalUrl(env, "/privacy"), { changefreq: "yearly", priority: "0.3" }),
+    sitemapEntry(canonicalUrl(env, "/terms"), { changefreq: "yearly", priority: "0.3" }),
+    sitemapEntry(canonicalUrl(env, "/curator-policy"), { changefreq: "monthly", priority: "0.4" }),
+    sitemapEntry(canonicalUrl(env, "/community-guidelines"), { changefreq: "monthly", priority: "0.4" }),
+    sitemapEntry(canonicalUrl(env, "/affiliate-info"), { changefreq: "yearly", priority: "0.3" })
   ];
 }
 
@@ -1015,16 +1041,29 @@ async function renderContentSitemap(env, type, page) {
 }
 
 function renderRobots(env) {
-  const body = [
-    "User-agent: *",
-    "Allow: /",
-    `Sitemap: ${canonicalUrl(env, "/sitemap.xml")}`,
-    ""
-  ].join("\n");
+  const body = isProductionEnvironment(env)
+    ? ["User-agent: *", "Allow: /", `Sitemap: ${canonicalUrl(env, "/sitemap.xml")}`, ""].join("\n")
+    : ["User-agent: *", "Disallow: /", ""].join("\n");
   return new Response(body, {
     headers: responseHeaders({
       contentType: "text/plain; charset=UTF-8",
       cacheControl: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+    })
+  });
+}
+
+function renderRuntimeConfig(env) {
+  const payload = {
+    supabaseUrl: String(env.SUPABASE_URL || ""),
+    supabasePublishableKey: String(env.SUPABASE_PUBLISHABLE_KEY || ""),
+    siteUrl: canonicalUrl(env, "/").replace(/\/$/, ""),
+    adminEmail: String(env.ADMIN_EMAIL || "albarifirdaus209@gmail.com")
+  };
+  return new Response(`window.SISIP_CONFIG = ${JSON.stringify(payload)};\n`, {
+    headers: responseHeaders({
+      contentType: "application/javascript; charset=UTF-8",
+      cacheControl: "no-store",
+      indexable: false
     })
   });
 }
@@ -1034,7 +1073,8 @@ export default {
     const isReadRequest = ["GET", "HEAD"].includes(request.method);
     const pathname = new URL(request.url).pathname;
     let response;
-    if (isReadRequest && pathname === "/robots.txt") response = renderRobots(env);
+    if (isReadRequest && pathname === "/config.js" && env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY) response = renderRuntimeConfig(env);
+    else if (isReadRequest && pathname === "/robots.txt") response = renderRobots(env);
     else if (isReadRequest && pathname === "/sitemap.xml") response = await renderSitemapIndex(env);
     else if (isReadRequest && pathname === "/sitemap-static.xml") response = await renderStaticSitemap(env);
     else {
@@ -1045,6 +1085,9 @@ export default {
         response = route ? await renderContentPage(request, env, route) : await env.ASSETS.fetch(request);
       }
     }
-    return request.method === "HEAD" ? new Response(null, { status: response.status, statusText: response.statusText, headers: response.headers }) : response;
+    const finalResponse = request.method === "HEAD"
+      ? new Response(null, { status: response.status, statusText: response.statusText, headers: response.headers })
+      : response;
+    return withOperationalHeaders(finalResponse, env);
   }
 };

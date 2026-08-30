@@ -1,10 +1,12 @@
-# Deploy SISIP
+# Deploy COMOOTD
+
+> Jangan deploy perubahan fitur langsung ke production. Gunakan alur `feature → develop/staging → main/production` di [docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md). Konfigurasi environment ada di [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md), dan prosedur pemulihan ada di [docs/ROLLBACK.md](docs/ROLLBACK.md).
 
 ## 1. GitHub
 
 Repository tujuan: `albarifirdaus/SISIP`.
 
-Jika koneksi GitHub di Codex menampilkan `Resource not accessible by integration`, sambungkan ulang GitHub dengan izin **Contents: Read and write** untuk repository ini, lalu publish folder proyek ini ke branch `main`.
+Perubahan rutin dikirim ke branch fitur atau `develop`. Branch `main` hanya menerima perubahan yang sudah lolos staging dan quality gate.
 
 Isi website berada di root repository:
 
@@ -24,7 +26,8 @@ supabase/migrations/
 3. Pilih framework **None**.
 4. Kosongkan build command dan set build output directory ke `.` (root repository).
 5. Deploy. Cloudflare akan memberi URL gratis `*.pages.dev`.
-6. Setelah deploy, buka URL tersebut lalu login ke SISIP Studio untuk mengimpor sample atau mulai mengisi katalog asli.
+6. Isi environment variables sesuai [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md). Untuk staging, wajib gunakan Supabase staging dan `APP_ENV=staging`.
+7. Setelah deploy, buka URL tersebut lalu login ke COMOOTD Studio untuk menguji alur kritis.
 
 Tidak ada environment variable rahasia yang dibutuhkan pada frontend ini. Supabase RLS yang membatasi akses tulis, bukan penyembunyian key browser.
 

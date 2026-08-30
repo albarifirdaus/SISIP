@@ -1,6 +1,6 @@
-# SISIP — curated fashion affiliate catalogue
+# COMOOTD — platform kurasi fashion Indonesia
 
-SISIP adalah katalog fashion all-gender untuk Indonesia: satu look berisi 2–5 produk, setiap produk memiliki satu link affiliate Shopee, dan warna/varian dapat dipakai ulang di look yang berbeda.
+COMOOTD adalah platform kurasi fashion all-gender untuk Indonesia: satu Look berisi 2–5 produk, dapat dibuat oleh COMOOTD atau curator, dibagikan melalui URL khusus, dan dihubungkan ke marketplace.
 
 ## Yang sudah siap
 
@@ -65,6 +65,15 @@ Rekomendasi pada bagian **Untuk Kamu** dihitung di browser dari data katalog pub
 ## Deploy
 
 Lihat [DEPLOY.md](DEPLOY.md) untuk langkah GitHub dan hosting. Untuk katalog affiliate live, gunakan host yang mengizinkan penggunaan komersial/affiliate; proyek ini siap untuk hosting static seperti Cloudflare Pages.
+
+Dokumen operasional Milestone 1:
+
+- [Environment staging dan production](docs/ENVIRONMENTS.md)
+- [Alur rilis](docs/RELEASE_WORKFLOW.md)
+- [Rollback dan pemulihan](docs/ROLLBACK.md)
+- [Tata kelola data](docs/DATA_GOVERNANCE.md)
+
+Jalankan `npm test` sebelum setiap pull request. Quality gate yang sama dijalankan otomatis untuk branch `develop`, `main`, dan pull request.
 
 ## Supabase
 

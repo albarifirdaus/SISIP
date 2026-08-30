@@ -1,0 +1,11 @@
+{
+  "name": "comootd-platform",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node tools/qa-static.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
