@@ -706,10 +706,17 @@
   function mapAuthUser(user) {
     if (!user?.id) return null;
     const email = String(user.email || "").trim().toLowerCase();
+    // Provider profile fields are presentation data only. Authorization still
+    // comes from the private role table and RLS, never from user metadata.
+    const displayName = [
+      user.user_metadata?.display_name,
+      user.user_metadata?.full_name,
+      user.user_metadata?.name
+    ].map((value) => String(value || "").trim()).find(Boolean) || "";
     return {
       id: user.id,
       email,
-      displayName: String(user.user_metadata?.display_name || "").trim(),
+      displayName,
       // This flag only controls the client experience. Supabase RLS remains the authority for admin access.
       isAdmin: isAdminEmail(email)
     };
@@ -739,6 +746,19 @@
     });
     if (error) throw error;
     return mapAuthUser(data?.user || null);
+  }
+
+  async function signInWithGoogle() {
+    const redirectUrl = authRedirectUrl();
+    if (!redirectUrl) throw new Error("Alamat kembali untuk Google Login belum dikonfigurasi.");
+    const callbackUrl = new URL(redirectUrl);
+    callbackUrl.searchParams.set("auth", "google");
+    const { data, error } = await getClient().auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: callbackUrl.toString() }
+    });
+    if (error) throw error;
+    return data;
   }
 
   async function signInAdmin(email, password) {
@@ -827,10 +847,15 @@
     ]);
     if (profileResult.error) throw profileResult.error;
     if (preferencesResult.error) throw preferencesResult.error;
+    const storedDisplayName = String(profileResult.data?.display_name || "").trim();
+    const providerDisplayName = String(user.displayName || "").trim();
+    const displayName = providerDisplayName && /^(?:sisip|comootd) member$/i.test(storedDisplayName)
+      ? providerDisplayName
+      : storedDisplayName || providerDisplayName || "COMOOTD Member";
     return {
       user,
       profile: {
-        displayName: String(profileResult.data?.display_name || user.displayName || "COMOOTD Member").trim()
+        displayName
       },
       preferences: mapMemberPreferences(preferencesResult.data)
     };
@@ -2389,6 +2414,7 @@
     isAdmin,
     signInAdmin,
     signInMember,
+    signInWithGoogle,
     signUpMember,
     resendMemberConfirmation,
     signOut,
@@ -2424,3 +2450,4 @@
     publicUrl
   };
 })();
+

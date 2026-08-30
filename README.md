@@ -7,7 +7,7 @@ SISIP adalah katalog fashion all-gender untuk Indonesia: satu look berisi 2–5 
 - Katalog responsive: pencarian, filter style/gender, urutan, detail look, link Shopee, dan Journal.
 - **SISIP Studio**: login admin, tambah produk + varian warna, tambah look, unggah gambar hingga 5 MB ke Supabase Storage, serta hapus data yang tidak dipakai look lain.
 - **New Series**: carousel beranda hingga lima look, lengkap dengan urutan yang dapat dipilih dari tab **New Series** di SISIP Studio.
-- **Akun member**: daftar/masuk dengan email, lalu pilih hingga 10 tag style, gender preferensi, serta budget. Preferensi hanya dapat dibaca oleh pemilik akun dan admin.
+- **Akun member**: masuk dengan Google atau daftar/masuk dengan email, lalu pilih hingga 10 tag style, gender preferensi, serta budget. Preferensi hanya dapat dibaca oleh pemilik akun dan admin.
 - **Untuk Kamu**: look dan produk published diurutkan dari kecocokan tag style, gender preferensi, dan budget—tanpa AI atau data pihak ketiga.
 - **Request Outfit**: member yang sudah masuk dapat mengirim brief langsung ke antrean **SISIP Studio → Requests**. Admin dapat membalas, menyimpan catatan internal, dan memilih hingga enam Look/produk published sebagai jawaban.
 - Data cloud Supabase dengan Row Level Security: publik hanya dapat membaca konten published; hanya `albarifirdaus209@gmail.com` yang dapat mengelola data.
@@ -30,6 +30,8 @@ Di Supabase Dashboard:
 4. Untuk live, aktifkan konfirmasi email. Di **Authentication → URL Configuration**, set Site URL ke `https://sisip-fashion.pages.dev` dan izinkan `https://sisip-fashion.pages.dev/**` pada Redirect URLs.
 5. Untuk mengubah nama yang terlihat di subject/isi email, buka **Authentication → Email Templates → Confirm signup** dan gunakan, misalnya, `Konfirmasi akun SISIP`. Nama pengirim branded `SISIP` memerlukan Custom SMTP serta domain email yang diverifikasi.
 6. Buka website, klik ikon Studio kanan atas, lalu masuk dengan akun admin tersebut.
+
+Untuk Google Login, aktifkan provider **Google** di Supabase dan gunakan callback `https://rbvrlfmsvmwjkisbwuim.supabase.co/auth/v1/callback`. Client Secret hanya disimpan di Google Cloud dan Supabase Dashboard; jangan menaruhnya di repository.
 
 Profil dan baris preferensi dibuat otomatis oleh trigger saat akun Auth dibuat. Password tidak pernah tersimpan di file proyek atau GitHub.
 
@@ -67,4 +69,5 @@ Lihat [DEPLOY.md](DEPLOY.md) untuk langkah GitHub dan hosting. Untuk katalog aff
 ## Supabase
 
 Dokumentasi migration dan keamanan ada di [supabase/README.md](supabase/README.md). Proyek Supabase yang terhubung sudah memiliki migration awal, hardening, dan izin function.
+
 

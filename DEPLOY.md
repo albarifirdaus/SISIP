@@ -36,6 +36,7 @@ Di Supabase Dashboard, buka **Authentication → URL Configuration**:
 - Tambahkan `https://sisip-fashion.pages.dev/**` pada **Redirect URLs**. Gunakan URL exact jika tidak membutuhkan path tambahan.
 - Tambahkan domain custom nanti jika sudah punya.
 - Di **Authentication → Providers → Email**, aktifkan email sign-up. Untuk website live, aktifkan juga konfirmasi email.
+- Di **Authentication → Providers → Google**, aktifkan provider dan simpan Client ID serta Client Secret dari Google Cloud. Authorized redirect URI Google harus persis `https://rbvrlfmsvmwjkisbwuim.supabase.co/auth/v1/callback`.
 
 Di **Authentication → Email Templates → Confirm signup**, subject dan isi email dapat memakai nama SISIP, misalnya subject `Konfirmasi akun SISIP`. Nama pengirim `SISIP` dengan alamat email branded memerlukan Custom SMTP dan domain email milikmu yang sudah diverifikasi.
 
@@ -51,4 +52,5 @@ Member dapat membuat akun sendiri untuk menyimpan preferensi dan request outfit.
 - Isi minimal satu artikel jika Journal ingin tampil di cloud.
 - Coba satu akun member: simpan preferensi, kirim Request Outfit, lalu balas lewat **SISIP Studio → Requests**.
 - Aktifkan leaked-password protection di Supabase Auth bila tersedia di paketmu.
+
 
