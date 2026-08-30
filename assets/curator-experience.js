@@ -45,9 +45,7 @@
     ["Olive", "#6C7047"], ["Ungu", "#765A83"], ["Silver", "#B9BBC0"],
     ["Gold", "#B89A52"], ["Multicolor", "#B8AEA1"]
   ];
-  const CURATOR_PROFILE_TAG_OPTIONS = [
-    "Clean", "Casual", "Formal", "Streetwear", "Modest",
-    "Sporty", "Vintage", "Korean-inspired", "Workwear", "Party",
+  const PERSONAL_PROFILE_TAG_OPTIONS = [
     "Stylist", "Fashion Creator", "Content Creator", "Creative Director",
     "Photographer", "Model", "Designer", "Writer", "Visual Artist",
     "Fashion Student", "Brand / Marketing", "Marketing", "Student",
@@ -106,6 +104,9 @@
       .map((item) => compact(typeof item === "string" ? item : item?.name))
       .filter(Boolean);
     return remote.length ? [...new Set(remote)] : STYLE_OPTIONS;
+  }
+  function curatorProfileTagOptions() {
+    return [...new Set([...activeStyleOptions(), ...PERSONAL_PROFILE_TAG_OPTIONS])];
   }
   function normaliseCustomStyleTag(value) {
     const tag = compact(value).slice(0, 48);
@@ -238,7 +239,7 @@
       displayName,
       avatarPath: raw.avatarPath || raw.avatar_path || profile.avatarPath || profile.avatar_path || "",
       bio: compact(raw.bio || raw.description || ""),
-      jobTags: controlledTagList(raw.jobTags ?? raw.job_tags ?? raw.tags, CURATOR_PROFILE_TAG_OPTIONS, 5),
+      jobTags: controlledTagList(raw.jobTags ?? raw.job_tags ?? raw.tags, curatorProfileTagOptions(), 5),
       heightCm: optionalMetric(raw.heightCm ?? raw.height_cm ?? bodyMetrics.heightCm ?? bodyMetrics.height_cm ?? bodyMetrics.height, 100, 250),
       weightKg: optionalMetric(raw.weightKg ?? raw.weight_kg ?? bodyMetrics.weightKg ?? bodyMetrics.weight_kg ?? bodyMetrics.weight, 25, 300, 1),
       bodyMetricsPublic: truthyFlag(raw.bodyMetricsPublic ?? raw.body_metrics_public ?? bodyMetrics.public ?? bodyMetrics.isPublic),
@@ -531,7 +532,7 @@
   function onboardMarkup() {
     return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / OPEN CURATOR</p><h2>Show Your<br />Point of View.</h2><p class="curator-onboard-copy">Buka profil curator gratis untuk membagikan hingga ${DEFAULT_QUOTA} look aktif. Tautan Shopee yang kamu cantumkan tetap milikmu.</p><form class="curator-form" data-curator-onboard-form>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorOnboardName">Nama tampil</label><input id="curatorOnboardName" name="displayName" maxlength="80" required placeholder="Nama kamu" /></div><div class="curator-field"><label for="curatorOnboardHandle">Handle</label><input id="curatorOnboardHandle" name="handle" minlength="3" maxlength="32" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required placeholder="contoh: araedits" autocomplete="off" /><p class="curator-file-note">3–32 karakter: huruf kecil, angka, _ atau -.</p></div></div>
-      ${controlledTagPickerMarkup({ name:"profileTags", options:CURATOR_PROFILE_TAG_OPTIONS, selected:[], maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}
+      ${controlledTagPickerMarkup({ name:"profileTags", options:curatorProfileTagOptions(), selected:[], maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}
       <div class="curator-field"><label for="curatorOnboardBio">Tentang edit kamu</label><textarea id="curatorOnboardBio" name="bio" maxlength="500" placeholder="Ceritakan sedikit sudut pandang atau pendekatan styling-mu."></textarea></div>
       <p class="curator-form-status" data-curator-onboard-status role="alert"></p><button class="button" type="submit">Aktifkan profil curator ↗</button></form></div>`;
   }
@@ -555,7 +556,7 @@
     return `<section class="curator-studio-panel" data-curator-studio-panel="profile"><p class="eyebrow" style="color:var(--clay)">YOUR PUBLIC PROFILE</p><h3>Make the profile<br />feel like you.</h3><p class="curator-studio-lede">Foto, tag fashion dan personal, bio, tautan sosial, serta detail tubuh opsional tampil di halaman shareable milikmu.</p>
       <form class="curator-form" data-curator-profile-form><div class="curator-profile-photo-row">${imageMarkup(curator.avatarPath, "", "curator-profile-avatar", curator.displayName)}<div class="curator-field" style="flex:1"><label for="curatorAvatarInput">Foto profil</label><input id="curatorAvatarInput" name="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" /><p class="curator-file-note">JPG, PNG, atau WebP. Maksimal 5 MB.</p></div></div>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorDisplayName">Nama tampil</label><input id="curatorDisplayName" name="displayName" maxlength="80" value="${esc(curator.displayName)}" required /></div><div class="curator-field"><label for="curatorHandle">Handle</label><input id="curatorHandle" name="handle" minlength="3" maxlength="32" value="${esc(curator.handle)}" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required /><p class="curator-file-note">Handle menjadi alamat profil kamu.</p></div></div>
-      ${controlledTagPickerMarkup({ name:"profileTags", options:CURATOR_PROFILE_TAG_OPTIONS, selected:curator.jobTags, maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}<div class="curator-field"><label for="curatorBio">Bio</label><textarea id="curatorBio" name="bio" maxlength="500" placeholder="Sudut pandang style kamu.">${esc(curator.bio)}</textarea></div>
+      ${controlledTagPickerMarkup({ name:"profileTags", options:curatorProfileTagOptions(), selected:curator.jobTags, maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}<div class="curator-field"><label for="curatorBio">Bio</label><textarea id="curatorBio" name="bio" maxlength="500" placeholder="Sudut pandang style kamu.">${esc(curator.bio)}</textarea></div>
       <div class="curator-form-grid"><div class="curator-field"><label for="curatorHeightCm">Tinggi badan (cm)</label><input id="curatorHeightCm" name="heightCm" type="number" min="100" max="250" step="1" inputmode="numeric" value="${esc(heightValue)}" placeholder="Contoh: 170" /></div><div class="curator-field"><label for="curatorWeightKg">Berat badan (kg)</label><input id="curatorWeightKg" name="weightKg" type="number" min="25" max="300" step="0.1" inputmode="decimal" value="${esc(weightValue)}" placeholder="Contoh: 58" /></div></div>
       <p class="curator-file-note">Tinggi dan berat badan bersifat opsional. Jika diisi, data akan otomatis tampil pada profil publik dan look yang kamu buat.</p>
       <div><p class="curator-inline-label">Social links</p><div class="curator-social-fields">${Object.entries(SOCIAL_LABELS).map(([platform, label]) => `<div class="curator-field"><label for="curatorSocial${platform}">${esc(label)}</label><input id="curatorSocial${platform}" name="social-${esc(platform)}" type="url" placeholder="https://" value="${esc(socialMap[platform] || "")}" /></div>`).join("")}</div></div>
@@ -825,7 +826,7 @@
     const payload = {
       displayName: compact(form.elements.displayName?.value),
       handle: safeHandle(form.elements.handle?.value),
-      profileTags: controlledValuesFromForm(form, "profileTags", CURATOR_PROFILE_TAG_OPTIONS, 5),
+      profileTags: controlledValuesFromForm(form, "profileTags", curatorProfileTagOptions(), 5),
       bio: compact(form.elements.bio?.value)
     };
     if (!/^[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?$/.test(payload.handle) || payload.handle.length < 3 || payload.handle.length > 32) { setFormStatus(status, "Handle harus 3–32 karakter dan hanya memakai huruf kecil, angka, _ atau -."); return; }
@@ -860,7 +861,7 @@
       displayName: compact(form.elements.displayName?.value),
       handle: safeHandle(form.elements.handle?.value),
       bio: compact(form.elements.bio?.value),
-      profileTags: controlledValuesFromForm(form, "profileTags", CURATOR_PROFILE_TAG_OPTIONS, 5),
+      profileTags: controlledValuesFromForm(form, "profileTags", curatorProfileTagOptions(), 5),
       avatarFile,
       heightCm,
       weightKg,
@@ -1047,3 +1048,4 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
   else start();
 })();
+
