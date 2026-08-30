@@ -153,8 +153,8 @@
     return normalizeStyleTags(canonical);
   }
 
-  async function existingStyleTags(db, styles) {
-    const requested = normalizeStyleTags(styles);
+  async function existingStyleTags(db, styles, { max = 3, label = "Tag style" } = {}) {
+    const requested = normalizeStyleTags(styles, { max, label });
     if (!requested.length) return [];
     const { data, error } = await db.from("comootd_style_tags").select("name,normalized_name").eq("is_active", true);
     if (error) throw error;
@@ -520,13 +520,13 @@
       return query.range(from, to);
     };
 
-    const styleTagsQuery = db
+    let styleTagsQuery = db
       .from("comootd_style_tags")
       .select("id,name,is_active,is_explore_visible,sort_order,preview_look_id")
-      .eq("is_active", true)
       .order("is_explore_visible", { ascending: false })
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
+    if (!admin) styleTagsQuery = styleTagsQuery.eq("is_active", true);
 
     const [productRows, lookRows, articleRows, newSeriesSlotRows, outfitRequestRows, curatorRows, styleTagRows] = await Promise.all([
       queryAllRows(productsQuery),
@@ -582,7 +582,7 @@
     const requests = admin
       ? outfitRequestRows.map((row) => mapOutfitRequest(row, { productMap, lookMap, includeAdminNote: true }))
       : [];
-    const styleTags = (styleTagRows || []).map((row) => ({ id:row.id, name:row.name, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0), previewLookId:row.preview_look_id || "" }));
+    const styleTags = (styleTagRows || []).map((row) => ({ id:row.id, name:row.name, isActive:row.is_active !== false, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0), previewLookId:row.preview_look_id || "" }));
     return { products, looks, articles, curators, styleTags, newSeriesSlots, newSeriesLookIds, requests };
   }
 
@@ -603,7 +603,23 @@
     const { data, error } = await getClient().rpc("ensure_comootd_style_tag", { p_name: name });
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
-    return { id:row?.id || "", name:row?.name || name, isExploreVisible:Boolean(row?.is_explore_visible), sortOrder:Number(row?.sort_order || 0), previewLookId:row?.preview_look_id || "" };
+    return { id:row?.id || "", name:row?.name || name, isActive:row?.is_active !== false, isExploreVisible:Boolean(row?.is_explore_visible), sortOrder:Number(row?.sort_order || 0), previewLookId:row?.preview_look_id || "" };
+  }
+
+  async function updateStyleTag({ id, name, isActive = true, isExploreVisible = false, sortOrder = 0 }) {
+    const tagId = String(id || "").trim();
+    if (!tagId) throw new Error("Style yang akan diperbarui belum valid.");
+    const tagName = normalizeStyleTagName(name);
+    const { data, error } = await getClient().rpc("admin_update_comootd_style_tag", {
+      p_id: tagId,
+      p_name: tagName,
+      p_is_active: Boolean(isActive),
+      p_is_explore_visible: Boolean(isExploreVisible),
+      p_sort_order: Math.max(0, Math.min(1000, Math.trunc(Number(sortOrder) || 0)))
+    });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return { id:row?.id || tagId, name:row?.name || tagName, isActive:row?.is_active !== false, isExploreVisible:Boolean(row?.is_explore_visible), sortOrder:Number(row?.sort_order || 0), previewLookId:row?.preview_look_id || "" };
   }
 
   async function getSession() {
@@ -887,10 +903,12 @@
       : onboardingInput.provided
         ? normalizeBoolean(onboardingInput.value, "Status onboarding")
         : previous.onboardingCompleted;
+    const requestedStyles = normalizeMemberTagList(pickPreference(["styleTags", "style_tags"], previous.styleTags), "Pilihan gaya", { max: 10 });
+    const controlledStyles = await existingStyleTags(db, requestedStyles, { max: 10, label: "Pilihan gaya" });
     const preferenceRow = {
       user_id: current.user.id,
       gender_target: normalizeGenderPreference(pickPreference(["genderTarget", "gender_target"], previous.genderTarget)),
-      style_tags: normalizeMemberTagList(pickPreference(["styleTags", "style_tags"], previous.styleTags), "Pilihan gaya", { max: 10 }),
+      style_tags: controlledStyles.map((style) => style.toLocaleLowerCase("id-ID")),
       budget_min_idr: budgetMin,
       budget_max_idr: budgetMax,
       onboarding_completed: Boolean(onboardingCompleted)
@@ -2118,7 +2136,9 @@
     try {
       const galleryResult = await uploadLookGallery({ input, lookId: id, existingMedia: existing.look_media || [], fallbackCoverPath: existing.cover_image_path || "", upload: (file, aspect) => uploadImage(file, "looks", id, aspect) });
       uploadedPaths = galleryResult.uploadedPaths;
-      const nextCoverPath = galleryResult.media[0]?.image_path || existing.cover_image_path || null;
+      const nextCoverPath = galleryResult.hasExplicitGallery
+        ? (galleryResult.media[0]?.image_path || null)
+        : (galleryResult.media[0]?.image_path || existing.cover_image_path || null);
       const { error } = await db.rpc("update_sisip_look", {
         p_look_id: id,
         p_title: String(title || "").trim(),
@@ -2408,6 +2428,7 @@
     loadState,
     getStyleTags,
     ensureStyleTag,
+    updateStyleTag,
     getSession,
     getCurrentUser,
     onAuthStateChange,
