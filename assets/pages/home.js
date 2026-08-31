@@ -163,9 +163,6 @@
         let journalDraftProductCtas = [];
         let memberViewer = null;
         let memberRequests = [];
-        let likedLookIds = new Set();
-        let memberAuthMode = "signin";
-        let pendingConfirmationEmail = "";
         let resendConfirmationCooldownUntil = 0;
         let resendConfirmationTimer;
         let resendConfirmationInFlight = false;
@@ -210,6 +207,20 @@
           button:document.getElementById("searchButton"),
           target:document.getElementById("lookbook"),
           input:els.search
+        });
+        const memberAuthentication = window.COMOOTDAuthentication.create({
+          elements:{
+            title:els.memberAuthTitle, copy:els.memberAuthCopy, displayNameField:els.memberDisplayNameField,
+            submit:els.memberAuthSubmit, switchButton:els.memberAuthSwitch, displayNameInput:els.memberDisplayNameInput,
+            passwordInput:els.memberPasswordInput, error:els.memberAuthError
+          },
+          onRenderResend:()=>renderMemberResendControl()
+        });
+        const lookLikes = window.COMOOTDLookLikes.create({
+          escapeHtml:esc, getLook, getCloud:()=>cloud, isCloudEnabled:cloudEnabled, isSignedIn:memberIsSignedIn,
+          notify:showToast, requireSignIn:openMemberAccount,
+          onUpdated:(entry)=>{ renderLooks(); renderNewSeries(); renderPersonalized(); renderDirectoryRoute(); if (els.lookModal.open) openLook(entry.id,{navigate:false}); },
+          emit:(detail)=>window.dispatchEvent(new CustomEvent("comootd:like-change",{detail}))
         });
 
         function loadState() {
@@ -513,7 +524,7 @@
         function renderMemberResendControl() {
           const button = els.memberResendConfirmation;
           if (!button) return;
-          const shouldShow = memberAuthMode === "signup" && Boolean(pendingConfirmationEmail);
+          const shouldShow = memberAuthentication.mode === "signup" && Boolean(memberAuthentication.pendingEmail);
           window.clearTimeout(resendConfirmationTimer);
           button.hidden = !shouldShow;
           if (!shouldShow) {
@@ -527,16 +538,7 @@
           if (!resendConfirmationInFlight && seconds > 0) resendConfirmationTimer = window.setTimeout(renderMemberResendControl, 1000);
         }
         function renderMemberAuth() {
-          const signup = memberAuthMode === "signup";
-          els.memberAuthTitle.textContent = signup ? "Buat profil gayamu." : "Masuk untuk menemukan yang lebih pas.";
-          els.memberAuthCopy.textContent = signup ? "Daftar dengan email untuk menyimpan preferensi dan menerima kurasi yang lebih relevan." : "Simpan preferensi style, dapatkan urutan look yang lebih relevan, dan kirim request outfit ke COMOOTD Studio.";
-          els.memberDisplayNameField.hidden = !signup;
-          els.memberAuthSubmit.innerHTML = signup ? `Buat akun <span aria-hidden="true">↗</span>` : `Masuk <span aria-hidden="true">↗</span>`;
-          els.memberAuthSwitch.textContent = signup ? "Sudah punya akun? Masuk dengan email" : "Belum punya akun? Daftar dengan email";
-          renderMemberResendControl();
-          els.memberDisplayNameInput.required = signup;
-          els.memberPasswordInput.setAttribute("autocomplete", signup ? "new-password" : "current-password");
-          els.memberAuthError.textContent = "";
+          memberAuthentication.render();
         }
         function renderMemberProfile() {
           if (!memberIsSignedIn()) return;
@@ -733,28 +735,10 @@
           return metrics.length ? `<p class="look-curator-metrics${compact ? " is-compact" : ""}" aria-label="Tinggi dan berat curator">${metrics.map(esc).join(" · ")}</p>` : "";
         }
         function lookLikeButton(entry, compact = false) {
-          const liked = likedLookIds.has(entry.id);
-          const label = liked ? "Disukai" : "Sukai look";
-          return `<button class="look-like-button${liked ? " is-liked" : ""}${compact ? " is-compact" : ""}" type="button" data-toggle-main-like="${esc(entry.id)}" aria-pressed="${String(liked)}" aria-label="${label} ${esc(entry.title)}"><span aria-hidden="true">♥</span><span>${entry.popularity || 0}</span></button>`;
+          return lookLikes.button(entry, compact);
         }
         async function toggleMainLookLike(lookId) {
-          const entry = getLook(lookId);
-          if (!entry) return;
-          if (!cloudEnabled() || typeof cloud?.toggleLookLike !== "function") { showToast("Fitur like aktif saat katalog cloud COMOOTD terhubung."); return; }
-          if (!memberIsSignedIn()) { showToast("Masuk untuk menyukai look."); openMemberAccount(); return; }
-          try {
-            const wasLiked = likedLookIds.has(lookId);
-            const result = await cloud.toggleLookLike(lookId);
-            const liked = Boolean(result?.liked);
-            if (liked) likedLookIds.add(lookId); else likedLookIds.delete(lookId);
-            entry.popularity = Math.max(0, Number(entry.popularity || 0) + (liked === wasLiked ? 0 : liked ? 1 : -1));
-            renderLooks();
-            renderNewSeries();
-            renderPersonalized();
-            renderDirectoryRoute();
-            if (els.lookModal.open) openLook(lookId, { navigate:false });
-            window.dispatchEvent(new CustomEvent("comootd:like-change", { detail: { source:"main", lookId, liked, delta:liked === wasLiked ? 0 : liked ? 1 : -1 } }));
-          } catch (error) { showToast(error?.message || "Like belum dapat disimpan."); }
+          await lookLikes.toggle(lookId);
         }
         function renderLooks() {
           const entries = [...state.looks].sort((a,b)=>Number(b.popularity||0)-Number(a.popularity||0)||Number(b.createdOrder||0)-Number(a.createdOrder||0)).slice(0,4);
@@ -1459,7 +1443,7 @@
           if (!cloudEnabled() || typeof cloud?.getMemberProfile !== "function") {
             memberViewer = null;
             memberRequests = [];
-            likedLookIds = new Set();
+            lookLikes.clear();
             cloudAdmin = false;
             updateMemberUi();
             return;
@@ -1468,8 +1452,8 @@
             memberViewer = await cloud.getMemberProfile();
             if (memberIsSignedIn() && typeof cloud?.loadMyOutfitRequests === "function") memberRequests = await cloud.loadMyOutfitRequests();
             else memberRequests = [];
-            if (memberIsSignedIn() && typeof cloud?.loadMyLookLikes === "function") likedLookIds = new Set(await cloud.loadMyLookLikes());
-            else likedLookIds = new Set();
+            if (memberIsSignedIn() && typeof cloud?.loadMyLookLikes === "function") lookLikes.replace(await cloud.loadMyLookLikes());
+            else lookLikes.clear();
             cloudAdmin = memberIsSignedIn() && typeof cloud?.isAdmin === "function" ? await cloud.isAdmin() : false;
             updateMemberUi();
             renderLooks();
@@ -1481,7 +1465,7 @@
             console.warn("Unable to load SISIP member session", error);
             memberViewer = null;
             memberRequests = [];
-            likedLookIds = new Set();
+            lookLikes.clear();
             cloudAdmin = false;
             updateMemberUi();
             renderLooks();
@@ -1931,10 +1915,7 @@
           } catch(error) { showToast("Sesi belum dapat diakhiri. Coba lagi."); }
         });
         els.memberAuthSwitch.addEventListener("click",()=>{
-          memberAuthMode = memberAuthMode === "signin" ? "signup" : "signin";
-          pendingConfirmationEmail="";
-          renderMemberAuth();
-          els.memberPasswordInput?.setAttribute("autocomplete", memberAuthMode === "signup" ? "new-password" : "current-password");
+          memberAuthentication.toggleMode();
         });
         els.memberAuthForm.addEventListener("submit",async(event)=>{
           event.preventDefault();
@@ -1947,10 +1928,10 @@
             const data=new FormData(form);
             const email=String(data.get("email")||"").trim();
             const password=String(data.get("password")||"");
-            if(memberAuthMode === "signup") {
+            if(memberAuthentication.mode === "signup") {
               const result=await cloud.signUpMember({email,password,displayName:String(data.get("displayName")||"").trim()});
               if(result?.needsEmailConfirmation) {
-                pendingConfirmationEmail=email;
+                memberAuthentication.setPendingEmail(email);
                 renderMemberAuth();
                 els.memberAuthError.textContent=result?.possiblyExistingAccount
                   ? "Jika email ini sudah pernah terdaftar, masuk dengan password yang sudah ada. Jika baru mendaftar, cek inbox, Spam, atau Promosi untuk email konfirmasi COMOOTD."
@@ -1973,7 +1954,7 @@
           }
         });
         els.memberResendConfirmation.addEventListener("click",async()=>{
-          const email=pendingConfirmationEmail||String(new FormData(els.memberAuthForm).get("email")||"").trim();
+          const email=memberAuthentication.pendingEmail||String(new FormData(els.memberAuthForm).get("email")||"").trim();
           if(resendConfirmationInFlight || resendConfirmationSecondsLeft() > 0) { renderMemberResendControl(); return; }
           resendConfirmationInFlight=true;
           renderMemberResendControl();
@@ -1981,7 +1962,7 @@
             if(!email) throw new Error("Masukkan email yang dipakai saat daftar terlebih dahulu.");
             if(typeof cloud.resendMemberConfirmation!=="function") throw new Error("Fitur kirim ulang belum siap. Muat ulang halaman lalu coba lagi.");
             await cloud.resendMemberConfirmation(email);
-            pendingConfirmationEmail=email;
+            memberAuthentication.setPendingEmail(email);
             resendConfirmationCooldownUntil=Date.now()+60000;
             els.memberAuthError.textContent="Permintaan email konfirmasi sudah diproses. Jika email masuk, gunakan link terbaru saja.";
           } catch(error) {
@@ -2083,7 +2064,7 @@
           const detail=event?.detail || {};
           if (detail.source === "main" || !detail.lookId) return;
           const lookId=String(detail.lookId);
-          if (detail.liked) likedLookIds.add(lookId); else likedLookIds.delete(lookId);
+          lookLikes.applyExternal(lookId,Boolean(detail.liked));
           const entry=getLook(lookId);
           if (entry) entry.popularity=Math.max(0,Number(entry.popularity||0)+Number(detail.delta||0));
           renderLooks(); renderNewSeries(); renderPersonalized(); renderDirectoryRoute();

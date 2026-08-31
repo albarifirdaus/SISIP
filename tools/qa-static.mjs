@@ -62,6 +62,8 @@ for (const asset of [
   "/assets/components/navigation.js",
   "/assets/components/filters.js",
   "/assets/features/curator-studio.js",
+  "/assets/features/authentication.js",
+  "/assets/features/look-likes.js",
   "/assets/features/platform-insights.js",
   "/assets/services/supabase.js",
   "/assets/styles/architectural-redesign.css"
@@ -83,7 +85,7 @@ for (const path of ["/about", "/privacy", "/terms", "/curator-policy", "/communi
   check(worker.includes(`"${path}"`), `${path} belum masuk sitemap`);
 }
 
-for (const file of ["_worker.js", "assets/pages/home.js", "assets/pages/catalogue-directory.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/components/notification.js", "assets/components/navigation.js", "assets/components/filters.js", "assets/services/supabase.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
+for (const file of ["_worker.js", "assets/pages/home.js", "assets/pages/catalogue-directory.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/components/notification.js", "assets/components/navigation.js", "assets/components/filters.js", "assets/services/supabase.js", "assets/features/authentication.js", "assets/features/look-likes.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const result = spawnSync(process.execPath, ["--check", resolve(root, file)], { encoding: "utf8" });
   check(result.status === 0, `${file} gagal syntax check: ${(result.stderr || result.stdout).trim()}`);
@@ -168,6 +170,27 @@ try {
   check(directory.readRoute()?.key === "products", "Page directory gagal mengenali route Products");
   directory.setFilter("category", "top");
   check(directory.filteredEntries(directory.readRoute()).length === 1, "Page directory gagal menyaring kategori produk");
+
+  runInNewContext(read("assets/features/authentication.js"), uiContext, { filename:"assets/features/authentication.js" });
+  const authElements = {
+    title:{ textContent:"" }, copy:{ textContent:"" }, displayNameField:{ hidden:true }, submit:{ innerHTML:"" }, switchButton:{ textContent:"" },
+    displayNameInput:{ required:false }, passwordInput:{ setAttribute:(name,value) => { authElements.passwordInput[name] = value; } }, error:{ textContent:"lama" }
+  };
+  const authentication = uiContext.window.COMOOTDAuthentication.create({ elements:authElements });
+  authentication.setMode("signup");
+  check(authentication.mode === "signup" && authElements.displayNameInput.required && authElements.passwordInput.autocomplete === "new-password", "Feature authentication gagal mengatur mode signup");
+  authentication.setPendingEmail("member@example.com");
+  check(authentication.pendingEmail === "member@example.com", "Feature authentication gagal menyimpan email konfirmasi sementara");
+
+  runInNewContext(read("assets/features/look-likes.js"), uiContext, { filename:"assets/features/look-likes.js" });
+  const likedEntry = { id:"look-1", title:"Clean Look", popularity:2 };
+  let likeUpdated = false;
+  const likes = uiContext.window.COMOOTDLookLikes.create({
+    escapeHtml:(value) => String(value), getLook:() => likedEntry, getCloud:() => ({ toggleLookLike:async() => ({ liked:true }) }),
+    isCloudEnabled:() => true, isSignedIn:() => true, notify:() => {}, requireSignIn:() => {}, onUpdated:() => { likeUpdated = true; }
+  });
+  await likes.toggle("look-1");
+  check(likes.has("look-1") && likedEntry.popularity === 3 && likeUpdated, "Feature look likes gagal menyinkronkan state dan popularity");
 } catch (error) {
   failures.push(`Uji komponen UI gagal: ${error?.message || error}`);
 }

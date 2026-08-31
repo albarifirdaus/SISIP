@@ -22,6 +22,8 @@ assets/
     notification.js                lifecycle toast/status sementara
     filters.js                     renderer filter style publik
   features/
+    authentication.js              state tampilan login/daftar member
+    look-likes.js                   lifecycle like Look dan sinkronisasi UI
     curator-studio.js              workflow dashboard curator
     curator-studio.css
     platform-insights.js           analytics, attribution, dan link health
