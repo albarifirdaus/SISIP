@@ -419,7 +419,8 @@
   }
   function profileSocialMarkup(curator) {
     const socials = curator.socials.filter((social) => /^https:\/\//i.test(social.url));
-    return `<div class="curator-socials">${socials.map((social) => `<a href="${esc(social.url)}" target="_blank" rel="noopener noreferrer">${esc(socialLabel(social.platform))} ↗</a>`).join("")}<button type="button" class="curator-share-button" data-share-curator="${esc(curator.handle)}">Bagikan profil ↗</button></div>`;
+    const follow = window.COMOOTDRetentionInstance?.followButton?.(curator.userId) || "";
+    return `<div class="curator-socials">${socials.map((social) => `<a href="${esc(social.url)}" target="_blank" rel="noopener noreferrer">${esc(socialLabel(social.platform))} ↗</a>`).join("")}${follow}<button type="button" class="curator-share-button" data-share-curator="${esc(curator.handle)}">Bagikan profil ↗</button></div>`;
   }
   function publicBodyMetricsMarkup(curator) {
     const metrics = [];
@@ -518,6 +519,7 @@
     } else {
       const curator = allCurators().find((entry) => entry.handle === route.handle);
       layer.innerHTML = curator ? profileMarkup(curator) : notFoundMarkup(route.handle);
+      if (curator) void window.COMOOTDRetentionInstance?.recordView?.("curator", curator.userId);
       document.title = curator ? `${curator.displayName} (@${curator.handle}) — COMOOTD` : "Curator tidak ditemukan — COMOOTD";
     }
     const back = layer.querySelector("[data-close-curator-route]");
@@ -1074,6 +1076,15 @@
       updateLookPopularity(id, Number(detail.delta || 0));
       renderHome();
       renderRoute();
+    });
+    window.addEventListener("comootd:retention-change", (event) => {
+      const followed = new Set((event?.detail?.followedCuratorIds || []).map(String));
+      document.querySelectorAll("[data-retention-follow]").forEach((button) => {
+        const active = followed.has(String(button.dataset.retentionFollow));
+        button.classList.toggle("is-followed", active);
+        button.setAttribute("aria-pressed", String(active));
+        button.textContent = active ? "Mengikuti ✓" : "Ikuti curator +";
+      });
     });
     installStudioCapture();
     installMemberPromptObserver();

@@ -65,6 +65,8 @@ for (const asset of [
   "/assets/features/authentication.js",
   "/assets/features/look-likes.js",
   "/assets/features/platform-insights.js",
+  "/assets/features/member-retention.js",
+  "/assets/features/member-retention.css",
   "/assets/services/supabase.js",
   "/assets/styles/architectural-redesign.css"
 ]) check(index.includes(asset), `Referensi aset baru belum terpasang: ${asset}`);
@@ -85,7 +87,7 @@ for (const path of ["/about", "/privacy", "/terms", "/curator-policy", "/communi
   check(worker.includes(`"${path}"`), `${path} belum masuk sitemap`);
 }
 
-for (const file of ["_worker.js", "assets/pages/home.js", "assets/pages/catalogue-directory.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/components/notification.js", "assets/components/navigation.js", "assets/components/filters.js", "assets/services/supabase.js", "assets/features/authentication.js", "assets/features/look-likes.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
+for (const file of ["_worker.js", "assets/pages/home.js", "assets/pages/catalogue-directory.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/components/notification.js", "assets/components/navigation.js", "assets/components/filters.js", "assets/services/supabase.js", "assets/features/authentication.js", "assets/features/look-likes.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/features/member-retention.js", "assets/public-content-pages.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const result = spawnSync(process.execPath, ["--check", resolve(root, file)], { encoding: "utf8" });
   check(result.status === 0, `${file} gagal syntax check: ${(result.stderr || result.stdout).trim()}`);
@@ -224,6 +226,13 @@ check(!styleNormalizationMigration.includes("E'\\s+'"), "Migration style masih b
 check(styleNormalizationMigration.includes("('Ca ual', 'Casual')") && styleNormalizationMigration.includes("('Japane e', 'Japanese')"), "Data style yang telanjur rusak belum dipulihkan");
 const curatorExperience = read("assets/features/curator-studio.js");
 check(curatorExperience.includes('dataset.archiveConfirmed') && curatorExperience.includes('textContent = "Mengarsipkan…"'), "Arsip curator belum memakai konfirmasi dan status proses yang terlihat");
+const retention = read("assets/features/member-retention.js");
+const retentionMigration = read("supabase/migrations/20260831190000_comootd_phase5_member_retention.sql");
+const retentionHardening = read("supabase/migrations/20260831191500_phase5_saved_items_security_invoker.sql");
+check(retention.includes("toggleSavedItem") && retention.includes("toggleCuratorFollow") && retention.includes("recordView"), "Fase 5 belum memuat save, follow, dan recently viewed");
+check(retention.includes("createMemberCollection") && appSource.includes('id="memberRetentionPanel"'), "Koleksi member belum terhubung ke profil");
+check(retentionMigration.includes("enable row level security") && retentionHardening.includes("security invoker") && retentionMigration.includes("set search_path = ''"), "Data retention belum memiliki RLS dan RPC terisolasi");
+check(appSource.includes("memberRetention.score(entry, type)") && appSource.includes("memberRetention.hasSignals()"), "Feed personal belum memakai sinyal aktivitas Fase 5");
 
 for (const file of ["index.html", "_worker.js", "config.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/services/supabase.js", "assets/features/curator-studio.js"]) {
   if (!existsSync(resolve(root, file))) continue;

@@ -23,7 +23,7 @@ Pekerjaan bergerak fase demi fase; milestone hanya menjadi checkpoint hasil.
 | 2 | Restrukturisasi kode menjadi pages, components, features, admin, dan services | **Selesai penuh** — Batch A–C terpisah, diuji, dan dapat di-rollback per deployment |
 | 3 | Homepage editorial storefront dan navigasi responsif | **Selesai** — storefront editorial, urutan homepage, dan navigasi responsif sudah terverifikasi |
 | 4 | Analytics, attribution, dashboard curator dan admin | **Selesai** — event production, attribution sesi, UTM builder, tren, dashboard role-scoped, dan leaderboard internal terverifikasi |
-| 5 | Retention dan personalisasi: save, collection, follow, recently viewed, feed | Belum dimulai sebagai fase formal |
+| 5 | Retention dan personalisasi: save, collection, follow, recently viewed, feed | **Selesai** — state privat, RLS, koleksi member, follow Curator, riwayat, dan ranking feed terverifikasi |
 | 6 | Moderasi dan pengajuan curator | Belum dimulai |
 | 7 | Link health dan multi-marketplace | Sebagian fondasi sudah tersedia; audit formal menunggu fase sebelumnya |
 | 8 | Privacy Center, Terms, consent, penghapusan akun, dan keamanan data | Halaman dasar tersedia; fitur privacy center belum dimulai |
@@ -82,3 +82,24 @@ Fase 1 baru dapat ditandai selesai penuh setelah Fase 1B disetujui dan aktif.
 `home.js` tetap menjadi orkestrator halaman selama migrasi bertahap. Ekstraksi
 panel lain boleh dilanjutkan sebagai maintenance internal setelah kontrak state
 dan event stabil, tanpa menahan dimulainya Fase 3.
+
+## Fase 5 — selesai
+
+- Member dapat menyimpan Look dan produk ke koleksi utama **Disimpan**.
+- Member dapat membuat koleksi tambahan, menambahkan item ke koleksi pilihan,
+  menghapus item, dan menghapus koleksi non-default dari profil.
+- Profil Curator memiliki aksi follow; daftar Curator yang diikuti hanya dapat
+  dibaca oleh akun pemilik.
+- Look, produk, dan Curator yang dibuka masuk ke riwayat privat, dibatasi pada
+  40 item terakhir.
+- Feed personal menggabungkan preferensi profil, item tersimpan, Curator yang
+  diikuti, dan pola style dari riwayat. Data aktivitas tidak pernah dipublikasikan.
+- Empat tabel retention memakai RLS owner-only dan privilege eksplisit.
+  Operasi RPC berjalan sebagai invoker; tes transaksi role `authenticated`
+  untuk save, follow, dan history lulus tanpa meninggalkan data uji.
+- UI lolos pemeriksaan desktop 1440 px dan ponsel 390 px tanpa overflow.
+- Tidak ada layanan, API, dependency, atau resource berbayar baru.
+
+Notification center pada Milestone 3 belum dianggap selesai. Notifikasi untuk
+moderasi/pengajuan Curator akan dibangun bersama Fase 6 agar sumber event dan
+hak aksesnya tidak dibuat dua kali.

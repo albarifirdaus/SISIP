@@ -5,7 +5,7 @@
     const {
       getState, esc, slugify, money, safeImage, marketplaces, productCategories,
       marketplaceOf, marketplaceLabel, lookVisual, productArt, lookAttribution,
-      curatorMetricsMarkup, lookLikeButton, articleCategoryLabel
+      curatorMetricsMarkup, lookLikeButton, saveButton, articleCategoryLabel
     } = options;
     if (typeof getState !== "function") throw new Error("Catalogue state provider is required.");
     const doc = options.document || window.document;
@@ -46,11 +46,11 @@
     }
 
     function lookCard(entry) {
-      return `<article class="catalogue-look-card"><button class="catalogue-look-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka ${esc(entry.title)}">${lookVisual(entry)}</button><div class="catalogue-look-copy"><p class="catalogue-look-attribution">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2 class="catalogue-look-title">${esc(entry.title)}</h2>${curatorMetricsMarkup(entry,true)}<div>${entry.styles.slice(0,3).map((style) => `<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry)}</div></article>`;
+      return `<article class="catalogue-look-card"><button class="catalogue-look-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka ${esc(entry.title)}">${lookVisual(entry)}</button><div class="catalogue-look-copy"><p class="catalogue-look-attribution">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2 class="catalogue-look-title">${esc(entry.title)}</h2>${curatorMetricsMarkup(entry,true)}<div>${entry.styles.slice(0,3).map((style) => `<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div><div class="catalogue-card-actions">${lookLikeButton(entry)}${saveButton?.("look",entry.id,true) || ""}</div></div></article>`;
     }
 
     function productCard(entry) {
-      return `<article class="catalogue-product-card"><button type="button" data-open-product="${esc(entry.id)}">${productArt(entry,entry.variants?.[0])}</button><div><p>${esc(entry.badge || "COMOOTD EDIT")} · ${esc(marketplaceLabel(entry))}</p><h2>${esc(entry.name)}</h2><span>${money(entry.price)}</span></div></article>`;
+      return `<article class="catalogue-product-card"><button type="button" data-open-product="${esc(entry.id)}">${productArt(entry,entry.variants?.[0])}</button><div><p>${esc(entry.badge || "COMOOTD EDIT")} · ${esc(marketplaceLabel(entry))}</p><h2>${esc(entry.name)}</h2><span>${money(entry.price)}</span>${saveButton?.("product",entry.id) || ""}</div></article>`;
     }
 
     function journalCard(entry) {

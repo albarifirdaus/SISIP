@@ -28,6 +28,8 @@ assets/
     curator-studio.css
     platform-insights.js           analytics, attribution, dan link health
     platform-insights.css
+    member-retention.js            save, collection, follow, history, dan sinyal feed
+    member-retention.css
   services/
     supabase.js                    satu pintu komunikasi data Supabase
   styles/
@@ -56,6 +58,18 @@ penyajian aset; logika antarmuka tidak boleh dipindahkan ke Worker.
   bulk import sudah mandiri; panel UI lainnya dipisahkan setelah kontrak state
   dan event-nya stabil. Selama transisi, fitur lama tetap kompatibel lewat
   namespace `window.COMOOTD*` dan `window.SISIP*` yang sudah digunakan aplikasi.
+
+## Batas data retention member
+
+- `member-retention.js` memiliki state interaksi di browser dan hanya berbicara
+  ke database melalui `services/supabase.js`.
+- `home.js` tetap menentukan kandidat katalog dan menambahkan skor dari feature;
+  feature retention tidak melakukan query katalog sendiri.
+- Koleksi, saved item, follow, dan recently viewed memakai RLS owner-only.
+  Identitas follower dan riwayat tidak mempunyai kebijakan baca publik.
+- Event `comootd:retention-change` hanya membawa snapshot akun aktif untuk
+  sinkronisasi komponen pada halaman yang sama; data tidak disimpan di
+  `localStorage` dan tidak dikirim ke analytics.
 
 ## Urutan migrasi aman
 

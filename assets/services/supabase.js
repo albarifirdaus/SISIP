@@ -1726,6 +1726,74 @@
     return { liked: Boolean(data) };
   }
 
+  async function loadMemberRetentionState() {
+    const user = await getCurrentUser();
+    if (!user) return { collections: [], savedItems: [], followedCuratorIds: [], recentlyViewed: [] };
+    const db = getClient();
+    const [collectionsResult, savedResult, followsResult, recentResult] = await Promise.all([
+      db.from("comootd_collections").select("id,name,is_default,created_at,updated_at").order("is_default", { ascending:false }).order("updated_at", { ascending:false }),
+      db.from("comootd_saved_items").select("collection_id,target_type,target_id,created_at").order("created_at", { ascending:false }),
+      db.from("comootd_curator_follows").select("curator_id,created_at").order("created_at", { ascending:false }),
+      db.from("comootd_recently_viewed").select("target_type,target_id,viewed_at").order("viewed_at", { ascending:false }).limit(40)
+    ]);
+    const failed = [collectionsResult, savedResult, followsResult, recentResult].find((result) => result.error);
+    if (failed?.error) throw failed.error;
+    return {
+      collections: (collectionsResult.data || []).map((row) => ({ id:row.id, name:row.name, isDefault:Boolean(row.is_default), createdAt:row.created_at, updatedAt:row.updated_at })),
+      savedItems: (savedResult.data || []).map((row) => ({ collectionId:row.collection_id, targetType:row.target_type, targetId:row.target_id, createdAt:row.created_at })),
+      followedCuratorIds: (followsResult.data || []).map((row) => row.curator_id).filter(Boolean),
+      recentlyViewed: (recentResult.data || []).map((row) => ({ targetType:row.target_type, targetId:row.target_id, viewedAt:row.viewed_at }))
+    };
+  }
+
+  async function toggleSavedItem(targetType, targetId, collectionId = null) {
+    const type = String(targetType || "").trim().toLowerCase();
+    if (!['look', 'product'].includes(type)) throw new Error("Jenis item belum valid.");
+    const id = assertUuid(targetId, "Item");
+    const collection = collectionId ? assertUuid(collectionId, "Koleksi") : null;
+    if (!(await getCurrentUser())) throw new Error("Masuk terlebih dahulu untuk menyimpan item.");
+    const { data, error } = await getClient().rpc("toggle_comootd_saved_item", {
+      p_target_type:type, p_target_id:id, p_collection_id:collection
+    });
+    if (error) throw error;
+    return { saved:Boolean(data) };
+  }
+
+  async function createMemberCollection(name) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Masuk terlebih dahulu untuk membuat koleksi.");
+    const cleanName = normalizeUserText(name, "Nama koleksi", { required:true, min:1, max:60 });
+    const { data, error } = await getClient().from("comootd_collections")
+      .insert({ user_id:user.id, name:cleanName, is_default:false })
+      .select("id,name,is_default,created_at,updated_at").single();
+    if (error) throw error;
+    return { id:data.id, name:data.name, isDefault:false, createdAt:data.created_at, updatedAt:data.updated_at };
+  }
+
+  async function deleteMemberCollection(collectionId) {
+    const id = assertUuid(collectionId, "Koleksi");
+    if (!(await getCurrentUser())) throw new Error("Masuk terlebih dahulu untuk menghapus koleksi.");
+    const { error } = await getClient().from("comootd_collections").delete().eq("id", id).eq("is_default", false);
+    if (error) throw error;
+  }
+
+  async function toggleCuratorFollow(curatorId) {
+    const id = assertUuid(curatorId, "Curator");
+    if (!(await getCurrentUser())) throw new Error("Masuk terlebih dahulu untuk mengikuti Curator.");
+    const { data, error } = await getClient().rpc("toggle_comootd_curator_follow", { p_curator_id:id });
+    if (error) throw error;
+    return { followed:Boolean(data) };
+  }
+
+  async function recordRecentView(targetType, targetId) {
+    const type = String(targetType || "").trim().toLowerCase();
+    if (!['look', 'product', 'curator'].includes(type)) return;
+    if (!(await getCurrentUser())) return;
+    const id = assertUuid(targetId, "Konten");
+    const { error } = await getClient().rpc("record_comootd_recent_view", { p_target_type:type, p_target_id:id });
+    if (error) throw error;
+  }
+
   function assertImageUrl(value) {
     const raw = String(value || "").trim();
     if (!raw) return "";
@@ -2543,6 +2611,12 @@
     setCuratorAccess,
     loadMyLookLikes,
     toggleLookLike,
+    loadMemberRetentionState,
+    toggleSavedItem,
+    createMemberCollection,
+    deleteMemberCollection,
+    toggleCuratorFollow,
+    recordRecentView,
     createOutfitRequest,
     loadMyOutfitRequests,
     loadOutfitRequests,
