@@ -64,6 +64,7 @@
     catalogue: { looks: [], curators: [] },
     user: null,
     curator: null,
+    application: null,
     liked: new Set(),
     studioTab: "looks",
     editingLook: null,
@@ -244,6 +245,7 @@
       avatarPath: raw.avatarPath || raw.avatar_path || profile.avatarPath || profile.avatar_path || "",
       bio: compact(raw.bio || raw.description || ""),
       jobTags: controlledTagList(raw.jobTags ?? raw.job_tags ?? raw.tags, curatorProfileTagOptions(), 5),
+      trustLevel: compact(raw.trustLevel ?? raw.trust_level ?? "emerging").toLowerCase(),
       heightCm: optionalMetric(raw.heightCm ?? raw.height_cm ?? bodyMetrics.heightCm ?? bodyMetrics.height_cm ?? bodyMetrics.height, 100, 250),
       weightKg: optionalMetric(raw.weightKg ?? raw.weight_kg ?? bodyMetrics.weightKg ?? bodyMetrics.weight_kg ?? bodyMetrics.weight, 25, 300, 1),
       bodyMetricsPublic: truthyFlag(raw.bodyMetricsPublic ?? raw.body_metrics_public ?? bodyMetrics.public ?? bodyMetrics.isPublic),
@@ -333,6 +335,12 @@
       return "";
     } catch { return ""; }
   }
+  function trustBadgeMarkup(curator) {
+    const level = compact(curator?.trustLevel || "emerging").toLowerCase();
+    if (level === "editorial") return `<span class="curator-trust-badge is-editorial">COMOOTD Editorial</span>`;
+    if (level === "verified") return `<span class="curator-trust-badge">Verified Curator</span>`;
+    return "";
+  }
 
   function ensureLayers() {
     if (!document.getElementById("curatorRouteLayer")) {
@@ -386,7 +394,7 @@
       <div class="curator-card-top curator-card-top--count"><span class="curator-card-number">${looks.length} CURATION${looks.length === 1 ? "" : "S"}</span></div>
       <div class="curator-card-person">
         ${imageMarkup(curator.avatarPath, "", "curator-avatar", curator.displayName)}
-        <div><h3 class="curator-card-name">${esc(curator.displayName)}</h3><p class="curator-card-handle">@${esc(curator.handle)}</p></div>
+        <div><h3 class="curator-card-name">${esc(curator.displayName)}</h3><p class="curator-card-handle">@${esc(curator.handle)}</p>${trustBadgeMarkup(curator)}</div>
       </div>
       <p class="curator-card-bio">${esc(curator.bio || "A personal edit of pieces worth repeating.")}</p>
       ${curator.jobTags.length ? `<div class="curator-card-tags">${curator.jobTags.slice(0, 3).map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>` : ""}
@@ -398,10 +406,11 @@
     if (!mount) return;
     const curators = allCurators();
     const hasCurator = Boolean(state.curator?.isActive !== false && state.curator?.handle);
+    const pending = state.application?.status === "submitted";
     const leadAction = state.user
       ? (hasCurator
         ? `<button class="button-outline" type="button" data-open-curator-studio>Open Curator Studio ↗</button>`
-        : `<button class="button-outline" type="button" data-open-curator-onboard>Jadi Curator ↗</button>`)
+        : `<button class="button-outline" type="button" data-open-curator-onboard>${pending ? "Lihat pengajuan" : "Ajukan jadi Curator"} ↗</button>`)
       : `<button class="button-outline" type="button" data-open-curator-account>Masuk untuk berkarya ↗</button>`;
     mount.innerHTML = `<section class="section curator-section" id="curators" aria-labelledby="curatorsTitle">
       <div class="section-heading">
@@ -473,7 +482,7 @@
           <div><p class="eyebrow" style="color:var(--clay)">COMOOTD CURATOR</p><h1 class="curator-profile-title" id="curatorProfileTitle">${esc(curator.displayName)}</h1><p class="curator-profile-handle">@${esc(curator.handle)}</p></div>
         </div>
         <div class="curator-profile-side">
-          <p class="curator-profile-bio">${esc(curator.bio || "Personal edits, styled with intention.")}</p>
+          ${trustBadgeMarkup(curator)}<p class="curator-profile-bio">${esc(curator.bio || "Personal edits, styled with intention.")}</p>
           ${curator.jobTags.length ? `<div class="curator-profile-tags">${curator.jobTags.map((tag) => `<span class="curator-tag">${esc(tag)}</span>`).join("")}</div>` : ""}
           ${publicBodyMetricsMarkup(curator)}
           ${profileSocialMarkup(curator)}
@@ -539,11 +548,21 @@
   }
 
   function onboardMarkup() {
-    return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / OPEN CURATOR</p><h2>Show Your<br />Point of View.</h2><p class="curator-onboard-copy">Buka profil curator gratis untuk membagikan hingga ${DEFAULT_QUOTA} look aktif. Tautan marketplace yang kamu cantumkan tetap milikmu.</p><form class="curator-form" data-curator-onboard-form>
-      <div class="curator-form-grid"><div class="curator-field"><label for="curatorOnboardName">Nama tampil</label><input id="curatorOnboardName" name="displayName" maxlength="80" required placeholder="Nama kamu" /></div><div class="curator-field"><label for="curatorOnboardHandle">Handle</label><input id="curatorOnboardHandle" name="handle" minlength="3" maxlength="32" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required placeholder="contoh: araedits" autocomplete="off" /><p class="curator-file-note">3–32 karakter: huruf kecil, angka, _ atau -.</p></div></div>
-      ${controlledTagPickerMarkup({ name:"profileTags", options:curatorProfileTagOptions(), selected:[], maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}
-      <div class="curator-field"><label for="curatorOnboardBio">Tentang edit kamu</label><textarea id="curatorOnboardBio" name="bio" maxlength="500" placeholder="Ceritakan sedikit sudut pandang atau pendekatan styling-mu."></textarea></div>
-      <p class="curator-form-status" data-curator-onboard-status role="alert"></p><button class="button" type="submit">Aktifkan profil curator ↗</button></form></div>`;
+    const application = state.application || {};
+    if (application.status === "submitted") {
+      return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / APPLICATION RECEIVED</p><h2>We are<br />reviewing it.</h2><div class="curator-application-status"><strong>Pengajuan @${esc(application.requestedHandle)}</strong><span>Dikirim ${esc(humanDate(application.submittedAt))}</span><p>Tim COMOOTD akan menilai orisinalitas, konsistensi point of view, dan kualitas referensi. Hasilnya muncul di notifikasi akunmu.</p></div><p class="curator-onboard-copy">Untuk berkas tambahan, hubungi <a href="mailto:comootd@gmail.com">comootd@gmail.com</a>.</p><button class="button-outline" type="button" data-withdraw-curator-application>Batalkan pengajuan</button></div>`;
+    }
+    const rejected = application.status === "rejected";
+    return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / CURATOR APPLICATION</p><h2>Show Your<br />Point of View.</h2><p class="curator-onboard-copy">Akun Curator hanya diaktifkan setelah peninjauan. Kami melihat sudut pandang, konsistensi konten, dan apakah referensimu membantu orang menemukan outfit dengan lebih mudah.</p>${rejected ? `<div class="curator-review-note"><strong>Pengajuan sebelumnya belum disetujui.</strong><p>${esc(application.adminNote || "Perbaiki informasi yang masih kurang, lalu kirim ulang.")}</p></div>` : ""}<form class="curator-form" data-curator-onboard-form>
+      <div class="curator-form-grid"><div class="curator-field"><label for="curatorOnboardName">Nama tampil</label><input id="curatorOnboardName" name="displayName" maxlength="80" required placeholder="Nama kamu" value="${esc(application.displayName || "")}" /></div><div class="curator-field"><label for="curatorOnboardHandle">Handle</label><input id="curatorOnboardHandle" name="handle" minlength="3" maxlength="32" pattern="[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?" required placeholder="contoh: araedits" autocomplete="off" value="${esc(application.requestedHandle || "")}" /><p class="curator-file-note">3–32 karakter: huruf kecil, angka, _ atau -.</p></div></div>
+      <div class="curator-field"><label for="curatorOnboardEmail">Email kontak</label><input id="curatorOnboardEmail" name="contactEmail" type="email" maxlength="254" required value="${esc(application.contactEmail || state.user?.email || "")}" /></div>
+      ${controlledTagPickerMarkup({ name:"profileTags", options:curatorProfileTagOptions(), selected:application.profileTags || [], maximum:5, label:"Fashion style & personal profile", note:"Pilih maksimal 5 tag yang menggambarkan style dan personal point of view-mu." })}
+      <div class="curator-field"><label for="curatorOnboardBio">Tentang edit kamu</label><textarea id="curatorOnboardBio" name="bio" maxlength="500" placeholder="Ceritakan sedikit sudut pandang atau pendekatan styling-mu.">${esc(application.bio || "")}</textarea></div>
+      <div class="curator-form-grid"><div class="curator-field"><label for="curatorOnboardInstagram">Instagram (opsional)</label><input id="curatorOnboardInstagram" name="instagramUrl" type="url" placeholder="https://instagram.com/..." value="${esc(application.instagramUrl || "")}" /></div><div class="curator-field"><label for="curatorOnboardTikTok">TikTok (opsional)</label><input id="curatorOnboardTikTok" name="tiktokUrl" type="url" placeholder="https://tiktok.com/@..." value="${esc(application.tiktokUrl || "")}" /></div></div>
+      <div class="curator-field"><label for="curatorOnboardPortfolio">Portofolio / link-in-bio (opsional)</label><input id="curatorOnboardPortfolio" name="portfolioUrl" type="url" placeholder="https://" value="${esc(application.portfolioUrl || "")}" /></div>
+      <div class="curator-field"><label for="curatorOnboardMotivation">Kenapa ingin menjadi Curator COMOOTD?</label><textarea id="curatorOnboardMotivation" name="motivation" minlength="20" maxlength="1200" required placeholder="Ceritakan jenis look yang ingin kamu kurasi, siapa audiensmu, dan bagaimana kamu menjaga konten tetap autentik.">${esc(application.motivation || "")}</textarea></div>
+      <p class="curator-file-note">Pengajuan masuk ke dashboard admin. Berkas tambahan dapat dikirim ke <a href="mailto:comootd@gmail.com">comootd@gmail.com</a>.</p>
+      <p class="curator-form-status" data-curator-onboard-status role="alert"></p><button class="button" type="submit">Kirim pengajuan Curator ↗</button></form></div>`;
   }
   function openAccount() {
     document.getElementById("accountButton")?.click();
@@ -552,10 +571,11 @@
     if (!state.user) { showToast("Masuk atau buat akun terlebih dahulu untuk membuka profil curator."); openAccount(); return; }
     const dialog = document.getElementById("curatorOnboardDialog");
     if (!dialog) return;
+    dialog.innerHTML = onboardMarkup();
     const input = dialog.querySelector("[name=displayName]");
     if (input && !input.value) input.value = compact(state.user.user_metadata?.display_name || state.user.user_metadata?.name || state.user.email?.split("@")[0] || "");
     if (!dialog.open) dialog.showModal();
-    window.setTimeout(() => dialog.querySelector("[name=handle]")?.focus(), 0);
+    window.setTimeout(() => dialog.querySelector("[name=handle], [data-withdraw-curator-application]")?.focus(), 0);
   }
 
   function profileEditorMarkup(curator) {
@@ -752,6 +772,7 @@
       state.catalogue = catalogue || { looks: [], curators: [] };
       state.user = user;
       state.curator = null;
+      state.application = null;
       state.liked = new Set();
       if (user?.id) {
         const jobs = [];
@@ -759,12 +780,15 @@
         else jobs.push(Promise.resolve(null));
         if (typeof api.loadMyLookLikes === "function") jobs.push(api.loadMyLookLikes());
         else jobs.push(Promise.resolve([]));
-        const [curatorRaw, likesRaw] = await Promise.all(jobs);
+        if (typeof api.getCuratorApplication === "function") jobs.push(api.getCuratorApplication());
+        else jobs.push(Promise.resolve(null));
+        const [curatorRaw, likesRaw, applicationRaw] = await Promise.all(jobs);
         if (version !== state.refreshVersion) return;
         // The adapter returns a wrapper for every signed-in member. Only the
         // nested `curator` value represents an activated Curator profile.
         const curatorSource = curatorRaw?.curator || (curatorRaw?.handle ? curatorRaw : null);
         if (curatorSource) state.curator = normaliseCurator(curatorSource);
+        state.application = applicationRaw || null;
         const likeRows = asArray(likesRaw?.likes || likesRaw);
         state.liked = new Set(likeRows.map((entry) => String(entry?.lookId || entry?.look_id || entry)).filter(Boolean));
       }
@@ -787,7 +811,8 @@
     const prompt = document.createElement("div");
     prompt.id = "curatorMemberPrompt";
     prompt.className = "curator-callout";
-    prompt.innerHTML = `<p><strong>Sudah punya sudut pandang sendiri?</strong><br />Buka profil Curator gratis untuk membagikan hingga ${DEFAULT_QUOTA} look dan tautan affiliate marketplace-mu.</p><button class="button-outline" type="button" data-open-curator-onboard>Jadi Curator ↗</button>`;
+    const pending = state.application?.status === "submitted";
+    prompt.innerHTML = `<p><strong>${pending ? "Pengajuan Curator sedang ditinjau." : "Sudah punya sudut pandang sendiri?"}</strong><br />${pending ? "Kami akan mengirim update ke notifikasi akunmu setelah tim mengambil keputusan." : "Ajukan profil Curator untuk membagikan look dan tautan marketplace setelah disetujui tim COMOOTD."}</p><button class="button-outline" type="button" data-open-curator-onboard>${pending ? "Lihat pengajuan" : "Ajukan jadi Curator"} ↗</button>`;
     profile.prepend(prompt);
   }
   function updateLookPopularity(id, amount) {
@@ -835,27 +860,47 @@
     const api = cloud();
     const status = form.querySelector("[data-curator-onboard-status]");
     const submit = form.querySelector("[type=submit]");
-    if (!api || typeof api.activateCurator !== "function") { setFormStatus(status, "Fitur Curator belum tersambung. Coba lagi sesaat lagi."); return; }
+    if (!api || typeof api.submitCuratorApplication !== "function") { setFormStatus(status, "Pengajuan Curator belum tersambung. Coba lagi sesaat lagi."); return; }
     const payload = {
       displayName: compact(form.elements.displayName?.value),
       handle: safeHandle(form.elements.handle?.value),
       profileTags: controlledValuesFromForm(form, "profileTags", curatorProfileTagOptions(), 5),
-      bio: compact(form.elements.bio?.value)
+      bio: compact(form.elements.bio?.value),
+      contactEmail: compact(form.elements.contactEmail?.value),
+      instagramUrl: compact(form.elements.instagramUrl?.value),
+      tiktokUrl: compact(form.elements.tiktokUrl?.value),
+      portfolioUrl: compact(form.elements.portfolioUrl?.value),
+      motivation: compact(form.elements.motivation?.value)
     };
     if (!/^[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?$/.test(payload.handle) || payload.handle.length < 3 || payload.handle.length > 32) { setFormStatus(status, "Handle harus 3–32 karakter dan hanya memakai huruf kecil, angka, _ atau -."); return; }
     submit.disabled = true;
-    setFormStatus(status, "Mengaktifkan profil…");
+    setFormStatus(status, "Mengirim pengajuan…");
     try {
-      await api.activateCurator(payload);
-      setFormStatus(status, "Profil curator aktif.", true);
+      await api.submitCuratorApplication(payload);
+      setFormStatus(status, "Pengajuan sudah dikirim.", true);
       await refresh({ quiet: false });
-      document.getElementById("curatorOnboardDialog")?.close();
-      state.studioTab = "profile";
-      openStudio();
-      showToast("Selamat datang di COMOOTD Curator.");
+      openOnboarding();
+      showToast("Pengajuan Curator sudah masuk ke tim COMOOTD.");
     } catch (error) {
-      setFormStatus(status, error?.message || "Profil curator belum dapat diaktifkan.");
+      setFormStatus(status, error?.message || "Pengajuan Curator belum dapat dikirim.");
     } finally { submit.disabled = false; }
+  }
+
+  async function withdrawApplication(button) {
+    const api = cloud();
+    if (!api || typeof api.withdrawCuratorApplication !== "function") return;
+    button.disabled = true;
+    button.textContent = "Membatalkan…";
+    try {
+      await api.withdrawCuratorApplication();
+      await refresh({ quiet:false });
+      document.getElementById("curatorOnboardDialog")?.close();
+      showToast("Pengajuan Curator dibatalkan.");
+    } catch (error) {
+      showToast(error?.message || "Pengajuan belum dapat dibatalkan.");
+      button.disabled = false;
+      button.textContent = "Batalkan pengajuan";
+    }
   }
   async function submitProfile(form) {
     const api = cloud();
@@ -965,6 +1010,8 @@
     if (event.target.closest("[data-open-curator-account]")) { openAccount(); return; }
     if (event.target.closest("[data-open-curator-studio]")) { openStudio(); return; }
     if (event.target.closest("[data-close-curator-onboard]")) { document.getElementById("curatorOnboardDialog")?.close(); return; }
+    const withdraw = event.target.closest("[data-withdraw-curator-application]");
+    if (withdraw) { withdrawApplication(withdraw); return; }
     if (event.target.closest("[data-close-curator-studio]")) { document.getElementById("curatorStudioDialog")?.close(); return; }
     const studioTab = event.target.closest("[data-curator-studio-tab]");
     if (studioTab) { state.editingLook = null; renderStudio(studioTab.dataset.curatorStudioTab); return; }

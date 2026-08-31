@@ -34,6 +34,7 @@
     <link rel="stylesheet" href="/assets/pages/home-storefront.css" />
     <link rel="stylesheet" href="/assets/features/platform-insights.css" />
     <link rel="stylesheet" href="/assets/features/member-retention.css" />
+    <link rel="stylesheet" href="/assets/features/phase6-moderation.css" />
   </head>
   <body>
     <a class="skip-link" href="#siteMain">Lewati ke konten utama</a>
@@ -388,6 +389,10 @@
             <p class="form-error" id="memberProfileError" role="alert"></p>
             <button class="button" type="submit">Simpan preferensi <span aria-hidden="true">↗</span></button>
           </form>
+          <section class="studio-section member-notification-section" id="memberNotificationPanel" aria-label="Notifikasi akun">
+            <div class="member-notification-head"><div><h3>Notifikasi</h3><p>Update pengajuan Curator dan status moderasi muncul di sini.</p></div><button class="small-button muted" id="markAllNotificationsRead" type="button" hidden>Tandai dibaca</button></div>
+            <div class="member-notification-list" id="memberNotificationList"><p class="microcopy">Belum ada notifikasi.</p></div>
+          </section>
           <section class="studio-section member-retention-section" id="memberRetentionPanel" aria-label="Koleksi dan aktivitas akun"></section>
           <section class="studio-section" style="margin-top:2rem">
             <h3>Request kamu</h3>
@@ -597,6 +602,11 @@
         </div>
 
         <div class="studio-panel" id="studioCuratorsPanel" data-studio-panel="curators">
+          <section class="studio-section">
+            <h3>Pengajuan Curator</h3>
+            <p>Setujui hanya akun dengan point of view yang jelas, referensi autentik, dan rencana konten yang relevan. Semua keputusan dikirim sebagai notifikasi privat.</p>
+            <div class="studio-list" id="studioCuratorApplicationsList"></div>
+          </section>
           <section class="studio-section">
             <h3>Curator access &amp; quota</h3>
             <p>Starter dimulai dari 30 look aktif. Kamu dapat menaikkan, menurunkan, atau menonaktifkan akun jika diperlukan.</p>

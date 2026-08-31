@@ -163,6 +163,8 @@
         let journalDraftProductCtas = [];
         let memberViewer = null;
         let memberRequests = [];
+        let memberNotifications = [];
+        let curatorApplications = [];
         let resendConfirmationCooldownUntil = 0;
         let resendConfirmationTimer;
         let resendConfirmationInFlight = false;
@@ -547,6 +549,17 @@
         function renderMemberAuth() {
           memberAuthentication.render();
         }
+        function renderMemberNotifications() {
+          const list=document.getElementById("memberNotificationList");
+          const markAll=document.getElementById("markAllNotificationsRead");
+          if(!list || !markAll) return;
+          const unread=memberNotifications.filter((item)=>!item.readAt).length;
+          markAll.hidden=unread===0;
+          list.innerHTML=memberNotifications.length?memberNotifications.map((item)=>{
+            const created=item.createdAt?new Date(item.createdAt).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"}):"";
+            return `<article class="member-notification${item.readAt?"":" is-unread"}" data-notification-id="${esc(item.id)}"><div><p class="eyebrow">${esc(created)}${item.readAt?"":" · BARU"}</p><h4>${esc(item.title)}</h4><p>${esc(item.message)}</p></div>${item.actionUrl?`<a class="small-button muted" href="${esc(item.actionUrl)}">Buka ↗</a>`:""}</article>`;
+          }).join(""):`<p class="microcopy">Belum ada notifikasi.</p>`;
+        }
         function renderMemberProfile() {
           if (!memberIsSignedIn()) return;
           const profile = memberViewer?.profile || {};
@@ -558,15 +571,18 @@
           form.elements.budgetMin.value = preference.budgetMin || "";
           form.elements.budgetMax.value = preference.budgetMax || "";
           els.memberProfileError.textContent = "";
+          renderMemberNotifications();
           memberRetention.renderPanel(els.memberRetentionPanel);
           renderMemberRequests();
         }
         function updateMemberUi() {
           const signedIn = memberIsSignedIn();
-          const label = signedIn ? `Profil ${memberDisplayName()}` : "Masuk atau buka profil COMOOTD";
+          const unread=memberNotifications.filter((item)=>!item.readAt).length;
+          const label = signedIn ? `Profil ${memberDisplayName()}${unread?`, ${unread} notifikasi baru`:""}` : "Masuk atau buka profil COMOOTD";
           els.accountButton.setAttribute("aria-label", label);
           els.accountButton.title = label;
-          els.mobileAccountButton.textContent = signedIn ? `Profil ${memberDisplayName()}` : "Masuk / Profil";
+          els.accountButton.classList.toggle("has-unread",unread>0);
+          els.mobileAccountButton.textContent = signedIn ? `Profil ${memberDisplayName()}${unread?` · ${unread} baru`:""}` : "Masuk / Profil";
           els.requestSubmitButton.innerHTML = signedIn ? `Kirim request ke Studio <span aria-hidden="true">↗</span>` : `Masuk untuk mengirim <span aria-hidden="true">↗</span>`;
           if (signedIn) prefillRequestForm();
           renderMemberRequests();
@@ -985,11 +1001,21 @@
         }
         function renderCuratorAdmin() {
           const list=document.getElementById("studioCuratorsList");
-          if(!list) return;
+          const applicationList=document.getElementById("studioCuratorApplicationsList");
+          if(!list || !applicationList) return;
           if(!cloudEnabled() || !cloudAdmin) {
             list.innerHTML=`<p class="microcopy" style="color:var(--taupe)">Masuk sebagai admin untuk mengatur Curator.</p>`;
+            applicationList.innerHTML=`<p class="microcopy" style="color:var(--taupe)">Masuk sebagai admin untuk melihat pengajuan.</p>`;
             return;
           }
+          const pendingApplications=curatorApplications.filter((item)=>item.status==="submitted");
+          const pendingMarkup=pendingApplications.length?pendingApplications.map((item)=>{
+            const links=[item.instagramUrl&&`<a href="${esc(item.instagramUrl)}" target="_blank" rel="noopener">Instagram ↗</a>`,item.tiktokUrl&&`<a href="${esc(item.tiktokUrl)}" target="_blank" rel="noopener">TikTok ↗</a>`,item.portfolioUrl&&`<a href="${esc(item.portfolioUrl)}" target="_blank" rel="noopener">Portofolio ↗</a>`].filter(Boolean).join(" · ");
+            return `<article class="curator-application-card" data-curator-application-id="${esc(item.id)}"><div class="curator-application-summary"><p class="eyebrow">@${esc(item.requestedHandle)} · ${esc(item.contactEmail)}</p><h4>${esc(item.displayName)}</h4><p>${esc(item.bio||"Belum ada bio.")}</p><div class="curator-application-tags">${(item.profileTags||[]).map((tag)=>`<span>${esc(tag)}</span>`).join("")}</div>${links?`<p class="curator-application-links">${links}</p>`:""}<blockquote>${esc(item.motivation)}</blockquote></div><div class="curator-application-review"><label>Trust level<select data-application-trust><option value="emerging">Emerging</option><option value="verified">Verified</option><option value="editorial">Editorial</option></select></label><label>Limit look<input data-application-limit type="number" min="0" max="1000" step="1" value="30" /></label><label>Catatan keputusan<textarea data-application-note maxlength="1000" placeholder="Alasan atau arahan perbaikan"></textarea></label><div class="studio-row-actions"><button class="small-button" type="button" data-review-curator-application="approved">Setujui</button><button class="small-button danger" type="button" data-review-curator-application="rejected">Tolak</button></div></div></article>`;
+          }).join(""):`<p class="microcopy" style="color:var(--taupe)">Tidak ada pengajuan baru.</p>`;
+          const reviewedApplications=curatorApplications.filter((item)=>item.status==="approved"||item.status==="rejected").slice(0,20);
+          const historyMarkup=reviewedApplications.length?`<div class="curator-application-history"><h4>Riwayat keputusan</h4>${reviewedApplications.map((item)=>`<div class="studio-row"><p><strong>${esc(item.displayName)}</strong><span>@${esc(item.requestedHandle)} · ${item.status==="approved"?"Disetujui":"Ditolak"}${item.adminNote?` · ${esc(item.adminNote)}`:""}</span></p></div>`).join("")}</div>`:"";
+          applicationList.innerHTML=pendingMarkup+historyMarkup;
           const activeLookCounts=new Map();
           (state.looks||[]).filter((look)=>look.status!=="archived").forEach((look)=>{
             const creatorId=String(look.creatorId||look.creator_id||"");
@@ -1005,8 +1031,9 @@
             const rawQuota=Number(curator.maxPublishedLooks??curator.activeLookLimit??30);
             const quota=Number.isInteger(rawQuota)&&rawQuota>=0&&rawQuota<=1000?rawQuota:30;
             const active=curator.isActive!==false;
+            const trust=String(curator.trustLevel||"emerging");
             const lookCount=activeLookCounts.get(id)||0;
-            return `<div class="studio-row curator-admin-row" data-curator-admin-row data-curator-admin-id="${esc(id)}"><p><strong>${esc(name)}</strong><span>@${esc(handle||"tanpa-handle")} · ${lookCount} look aktif · ${active?"Aktif":"Dinonaktifkan"}</span></p><div class="curator-admin-actions"><label>Limit <input data-curator-limit type="number" min="0" max="1000" step="1" value="${quota}" inputmode="numeric" /></label><label><input data-curator-active type="checkbox"${active?" checked":""} /> Aktif</label><button class="small-button muted" type="button" data-save-curator-access>Simpan</button></div></div>`;
+            return `<div class="studio-row curator-admin-row" data-curator-admin-row data-curator-admin-id="${esc(id)}"><p><strong>${esc(name)}</strong><span>@${esc(handle||"tanpa-handle")} · ${lookCount} look aktif · ${active?"Aktif":"Dinonaktifkan"}</span></p><div class="curator-admin-actions"><label>Trust <select data-curator-trust><option value="emerging"${trust==="emerging"?" selected":""}>Emerging</option><option value="verified"${trust==="verified"?" selected":""}>Verified</option><option value="editorial"${trust==="editorial"?" selected":""}>Editorial</option></select></label><label>Limit <input data-curator-limit type="number" min="0" max="1000" step="1" value="${quota}" inputmode="numeric" /></label><label><input data-curator-active type="checkbox"${active?" checked":""} /> Aktif</label><button class="small-button muted" type="button" data-save-curator-access>Simpan</button></div></div>`;
           }).join(""):`<p class="microcopy" style="color:var(--taupe)">Belum ada akun Curator.</p>`;
         }
         function renderStudio() {
@@ -1453,6 +1480,7 @@
           if (!cloudEnabled() || typeof cloud?.getMemberProfile !== "function") {
             memberViewer = null;
             memberRequests = [];
+            memberNotifications = [];
             lookLikes.clear();
             cloudAdmin = false;
             updateMemberUi();
@@ -1464,6 +1492,8 @@
             else memberRequests = [];
             if (memberIsSignedIn() && typeof cloud?.loadMyLookLikes === "function") lookLikes.replace(await cloud.loadMyLookLikes());
             else lookLikes.clear();
+            if (memberIsSignedIn() && typeof cloud?.loadNotifications === "function") memberNotifications = await cloud.loadNotifications();
+            else memberNotifications = [];
             await memberRetention.hydrate();
             cloudAdmin = memberIsSignedIn() && typeof cloud?.isAdmin === "function" ? await cloud.isAdmin() : false;
             updateMemberUi();
@@ -1476,6 +1506,7 @@
             console.warn("Unable to load SISIP member session", error);
             memberViewer = null;
             memberRequests = [];
+            memberNotifications = [];
             lookLikes.clear();
             await memberRetention.hydrate();
             cloudAdmin = false;
@@ -1505,7 +1536,10 @@
           try {
             cloudAdmin = await cloud.isAdmin();
             if (!cloudAdmin) { openAuth(); return; }
-            await refreshCloudState({ admin: true });
+            const jobs=[refreshCloudState({ admin: true })];
+            if(typeof cloud?.loadCuratorApplications === "function") jobs.push(cloud.loadCuratorApplications().then((items)=>{curatorApplications=items||[];}));
+            await Promise.all(jobs);
+            renderCuratorAdmin();
             updateStudioMode();
             openStudioDrawer();
           } catch (error) {
@@ -2082,6 +2116,16 @@
           renderLooks(); renderNewSeries(); renderPersonalized(); renderDirectoryRoute();
           if (els.lookModal.open && entry) openLook(lookId,{navigate:false});
         });
+        document.getElementById("markAllNotificationsRead").addEventListener("click",async(event)=>{
+          const button=event.currentTarget;
+          button.disabled=true;
+          try {
+            await cloud.markNotificationRead();
+            memberNotifications=await cloud.loadNotifications();
+            renderMemberNotifications();
+          } catch(error) { showToast(error?.message||"Notifikasi belum dapat diperbarui."); }
+          finally { button.disabled=false; }
+        });
         els.memberGoogleAuthButton.addEventListener("click",async()=>{
           els.memberAuthError.textContent="";
           const button=els.memberGoogleAuthButton;
@@ -2123,6 +2167,7 @@
           const row=button.closest("[data-curator-admin-row]");
           const userId=String(row?.dataset.curatorAdminId||"").trim();
           const active=Boolean(row?.querySelector("[data-curator-active]")?.checked);
+          const trustLevel=String(row?.querySelector("[data-curator-trust]")?.value||"emerging");
           const limit=Number(row?.querySelector("[data-curator-limit]")?.value);
           if(!userId || !Number.isInteger(limit) || limit<0 || limit>1000) {
             showToast("Limit Curator harus berupa angka antara 0 dan 1000.");
@@ -2132,13 +2177,37 @@
           button.disabled=true;
           button.textContent="Menyimpan…";
           try {
-            await cloud.setCuratorAccess({userId,isActive:active,activeLookLimit:limit});
+            await cloud.setCuratorAccess({userId,isActive:active,activeLookLimit:limit,trustLevel});
             await refreshCloudState({admin:true});
             showToast(active?"Akses dan limit Curator disimpan.":"Akun Curator dinonaktifkan.");
           } catch(error) {
             showToast(error?.message||"Pengaturan Curator belum dapat disimpan.");
           } finally {
             if(document.body.contains(button)) { button.disabled=false; button.textContent=originalLabel; }
+          }
+        });
+        document.getElementById("studioCuratorApplicationsList").addEventListener("click",async(event)=>{
+          const button=event.target.closest("[data-review-curator-application]");
+          if(!button || !cloudEnabled() || !cloudAdmin) return;
+          const card=button.closest("[data-curator-application-id]");
+          const applicationId=String(card?.dataset.curatorApplicationId||"");
+          const decision=String(button.dataset.reviewCuratorApplication||"");
+          const adminNote=String(card?.querySelector("[data-application-note]")?.value||"").trim();
+          const trustLevel=String(card?.querySelector("[data-application-trust]")?.value||"emerging");
+          const activeLookLimit=Number(card?.querySelector("[data-application-limit]")?.value||30);
+          if(decision==="rejected" && adminNote.length<10) { showToast("Tambahkan alasan penolakan agar pemohon tahu apa yang perlu diperbaiki."); return; }
+          button.disabled=true;
+          const original=button.textContent;
+          button.textContent="Memproses…";
+          try {
+            await cloud.reviewCuratorApplication({applicationId,decision,adminNote,trustLevel,activeLookLimit});
+            const [applications]=await Promise.all([cloud.loadCuratorApplications(),refreshCloudState({admin:true})]);
+            curatorApplications=applications||[];
+            renderCuratorAdmin();
+            showToast(decision==="approved"?"Pengajuan disetujui dan akses Curator aktif.":"Keputusan sudah dikirim ke pemohon.");
+          } catch(error) {
+            showToast(error?.message||"Pengajuan belum dapat diproses.");
+            if(document.body.contains(button)) { button.disabled=false; button.textContent=original; }
           }
         });
         els.journalBlocks.addEventListener("click",(event)=>{ const button=event.target.closest("[data-remove-journal-block]"); if(!button)return; journalDraftBlocks.splice(Number(button.dataset.removeJournalBlock),1); renderJournalBlockEditor(); });

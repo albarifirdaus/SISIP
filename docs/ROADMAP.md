@@ -24,7 +24,7 @@ Pekerjaan bergerak fase demi fase; milestone hanya menjadi checkpoint hasil.
 | 3 | Homepage editorial storefront dan navigasi responsif | **Selesai** — storefront editorial, urutan homepage, dan navigasi responsif sudah terverifikasi |
 | 4 | Analytics, attribution, dashboard curator dan admin | **Selesai** — event production, attribution sesi, UTM builder, tren, dashboard role-scoped, dan leaderboard internal terverifikasi |
 | 5 | Retention dan personalisasi: save, collection, follow, recently viewed, feed | **Selesai** — state privat, RLS, koleksi member, follow Curator, riwayat, dan ranking feed terverifikasi |
-| 6 | Moderasi dan pengajuan curator | Belum dimulai |
+| 6 | Moderasi dan pengajuan curator | **Selesai** — pengajuan terkontrol, approval admin, trust level, suspensi, dan notifikasi privat terverifikasi |
 | 7 | Link health dan multi-marketplace | Sebagian fondasi sudah tersedia; audit formal menunggu fase sebelumnya |
 | 8 | Privacy Center, Terms, consent, penghapusan akun, dan keamanan data | Halaman dasar tersedia; fitur privacy center belum dimulai |
 
@@ -100,6 +100,23 @@ dan event stabil, tanpa menahan dimulainya Fase 3.
 - UI lolos pemeriksaan desktop 1440 px dan ponsel 390 px tanpa overflow.
 - Tidak ada layanan, API, dependency, atau resource berbayar baru.
 
-Notification center pada Milestone 3 belum dianggap selesai. Notifikasi untuk
-moderasi/pengajuan Curator akan dibangun bersama Fase 6 agar sumber event dan
-hak aksesnya tidak dibuat dua kali.
+Notification center pada Milestone 3 diselesaikan bersama Fase 6 agar sumber
+event moderasi dan hak akses privatnya menggunakan satu sistem yang sama.
+
+## Fase 6 — selesai
+
+- Akun member tidak dapat lagi mengaktifkan role Curator secara mandiri.
+- Pengajuan Curator memuat identitas publik, tag profil, kontak, tautan sosial,
+  portofolio, dan alasan pengajuan; statusnya hanya dapat dibaca pemohon atau admin.
+- Admin dapat menyetujui atau menolak pengajuan, memberikan catatan, menentukan
+  kuota, dan menetapkan trust level `emerging`, `verified`, atau `editorial`.
+- Approval membuat role serta profil Curator secara atomik; penolakan tidak
+  memberikan akses publik dan dapat diajukan ulang setelah diperbaiki.
+- Moderasi Curator aktif mencakup perubahan trust level, kuota, serta suspensi.
+- Notification center privat memberi tahu hasil pengajuan dan perubahan akses.
+- Tabel baru memakai RLS, privilege eksplisit, indeks foreign key, dan satu
+  policy read gabungan. Implementasi berprivilege berada di schema privat;
+  RPC publik berjalan sebagai invoker dan tidak dapat dipanggil akun anonim.
+- Tes transaksi member → admin → member untuk submit, approval, aktivasi,
+  notifikasi, mark-as-read, withdraw, serta rollback berhasil.
+- Tidak ada layanan, API, dependency, atau resource berbayar baru.

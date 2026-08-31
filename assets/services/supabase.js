@@ -325,6 +325,7 @@
       name,
       bio: String(row.bio || "").trim(),
       jobTags: controlledStoredList(row.job_tags, CURATOR_PROFILE_TAG_OPTIONS),
+      trustLevel: String(row.trust_level || "emerging").trim().toLowerCase(),
       avatarPath,
       avatar: publicUrl(avatarPath),
       maxPublishedLooks: Number(row.active_look_limit || 30),
@@ -542,7 +543,7 @@
     const curatorProfilesQuery = (from, to) => {
       let query = db
         .from("curator_profiles")
-        .select("user_id, handle, display_name, bio, job_tags, avatar_path, active_look_limit, is_active, created_at")
+        .select("user_id, handle, display_name, bio, job_tags, avatar_path, active_look_limit, is_active, trust_level, created_at")
         .order("created_at", { ascending: false })
         .order("user_id", { ascending: true });
       if (!admin) query = query.eq("is_active", true);
@@ -1497,7 +1498,7 @@
     const db = getClient();
     const [profileResult, curatorResult, socialResult, metricsResult] = await Promise.all([
       db.from("profiles").select("id, display_name, avatar_path").eq("id", user.id).maybeSingle(),
-      db.from("curator_profiles").select("user_id, handle, display_name, bio, job_tags, avatar_path, active_look_limit, is_active").eq("user_id", user.id).maybeSingle(),
+      db.from("curator_profiles").select("user_id, handle, display_name, bio, job_tags, avatar_path, active_look_limit, is_active, trust_level").eq("user_id", user.id).maybeSingle(),
       db.from("contributor_social_links").select("id, contributor_id, platform, url, sort_order").eq("contributor_id", user.id).order("sort_order", { ascending: true }),
       db.from("curator_body_metrics").select("user_id,height_cm,weight_kg,is_public").eq("user_id", user.id).maybeSingle()
     ]);
@@ -1518,31 +1519,114 @@
     return Boolean(profile?.curator?.isActive);
   }
 
-  async function activateCurator(input) {
+  function optionalHttpsUrl(value, label) {
+    const text = normalizeUserText(value, label, { max: 500 });
+    if (!text) return null;
+    let parsed;
+    try { parsed = new URL(text); } catch { throw new Error(`${label} harus berupa alamat web lengkap.`); }
+    if (parsed.protocol !== "https:") throw new Error(`${label} harus menggunakan https://.`);
+    return parsed.href;
+  }
+
+  function mapCuratorApplication(row) {
+    if (!row) return null;
+    return {
+      id: row.id,
+      applicantId: row.applicant_id,
+      displayName: row.display_name,
+      requestedHandle: row.requested_handle,
+      contactEmail: row.contact_email,
+      bio: row.bio || "",
+      profileTags: asArray(row.profile_tags),
+      instagramUrl: row.instagram_url || "",
+      tiktokUrl: row.tiktok_url || "",
+      portfolioUrl: row.portfolio_url || "",
+      motivation: row.motivation || "",
+      status: row.status,
+      adminNote: row.admin_note || "",
+      submittedAt: row.submitted_at,
+      reviewedAt: row.reviewed_at
+    };
+  }
+
+  async function getCuratorApplication() {
+    const user = await getCurrentUser();
+    if (!user) return null;
+    const { data, error } = await getClient().from("curator_applications").select("*").eq("applicant_id", user.id).maybeSingle();
+    if (error) throw error;
+    return mapCuratorApplication(data);
+  }
+
+  async function submitCuratorApplication(input) {
     const source = assertObject(input, "Profil Curator");
     const user = await getCurrentUser();
-    if (!user) throw new Error("Masuk terlebih dahulu untuk menjadi Curator.");
+    if (!user) throw new Error("Masuk terlebih dahulu untuk mengajukan akun Curator.");
     const handle = normalizeCuratorHandle(source.handle);
     const bio = normalizeUserText(source.bio, "Bio Curator", { max: 500 });
     const jobTags = normalizeCuratorTags(source.profileTags ?? source.profile_tags ?? source.jobTags ?? source.job_tags, "Tag profil curator", { max: 5 });
-    // Keep the member identity and the first public Curator identity in sync.
-    // The activation RPC deliberately owns role/quota changes; this regular
-    // owner-only update only persists the display name typed in onboarding.
-    const displayNameInput = firstDefined(source, ["displayName", "display_name"]);
-    if (displayNameInput.provided) {
-      const { error: profileError } = await getClient()
-        .from("profiles")
-        .update({ display_name: normalizeDisplayName(displayNameInput.value) })
-        .eq("id", user.id);
-      if (profileError) throw profileError;
-    }
-    const { data, error } = await getClient().rpc("activate_comootd_curator", {
-      p_handle: handle,
+    const displayName = normalizeDisplayName(source.displayName ?? source.display_name);
+    const contactEmail = normalizeEmail(source.contactEmail ?? source.contact_email ?? user.email);
+    const motivation = normalizeUserText(source.motivation, "Alasan pengajuan", { required: true, min: 20, max: 1200 });
+    const { data, error } = await getClient().rpc("submit_comootd_curator_application", {
+      p_display_name: displayName,
+      p_requested_handle: handle,
+      p_contact_email: contactEmail,
       p_bio: bio || null,
-      p_job_tags: jobTags
+      p_profile_tags: jobTags,
+      p_instagram_url: optionalHttpsUrl(source.instagramUrl ?? source.instagram_url, "Link Instagram"),
+      p_tiktok_url: optionalHttpsUrl(source.tiktokUrl ?? source.tiktok_url, "Link TikTok"),
+      p_portfolio_url: optionalHttpsUrl(source.portfolioUrl ?? source.portfolio_url, "Link portofolio"),
+      p_motivation: motivation
     });
     if (error) throw error;
-    return data;
+    return mapCuratorApplication(data);
+  }
+
+  async function withdrawCuratorApplication() {
+    const { data, error } = await getClient().rpc("withdraw_comootd_curator_application");
+    if (error) throw error;
+    return mapCuratorApplication(data);
+  }
+
+  async function loadCuratorApplications() {
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk melihat pengajuan Curator.");
+    const { data, error } = await getClient().from("curator_applications").select("*").order("submitted_at", { ascending: false });
+    if (error) throw error;
+    return (data || []).map(mapCuratorApplication);
+  }
+
+  async function reviewCuratorApplication({ applicationId, decision, adminNote, trustLevel = "emerging", activeLookLimit = 30 }) {
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk meninjau pengajuan Curator.");
+    const id = assertUuid(applicationId, "Pengajuan Curator");
+    const status = String(decision || "").trim().toLowerCase();
+    if (!["approved", "rejected"].includes(status)) throw new Error("Keputusan pengajuan belum valid.");
+    const note = normalizeUserText(adminNote, "Catatan admin", { max: 1000 });
+    const limit = Number(activeLookLimit);
+    if (!Number.isInteger(limit) || limit < 0 || limit > 1000) throw new Error("Limit Look harus berupa angka antara 0 dan 1000.");
+    const { data, error } = await getClient().rpc("admin_review_comootd_curator_application", {
+      p_application_id: id,
+      p_decision: status,
+      p_admin_note: note || null,
+      p_trust_level: String(trustLevel || "emerging").trim().toLowerCase(),
+      p_active_look_limit: limit
+    });
+    if (error) throw error;
+    return mapCuratorApplication(data);
+  }
+
+  async function loadNotifications() {
+    const user = await getCurrentUser();
+    if (!user) return [];
+    const { data, error } = await getClient().from("comootd_notifications").select("id,kind,title,message,action_url,read_at,created_at").order("created_at", { ascending: false }).limit(30);
+    if (error) throw error;
+    return (data || []).map((row) => ({ id:row.id, kind:row.kind, title:row.title, message:row.message, actionUrl:row.action_url || "", readAt:row.read_at, createdAt:row.created_at }));
+  }
+
+  async function markNotificationRead(notificationId = null) {
+    const id = notificationId ? assertUuid(notificationId, "Notifikasi") : null;
+    const { data, error } = await getClient().rpc("mark_comootd_notification_read", { p_notification_id:id });
+    if (error) throw error;
+    return Number(data || 0);
   }
 
   async function saveCuratorProfile(input) {
@@ -1691,7 +1775,7 @@
     if (error) throw error;
   }
 
-  async function setCuratorAccess({ userId, isActive, activeLookLimit }) {
+  async function setCuratorAccess({ userId, isActive, activeLookLimit, trustLevel = "emerging" }) {
     if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk mengatur Curator.");
     const curatorId = assertUuid(userId, "Akun Curator");
     if (typeof isActive !== "boolean") throw new Error("Status Curator belum valid.");
@@ -1699,10 +1783,13 @@
     if (!Number.isInteger(lookLimit) || lookLimit < 0 || lookLimit > 1000) {
       throw new Error("Limit Look harus berupa angka antara 0 dan 1000.");
     }
-    const { data, error } = await getClient().rpc("admin_set_comootd_curator_access", {
+    const trust = String(trustLevel || "emerging").trim().toLowerCase();
+    if (!["emerging", "verified", "editorial"].includes(trust)) throw new Error("Trust level Curator belum valid.");
+    const { data, error } = await getClient().rpc("admin_moderate_comootd_curator", {
       p_user_id: curatorId,
       p_is_active: isActive,
-      p_active_look_limit: lookLimit
+      p_active_look_limit: lookLimit,
+      p_trust_level: trust
     });
     if (error) throw error;
     return data;
@@ -2603,7 +2690,13 @@
     saveMemberProfile,
     getCuratorProfile,
     isCurator,
-    activateCurator,
+    getCuratorApplication,
+    submitCuratorApplication,
+    withdrawCuratorApplication,
+    loadCuratorApplications,
+    reviewCuratorApplication,
+    loadNotifications,
+    markNotificationRead,
     saveCuratorProfile,
     createCuratorLook,
     updateCuratorLook,
