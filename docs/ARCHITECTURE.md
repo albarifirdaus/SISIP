@@ -9,6 +9,8 @@ publik hanya demi merapikan kode.
 ```text
 index.html                         shell dan markup halaman utama
 assets/
+  core/
+    utils.js                      fungsi murni format, sanitasi, ID, dan aspek gambar
   pages/
     home.css                       presentasi khusus halaman utama
     home.js                        orkestrasi state dan tampilan halaman utama
@@ -24,6 +26,8 @@ assets/
   styles/
     architectural-redesign.css     sistem visual lintas halaman
   vendor/                          library pihak ketiga yang disimpan lokal
+  admin/
+    bulk-import.js                 parsing dan validasi import produk/look
 ```
 
 Halaman publik lain tetap mempunyai folder rute sendiri. `_worker.js` hanya
@@ -40,9 +44,11 @@ penyajian aset; logika antarmuka tidak boleh dipindahkan ke Worker.
   Feature boleh memakai service, tetapi tidak menyalin akses Supabase sendiri.
 - **Services** menjadi pintu integrasi data atau pihak luar. Detail tabel, RPC,
   storage, dan autentikasi tidak boleh tersebar ke component baru.
-- **Admin** akan dipisahkan dari orkestrator `home.js` per panel setelah kontrak
-  state dan event-nya stabil. Selama transisi, fitur lama tetap kompatibel lewat
-  namespace `window.SISIP*` yang sudah digunakan aplikasi.
+- **Core** hanya berisi fungsi murni tanpa state halaman atau akses data.
+- **Admin** memuat logika khusus pengelolaan katalog. Mesin parsing dan validasi
+  bulk import sudah mandiri; panel UI lainnya dipisahkan setelah kontrak state
+  dan event-nya stabil. Selama transisi, fitur lama tetap kompatibel lewat
+  namespace `window.COMOOTD*` dan `window.SISIP*` yang sudah digunakan aplikasi.
 
 ## Urutan migrasi aman
 

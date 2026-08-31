@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
+import { runInNewContext } from "node:vm";
 
 const root = resolve(import.meta.dirname, "..");
 const failures = [];
@@ -49,6 +50,8 @@ check(!/<script(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i.test(index), "JavaScrip
 for (const asset of [
   "/assets/pages/home.css",
   "/assets/pages/home.js",
+  "/assets/core/utils.js",
+  "/assets/admin/bulk-import.js",
   "/assets/components/image-cropper.js",
   "/assets/features/curator-studio.js",
   "/assets/features/platform-insights.js",
@@ -64,10 +67,33 @@ for (const path of ["/about", "/privacy", "/terms", "/curator-policy", "/communi
   check(worker.includes(`"${path}"`), `${path} belum masuk sitemap`);
 }
 
-for (const file of ["_worker.js", "assets/pages/home.js", "assets/services/supabase.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
+for (const file of ["_worker.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/services/supabase.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const result = spawnSync(process.execPath, ["--check", resolve(root, file)], { encoding: "utf8" });
   check(result.status === 0, `${file} gagal syntax check: ${(result.stderr || result.stdout).trim()}`);
+}
+
+try {
+  const moduleContext = { window:{}, Intl, URL, Object, String, Number, Array, Map, Set, JSON, Date, Math, Error };
+  runInNewContext(read("assets/core/utils.js"), moduleContext, { filename:"assets/core/utils.js" });
+  const core = moduleContext.window.COMOOTDCore;
+  check(core.slugify("Korean Style") === "korean-style", "Core slugify tidak menghasilkan slug yang stabil");
+  check(core.imageAspect("look-square.webp") === "square", "Core image aspect gagal mengenali gambar square");
+  check(core.esc('<b class="x">') === "&lt;b class=&quot;x&quot;&gt;", "Core HTML escaping tidak aman");
+
+  runInNewContext(read("assets/admin/bulk-import.js"), moduleContext, { filename:"assets/admin/bulk-import.js" });
+  const bulk = moduleContext.window.COMOOTDBulkImport.create({
+    STYLE_ORDER:["Clean"], PRODUCT_BADGE_OPTIONS:["", "COMOOTD Pick"],
+    MARKETPLACES:{ shopee:{ label:"Shopee" } }, PRODUCT_CATEGORIES:{ top:"Atasan" },
+    BULK_IMPORT_MAX_ROWS:10, BULK_IMPORT_MAX_PRODUCTS:10,
+    BULK_LOOK_IMPORT_MAX_ROWS:10, BULK_LOOK_IMPORT_MAX_LOOKS:10,
+    marketplaceFromUrl:()=>"shopee", affiliateUrl:(value)=>String(value)
+  });
+  const matrix = bulk.parseCsvMatrix("product_key,name,affiliate_url,price_idr,color_name,style_tag_1,category\nTOP-1,Top,https://shope.ee/example,120000,Putih,Clean,top");
+  const result = bulk.validateBulkRows(bulk.matrixToBulkRows(matrix));
+  check(result.errors.length === 0 && result.groups.length === 1, "Modul bulk import gagal memvalidasi template produk yang sah");
+} catch (error) {
+  failures.push(`Uji modul frontend gagal: ${error?.message || error}`);
 }
 
 const insights = read("assets/features/platform-insights.js");
@@ -96,7 +122,7 @@ check(styleNormalizationMigration.includes("('Ca ual', 'Casual')") && styleNorma
 const curatorExperience = read("assets/features/curator-studio.js");
 check(curatorExperience.includes('dataset.archiveConfirmed') && curatorExperience.includes('textContent = "Mengarsipkan…"'), "Arsip curator belum memakai konfirmasi dan status proses yang terlihat");
 
-for (const file of ["index.html", "_worker.js", "config.js", "assets/pages/home.js", "assets/services/supabase.js", "assets/features/curator-studio.js"]) {
+for (const file of ["index.html", "_worker.js", "config.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/services/supabase.js", "assets/features/curator-studio.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const content = read(file);
   check(!/(service_role\s*[:=]\s*["'][A-Za-z0-9._-]{20,})/i.test(content), `${file} tampak memuat service role key`);
