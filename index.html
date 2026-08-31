@@ -31,9 +31,11 @@
     <link rel="stylesheet" href="/assets/features/curator-studio.css" />
     <link rel="stylesheet" href="/assets/pages/home.css" />
     <link rel="stylesheet" href="/assets/styles/architectural-redesign.css" />
+    <link rel="stylesheet" href="/assets/pages/home-storefront.css" />
     <link rel="stylesheet" href="/assets/features/platform-insights.css" />
   </head>
   <body>
+    <a class="skip-link" href="#siteMain">Lewati ke konten utama</a>
     <div class="utility-bar" aria-label="Informasi COMOOTD">
       <span>Kurasi Fashion Catalogue · Indonesia</span>
     </div>
@@ -67,15 +69,22 @@
         </div>
       </div>
       <nav class="mobile-nav" id="mobileNav" aria-label="Navigasi mobile">
-        <a href="/looks">Looks</a>
-        <a href="/products">Products</a>
-        <a href="#styles">Styles</a>
-        <a href="/curators">Curators</a>
-        <a href="/journal">Journal</a>
-        <a href="#request">Request outfit</a>
-        <a href="/about">Tentang COMOOTD</a>
-        <button class="button-outline" id="mobileAccountButton" type="button">Masuk / Profil</button>
-        <button class="button-outline" id="mobileStudioButton" type="button">Buka COMOOTD Studio</button>
+        <p class="mobile-nav-label">Explore COMOOTD</p>
+        <div class="mobile-nav-primary">
+          <a href="/looks"><span>01</span>Looks</a>
+          <a href="/products"><span>02</span>Products</a>
+          <a href="/curators"><span>03</span>Curators</a>
+          <a href="/journal"><span>04</span>Journal</a>
+        </div>
+        <div class="mobile-nav-secondary">
+          <a href="#styles">Styles</a>
+          <a href="#request">Request outfit</a>
+          <a href="/about">Tentang COMOOTD</a>
+        </div>
+        <div class="mobile-nav-actions">
+          <button class="button-outline" id="mobileAccountButton" type="button">Masuk / Profil</button>
+          <button class="button-outline" id="mobileStudioButton" type="button">Buka COMOOTD Studio</button>
+        </div>
       </nav>
     </header>
 
@@ -111,6 +120,38 @@
         </div>
       </div>
 
+      <section class="section storefront-index" aria-labelledby="storefrontTitle">
+        <div class="storefront-heading">
+          <div>
+            <p class="section-number eyebrow">COMOOTD / START HERE</p>
+            <h2 class="section-title" id="storefrontTitle">Explore the<br />Wardrobe System.</h2>
+          </div>
+          <p class="section-description">Mulai dari outfit utuh, telusuri item satu per satu, ikuti sudut pandang kurator, atau pahami alasan di balik setiap styling.</p>
+        </div>
+        <div class="storefront-grid">
+          <a class="storefront-card storefront-card--lead" href="/looks">
+            <span class="storefront-card-number">01 / LOOKS</span>
+            <span class="storefront-card-copy"><strong>Find the whole outfit.</strong><small>All looks · By COMOOTD · By Curators</small></span>
+            <span class="storefront-card-arrow" aria-hidden="true">↗</span>
+          </a>
+          <a class="storefront-card" href="/products">
+            <span class="storefront-card-number">02 / PRODUCTS</span>
+            <span class="storefront-card-copy"><strong>Build it piece by piece.</strong><small>Gender · Category · Price</small></span>
+            <span class="storefront-card-arrow" aria-hidden="true">↗</span>
+          </a>
+          <a class="storefront-card storefront-card--signal" href="/curators">
+            <span class="storefront-card-number">03 / CURATORS</span>
+            <span class="storefront-card-copy"><strong>Follow a point of view.</strong><small>Personal edits from real curators</small></span>
+            <span class="storefront-card-arrow" aria-hidden="true">↗</span>
+          </a>
+          <a class="storefront-card storefront-card--dark" href="/journal">
+            <span class="storefront-card-number">04 / JOURNAL</span>
+            <span class="storefront-card-copy"><strong>Understand why it works.</strong><small>Guides · Proportion · Color</small></span>
+            <span class="storefront-card-arrow" aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
+
       <section class="section" id="styles" aria-labelledby="stylesTitle">
         <div class="section-heading">
           <div>
@@ -122,34 +163,6 @@
           </div>
         </div>
         <div class="mood-list" id="moodList"></div>
-      </section>
-
-      <section class="section" aria-labelledby="popularTitle">
-        <div class="section-heading">
-          <div>
-            <h2 class="section-title" id="popularTitle">High-Rotation Items</h2>
-            <p class="section-deck">The Staples You’ll Repeat Non-Stop.</p>
-          </div>
-          <div class="section-lead">
-            <p class="section-description">Koleksi <em>fashion statement</em> dan <em>basic pieces</em> paling serbaguna yang terbukti gampang di-<em>styling</em> berkali-kali.</p>
-            <a class="text-link" href="/products">Explore products <span aria-hidden="true">↘</span></a>
-          </div>
-        </div>
-        <div class="popular-grid" id="popularGrid"></div>
-      </section>
-
-      <section class="section personal-section" id="forYou" aria-labelledby="forYouTitle">
-        <div class="section-heading">
-          <div>
-            <h2 class="section-title" id="forYouTitle">Tailored for You</h2>
-            <p class="section-deck">Built for Your Personal Aesthetic.</p>
-          </div>
-          <div class="section-lead">
-            <p class="section-description">Atur profil gayamu. Algoritma kurasi kami akan memfilter kombinasi outfit yang sesuai dengan karakter dan kebutuhan harianmu.</p>
-            <a class="text-link" href="/looks">Explore the curation <span aria-hidden="true">↘</span></a>
-          </div>
-        </div>
-        <div class="personal-grid" id="personalGrid"></div>
       </section>
 
       <section class="section lookbook-section" id="lookbook" aria-labelledby="lookbookTitle">
@@ -188,18 +201,50 @@
         <div class="look-grid" id="lookGrid" aria-live="polite"></div>
       </section>
 
+      <section class="section" aria-labelledby="popularTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-number eyebrow">COMOOTD / PRODUCT EDIT</p>
+            <h2 class="section-title" id="popularTitle">High-Rotation Items</h2>
+            <p class="section-deck">The Staples You’ll Repeat Non-Stop.</p>
+          </div>
+          <div class="section-lead">
+            <p class="section-description">Koleksi <em>fashion statement</em> dan <em>basic pieces</em> paling serbaguna yang terbukti gampang di-<em>styling</em> berkali-kali.</p>
+            <a class="text-link" href="/products">Explore products <span aria-hidden="true">↘</span></a>
+          </div>
+        </div>
+        <div class="popular-grid" id="popularGrid"></div>
+      </section>
+
       <div id="curatorsMount"></div>
 
       <section class="section dark" id="journal" aria-labelledby="journalTitle">
         <div class="section-heading">
           <div>
+            <p class="section-number eyebrow">COMOOTD / READ THE EDIT</p>
             <h2 class="section-title" id="journalTitle">Style is Science<br />&amp; Art Combined.</h2>
           </div>
           <div class="section-lead">
             <p class="section-description">Panduan praktis tentang permainan proporsi, kombinasi warna, dan strategi <em>mix-and-match</em> agar pakaianmu bekerja maksimal.</p>
+            <a class="text-link" href="/journal">Baca semua journal <span aria-hidden="true">↗</span></a>
           </div>
         </div>
         <div class="journal-grid" id="journalGrid"></div>
+      </section>
+
+      <section class="section personal-section" id="forYou" aria-labelledby="forYouTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-number eyebrow">COMOOTD / PERSONAL EDIT</p>
+            <h2 class="section-title" id="forYouTitle">Tailored for You</h2>
+            <p class="section-deck">Built for Your Personal Aesthetic.</p>
+          </div>
+          <div class="section-lead">
+            <p class="section-description">Atur profil gayamu. Algoritma kurasi kami akan memfilter kombinasi outfit yang sesuai dengan karakter dan kebutuhan harianmu.</p>
+            <a class="text-link" href="/looks">Explore the curation <span aria-hidden="true">↘</span></a>
+          </div>
+        </div>
+        <div class="personal-grid" id="personalGrid"></div>
       </section>
 
       <section class="section" id="request" aria-labelledby="requestTitle">

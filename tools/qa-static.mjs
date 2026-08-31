@@ -50,6 +50,7 @@ check(!/<script(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i.test(index), "JavaScrip
 check(homeScript.indexOf("const { slugify") < homeScript.indexOf("const SEED_PRODUCTS"), "Core utils harus diinisialisasi sebelum seed catalogue");
 for (const asset of [
   "/assets/pages/home.css",
+  "/assets/pages/home-storefront.css",
   "/assets/pages/home.js",
   "/assets/core/utils.js",
   "/assets/admin/bulk-import.js",
@@ -60,6 +61,14 @@ for (const asset of [
   "/assets/services/supabase.js",
   "/assets/styles/architectural-redesign.css"
 ]) check(index.includes(asset), `Referensi aset baru belum terpasang: ${asset}`);
+check(index.includes('class="skip-link"') && index.includes('href="#siteMain"'), "Homepage belum memiliki skip link ke konten utama");
+check(index.includes('class="storefront-grid"'), "Editorial storefront Fase 3 belum tersedia");
+for (const path of ["/looks", "/products", "/curators", "/journal"]) {
+  check(index.includes(`class="storefront-card`) && index.includes(`href="${path}"`), `Editorial storefront belum menautkan ${path}`);
+}
+check(index.includes('class="mobile-nav-primary"') && index.includes('class="mobile-nav-secondary"'), "Navigasi mobile belum memakai hierarki Fase 3");
+check(index.indexOf('id="lookbook"') < index.indexOf('id="popularTitle"'), "Highlight Looks harus muncul sebelum highlight Products");
+check(index.indexOf('id="journal"') < index.indexOf('id="forYou"'), "Rekomendasi personal harus muncul setelah editorial Journal");
 check(index.includes('href="/privacy"') && index.includes('href="/terms"'), "Footer belum menautkan halaman legal");
 check(about.includes("comootd@gmail.com") && about.includes("instagram.com/comootd.id"), "Kontak resmi belum lengkap");
 check(worker.includes("Strict-Transport-Security"), "Header HSTS belum aktif");

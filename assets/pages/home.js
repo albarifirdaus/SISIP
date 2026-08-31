@@ -1959,8 +1959,8 @@
           activeMoodStyle=button.dataset.moodStyle; renderMoodList();
         });
         document.getElementById("searchButton").addEventListener("click",()=>{ document.getElementById("lookbook").scrollIntoView({behavior:"smooth",block:"start"}); setTimeout(()=>els.search.focus(),500); });
-        document.getElementById("menuButton").addEventListener("click",(event)=>{ const nav=document.getElementById("mobileNav"); const open=nav.classList.toggle("is-open"); event.currentTarget.setAttribute("aria-expanded",String(open)); });
-        document.getElementById("mobileNav").addEventListener("click",(event)=>{ if(event.target.matches("a")){ event.currentTarget.classList.remove("is-open"); document.getElementById("menuButton").setAttribute("aria-expanded","false"); } });
+        document.getElementById("menuButton").addEventListener("click",(event)=>{ const nav=document.getElementById("mobileNav"); const open=nav.classList.toggle("is-open"); event.currentTarget.setAttribute("aria-expanded",String(open)); event.currentTarget.setAttribute("aria-label",open?"Tutup menu":"Buka menu"); });
+        document.getElementById("mobileNav").addEventListener("click",(event)=>{ if(event.target.closest("a")){ event.currentTarget.classList.remove("is-open"); const menuButton=document.getElementById("menuButton"); menuButton.setAttribute("aria-expanded","false"); menuButton.setAttribute("aria-label","Buka menu"); } });
         [document.getElementById("studioButton"),document.getElementById("mobileStudioButton")].forEach((button)=>button.addEventListener("click",openStudio));
         [els.accountButton, els.mobileAccountButton].forEach((button)=>button.addEventListener("click",()=>{
           document.getElementById("mobileNav").classList.remove("is-open");
