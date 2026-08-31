@@ -54,6 +54,7 @@ for (const asset of [
   "/assets/core/utils.js",
   "/assets/admin/bulk-import.js",
   "/assets/components/image-cropper.js",
+  "/assets/components/catalog-media.js",
   "/assets/features/curator-studio.js",
   "/assets/features/platform-insights.js",
   "/assets/services/supabase.js",
@@ -68,7 +69,7 @@ for (const path of ["/about", "/privacy", "/terms", "/curator-policy", "/communi
   check(worker.includes(`"${path}"`), `${path} belum masuk sitemap`);
 }
 
-for (const file of ["_worker.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/services/supabase.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
+for (const file of ["_worker.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/services/supabase.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const result = spawnSync(process.execPath, ["--check", resolve(root, file)], { encoding: "utf8" });
   check(result.status === 0, `${file} gagal syntax check: ${(result.stderr || result.stdout).trim()}`);
@@ -93,6 +94,15 @@ try {
   const matrix = bulk.parseCsvMatrix("product_key,name,affiliate_url,price_idr,color_name,style_tag_1,category\nTOP-1,Top,https://shope.ee/example,120000,Putih,Clean,top");
   const result = bulk.validateBulkRows(bulk.matrixToBulkRows(matrix));
   check(result.errors.length === 0 && result.groups.length === 1, "Modul bulk import gagal memvalidasi template produk yang sah");
+
+  runInNewContext(read("assets/components/catalog-media.js"), moduleContext, { filename:"assets/components/catalog-media.js" });
+  const media = moduleContext.window.COMOOTDCatalogMedia.create({
+    safeImage:core.safeImage, esc:core.esc,
+    tones:{ carbon:{ bg:"#000", accent:"#111", garment:"#222", bottom:"#333", figure:"#444", skin:"#555", skinDark:"#666", hair:"#777", label:"#fff", light:false } },
+    lookAttribution:()=>"BY COMOOTD"
+  });
+  check(media.productArt({ name:"Tas", category:"bag", image:"https://example.com/tas.jpg" }, null).includes("image-frame--square"), "Catalog media gagal merender produk square");
+  check(media.lookMediaEntries({ media:[{ image:"https://example.com/look.jpg" }, { image:"https://example.com/look.jpg" }] }).length === 1, "Catalog media gagal menghapus foto look duplikat");
 } catch (error) {
   failures.push(`Uji modul frontend gagal: ${error?.message || error}`);
 }
@@ -123,7 +133,7 @@ check(styleNormalizationMigration.includes("('Ca ual', 'Casual')") && styleNorma
 const curatorExperience = read("assets/features/curator-studio.js");
 check(curatorExperience.includes('dataset.archiveConfirmed') && curatorExperience.includes('textContent = "Mengarsipkan…"'), "Arsip curator belum memakai konfirmasi dan status proses yang terlihat");
 
-for (const file of ["index.html", "_worker.js", "config.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/services/supabase.js", "assets/features/curator-studio.js"]) {
+for (const file of ["index.html", "_worker.js", "config.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/services/supabase.js", "assets/features/curator-studio.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const content = read(file);
   check(!/(service_role\s*[:=]\s*["'][A-Za-z0-9._-]{20,})/i.test(content), `${file} tampak memuat service role key`);

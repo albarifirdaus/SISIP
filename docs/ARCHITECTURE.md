@@ -16,6 +16,7 @@ assets/
     home.js                        orkestrasi state dan tampilan halaman utama
   components/
     image-cropper.js               komponen crop gambar yang dapat dipakai ulang
+    catalog-media.js               renderer visual produk dan galeri Look
   features/
     curator-studio.js              workflow dashboard curator
     curator-studio.css
