@@ -197,11 +197,15 @@ try {
 
 const insights = read("assets/features/platform-insights.js");
 const analyticsMigration = read("supabase/migrations/20260830193000_comootd_analytics_and_link_health.sql");
+const analyticsHardening = read("supabase/migrations/20260831170000_comootd_phase4_analytics_hardening.sql");
 check(!/userAgent|user_agent|ip_address|inet\s/i.test(analyticsMigration), "Migration analytics tidak boleh menyimpan IP atau user-agent");
 check(analyticsMigration.includes("enable row level security"), "Tabel Milestone 2 belum mengaktifkan RLS");
 check(analyticsMigration.includes("revoke all on table public.comootd_analytics_events"), "Akses langsung ke event analytics belum ditutup");
 check(insights.includes("sessionStorage") && !insights.includes("localStorage"), "Analytics harus memakai sesi sementara, bukan identifier persisten");
 check(appSource.includes('data-studio-tab="insights"'), "Tab Insights admin belum tersedia");
+check(analyticsHardening.includes("p_event_type='product_click'") && analyticsHardening.includes("'campaigns'") && analyticsHardening.includes("'mediums'"), "Kontrak event dan agregasi attribution Fase 4 belum lengkap");
+check(insights.includes("ATTRIBUTION_KEY") && insights.includes("data-campaign-builder") && insights.includes("trendMarkup"), "Attribution sesi, UTM builder, atau tren dashboard Fase 4 belum tersedia");
+check(appSource.includes('data-insight-context-look="${esc(entry.id)}"'), "Klik produk dari detail Look belum diatribusikan ke Look dan curator");
 
 const marketplaceMigration = read("supabase/migrations/20260831090000_comootd_multi_marketplace.sql");
 check(marketplaceMigration.includes("private.comootd_marketplace_for_url"), "Validasi marketplace di database belum tersedia");

@@ -22,7 +22,7 @@ Pekerjaan bergerak fase demi fase; milestone hanya menjadi checkpoint hasil.
 | 1 | Pemisahan staging dan production | **Aktif sebagian** — production safety tanpa biaya dikerjakan; Supabase staging ditunda |
 | 2 | Restrukturisasi kode menjadi pages, components, features, admin, dan services | **Selesai penuh** — Batch A–C terpisah, diuji, dan dapat di-rollback per deployment |
 | 3 | Homepage editorial storefront dan navigasi responsif | **Selesai** — storefront editorial, urutan homepage, dan navigasi responsif sudah terverifikasi |
-| 4 | Analytics, attribution, dashboard curator dan admin | Sebagian fondasi sudah tersedia; audit formal menunggu Fase 1–3 |
+| 4 | Analytics, attribution, dashboard curator dan admin | **Selesai** — event production, attribution sesi, UTM builder, tren, dashboard role-scoped, dan leaderboard internal terverifikasi |
 | 5 | Retention dan personalisasi: save, collection, follow, recently viewed, feed | Belum dimulai sebagai fase formal |
 | 6 | Moderasi dan pengajuan curator | Belum dimulai |
 | 7 | Link health dan multi-marketplace | Sebagian fondasi sudah tersedia; audit formal menunggu fase sebelumnya |

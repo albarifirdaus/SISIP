@@ -2,6 +2,7 @@
   "use strict";
 
   const SESSION_KEY = "comootd-analytics-session";
+  const ATTRIBUTION_KEY = "comootd-analytics-attribution";
   const once = new Set();
 
   function sessionId() {
@@ -17,7 +18,7 @@
     }
   }
 
-  function attribution() {
+  function currentAttribution() {
     const params = new URLSearchParams(location.search);
     let referrerHost = "";
     try { referrerHost = document.referrer ? new URL(document.referrer).hostname : ""; } catch { /* empty */ }
@@ -30,6 +31,16 @@
       utmMedium: params.get("utm_medium") || "",
       utmCampaign: params.get("utm_campaign") || ""
     };
+  }
+
+  function attribution() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(ATTRIBUTION_KEY) || "null");
+      if (saved && typeof saved === "object") return saved;
+      const value = currentAttribution();
+      sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(value));
+      return value;
+    } catch { return currentAttribution(); }
   }
 
   async function track(eventType, targetType = "site", targetId = null, dedupeKey = "") {
@@ -54,11 +65,46 @@
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;" })[char]);
   const number = (value) => new Intl.NumberFormat("id-ID").format(Number(value || 0));
 
-  function barsMarkup(rows, labelKey, valueKey) {
+  function barsMarkup(rows, labelKey, valueKey, secondaryKey = "", secondaryLabel = "") {
     const list = Array.isArray(rows) ? rows : [];
     if (!list.length) return `<div class="insights-empty">Belum cukup data pada periode ini.</div>`;
     const max = Math.max(...list.map((row) => Number(row[valueKey] || 0)), 1);
-    return `<div class="insights-bars">${list.map((row) => `<div class="insights-bar"><span>${escapeHtml(row[labelKey] || "Direct")}</span><span class="insights-bar-track"><i style="--bar:${Math.max(3, Math.round(Number(row[valueKey] || 0) / max * 100))}%"></i></span><strong>${number(row[valueKey])}</strong></div>`).join("")}</div>`;
+    return `<div class="insights-bars">${list.map((row) => `<div class="insights-bar"><span>${escapeHtml(row[labelKey] || "Direct")}${secondaryKey ? `<small>${number(row[secondaryKey])} ${escapeHtml(secondaryLabel)}</small>` : ""}</span><span class="insights-bar-track"><i style="--bar:${Math.max(3, Math.round(Number(row[valueKey] || 0) / max * 100))}%"></i></span><strong>${number(row[valueKey])}</strong></div>`).join("")}</div>`;
+  }
+
+  function trendMarkup(rows, role) {
+    const list = Array.isArray(rows) ? rows : [];
+    if (!list.length) return `<div class="insights-empty">Belum ada tren harian pada periode ini.</div>`;
+    const max = Math.max(...list.flatMap((row) => [Number(row.views || 0), Number(row.clicks || 0), Number(row.page_views || 0)]), 1);
+    return `<div class="insights-trend" role="img" aria-label="Tren analytics harian">${list.map((row) => {
+      const date = new Date(`${row.event_day}T00:00:00`);
+      const label = Number.isNaN(date.getTime()) ? row.event_day : new Intl.DateTimeFormat("id-ID", { day:"2-digit", month:"short" }).format(date);
+      const primary = role === "admin" ? Number(row.page_views || 0) : Number(row.views || 0);
+      const clicks = Number(row.clicks || 0);
+      return `<div class="insights-trend-day" title="${escapeHtml(label)} · ${number(primary)} view · ${number(clicks)} klik"><span><i style="--value:${Math.max(4,Math.round(primary/max*100))}%"></i><b style="--value:${Math.max(clicks ? 4 : 0,Math.round(clicks/max*100))}%"></b></span><small>${escapeHtml(label)}</small></div>`;
+    }).join("")}</div><div class="insights-legend"><span><i></i>${role === "admin" ? "Page views" : "Look views"}</span><span><b></b>Product clicks</span></div>`;
+  }
+
+  function campaignBuilderMarkup() {
+    return `<section class="insights-card insights-campaign-builder"><div><h4>Buat link campaign</h4><p class="microcopy">Tambahkan penanda traffic untuk Instagram, TikTok, WhatsApp, atau campaign lain. Link hanya dapat diarahkan ke halaman COMOOTD.</p></div><form data-campaign-builder><label>Halaman tujuan<input name="destination" type="url" value="${escapeHtml(`${location.origin}/looks/`)}" required /></label><div class="insights-campaign-fields"><label>Source<input name="source" value="instagram" maxlength="100" required /></label><label>Medium<input name="medium" value="social" maxlength="100" required /></label><label>Campaign<input name="campaign" placeholder="Contoh: clean_august" maxlength="120" required /></label></div><div class="insights-campaign-presets"><button type="button" data-campaign-source="instagram">Instagram</button><button type="button" data-campaign-source="tiktok">TikTok</button><button type="button" data-campaign-source="whatsapp">WhatsApp</button><button type="button" data-campaign-source="newsletter">Newsletter</button></div><div class="insights-campaign-output"><input data-campaign-output readonly aria-label="Link campaign" placeholder="Link tracking akan muncul di sini" /><button class="small-button" type="submit">Buat &amp; salin</button></div><p class="microcopy" data-campaign-status aria-live="polite"></p></form></section>`;
+  }
+
+  function buildCampaignUrl(form) {
+    const data = new FormData(form);
+    const url = new URL(String(data.get("destination") || "").trim(), location.origin);
+    if (url.origin !== location.origin) throw new Error("Gunakan halaman tujuan di website COMOOTD.");
+    for (const [key, field] of [["utm_source","source"],["utm_medium","medium"],["utm_campaign","campaign"]]) {
+      const value = String(data.get(field) || "").trim().replace(/\s+/g, "_").toLowerCase();
+      if (!value) throw new Error("Lengkapi source, medium, dan nama campaign.");
+      url.searchParams.set(key, value);
+    }
+    return url.toString();
+  }
+
+  async function copyText(value) {
+    if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(value);
+    const input = document.createElement("textarea");
+    input.value = value; input.style.cssText = "position:fixed;left:-9999px;opacity:0"; document.body.append(input); input.select(); document.execCommand("copy"); input.remove();
   }
 
   function reportsMarkup(reports) {
@@ -73,7 +119,7 @@
     const role = root.dataset.insightsDashboard;
     if (!cloud?.isConfigured?.()) {
       root.dataset.loaded = "true";
-      root.innerHTML = `<div class="insights-empty">Analytics aktif setelah staging terhubung ke Supabase.</div>`;
+      root.innerHTML = `<div class="insights-empty">Analytics aktif setelah aplikasi terhubung ke Supabase.</div>`;
       return;
     }
     root.dataset.loading = "true";
@@ -90,12 +136,12 @@
       const primaryRows = role === "admin" ? analytics.topCurators : analytics.topLooks;
       const primaryLabel = role === "admin" ? "display_name" : "title";
       const primaryValue = role === "admin" ? "events" : "views";
-      root.innerHTML = `<div class="insights-dashboard"><div class="insights-toolbar"><label>Periode<select data-insights-days><option value="7"${days===7?" selected":""}>7 hari</option><option value="30"${days===30?" selected":""}>30 hari</option><option value="90"${days===90?" selected":""}>90 hari</option></select></label><button class="small-button muted" type="button" data-refresh-insights>Refresh</button></div><div class="insights-kpis">${kpis.map(([label,value]) => `<div class="insights-kpi"><strong>${number(value)}</strong><span>${escapeHtml(label)}</span></div>`).join("")}</div><div class="insights-grid"><section class="insights-card"><h4>${role === "admin" ? "Curator dengan traffic tertinggi" : "Look paling banyak dilihat"}</h4>${barsMarkup(primaryRows,primaryLabel,primaryValue)}</section><section class="insights-card"><h4>Sumber traffic</h4>${barsMarkup(analytics.sources,"source","events")}</section></div><section class="insights-card"><h4>Laporan tautan</h4>${reportsMarkup(reports)}</section></div>`;
+      root.innerHTML = `<div class="insights-dashboard"><div class="insights-toolbar"><label>Periode<select data-insights-days><option value="7"${days===7?" selected":""}>7 hari</option><option value="30"${days===30?" selected":""}>30 hari</option><option value="90"${days===90?" selected":""}>90 hari</option></select></label><button class="small-button muted" type="button" data-refresh-insights>Refresh</button></div><div class="insights-kpis">${kpis.map(([label,value]) => `<div class="insights-kpi"><strong>${number(value)}</strong><span>${escapeHtml(label)}</span></div>`).join("")}</div><section class="insights-card"><h4>Tren harian</h4>${trendMarkup(analytics.daily,role)}</section><div class="insights-grid"><section class="insights-card"><h4>${role === "admin" ? "Curator dengan traffic tertinggi" : "Look paling banyak dilihat"}</h4>${barsMarkup(primaryRows,primaryLabel,primaryValue,"clicks","klik produk")}</section><section class="insights-card"><h4>Sumber traffic</h4>${barsMarkup(analytics.sources,"source","events")}</section></div><div class="insights-grid"><section class="insights-card"><h4>Campaign teratas</h4>${barsMarkup(analytics.campaigns,"campaign","events")}</section><section class="insights-card"><h4>Medium</h4>${barsMarkup(analytics.mediums,"medium","events")}</section></div>${campaignBuilderMarkup()}<section class="insights-card"><h4>Laporan tautan</h4>${reportsMarkup(reports)}</section></div>`;
       root.dataset.loaded = "true";
       root.dataset.days = String(days);
     } catch (error) {
       root.dataset.loaded = "true";
-      root.innerHTML = `<div class="insights-empty">Analytics belum tersedia di environment ini. Terapkan migration Milestone 2 pada Supabase staging terlebih dahulu.<br><small>${escapeHtml(error?.message || "")}</small></div>`;
+      root.innerHTML = `<div class="insights-empty">Analytics belum tersedia di environment ini. Pastikan migration Fase 4 sudah diterapkan.<br><small>${escapeHtml(error?.message || "")}</small></div>`;
     } finally { root.dataset.loading = "false"; }
   }
 
@@ -137,7 +183,10 @@
 
   document.addEventListener("click", async (event) => {
     const affiliate = event.target.closest("a[data-insight-target][data-insight-id]");
-    if (affiliate) void track("product_click", affiliate.dataset.insightTarget, affiliate.dataset.insightId, `${Date.now()}:${affiliate.dataset.insightId}`);
+    if (affiliate) {
+      const contextLook = affiliate.dataset.insightContextLook;
+      void track("product_click", contextLook ? "look" : affiliate.dataset.insightTarget, contextLook || affiliate.dataset.insightId, `${Date.now()}:${contextLook || affiliate.dataset.insightId}`);
+    }
     const lookShare = event.target.closest("[data-share-look],[data-share-curator-look]");
     if (lookShare) void track("look_share", "look", lookShare.dataset.shareLook || lookShare.dataset.shareCuratorLook, `${Date.now()}:share-look`);
     const productShare = event.target.closest("[data-share-product]");
@@ -164,6 +213,8 @@
     }
     const insightsTab=event.target.closest('[data-studio-tab="insights"],[data-curator-studio-tab="analytics"]');
     if(insightsTab) setTimeout(()=>document.querySelectorAll("[data-insights-dashboard]").forEach((root)=>void hydrateDashboard(root,true)),0);
+    const sourcePreset=event.target.closest("[data-campaign-source]");
+    if(sourcePreset){const form=sourcePreset.closest("[data-campaign-builder]");if(form){form.elements.source.value=sourcePreset.dataset.campaignSource;form.elements.medium.value=sourcePreset.dataset.campaignSource==="newsletter"?"email":sourcePreset.dataset.campaignSource==="whatsapp"?"messaging":"social";}}
   }, true);
 
   document.addEventListener("change", (event) => {
@@ -174,6 +225,13 @@
   });
 
   document.addEventListener("submit", async (event) => {
+    const campaignForm=event.target.closest("[data-campaign-builder]");
+    if(campaignForm){
+      event.preventDefault(); const output=campaignForm.querySelector("[data-campaign-output]"); const status=campaignForm.querySelector("[data-campaign-status]");
+      try{const value=buildCampaignUrl(campaignForm);output.value=value;await copyText(value);status.textContent="Link campaign dibuat dan disalin.";}
+      catch(error){status.textContent=error?.message||"Link campaign belum dapat dibuat.";}
+      return;
+    }
     const form=event.target.closest("[data-link-report-form]");
     if(!form)return;
     event.preventDefault();

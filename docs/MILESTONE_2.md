@@ -20,7 +20,14 @@ Event tidak menyimpan IP, user-agent, atau URL referrer lengkap. Browser memakai
 - Admin: agregat platform dan daftar curator dengan traffic tertinggi.
 - User biasa dan publik: tidak mempunyai akses baca ke tabel event.
 
-Dashboard menyediakan rentang 7, 30, dan 90 hari, KPI utama, konten teratas, sumber traffic, serta laporan link terbuka.
+Dashboard menyediakan rentang 7, 30, dan 90 hari, KPI utama, tren harian,
+konten teratas, sumber traffic, medium, campaign, serta laporan link terbuka.
+Curator dan admin juga memiliki pembuat link UTM internal untuk menandai traffic
+dari Instagram, TikTok, WhatsApp, newsletter, dan campaign lain.
+
+Attribution awal disimpan hanya selama tab/sesi browser aktif. Klik produk yang
+berasal dari detail Look dikreditkan ke Look dan curator tersebut, sementara
+klik dari katalog produk tetap dihitung sebagai traffic produk platform.
 
 ## Link health
 
@@ -33,12 +40,15 @@ Pemilik dapat:
 - menandai laporan selesai;
 - mengabaikan laporan yang tidak valid.
 
-## Urutan deployment
+## Status deployment
 
-1. Terapkan migration `20260830193000_comootd_analytics_and_link_health.sql` pada Supabase staging.
-2. Jalankan advisor keamanan dan performa.
-3. Deploy branch ke Cloudflare staging.
-4. Uji sebagai publik, member, curator, dan admin.
-5. Setelah lolos, migration diterapkan ke production sebelum frontend Milestone 2 dirilis.
+Fondasi measurement, hardening kontrak event, agregasi attribution, dan indeks
+maintenance sudah diterapkan ke Supabase production. Frontend dirilis langsung
+ke production melalui checklist sementara karena staging berbayar masih ditunda.
 
-Jangan deploy frontend ini lebih dulu ke production karena query katalog sudah mengenali kolom `link_status` baru.
+Peringatan advisor tentang tabel event tanpa policy adalah kondisi yang sengaja:
+RLS aktif dan semua grant langsung dicabut sehingga event tidak dapat dibaca
+publik. RPC `record_comootd_analytics_event` sengaja dapat dipanggil pengunjung,
+tetapi memvalidasi pasangan event/target, target published, duplikasi cepat, dan
+batas event per sesi. RPC dashboard tetap memeriksa role curator/admin di dalam
+fungsi.
