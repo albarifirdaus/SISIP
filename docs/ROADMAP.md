@@ -20,7 +20,7 @@ Pekerjaan bergerak fase demi fase; milestone hanya menjadi checkpoint hasil.
 | Fase | Fokus | Status |
 | --- | --- | --- |
 | 1 | Pemisahan staging dan production | **Aktif sebagian** — production safety tanpa biaya dikerjakan; Supabase staging ditunda |
-| 2 | Restrukturisasi kode menjadi pages, components, features, admin, dan services | **Aktif** — fondasi modular dan quality gate sedang dikerjakan |
+| 2 | Restrukturisasi kode menjadi pages, components, features, admin, dan services | **Selesai** — boundary modular, unit check, dan regression test production aktif |
 | 3 | Homepage editorial storefront dan navigasi responsif | Belum dimulai sebagai fase formal |
 | 4 | Analytics, attribution, dashboard curator dan admin | Sebagian fondasi sudah tersedia; audit formal menunggu Fase 1–3 |
 | 5 | Retention dan personalisasi: save, collection, follow, recently viewed, feed | Belum dimulai sebagai fase formal |
@@ -63,3 +63,22 @@ yang diduplikasi atau terlewat.
 - Pengujian migration sebelum promosi ke production.
 
 Fase 1 baru dapat ditandai selesai penuh setelah Fase 1B disetujui dan aktif.
+
+## Fase 2 — selesai
+
+- CSS dan JavaScript aplikasi tidak lagi tertanam di `index.html`.
+- Aset dipisahkan berdasarkan tanggung jawab ke `pages`, `core`, `components`,
+  `features`, `admin`, `services`, `styles`, dan `vendor`.
+- Supabase menjadi satu pintu akses data; komponen visual tidak menjalankan
+  query database langsung.
+- Parser serta validator bulk import admin dan renderer media katalog memiliki
+  pemeriksaan modul terisolasi.
+- Quality gate memverifikasi urutan dependency, referensi aset, syntax,
+  keamanan, route Worker, dan fitur lama.
+- Production sudah diuji tanpa overflow pada ponsel dan dengan empat kolom Look
+  pada desktop.
+- Tidak ada framework, API, dependency, atau resource berbayar baru.
+
+`home.js` tetap menjadi orkestrator halaman selama migrasi bertahap. Ekstraksi
+panel lain boleh dilanjutkan sebagai maintenance internal setelah kontrak state
+dan event stabil, tanpa menahan dimulainya Fase 3.
