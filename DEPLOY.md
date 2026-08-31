@@ -1,12 +1,17 @@
 # Deploy COMOOTD
 
-> Jangan deploy perubahan fitur langsung ke production. Gunakan alur `feature → develop/staging → main/production` di [docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md). Konfigurasi environment ada di [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md), dan prosedur pemulihan ada di [docs/ROLLBACK.md](docs/ROLLBACK.md).
+> Supabase staging terpisah sedang ditunda sampai biaya disetujui pemilik
+> COMOOTD. Selama website belum diluncurkan resmi, rilis production mengikuti
+> [checklist sementara](docs/PRODUCTION_RELEASE_CHECKLIST.md). Alur staging penuh
+> tetap didokumentasikan di [docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md).
 
 ## 1. GitHub
 
 Repository tujuan: `albarifirdaus/SISIP`.
 
-Perubahan rutin dikirim ke branch fitur atau `develop`. Branch `main` hanya menerima perubahan yang sudah lolos staging dan quality gate.
+Perubahan rutin dibuat pada branch kerja. Branch `main` hanya menerima commit
+yang sudah lolos `npm run release:check`, review diff, serta verifikasi database
+bila ada migration. Push harus non-force.
 
 Isi website berada di root repository:
 

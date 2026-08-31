@@ -16,6 +16,17 @@ const requiredPages = [
   "affiliate-info/index.html"
 ];
 
+for (const document of ["docs/ROADMAP.md", "docs/PRODUCTION_RELEASE_CHECKLIST.md"]) {
+  check(existsSync(resolve(root, document)), `${document} tidak ditemukan`);
+}
+
+if (existsSync(resolve(root, "docs/ROADMAP.md"))) {
+  const roadmap = read("docs/ROADMAP.md");
+  check((roadmap.match(/\| [1-8] \|/g) || []).length === 8, "Roadmap belum memuat delapan fase");
+  check((roadmap.match(/\| [1-6] —/g) || []).length === 6, "Roadmap belum memuat enam milestone");
+  check(/persetujuan pemilik COMOOTD/i.test(roadmap), "Roadmap belum memiliki gerbang persetujuan biaya");
+}
+
 for (const page of requiredPages) {
   check(existsSync(resolve(root, page)), `${page} tidak ditemukan`);
   if (!existsSync(resolve(root, page))) continue;

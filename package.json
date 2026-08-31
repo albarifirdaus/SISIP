@@ -4,7 +4,8 @@
   "type": "module",
   "version": "1.0.0",
   "scripts": {
-    "test": "node tools/qa-static.mjs"
+    "test": "node tools/qa-static.mjs",
+    "release:check": "node tools/release-check.mjs"
   },
   "engines": {
     "node": ">=20"

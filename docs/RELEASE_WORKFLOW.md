@@ -1,5 +1,8 @@
 # Alur Rilis COMOOTD
 
+> Alur normal di bawah adalah target setelah staging diaktifkan. Selama staging
+> masih ditunda, gunakan [PRODUCTION_RELEASE_CHECKLIST.md](PRODUCTION_RELEASE_CHECKLIST.md).
+
 ## Jalur normal
 
 1. Buat branch fitur dari `develop`.

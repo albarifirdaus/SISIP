@@ -66,8 +66,10 @@ Rekomendasi pada bagian **Untuk Kamu** dihitung di browser dari data katalog pub
 
 Lihat [DEPLOY.md](DEPLOY.md) untuk langkah GitHub dan hosting. Untuk katalog affiliate live, gunakan host yang mengizinkan penggunaan komersial/affiliate; proyek ini siap untuk hosting static seperti Cloudflare Pages.
 
-Dokumen operasional Milestone 1:
+Roadmap dan dokumen operasional:
 
+- [Roadmap 8 fase dan 6 milestone](docs/ROADMAP.md)
+- [Checklist rilis production sementara](docs/PRODUCTION_RELEASE_CHECKLIST.md)
 - [Environment staging dan production](docs/ENVIRONMENTS.md)
 - [Alur rilis](docs/RELEASE_WORKFLOW.md)
 - [Rollback dan pemulihan](docs/ROLLBACK.md)
@@ -75,7 +77,8 @@ Dokumen operasional Milestone 1:
 - [Milestone 2: analytics dan link health](docs/MILESTONE_2.md)
 - [Milestone 3: discovery, marketplace, dan SEO](docs/MILESTONE_3.md)
 
-Jalankan `npm test` sebelum setiap pull request. Quality gate yang sama dijalankan otomatis untuk branch `develop`, `main`, dan pull request.
+Jalankan `npm run release:check` sebelum setiap rilis. Quality gate yang sama
+dijalankan otomatis untuk branch `develop`, `main`, dan pull request.
 
 ## Supabase
 

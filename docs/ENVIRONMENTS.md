@@ -2,12 +2,14 @@
 
 ## Tujuan
 
-COMOOTD memakai dua lingkungan yang benar-benar terpisah. Data, autentikasi, media, dan konfigurasi staging tidak boleh memakai proyek production.
+Arsitektur target COMOOTD memakai dua lingkungan yang benar-benar terpisah.
+Untuk sementara hanya production yang aktif; Supabase staging ditunda sampai
+biayanya disetujui pemilik COMOOTD.
 
 | Lingkungan | Git branch | Cloudflare | Supabase | Indexing |
 | --- | --- | --- | --- | --- |
 | Production | `main` | `sisip-fashion.pages.dev` dan domain utama | proyek production | aktif |
-| Staging | `develop` | project/preview URL staging | proyek staging terpisah | nonaktif |
+| Staging | `develop` | project/preview URL staging | proyek staging terpisah | **ditunda** |
 
 ## Variabel Cloudflare
 
@@ -31,4 +33,8 @@ Worker menghasilkan `/config.js` dari variabel ini sehingga frontend dan renderi
 
 ## Status setup
 
-Branch lokal `milestone-1-staging` sudah menampung perubahan Milestone 1. Branch remote `develop`, project Cloudflare staging, dan proyek Supabase staging perlu dibuat saat akses integrasi tersedia. Production tidak diubah selama tahap ini.
+Fondasi konfigurasi environment, `noindex`, rollback, dan QA sudah tersedia.
+Branch `develop`, Cloudflare staging, dan Supabase staging belum diaktifkan.
+Selama penundaan ini, gunakan
+[PRODUCTION_RELEASE_CHECKLIST.md](PRODUCTION_RELEASE_CHECKLIST.md). Aktivasi
+resource yang menimbulkan biaya wajib memperoleh persetujuan terlebih dahulu.

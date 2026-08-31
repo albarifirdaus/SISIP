@@ -17,4 +17,4 @@ jobs:
         with:
           node-version: 22
       - name: Verify static app
-        run: npm test
+        run: npm run release:check
