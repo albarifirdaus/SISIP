@@ -47,6 +47,7 @@ const about = read("about/index.html");
 check(!/COMOOTD\s*\/\s*Prototype/i.test(index), "Label Prototype masih tampil pada footer publik");
 check(!/<style[\s>]/i.test(index), "CSS halaman utama masih tertanam di index.html");
 check(!/<script(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i.test(index), "JavaScript aplikasi masih tertanam di index.html");
+check(homeScript.indexOf("const { slugify") < homeScript.indexOf("const SEED_PRODUCTS"), "Core utils harus diinisialisasi sebelum seed catalogue");
 for (const asset of [
   "/assets/pages/home.css",
   "/assets/pages/home.js",

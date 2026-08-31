@@ -1,6 +1,7 @@
       (() => {
         "use strict";
 
+        const { slugify, clone, esc, safeImage, imageAspect, imageFrameClass, money, uid } = window.COMOOTDCore;
         const STORAGE_KEY = "sisip-prototype-v1";
         const TONES = {
           carbon: { bg: "#393430", accent: "#a9553c", garment: "#171614", bottom: "#292522", figure: "#d7c6b7", skin: "#9a6a52", skinDark: "#825542", hair: "#1b1816", label: "#f7f3ed", light: false },
@@ -120,7 +121,6 @@
         function look(id, title, gender, styles, tone, popularity, createdOrder, items) {
           return { id, slug: slugify(title), title, gender, styles, tone, popularity, createdOrder, coverImage: "", items: items.map(([productId, variantName]) => ({ productId, variantName })) };
         }
-        const { slugify, clone, esc, safeImage, imageAspect, imageFrameClass, money, uid } = window.COMOOTDCore;
         function preparedImageFile(input) {
           if (!input?.files?.length) return null;
           const cropper = window.COMOOTDImageCropper;
