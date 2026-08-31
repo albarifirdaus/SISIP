@@ -40,7 +40,8 @@ for (const page of requiredPages) {
 const index = read("index.html");
 const homeScript = read("assets/pages/home.js");
 const homeStyle = read("assets/pages/home.css");
-const appSource = `${index}\n${homeScript}`;
+const catalogueDirectoryScript = read("assets/pages/catalogue-directory.js");
+const appSource = `${index}\n${homeScript}\n${catalogueDirectoryScript}`;
 const worker = read("_worker.js");
 const about = read("about/index.html");
 
@@ -51,6 +52,7 @@ check(homeScript.indexOf("const { slugify") < homeScript.indexOf("const SEED_PRO
 for (const asset of [
   "/assets/pages/home.css",
   "/assets/pages/home-storefront.css",
+  "/assets/pages/catalogue-directory.js",
   "/assets/pages/home.js",
   "/assets/core/utils.js",
   "/assets/admin/bulk-import.js",
@@ -81,7 +83,7 @@ for (const path of ["/about", "/privacy", "/terms", "/curator-policy", "/communi
   check(worker.includes(`"${path}"`), `${path} belum masuk sitemap`);
 }
 
-for (const file of ["_worker.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/components/notification.js", "assets/components/navigation.js", "assets/components/filters.js", "assets/services/supabase.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
+for (const file of ["_worker.js", "assets/pages/home.js", "assets/pages/catalogue-directory.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/components/notification.js", "assets/components/navigation.js", "assets/components/filters.js", "assets/services/supabase.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const result = spawnSync(process.execPath, ["--check", resolve(root, file)], { encoding: "utf8" });
   check(result.status === 0, `${file} gagal syntax check: ${(result.stderr || result.stdout).trim()}`);
@@ -154,6 +156,18 @@ try {
   const chips = { innerHTML:"" };
   uiContext.window.COMOOTDFilters.renderStyleControls({ styles:["Clean", "Casual"], select, chips, activeStyle:"Casual", escapeHtml:(value) => String(value) });
   check(select.value === "Casual" && chips.innerHTML.includes('data-style="Casual"') && chips.innerHTML.includes("is-active"), "Komponen filters gagal mempertahankan style aktif");
+
+  runInNewContext(read("assets/pages/catalogue-directory.js"), uiContext, { filename:"assets/pages/catalogue-directory.js" });
+  const directoryState = { products:[{ id:"p1", name:"Oxford", price:120000, category:"top", genderTarget:"unisex", styles:["Clean"], variants:[] }], looks:[], articles:[], styleTags:[{ name:"Clean" }] };
+  const directory = uiContext.window.COMOOTDCatalogueDirectory.create({
+    getState:() => directoryState, esc:(value) => String(value), slugify:(value) => String(value).toLowerCase(), money:(value) => String(value), safeImage:(value) => String(value),
+    marketplaces:{ shopee:{ label:"Shopee" } }, productCategories:{ top:"Atasan" }, marketplaceOf:() => "shopee", marketplaceLabel:() => "Shopee",
+    lookVisual:() => "", productArt:() => "", lookAttribution:() => "BY COMOOTD", curatorMetricsMarkup:() => "", lookLikeButton:() => "", articleCategoryLabel:() => "Journal",
+    window:{ location:{ pathname:"/products", href:"https://comootd.test/products" } }, document:{}
+  });
+  check(directory.readRoute()?.key === "products", "Page directory gagal mengenali route Products");
+  directory.setFilter("category", "top");
+  check(directory.filteredEntries(directory.readRoute()).length === 1, "Page directory gagal menyaring kategori produk");
 } catch (error) {
   failures.push(`Uji komponen UI gagal: ${error?.message || error}`);
 }

@@ -16,6 +16,7 @@
           shopee: { label:"Shopee", placeholder:"https://shopee.co.id/..." },
           tiktok_shop: { label:"TikTok Shop", placeholder:"https://shop.tiktok.com/..." }
         };
+        const PRODUCT_CATEGORIES = { top:"Atasan", bottom:"Bawahan", outerwear:"Outerwear", dress:"Dress / Set", footwear:"Sepatu", bag:"Tas", accessory:"Aksesori", hijab:"Hijab", jewelry:"Perhiasan", other:"Lainnya" };
         const ARTICLE_CATEGORIES = {
           "style-guide": "Style guide",
           "occasion-guide": "Occasion guide",
@@ -1258,77 +1259,15 @@
             return { type, slug, variantId: type === "product" ? String(new URL(window.location.href).searchParams.get("variant") || "") : "" };
           } catch { return null; }
         }
-        function readDirectoryRoute() {
-          const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
-          const entries = {
-            "/looks": { key:"looks", title:"All Looks", deck:"Kurasi mix-and-match untuk berbagai agenda, style, dan mood." },
-            "/looks/comootd": { key:"comootd", title:"Looks by COMOOTD", deck:"Kurasi editorial dari tim COMOOTD, dibuat untuk dipakai berulang." },
-            "/looks/curators": { key:"curators", title:"Looks by Curators", deck:"Sudut pandang personal dari para curator dan fashion people COMOOTD." },
-            "/products": { key:"products", title:"Products", deck:"Produk pilihan COMOOTD yang siap menjadi bagian dari rotasi wardrobe-mu." },
-            "/journal": { key:"journal", title:"Style Journal", deck:"Catatan praktis tentang proporsi, warna, dan strategi mix-and-match." }
-          };
-          if (entries[pathname]) return entries[pathname];
-          const styleMatch=pathname.match(/^\/styles\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
-          if(styleMatch){
-            const style=(state.styleTags||[]).map((item)=>typeof item==="string"?item:item?.name).find((name)=>slugify(name)===styleMatch[1]);
-            if(style) return {key:"style",styleName:style,title:`${style} Style`,deck:`Look kurasi ${style} dari COMOOTD dan para curator—lengkap dengan rincian item yang bisa langsung ditemukan.`};
-          }
-          return null;
-        }
-        function ensureCatalogueRouteLayer() {
-          let layer = document.getElementById("catalogueRouteLayer");
-          if (!layer) { layer = document.createElement("div"); layer.id = "catalogueRouteLayer"; layer.className = "catalogue-route-layer"; document.body.append(layer); }
-          return layer;
-        }
-        function catalogueRouteBar() {
-          return `<header class="catalogue-route-bar"><a class="catalogue-route-brand" href="/" data-close-catalogue-route><img src="/assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="COMOOTD" /></a><a class="catalogue-route-back" href="/" data-close-catalogue-route>← Back to home</a></header>`;
-        }
-        function catalogueLookCard(entry) {
-          return `<article class="catalogue-look-card"><button class="catalogue-look-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka ${esc(entry.title)}">${lookVisual(entry)}</button><div class="catalogue-look-copy"><p class="catalogue-look-attribution">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2 class="catalogue-look-title">${esc(entry.title)}</h2>${curatorMetricsMarkup(entry,true)}<div>${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div>${lookLikeButton(entry)}</div></article>`;
-        }
-        function catalogueProductCard(entry) {
-          return `<article class="catalogue-product-card"><button type="button" data-open-product="${esc(entry.id)}">${productArt(entry,entry.variants?.[0])}</button><div><p>${esc(entry.badge || "COMOOTD EDIT")} · ${esc(marketplaceLabel(entry))}</p><h2>${esc(entry.name)}</h2><span>${money(entry.price)}</span></div></article>`;
-        }
-        function catalogueJournalCard(entry) {
-          return `<article class="catalogue-journal-card"><button type="button" data-open-article="${esc(entry.id)}">${entry.coverImage ? `<img src="${esc(safeImage(entry.coverImage))}" alt="${esc(entry.coverAlt || entry.title)}" />` : ""}<span>${esc(articleCategoryLabel(entry.category))}</span><h2>${esc(entry.title)}</h2><p>${esc(entry.excerpt || "Catatan style dari COMOOTD.")}</p></button></article>`;
-        }
-        const PRODUCT_CATEGORIES={top:"Atasan",bottom:"Bawahan",outerwear:"Outerwear",dress:"Dress / Set",footwear:"Sepatu",bag:"Tas",accessory:"Aksesori",hijab:"Hijab",jewelry:"Perhiasan",other:"Lainnya"};
-        const directoryFilters={q:"",gender:"all",style:"all",sort:"popular",category:"all",price:"all",marketplace:"all"};
-        function directoryFilterMarkup(route) {
-          if(route.key==="journal") return "";
-          if(route.key==="products") return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(directoryFilters.q)}" placeholder="Cari nama, warna, atau kategori" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${directoryFilters.gender==="Pria"?" selected":""}>Pria</option><option value="Wanita"${directoryFilters.gender==="Wanita"?" selected":""}>Wanita</option><option value="Uniseks"${directoryFilters.gender==="Uniseks"?" selected":""}>Uniseks</option></select></label><label><span>Kategori</span><select data-directory-filter="category"><option value="all">Semua kategori</option>${Object.entries(PRODUCT_CATEGORIES).map(([value,label])=>`<option value="${value}"${directoryFilters.category===value?" selected":""}>${label}</option>`).join("")}</select></label><label><span>Marketplace</span><select data-directory-filter="marketplace"><option value="all">Semua marketplace</option>${Object.entries(MARKETPLACES).map(([value,item])=>`<option value="${value}"${directoryFilters.marketplace===value?" selected":""}>${esc(item.label)}</option>`).join("")}</select></label><label><span>Harga</span><select data-directory-filter="price"><option value="all">Semua harga</option><option value="under100"${directoryFilters.price==="under100"?" selected":""}>Di bawah Rp100 ribu</option><option value="100to250"${directoryFilters.price==="100to250"?" selected":""}>Rp100–250 ribu</option><option value="250to500"${directoryFilters.price==="250to500"?" selected":""}>Rp250–500 ribu</option><option value="over500"${directoryFilters.price==="over500"?" selected":""}>Di atas Rp500 ribu</option></select></label></div>`;
-          const styles=[...new Set((route.key==="products"?state.products:state.looks).flatMap((item)=>item.styles||[]))].sort();
-          return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(directoryFilters.q)}" placeholder="Cari nama, style, warna, atau curator" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${directoryFilters.gender==="Pria"?" selected":""}>Pria</option><option value="Wanita"${directoryFilters.gender==="Wanita"?" selected":""}>Wanita</option><option value="Uniseks"${directoryFilters.gender==="Uniseks"?" selected":""}>Uniseks</option></select></label><label><span>Style</span><select data-directory-filter="style"><option value="all">Semua style</option>${styles.map((style)=>`<option value="${esc(style)}"${directoryFilters.style===style?" selected":""}>${esc(style)}</option>`).join("")}</select></label><label><span>Urutkan</span><select data-directory-filter="sort"><option value="popular"${directoryFilters.sort==="popular"?" selected":""}>Paling populer</option><option value="newest"${directoryFilters.sort==="newest"?" selected":""}>Terbaru</option><option value="az"${directoryFilters.sort==="az"?" selected":""}>A–Z</option></select></label></div>`;
-        }
-        function filteredDirectoryEntries(route) {
-          let source=route.key==="products"?[...state.products]:route.key==="journal"?[...state.articles]:route.key==="comootd"?state.looks.filter((item)=>item.publisherType!=="curator"&&!item.curator?.handle):route.key==="curators"?state.looks.filter((item)=>item.publisherType==="curator"||item.curator?.handle):[...state.looks];
-          if(route.key==="style") source=source.filter((item)=>(item.styles||[]).some((style)=>String(style).toLowerCase()===String(route.styleName).toLowerCase()));
-          if(route.key==="journal") return source;
-          const q=directoryFilters.q.trim().toLowerCase();
-          if(q) source=source.filter((item)=>[item.title,item.name,item.gender,item.genderTarget,item.badge,item.category,PRODUCT_CATEGORIES[item.category],item.curator?.displayName,item.curator?.handle,...(item.styles||[]),...(item.variants||[]).flatMap((variant)=>[variant.name,variant.hex])].filter(Boolean).join(" ").toLowerCase().includes(q));
-          if(directoryFilters.gender!=="all") source=source.filter((item)=>(item.gender||({pria:"Pria",wanita:"Wanita",unisex:"Uniseks"}[item.genderTarget]))===directoryFilters.gender);
-          if(route.key==="products"&&directoryFilters.category!=="all") source=source.filter((item)=>(item.category||"other")===directoryFilters.category);
-          if(route.key==="products"&&directoryFilters.marketplace!=="all") source=source.filter((item)=>marketplaceOf(item)===directoryFilters.marketplace);
-          if(route.key==="products"&&directoryFilters.price!=="all") source=source.filter((item)=>{const price=Number(item.price||0);return directoryFilters.price==="under100"?price<100000:directoryFilters.price==="100to250"?price>=100000&&price<250000:directoryFilters.price==="250to500"?price>=250000&&price<500000:price>=500000;});
-          if(route.key!=="products"&&directoryFilters.style!=="all") source=source.filter((item)=>(item.styles||[]).includes(directoryFilters.style));
-          if(directoryFilters.sort==="az") source.sort((a,b)=>String(a.title||a.name).localeCompare(String(b.title||b.name),"id"));
-          else if(directoryFilters.sort==="newest") source.sort((a,b)=>String(b.publishedAt||b.createdAt||"").localeCompare(String(a.publishedAt||a.createdAt||"")));
-          else source.sort((a,b)=>Number(b.popularity||0)-Number(a.popularity||0));
-          return source;
-        }
-        function renderDirectoryRoute() {
-          const route = readDirectoryRoute();
-          const layer = ensureCatalogueRouteLayer();
-          if (!route) { layer.classList.remove("is-open"); layer.innerHTML=""; document.body.classList.remove("catalogue-route-open"); return false; }
-          const source=filteredDirectoryEntries(route);
-          let content=route.key==="products"?source.map(catalogueProductCard).join(""):route.key==="journal"?source.map(catalogueJournalCard).join(""):source.map(catalogueLookCard).join("");
-          const className = route.key === "products" ? "catalogue-product-grid" : route.key === "journal" ? "catalogue-journal-grid" : "catalogue-look-grid";
-          const tabs=route.key==="products"?`<span class="is-active">Products</span>`:route.key==="journal"?`<span class="is-active">Journal</span>`:`<a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a>${route.key==="style"?`<span class="is-active">${esc(route.styleName)}</span>`:""}`;
-          layer.innerHTML = `<div class="catalogue-route-shell">${catalogueRouteBar()}<main class="catalogue-route-body"><div class="catalogue-route-heading"><p>COMOOTD / DIRECTORY</p><h1>${esc(route.title)}</h1><p>${esc(route.deck)}</p></div><nav class="catalogue-route-tabs" aria-label="Pilihan katalog">${tabs}</nav>${directoryFilterMarkup(route)}${route.key!=="journal"?`<p class="catalogue-result-count">${source.length} hasil</p>`:""}<section class="${className}">${content || `<p class="catalogue-empty">Belum ada konten yang cocok dengan filter ini.</p>`}</section></main></div>`;
-          layer.classList.add("is-open"); document.body.classList.add("catalogue-route-open");
-          updateDirectoryMetadata(route);
-          return true;
-        }
+        const directoryPage = window.COMOOTDCatalogueDirectory.create({
+          getState:()=>state, esc, slugify, money, safeImage,
+          marketplaces:MARKETPLACES, productCategories:PRODUCT_CATEGORIES,
+          marketplaceOf, marketplaceLabel, lookVisual, productArt, lookAttribution,
+          curatorMetricsMarkup, lookLikeButton, articleCategoryLabel
+        });
+        function readDirectoryRoute() { return directoryPage.readRoute(); }
+        function ensureCatalogueRouteLayer() { return directoryPage.ensureLayer(); }
+        function renderDirectoryRoute() { return directoryPage.render(); }
         function contentEntryForRoute(route) {
           const source = route?.type === "look" ? state.looks : route?.type === "product" ? state.products : state.articles;
           return source?.find((entry) => contentEntitySlug(entry, route?.type).toLowerCase() === route?.slug) || null;
@@ -1339,24 +1278,6 @@
           if (type === "look") return { title: `${name} — COMOOTD Look`, description: styles.length ? `${styles.join(" · ")} — temukan setiap item dalam look ini di COMOOTD.` : "Temukan setiap item dalam look kurasi COMOOTD ini.", image: safeImage(entry?.coverImage), ogType: "website" };
           if (type === "product") { const variant = entry?.variants?.find((item) => item.id === variantId) || entry?.variants?.[0]; return { title: `${name} — COMOOTD`, description: `${money(entry?.price)}${styles.length ? ` · ${styles.join(" · ")}` : ""} — pilihan kurasi COMOOTD yang mudah dipadankan.`, image: safeImage(variant?.image || entry?.image || entry?.variants?.[0]?.image), ogType: "product" }; }
           return { title: `${name} — COMOOTD Journal`, description: String(entry?.excerpt || "Catatan style dari COMOOTD.").trim(), image: safeImage(entry?.coverImage), ogType: "article" };
-        }
-        function updateDirectoryMetadata(route) {
-          const canonical = new URL(window.location.href);
-          canonical.search = "";
-          const title = `${route.title} — COMOOTD`;
-          document.title = title;
-          document.getElementById("pageTitle")?.replaceChildren(title);
-          document.getElementById("canonicalUrl")?.setAttribute("href", canonical.href);
-          setMetaContent("pageDescription", route.deck);
-          setMetaContent("openGraphType", "website");
-          setMetaContent("openGraphTitle", title);
-          setMetaContent("openGraphDescription", route.deck);
-          setMetaContent("openGraphUrl", canonical.href);
-          setMetaContent("twitterCard", "summary");
-          setMetaContent("twitterTitle", title);
-          setMetaContent("twitterDescription", route.deck);
-          document.getElementById("openGraphImage")?.remove();
-          document.getElementById("twitterImage")?.remove();
         }
         function setMetaContent(id, value) { const node = document.getElementById(id); if (node) node.setAttribute("content", value); }
         function setOptionalMeta(id, attribute, attributeValue, value) {
@@ -2659,14 +2580,14 @@
         document.addEventListener("input",(event)=>{
           const input=event.target.closest('[data-directory-filter="q"]');
           if(!input)return;
-          directoryFilters.q=input.value;
+          directoryPage.setFilter("q",input.value);
           clearTimeout(directoryFilterTimer);
           directoryFilterTimer=setTimeout(renderDirectoryRoute,180);
         });
         document.addEventListener("change",(event)=>{
           const input=event.target.closest("[data-directory-filter]");
           if(!input||input.dataset.directoryFilter==="q")return;
-          directoryFilters[input.dataset.directoryFilter]=input.value;
+          directoryPage.setFilter(input.dataset.directoryFilter,input.value);
           renderDirectoryRoute();
         });
       })();

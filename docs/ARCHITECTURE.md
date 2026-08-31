@@ -14,6 +14,7 @@ assets/
   pages/
     home.css                       presentasi khusus halaman utama
     home.js                        orkestrasi state dan tampilan halaman utama
+    catalogue-directory.js         route, filter, dan shell directory publik
   components/
     image-cropper.js               komponen crop gambar yang dapat dipakai ulang
     catalog-media.js               renderer visual produk dan galeri Look
