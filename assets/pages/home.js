@@ -147,7 +147,6 @@
         const studioLibraryFilters = { looks:"", products:"" };
         const studioLibraryLimits = { looks:100, products:100 };
         const studioLibrarySearchTimers = { looks:null, products:null };
-        let toastTimer;
         let cloudAdmin = false;
         let bulkImportGroups = [];
         let bulkImportErrors = [];
@@ -200,6 +199,16 @@
           productVariantsInput: document.getElementById("productVariantsInput"),
           productMarketplaceInput: document.getElementById("productMarketplaceInput"),
           productLinkInput: document.getElementById("productLinkInput")
+        });
+        const notification = window.COMOOTDNotification.create({ element:els.toast });
+        const headerNavigation = window.COMOOTDNavigation.create({
+          menuButton:document.getElementById("menuButton"),
+          mobileNav:document.getElementById("mobileNav")
+        });
+        window.COMOOTDNavigation.bindSearchShortcut({
+          button:document.getElementById("searchButton"),
+          target:document.getElementById("lookbook"),
+          input:els.search
         });
 
         function loadState() {
@@ -707,11 +716,7 @@
           }).join("") || `<div class="empty-state"><h3>Belum ada produk</h3><p>Tambahkan dari COMOOTD Studio.</p></div>`;
         }
         function renderStyleControls() {
-          const styles = getAllStyles();
-          const previous = els.style.value;
-          els.style.innerHTML = `<option value="all">Semua style</option>${styles.map((style)=>`<option value="${esc(style)}">${esc(style)}</option>`).join("")}`;
-          if (styles.includes(previous)) els.style.value = previous;
-          els.styleChips.innerHTML = [`<button class="filter-chip ${activeStyle === "all" ? "is-active" : ""}" type="button" data-style="all">Semua</button>`, ...styles.map((style)=>`<button class="filter-chip ${activeStyle === style ? "is-active" : ""}" type="button" data-style="${esc(style)}">${esc(style)}</button>`)].join("");
+          window.COMOOTDFilters.renderStyleControls({ styles:getAllStyles(), select:els.style, chips:els.styleChips, activeStyle, escapeHtml:esc });
         }
         function lookAttribution(entry) {
           const curator = entry?.curator;
@@ -1519,9 +1524,9 @@
           els.articleDetail.innerHTML=`<article class="editorial-article"><header class="editorial-article-head"><p class="eyebrow">COMOOTD JOURNAL / ${esc(articleCategoryLabel(article.category))}</p><h2>${esc(article.title)}</h2>${article.excerpt ? `<p class="article-lede">${esc(article.excerpt)}</p>` : ""}<div class="editorial-article-meta"><span>${esc(articlePublishedLabel(article))}</span><span>${articleReadMinutes(article)} menit baca</span><span>${esc((article.styles||[]).slice(0,3).join(" / ") || "Style notes")}</span></div><div class="detail-actions" style="margin:1.35rem 0 0"><button class="button-outline" type="button" data-share-article="${esc(article.id)}">Bagikan artikel ↗</button></div></header><div class="editorial-article-visual">${cover ? `<figure class="article-cover ${imageFrameClass(article.coverAspect || article.coverImage, "portrait")}"><img src="${esc(cover)}" alt="${esc(article.coverAlt || article.title)}" /></figure>` : `<div class="article-cover" aria-hidden="true"></div>`}</div><div class="editorial-article-main"><div class="article-content">${blocks}</div>${articleCurationMarkup(article)}<button class="button-outline" type="button" data-close-article style="margin-top:1.7rem">Tutup artikel</button></div></article>`;
           if (!els.articleModal.open) els.articleModal.showModal();
         }
-        function showToast(message) { clearTimeout(toastTimer); els.toast.textContent=message; els.toast.classList.add("show"); toastTimer=setTimeout(()=>els.toast.classList.remove("show"),3200); }
+        function showToast(message) { notification.show(message); }
         function closeStudio() { els.studioDrawer.classList.remove("is-open"); els.studioScrim.classList.remove("is-open"); els.studioDrawer.setAttribute("aria-hidden","true"); document.body.classList.remove("drawer-open"); }
-        function openStudioDrawer() { els.studioDrawer.classList.add("is-open"); els.studioScrim.classList.add("is-open"); els.studioDrawer.setAttribute("aria-hidden","false"); document.body.classList.add("drawer-open"); document.getElementById("mobileNav").classList.remove("is-open"); }
+        function openStudioDrawer() { els.studioDrawer.classList.add("is-open"); els.studioScrim.classList.add("is-open"); els.studioDrawer.setAttribute("aria-hidden","false"); document.body.classList.add("drawer-open"); headerNavigation.close(); }
         function openAuth() {
           els.authFormError.textContent = "";
           els.authEmail.value = cloud?.config?.adminEmail || "";
@@ -1958,13 +1963,9 @@
           const button=event.target.closest("[data-mood-style]"); if(!button)return;
           activeMoodStyle=button.dataset.moodStyle; renderMoodList();
         });
-        document.getElementById("searchButton").addEventListener("click",()=>{ document.getElementById("lookbook").scrollIntoView({behavior:"smooth",block:"start"}); setTimeout(()=>els.search.focus(),500); });
-        document.getElementById("menuButton").addEventListener("click",(event)=>{ const nav=document.getElementById("mobileNav"); const open=nav.classList.toggle("is-open"); event.currentTarget.setAttribute("aria-expanded",String(open)); event.currentTarget.setAttribute("aria-label",open?"Tutup menu":"Buka menu"); });
-        document.getElementById("mobileNav").addEventListener("click",(event)=>{ if(event.target.closest("a")){ event.currentTarget.classList.remove("is-open"); const menuButton=document.getElementById("menuButton"); menuButton.setAttribute("aria-expanded","false"); menuButton.setAttribute("aria-label","Buka menu"); } });
         [document.getElementById("studioButton"),document.getElementById("mobileStudioButton")].forEach((button)=>button.addEventListener("click",openStudio));
         [els.accountButton, els.mobileAccountButton].forEach((button)=>button.addEventListener("click",()=>{
-          document.getElementById("mobileNav").classList.remove("is-open");
-          document.getElementById("menuButton").setAttribute("aria-expanded","false");
+          headerNavigation.close();
           openMemberAccount();
         }));
         els.personalGrid.addEventListener("click",(event)=>{

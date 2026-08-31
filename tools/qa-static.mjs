@@ -56,6 +56,9 @@ for (const asset of [
   "/assets/admin/bulk-import.js",
   "/assets/components/image-cropper.js",
   "/assets/components/catalog-media.js",
+  "/assets/components/notification.js",
+  "/assets/components/navigation.js",
+  "/assets/components/filters.js",
   "/assets/features/curator-studio.js",
   "/assets/features/platform-insights.js",
   "/assets/services/supabase.js",
@@ -78,7 +81,7 @@ for (const path of ["/about", "/privacy", "/terms", "/curator-policy", "/communi
   check(worker.includes(`"${path}"`), `${path} belum masuk sitemap`);
 }
 
-for (const file of ["_worker.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/services/supabase.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
+for (const file of ["_worker.js", "assets/pages/home.js", "assets/core/utils.js", "assets/admin/bulk-import.js", "assets/components/catalog-media.js", "assets/components/notification.js", "assets/components/navigation.js", "assets/components/filters.js", "assets/services/supabase.js", "assets/features/curator-studio.js", "assets/features/platform-insights.js", "assets/public-content-pages.js"]) {
   if (!existsSync(resolve(root, file))) continue;
   const result = spawnSync(process.execPath, ["--check", resolve(root, file)], { encoding: "utf8" });
   check(result.status === 0, `${file} gagal syntax check: ${(result.stderr || result.stdout).trim()}`);
@@ -114,6 +117,45 @@ try {
   check(media.lookMediaEntries({ media:[{ image:"https://example.com/look.jpg" }, { image:"https://example.com/look.jpg" }] }).length === 1, "Catalog media gagal menghapus foto look duplikat");
 } catch (error) {
   failures.push(`Uji modul frontend gagal: ${error?.message || error}`);
+}
+
+try {
+  const uiContext = { window:{}, Object, String, Boolean, Array, Error };
+  runInNewContext(read("assets/components/notification.js"), uiContext, { filename:"assets/components/notification.js" });
+  runInNewContext(read("assets/components/navigation.js"), uiContext, { filename:"assets/components/navigation.js" });
+  runInNewContext(read("assets/components/filters.js"), uiContext, { filename:"assets/components/filters.js" });
+
+  const classList = () => {
+    const values = new Set();
+    return {
+      add:(value) => values.add(value), remove:(value) => values.delete(value), contains:(value) => values.has(value),
+      toggle:(value, force) => { const enabled = force === undefined ? !values.has(value) : Boolean(force); if (enabled) values.add(value); else values.delete(value); return enabled; }
+    };
+  };
+  const toast = { textContent:"", classList:classList() };
+  let scheduled = null;
+  const notification = uiContext.window.COMOOTDNotification.create({ element:toast, scheduler:{ setTimeout:(callback) => { scheduled = callback; return 1; }, clearTimeout:() => {} } });
+  notification.show("Tersimpan");
+  check(toast.textContent === "Tersimpan" && toast.classList.contains("show"), "Komponen notification gagal menampilkan pesan");
+  scheduled?.();
+  check(!toast.classList.contains("show"), "Komponen notification gagal membersihkan pesan");
+
+  const listeners = {};
+  const attributes = {};
+  const menuButton = { addEventListener:(name, callback) => { listeners[`menu:${name}`] = callback; }, removeEventListener:() => {}, setAttribute:(name, value) => { attributes[name] = value; } };
+  const mobileNav = { classList:classList(), addEventListener:(name, callback) => { listeners[`nav:${name}`] = callback; }, removeEventListener:() => {} };
+  const navigation = uiContext.window.COMOOTDNavigation.create({ menuButton, mobileNav });
+  navigation.toggle();
+  check(mobileNav.classList.contains("is-open") && attributes["aria-expanded"] === "true", "Komponen navigation gagal membuka menu");
+  navigation.close();
+  check(!mobileNav.classList.contains("is-open") && attributes["aria-label"] === "Buka menu", "Komponen navigation gagal menutup menu");
+
+  const select = { value:"Casual", innerHTML:"" };
+  const chips = { innerHTML:"" };
+  uiContext.window.COMOOTDFilters.renderStyleControls({ styles:["Clean", "Casual"], select, chips, activeStyle:"Casual", escapeHtml:(value) => String(value) });
+  check(select.value === "Casual" && chips.innerHTML.includes('data-style="Casual"') && chips.innerHTML.includes("is-active"), "Komponen filters gagal mempertahankan style aktif");
+} catch (error) {
+  failures.push(`Uji komponen UI gagal: ${error?.message || error}`);
 }
 
 const insights = read("assets/features/platform-insights.js");

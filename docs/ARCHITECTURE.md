@@ -17,6 +17,9 @@ assets/
   components/
     image-cropper.js               komponen crop gambar yang dapat dipakai ulang
     catalog-media.js               renderer visual produk dan galeri Look
+    navigation.js                  state menu mobile dan shortcut pencarian
+    notification.js                lifecycle toast/status sementara
+    filters.js                     renderer filter style publik
   features/
     curator-studio.js              workflow dashboard curator
     curator-studio.css
@@ -61,6 +64,20 @@ penyajian aset; logika antarmuka tidak boleh dipindahkan ke Worker.
    serta event masing-masing sudah terdokumentasi.
 6. Evaluasi framework komponen setelah batas domain stabil; migrasi framework
    bukan syarat Fase 2 dan tidak boleh menjadi rewrite besar.
+
+## Penyempurnaan pasca-fondasi
+
+Penyelesaian struktur penuh dilakukan dalam deployment kecil agar ekstraksi
+tidak menjadi rewrite berisiko:
+
+1. **Batch A — shared UI:** navigation, notification, dan filters.
+2. **Batch B — pages dan routing:** directory Looks, Products, Curators,
+   Journal, serta profile dipisahkan dari orkestrator homepage.
+3. **Batch C — feature dan admin:** authentication, likes/saves, reports,
+   modal detail, dan panel admin dipindahkan setelah kontrak event stabil.
+
+Setiap batch wajib menjaga namespace kompatibilitas, memiliki pemeriksaan
+modul terisolasi, dan lulus release check sebelum batch berikutnya dimulai.
 
 ## Quality gate Fase 2
 
