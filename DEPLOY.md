@@ -17,7 +17,8 @@ Isi website berada di root repository:
 
 ```text
 index.html
-assets/supabase-adapter.js
+assets/pages/home.js
+assets/services/supabase.js
 config.js
 supabase/migrations/
 ```

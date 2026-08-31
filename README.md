@@ -69,6 +69,7 @@ Lihat [DEPLOY.md](DEPLOY.md) untuk langkah GitHub dan hosting. Untuk katalog aff
 Roadmap dan dokumen operasional:
 
 - [Roadmap 8 fase dan 6 milestone](docs/ROADMAP.md)
+- [Arsitektur frontend dan aturan batas modul](docs/ARCHITECTURE.md)
 - [Checklist rilis production sementara](docs/PRODUCTION_RELEASE_CHECKLIST.md)
 - [Environment staging dan production](docs/ENVIRONMENTS.md)
 - [Alur rilis](docs/RELEASE_WORKFLOW.md)
