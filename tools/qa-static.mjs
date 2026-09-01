@@ -264,6 +264,7 @@ check(styleNormalizationMigration.includes("'[[:space:]]+'"), "Normalisasi style
 check(!styleNormalizationMigration.includes("E'\\s+'"), "Migration style masih berisiko menghapus huruf s");
 check(styleNormalizationMigration.includes("('Ca ual', 'Casual')") && styleNormalizationMigration.includes("('Japane e', 'Japanese')"), "Data style yang telanjur rusak belum dipulihkan");
 const curatorExperience = read("assets/features/curator-studio.js");
+const curatorStyle = read("assets/features/curator-studio.css");
 check(curatorExperience.includes('dataset.archiveConfirmed') && curatorExperience.includes('textContent = "Mengarsipkan…"'), "Arsip curator belum memakai konfirmasi dan status proses yang terlihat");
 const curatorFollowerMigration = read("supabase/migrations/20260901200000_curator_public_follower_counts.sql");
 check(curatorFollowerMigration.includes("follower_count integer not null default 0") && curatorFollowerMigration.includes("comootd_curator_follows_sync_count"), "Penghitung follower publik Curator belum tersedia");
@@ -274,6 +275,8 @@ check(homeScript.includes("syncDiscoveryRails") && homeScript.includes("moveDisc
 check(/scroll-snap-type:\s*x mandatory/.test(read("assets/styles/ui-polish.css")), "Rail eksplorasi belum memiliki scroll snap");
 check(homeScript.includes("Minimalist\", \"Techwear\", \"Whimsy\", \"Workwear\", \"Clean\", \"Casual") && /\.slice\(0,\s*6\)/.test(homeScript), "Explore style belum mengisi enam pilihan");
 check(/\.slice\(0,\s*12\)/.test(homeScript) && /\.slice\(0,\s*12\)/.test(curatorExperience), "Konten rail belum dibatasi untuk menjaga performa beranda");
+check(curatorStyle.includes("grid-template-columns:repeat(5,minmax(0,1fr))") && curatorStyle.includes("grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem"), "Grid look Curator belum memakai lima kolom desktop dan dua kolom ponsel");
+check(curatorStyle.includes(".curator-look-card .curator-profile-metrics { display:none; }") && curatorStyle.includes(".curator-look-card-actions .curator-look-open span"), "Kartu look ponsel belum memiliki informasi dan aksi yang ringkas");
 check(read("assets/services/supabase.js").includes("follower_count, created_at") && read("assets/services/supabase.js").includes("followerCount: Math.max"), "Jumlah follower belum dimuat dari katalog Curator");
 const retention = read("assets/features/member-retention.js");
 const retentionMigration = read("supabase/migrations/20260831190000_comootd_phase5_member_retention.sql");
