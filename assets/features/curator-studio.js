@@ -451,8 +451,9 @@
           <div class="curator-heading-actions"><a class="text-link" href="${ROUTE_ROOT}" data-curator-directory>Meet all curators <span aria-hidden="true">↗</span></a>${leadAction}</div>
         </div>
       </div>
-      ${curators.length ? `<div class="curator-home-grid">${curators.slice(0, 4).map((curator, index) => curatorCardMarkup(curator, index)).join("")}</div>` : `<div class="curator-home-empty">Belum ada kurasi komunitas yang diterbitkan. Jadilah yang pertama membagikan sudut pandangmu.</div>`}
+      ${curators.length ? `<div class="discovery-rail-shell" data-discovery-carousel="curators"><div class="discovery-rail-controls" aria-label="Navigasi Curator"><span class="eyebrow" data-discovery-status aria-live="polite">01 / 01</span><button type="button" data-discovery-move="-1" aria-label="Curator sebelumnya">←</button><button type="button" data-discovery-move="1" aria-label="Curator berikutnya">→</button></div><div class="curator-home-grid discovery-rail" tabindex="0" role="region" aria-label="Curator yang dapat digeser">${curators.slice(0, 12).map((curator, index) => curatorCardMarkup(curator, index)).join("")}</div></div>` : `<div class="curator-home-empty">Belum ada kurasi komunitas yang diterbitkan. Jadilah yang pertama membagikan sudut pandangmu.</div>`}
     </section>`;
+    window.COMOOTDSyncDiscoveryRails?.();
   }
   function profileSocialMarkup(curator) {
     const socials = curator.socials.filter((social) => /^https:\/\//i.test(social.url));

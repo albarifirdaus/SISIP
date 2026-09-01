@@ -721,9 +721,17 @@
         }
 
         function renderMoodList() {
-          const configured = (state.styleTags || []).filter((tag) => typeof tag === "object" && tag?.isExploreVisible).slice(0,5);
-          const fallback = ["Clean", "Casual", "Formal", "Streetwear", "Modest"].map((name) => ({ id:"", name, previewLookId:"" }));
-          const moods = (configured.length ? configured : fallback).map((tag) => typeof tag === "string" ? { id:"", name:tag, previewLookId:"" } : tag);
+          const taxonomy = (state.styleTags || []).filter((tag) => typeof tag === "object" && tag?.name && tag?.isActive !== false);
+          const configured = taxonomy.filter((tag) => tag.isExploreVisible);
+          const fallback = ["Minimalist", "Techwear", "Whimsy", "Workwear", "Clean", "Casual"].map((name) => ({ id:"", name, previewLookId:"" }));
+          const moodPool = [...configured, ...taxonomy, ...fallback];
+          const moodNames = new Set();
+          const moods = moodPool.filter((tag) => {
+            const key = String(tag?.name || "").trim().toLocaleLowerCase("id-ID");
+            if (!key || moodNames.has(key)) return false;
+            moodNames.add(key);
+            return true;
+          }).slice(0,6).map((tag) => typeof tag === "string" ? { id:"", name:tag, previewLookId:"" } : tag);
           if (!moods.some((tag) => tag.name === activeMoodStyle)) activeMoodStyle = moods[0]?.name || "";
           const activeTag = moods.find((tag) => tag.name === activeMoodStyle) || moods[0];
           const styleKey = String(activeTag?.name || "").toLocaleLowerCase("id-ID");
@@ -736,16 +744,51 @@
           const buttons = moods.map((mood, index) => `<button class="mood-button${mood.name === activeMoodStyle ? " is-active" : ""}" type="button" data-mood-style="${esc(mood.name)}" aria-pressed="${String(mood.name === activeMoodStyle)}"><strong>${esc(mood.name)}</strong><span>${String(index+1).padStart(2,"0")} ↘</span></button>`).join("");
           els.moodList.innerHTML = `${previewMarkup}<div class="mood-options" style="--mood-count:${moods.length}">${buttons}</div>`;
         }
+        function discoveryRailStep(rail) {
+          const card = rail?.firstElementChild;
+          if (!card) return 0;
+          const style = getComputedStyle(rail);
+          return card.getBoundingClientRect().width + (Number.parseFloat(style.columnGap || style.gap) || 0);
+        }
+        function syncDiscoveryRail(shell) {
+          const rail = shell?.querySelector(".discovery-rail");
+          if (!rail) return;
+          const controls = [...shell.querySelectorAll("[data-discovery-move]")];
+          const status = shell.querySelector("[data-discovery-status]");
+          const total = rail.children.length;
+          const step = discoveryRailStep(rail);
+          const current = total && step ? Math.min(total, Math.max(1, Math.round(rail.scrollLeft / step) + 1)) : total ? 1 : 0;
+          const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+          if (status) status.textContent = `${String(current).padStart(2,"0")} / ${String(total).padStart(2,"0")}`;
+          controls.forEach((button) => { button.disabled = button.dataset.discoveryMove === "-1" ? rail.scrollLeft <= 2 : rail.scrollLeft >= max - 2; });
+        }
+        function syncDiscoveryRails() {
+          document.querySelectorAll("[data-discovery-carousel]").forEach((shell) => {
+            const rail = shell.querySelector(".discovery-rail");
+            if (rail && !rail.dataset.discoveryReady) {
+              rail.dataset.discoveryReady = "true";
+              rail.addEventListener("scroll",()=>requestAnimationFrame(()=>syncDiscoveryRail(shell)),{passive:true});
+            }
+            syncDiscoveryRail(shell);
+          });
+        }
+        function moveDiscoveryRail(shell, direction) {
+          const rail = shell?.querySelector(".discovery-rail");
+          if (!rail) return;
+          rail.scrollBy({ left:discoveryRailStep(rail) * direction, behavior:"smooth" });
+        }
+        window.COMOOTDSyncDiscoveryRails = () => requestAnimationFrame(syncDiscoveryRails);
         function renderPopular() {
           const counts = new Map();
           state.looks.forEach((entry) => entry.items.forEach((item) => {
             if (item.productId) counts.set(item.productId, (counts.get(item.productId)||0)+1);
           }));
-          const popular = [...state.products].sort((a,b) => (counts.get(b.id)||0)-(counts.get(a.id)||0)).slice(0,4);
+          const popular = [...state.products].sort((a,b) => (counts.get(b.id)||0)-(counts.get(a.id)||0)).slice(0,12);
           els.popularGrid.innerHTML = popular.map((item) => {
             const variant = item.variants[0];
             return `<article class="popular-card"><button class="product-card-open" type="button" data-open-product="${esc(item.id)}" aria-label="Buka detail ${esc(item.name)}">${productArt(item, variant)}</button><p class="eyebrow" style="color:var(--taupe);margin:.1rem 0 .45rem">${esc(item.badge || "COMOOTD PICK")}</p><h3 class="product-name"><button class="product-name-link" type="button" data-open-product="${esc(item.id)}">${esc(item.name)}</button></h3><p class="product-price">${money(item.price)}</p><div class="product-meta"><span class="swatch" style="--swatch:${esc(variant?.hex || "#ccc")}" title="${esc(variant?.name || "")}"></span><a class="product-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(item.id)}">${esc(marketplaceLabel(item))} ↗</a></div></article>`;
           }).join("") || `<div class="empty-state"><h3>Belum ada produk</h3><p>Tambahkan dari COMOOTD Studio.</p></div>`;
+          window.COMOOTDSyncDiscoveryRails();
         }
         function renderStyleControls() {
           window.COMOOTDFilters.renderStyleControls({ styles:getAllStyles(), select:els.style, chips:els.styleChips, activeStyle, escapeHtml:esc });
@@ -837,10 +880,11 @@
         }
         function renderJournalStudio() { renderJournalBlockEditor(); renderJournalCuration(); }
         function renderJournal() {
-          document.getElementById("journalGrid").innerHTML = state.articles.length ? state.articles.map((article) => {
+          document.getElementById("journalGrid").innerHTML = state.articles.length ? state.articles.slice(0,12).map((article) => {
             const cover = safeImage(article.coverImage);
             return `<article class="journal-card">${cover ? `<div class="journal-card-cover ${imageFrameClass(article.coverAspect || article.coverImage, "portrait")}" aria-hidden="true"><img src="${esc(cover)}" alt="" /></div>` : ""}<span class="article-number eyebrow">${esc(articleCategoryLabel(article.category))} / ${esc(article.number)}</span><h3>${esc(article.title)}</h3>${article.excerpt ? `<p class="journal-card-excerpt">${esc(article.excerpt)}</p>` : ""}<button class="text-link" type="button" data-open-article="${esc(article.id)}">Baca catatan ↗</button></article>`;
           }).join("") : `<div class="empty-state"><h3>Journal segera hadir.</h3><p>Catatan fashion berikutnya sedang disiapkan.</p></div>`;
+          window.COMOOTDSyncDiscoveryRails();
         }
         const STOREFRONT_CARD_LABELS = { looks:"Looks", products:"Products", curators:"Curators", journal:"Journal" };
         function storefrontSourceId(key, entry) {
@@ -2054,6 +2098,18 @@
           const button=event.target.closest("[data-mood-style]"); if(!button)return;
           activeMoodStyle=button.dataset.moodStyle; renderMoodList();
         });
+        document.addEventListener("click",(event)=>{
+          const control=event.target.closest("[data-discovery-move]");
+          if(!control)return;
+          moveDiscoveryRail(control.closest("[data-discovery-carousel]"),Number(control.dataset.discoveryMove)||1);
+        });
+        document.addEventListener("keydown",(event)=>{
+          const rail=event.target.closest?.(".discovery-rail");
+          if(!rail || (event.key!=="ArrowLeft" && event.key!=="ArrowRight"))return;
+          event.preventDefault();
+          moveDiscoveryRail(rail.closest("[data-discovery-carousel]"),event.key==="ArrowLeft"?-1:1);
+        });
+        window.addEventListener("resize",()=>requestAnimationFrame(syncDiscoveryRails),{passive:true});
         [document.getElementById("studioButton"),document.getElementById("mobileStudioButton")].forEach((button)=>button.addEventListener("click",openStudio));
         [els.accountButton, els.mobileAccountButton].forEach((button)=>button.addEventListener("click",()=>{
           headerNavigation.close();

@@ -269,6 +269,11 @@ const curatorFollowerMigration = read("supabase/migrations/20260901200000_curato
 check(curatorFollowerMigration.includes("follower_count integer not null default 0") && curatorFollowerMigration.includes("comootd_curator_follows_sync_count"), "Penghitung follower publik Curator belum tersedia");
 check(curatorFollowerMigration.includes("security definer") && curatorFollowerMigration.includes("set search_path = ''") && curatorFollowerMigration.includes("revoke all on function private.sync_comootd_curator_follower_count()"), "Sinkronisasi follower Curator belum diisolasi dengan aman");
 check(curatorExperience.includes("curator-card-stats") && curatorExperience.includes("curator-profile-intro") && curatorExperience.includes("curator-icon-button") && curatorExperience.includes("followedCuratorIds"), "Penyegaran kartu, profil, dan follower Curator Tahap 5 belum lengkap");
+check(index.includes('data-discovery-carousel="products"') && index.includes('data-discovery-carousel="journal"') && curatorExperience.includes('data-discovery-carousel="curators"'), "Rail eksplorasi Products, Curators, dan Journal belum lengkap");
+check(homeScript.includes("syncDiscoveryRails") && homeScript.includes("moveDiscoveryRail") && /event\.key\s*===\s*"ArrowLeft"/.test(homeScript) && /event\.key\s*!==\s*"ArrowRight"/.test(homeScript), "Rail eksplorasi belum mendukung sinkronisasi tombol dan keyboard");
+check(/scroll-snap-type:\s*x mandatory/.test(read("assets/styles/ui-polish.css")), "Rail eksplorasi belum memiliki scroll snap");
+check(homeScript.includes("Minimalist\", \"Techwear\", \"Whimsy\", \"Workwear\", \"Clean\", \"Casual") && /\.slice\(0,\s*6\)/.test(homeScript), "Explore style belum mengisi enam pilihan");
+check(/\.slice\(0,\s*12\)/.test(homeScript) && /\.slice\(0,\s*12\)/.test(curatorExperience), "Konten rail belum dibatasi untuk menjaga performa beranda");
 check(read("assets/services/supabase.js").includes("follower_count, created_at") && read("assets/services/supabase.js").includes("followerCount: Math.max"), "Jumlah follower belum dimuat dari katalog Curator");
 const retention = read("assets/features/member-retention.js");
 const retentionMigration = read("supabase/migrations/20260831190000_comootd_phase5_member_retention.sql");

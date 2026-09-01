@@ -213,7 +213,14 @@
             <a class="text-link" href="/products">Explore products <span aria-hidden="true">↘</span></a>
           </div>
         </div>
-        <div class="popular-grid" id="popularGrid"></div>
+        <div class="discovery-rail-shell" data-discovery-carousel="products">
+          <div class="discovery-rail-controls" aria-label="Navigasi produk pilihan">
+            <span class="eyebrow" data-discovery-status aria-live="polite">01 / 01</span>
+            <button type="button" data-discovery-move="-1" aria-label="Produk sebelumnya">←</button>
+            <button type="button" data-discovery-move="1" aria-label="Produk berikutnya">→</button>
+          </div>
+          <div class="popular-grid discovery-rail" id="popularGrid" tabindex="0" role="region" aria-label="Produk pilihan yang dapat digeser"></div>
+        </div>
       </section>
 
       <div id="curatorsMount"></div>
@@ -229,7 +236,14 @@
             <a class="text-link" href="/journal">Baca semua journal <span aria-hidden="true">↗</span></a>
           </div>
         </div>
-        <div class="journal-grid" id="journalGrid"></div>
+        <div class="discovery-rail-shell" data-discovery-carousel="journal">
+          <div class="discovery-rail-controls is-light" aria-label="Navigasi artikel Journal">
+            <span class="eyebrow" data-discovery-status aria-live="polite">01 / 01</span>
+            <button type="button" data-discovery-move="-1" aria-label="Artikel sebelumnya">←</button>
+            <button type="button" data-discovery-move="1" aria-label="Artikel berikutnya">→</button>
+          </div>
+          <div class="journal-grid discovery-rail" id="journalGrid" tabindex="0" role="region" aria-label="Artikel Journal yang dapat digeser"></div>
+        </div>
       </section>
 
       <section class="section personal-section" id="forYou" aria-labelledby="forYouTitle">
