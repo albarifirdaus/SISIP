@@ -285,8 +285,8 @@ body.request-route-open { overflow: hidden; }
   .request-route-form { padding: 1rem; }
   .request-form-head { align-items: flex-start; flex-direction: column; }
   .request-form-head p { text-align: left; }
-  .member-profile-head { padding-right: 2.5rem; }
-  .member-profile-head h2 { font-size: clamp(2.2rem,11vw,3.3rem); }
+  .member-profile-head { align-items: flex-start; flex-direction: column; margin-right: 2.5rem; padding-right: 0; }
+  .member-profile-head h2 { max-width: 8em; font-size: clamp(2.2rem,11vw,3.3rem); }
   .member-profile-disclosure > summary { min-height: 64px; }
   .curator-callout-body { align-items: stretch; flex-direction: column; }
 }
