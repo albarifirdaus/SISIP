@@ -38,7 +38,7 @@ const SITE_DESCRIPTION = "Kurasi fashion all-gender untuk membantu menemukan loo
 const SITE_LOCALE = "id_ID";
 const SITEMAP_PAGE_SIZE = 1000;
 const SITEMAP_URLS_PER_FILE = 5000;
-const SITEMAP_CACHE_VERSION = "v3";
+const SITEMAP_CACHE_VERSION = "v4";
 const SITEMAP_CACHE_CONTROL = "public, max-age=300, s-maxage=900, stale-while-revalidate=86400";
 
 function escapeHtml(value) {
@@ -66,7 +66,8 @@ function routeFromRequest(request) {
       curators: "curator-directory",
       looks: "look-directory",
       products: "product-directory",
-      journal: "journal-directory"
+      journal: "journal-directory",
+      request: "request-page"
     };
     return directories[parts[0]] ? { type: directories[parts[0]] } : null;
   }
@@ -756,6 +757,11 @@ function directoryMetadata(env, type) {
       title: "Journal — COMOOTD",
       description: "Catatan style, panduan mix-and-match, dan referensi fashion dari COMOOTD.",
       canonical: `${origin}/journal`
+    },
+    "request-page": {
+      title: "Request Outfit — COMOOTD",
+      description: "Kirim brief agenda, budget, dan arah gaya untuk menerima rekomendasi outfit personal dari COMOOTD.",
+      canonical: `${origin}/request`
     }
   };
   const entry = metadata[type];
@@ -834,7 +840,7 @@ async function renderContentPage(request, env, route) {
     }
   }
   if (route.type === "style-directory") return renderStyleDirectoryPage(request, env, route);
-  if (route.type.endsWith("directory")) return renderDirectoryPage(request, env, route.type);
+  if (route.type.endsWith("directory") || route.type === "request-page") return renderDirectoryPage(request, env, route.type);
   if (route.type === "curator") return renderCuratorPage(request, env, route);
   const spec = CONTENT_SPECS[route.type];
   if (!spec) return errorPage(request, env, 404);
@@ -1008,6 +1014,7 @@ function staticSitemapEntries(env) {
     sitemapEntry(canonicalUrl(env, "/products"), { changefreq: "daily", priority: "0.8" }),
     sitemapEntry(canonicalUrl(env, "/journal"), { changefreq: "weekly", priority: "0.8" }),
     sitemapEntry(canonicalUrl(env, "/curators"), { changefreq: "weekly", priority: "0.7" }),
+    sitemapEntry(canonicalUrl(env, "/request"), { changefreq: "monthly", priority: "0.6" }),
     sitemapEntry(canonicalUrl(env, "/about"), { changefreq: "monthly", priority: "0.6" }),
     sitemapEntry(canonicalUrl(env, "/privacy"), { changefreq: "yearly", priority: "0.3" }),
     sitemapEntry(canonicalUrl(env, "/terms"), { changefreq: "yearly", priority: "0.3" }),

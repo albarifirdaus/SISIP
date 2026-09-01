@@ -118,7 +118,7 @@
 
     function savedRow(item, collection) {
       const otherCollections = state.collections.filter((candidate) => candidate.id !== collection.id);
-      return `<li class="retention-item"><div><span>${esc(item.targetType === "look" ? "LOOK" : "PRODUK")}</span><strong>${esc(titleFor(item.targetType, item.targetId))}</strong></div><div class="retention-item-actions">${otherCollections.length ? `<select aria-label="Pilih koleksi tujuan" data-retention-target-collection>${otherCollections.map((candidate) => `<option value="${esc(candidate.id)}">${esc(candidate.name)}</option>`).join("")}</select><button type="button" data-retention-copy="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}">Tambah</button>` : ""}<button type="button" data-retention-remove="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}" data-retention-collection="${esc(collection.id)}">Hapus</button></div></li>`;
+      return `<li class="retention-item"><div><span>${esc(item.targetType === "look" ? "LOOK" : "PRODUK")}</span><strong>${esc(titleFor(item.targetType, item.targetId))}</strong></div><div class="retention-item-actions"><button class="retention-open-button" type="button" data-retention-open="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}">Lihat <span aria-hidden="true">↗</span></button>${otherCollections.length ? `<select aria-label="Pilih koleksi tujuan" data-retention-target-collection>${otherCollections.map((candidate) => `<option value="${esc(candidate.id)}">${esc(candidate.name)}</option>`).join("")}</select><button type="button" data-retention-copy="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}">Tambah</button>` : ""}<button type="button" data-retention-remove="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}" data-retention-collection="${esc(collection.id)}">Hapus</button></div></li>`;
     }
 
     function renderPanel(root) {
@@ -134,6 +134,8 @@
     }
 
     document.addEventListener("click", (event) => {
+      const open = event.target.closest("[data-retention-open]");
+      if (open) { window.dispatchEvent(new CustomEvent("comootd:open-retention-item", { detail:{ type:open.dataset.retentionOpen, id:open.dataset.retentionId } })); return; }
       const save = event.target.closest("[data-retention-save]");
       if (save) { event.preventDefault(); event.stopPropagation(); void toggleSave(save.dataset.retentionSave, save.dataset.retentionId); return; }
       const follow = event.target.closest("[data-retention-follow]");

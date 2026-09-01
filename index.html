@@ -52,7 +52,7 @@
           <a href="#styles">Styles</a>
           <a href="/curators">Curators</a>
           <a href="/journal">Journal</a>
-          <a href="#request">Request</a>
+          <a href="/request">Request</a>
         </nav>
         <div class="header-actions">
           <button class="icon-button" id="searchButton" type="button" aria-label="Cari look">
@@ -79,7 +79,7 @@
         </div>
         <div class="mobile-nav-secondary">
           <a href="#styles">Styles</a>
-          <a href="#request">Request outfit</a>
+          <a href="/request">Request outfit</a>
           <a href="/about">Tentang COMOOTD</a>
         </div>
         <div class="mobile-nav-actions">
@@ -247,30 +247,13 @@
         <div class="personal-grid" id="personalGrid"></div>
       </section>
 
-      <section class="section" id="request" aria-labelledby="requestTitle">
-        <div class="request-grid">
-          <div class="request-copy">
-            <h2 class="section-title" id="requestTitle">STUCK ON WHAT<br />TO WEAR?<br /><span>LET US STYLE YOU.</span></h2>
-            <p class="request-description">Punya agenda penting minggu ini? Berikan <em>brief</em> atau tema acara kamu, dan kurator gaya kami akan meracik <em>lookboard</em> khusus sesuai profilmu.</p>
-            <div class="request-note">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 8v4l2.5 1.5"></path><circle cx="12" cy="12" r="8.5"></circle></svg>
-              <span class="microcopy">Request hanya dapat dikirim dari akun COMOOTD agar antrean Studio tetap aman dan relevan.</span>
-            </div>
-          </div>
-          <form class="request-form" id="requestForm">
-            <div class="form-grid">
-              <div class="field full"><label for="requestNeed">Untuk acara apa?</label><input id="requestNeed" name="occasion" required maxlength="160" placeholder="Contoh: bukber kantor, wisuda, date malam" /></div>
-              <div class="field"><label for="requestGender">Gender preferensi</label><select id="requestGender" name="genderTarget"><option value="">Tidak ingin menyebutkan</option><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
-              <div class="field"><label for="requestStyle">Arah gaya</label><input id="requestStyle" name="styleTags" placeholder="Clean, playful, modest" /></div>
-              <div class="field"><label for="requestBudgetMin">Budget minimum (opsional)</label><input id="requestBudgetMin" name="budgetMin" inputmode="numeric" placeholder="200000" /></div>
-              <div class="field"><label for="requestBudgetMax">Budget maksimum (opsional)</label><input id="requestBudgetMax" name="budgetMax" inputmode="numeric" placeholder="500000" /></div>
-              <div class="field full"><label for="requestColor">Warna yang disukai</label><input id="requestColor" name="preferredColors" placeholder="Olive, hitam, earth tone" /></div>
-              <div class="field full"><label for="requestNotes">Detail tambahan</label><textarea id="requestNotes" name="message" required maxlength="3000" placeholder="Item yang ingin dihindari, ukuran, proporsi tubuh (opsional), atau referensi suasana."></textarea></div>
-            </div>
-            <button class="button" type="submit" id="requestSubmitButton">Masuk untuk mengirim <span aria-hidden="true">↗</span></button>
-            <p class="form-status" id="requestStatus" role="status"></p>
-          </form>
+      <section class="section request-home-cta" aria-labelledby="requestHomeTitle">
+        <div>
+          <p class="eyebrow">COMOOTD / PERSONAL STYLING</p>
+          <h2 id="requestHomeTitle">STUCK ON WHAT TO WEAR?</h2>
         </div>
+        <p>Kirim agenda, budget, dan arah gayamu. Tim COMOOTD akan menyusun rekomendasi yang bisa kamu pantau dari profil.</p>
+        <a class="button" href="/request">Request an outfit <span aria-hidden="true">↗</span></a>
       </section>
 
       <section class="section about-section" id="about" aria-labelledby="aboutTitle">
@@ -290,6 +273,41 @@
       </section>
     </main>
 
+    <div class="request-route-layer" id="requestRouteLayer" hidden>
+      <header class="request-route-bar">
+        <a class="request-route-brand" href="/" aria-label="Kembali ke beranda COMOOTD"><img src="/assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="COMOOTD" /></a>
+        <a class="request-route-back" href="/">← Back to home</a>
+      </header>
+      <main class="request-route-body" aria-labelledby="requestTitle">
+        <div class="request-route-intro">
+          <p class="eyebrow">COMOOTD / OUTFIT REQUEST</p>
+          <h1 id="requestTitle">LET US STYLE<br />YOUR NEXT<br /><em>OCCASION.</em></h1>
+          <p>Punya agenda penting? Berikan <em>brief</em>, budget, dan arah gaya. Tim COMOOTD akan meracik rekomendasi yang bisa kamu pantau langsung dari profil.</p>
+          <div class="request-route-steps" aria-label="Cara kerja Request Outfit">
+            <span><b>01</b> Kirim brief</span><span><b>02</b> Tim meninjau</span><span><b>03</b> Terima kurasi</span>
+          </div>
+        </div>
+        <form class="request-form request-route-form" id="requestForm">
+          <div class="request-form-head"><span class="eyebrow">YOUR BRIEF</span><p>Semua informasi hanya dipakai untuk menyusun request ini.</p></div>
+          <div class="form-grid">
+            <div class="field full"><label for="requestNeed">Untuk acara apa?</label><input id="requestNeed" name="occasion" required maxlength="160" placeholder="Contoh: bukber kantor, wisuda, date malam" /></div>
+            <div class="field"><label for="requestGender">Gender preferensi</label><select id="requestGender" name="genderTarget"><option value="">Tidak ingin menyebutkan</option><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
+            <div class="field"><label for="requestStyle">Arah gaya</label><input id="requestStyle" name="styleTags" placeholder="Clean, playful, modest" /></div>
+            <div class="field"><label for="requestBudgetMin">Budget minimum (opsional)</label><input id="requestBudgetMin" name="budgetMin" inputmode="numeric" placeholder="200000" /></div>
+            <div class="field"><label for="requestBudgetMax">Budget maksimum (opsional)</label><input id="requestBudgetMax" name="budgetMax" inputmode="numeric" placeholder="500000" /></div>
+            <div class="field full"><label for="requestColor">Warna yang disukai</label><input id="requestColor" name="preferredColors" placeholder="Olive, hitam, earth tone" /></div>
+            <div class="field full"><label for="requestNotes">Detail tambahan</label><textarea id="requestNotes" name="message" required maxlength="3000" placeholder="Item yang ingin dihindari, ukuran, proporsi tubuh (opsional), atau referensi suasana."></textarea></div>
+          </div>
+          <div class="request-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 8v4l2.5 1.5"></path><circle cx="12" cy="12" r="8.5"></circle></svg>
+            <span class="microcopy">Request hanya dapat dikirim dari akun COMOOTD agar antrean Studio tetap aman dan relevan.</span>
+          </div>
+          <button class="button" type="submit" id="requestSubmitButton">Masuk untuk mengirim <span aria-hidden="true">↗</span></button>
+          <p class="form-status" id="requestStatus" role="status"></p>
+        </form>
+      </main>
+    </div>
+
     <footer class="footer">
       <div class="footer-top">
         <div class="footer-brand">COMOOTD</div>
@@ -297,7 +315,7 @@
       </div>
       <div class="footer-bottom">
         <span>© <span id="currentYear"></span> COMOOTD</span>
-        <div class="footer-links"><a href="/about">Tentang</a><a href="/privacy">Privasi</a><a href="/terms">Ketentuan</a><a href="/curator-policy">Curator</a><a href="/affiliate-info">Tautan produk</a><a href="#request">Request</a><a href="#home">Kembali ke atas ↑</a></div>
+        <div class="footer-links"><a href="/about">Tentang</a><a href="/privacy">Privasi</a><a href="/terms">Ketentuan</a><a href="/curator-policy">Curator</a><a href="/affiliate-info">Tautan produk</a><a href="/request">Request</a><a href="#home">Kembali ke atas ↑</a></div>
       </div>
     </footer>
 
@@ -377,8 +395,12 @@
             <div><p class="eyebrow" style="color:var(--clay)">COMOOTD / PROFIL GAYA</p><h2>Lebih kamu, lebih mudah dipilih.</h2></div>
             <button class="small-button muted" id="memberSignOutButton" type="button">Keluar</button>
           </div>
-          <p class="member-help">Semua pilihan ini bersifat opsional. Pilih hingga 10 style yang paling mendekati gayamu.</p>
-          <form class="form-stack" id="memberProfileForm">
+          <div class="member-profile-sections">
+          <details class="member-profile-disclosure" open>
+            <summary><span><b>Profil gaya</b><small>Preferensi untuk personalisasi kurasi</small></span><span aria-hidden="true">+</span></summary>
+            <div class="member-profile-disclosure-body">
+            <p class="member-help">Semua pilihan ini bersifat opsional. Pilih hingga 10 style yang paling mendekati gayamu.</p>
+            <form class="form-stack" id="memberProfileForm">
             <div class="compact-row">
               <div class="field"><label for="memberProfileName">Nama panggilan</label><input id="memberProfileName" name="displayName" maxlength="80" autocomplete="name" /></div>
               <div class="field"><label for="memberProfileGender">Gender preferensi</label><select id="memberProfileGender" name="genderTarget"><option value="">Tidak ingin menyebutkan</option><option value="unisex">Uniseks</option><option value="pria">Pria</option><option value="wanita">Wanita</option></select></div>
@@ -390,18 +412,33 @@
             </div>
             <p class="form-error" id="memberProfileError" role="alert"></p>
             <button class="button" type="submit">Simpan preferensi <span aria-hidden="true">↗</span></button>
-          </form>
-          <section class="studio-section member-notification-section" id="memberNotificationPanel" aria-label="Notifikasi akun">
+            </form>
+            </div>
+          </details>
+          <details class="member-profile-disclosure">
+            <summary><span><b>Notifikasi</b><small>Update akun dan status moderasi</small></span><span aria-hidden="true">+</span></summary>
+            <section class="studio-section member-notification-section" id="memberNotificationPanel" aria-label="Notifikasi akun">
             <div class="member-notification-head"><div><h3>Notifikasi</h3><p>Update pengajuan Curator dan status moderasi muncul di sini.</p></div><button class="small-button muted" id="markAllNotificationsRead" type="button" hidden>Tandai dibaca</button></div>
             <div class="member-notification-list" id="memberNotificationList"><p class="microcopy">Belum ada notifikasi.</p></div>
-          </section>
-          <section class="studio-section member-retention-section" id="memberRetentionPanel" aria-label="Koleksi dan aktivitas akun"></section>
-          <section class="studio-section privacy-center-section" id="memberPrivacyPanel" data-privacy-center aria-label="Pusat privasi akun"></section>
-          <section class="studio-section" style="margin-top:2rem">
+            </section>
+          </details>
+          <details class="member-profile-disclosure">
+            <summary><span><b>Koleksi</b><small>Item tersimpan dan aktivitas personal</small></span><span aria-hidden="true">+</span></summary>
+            <section class="studio-section member-retention-section" id="memberRetentionPanel" aria-label="Koleksi dan aktivitas akun"></section>
+          </details>
+          <details class="member-profile-disclosure">
+            <summary><span><b>Request outfit</b><small>Status dan jawaban dari COMOOTD</small></span><span aria-hidden="true">+</span></summary>
+            <section class="studio-section member-request-section">
             <h3>Request kamu</h3>
             <p>Setelah COMOOTD menyiapkan jawabannya, look dan produk terkait akan muncul di sini.</p>
             <div class="member-request-list" id="memberRequestList"></div>
-          </section>
+            </section>
+          </details>
+          <details class="member-profile-disclosure">
+            <summary><span><b>Privasi &amp; data</b><small>Persetujuan, ekspor, dan penghapusan akun</small></span><span aria-hidden="true">+</span></summary>
+            <section class="studio-section privacy-center-section" id="memberPrivacyPanel" data-privacy-center aria-label="Pusat privasi akun"></section>
+          </details>
+          </div>
         </div>
       </div>
     </dialog>

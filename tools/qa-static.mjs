@@ -79,11 +79,14 @@ check(index.includes('class="mobile-nav-primary"') && index.includes('class="mob
 check(index.indexOf('id="lookbook"') < index.indexOf('id="popularTitle"'), "Highlight Looks harus muncul sebelum highlight Products");
 check(index.indexOf('id="journal"') < index.indexOf('id="forYou"'), "Rekomendasi personal harus muncul setelah editorial Journal");
 check(index.includes('href="/privacy"') && index.includes('href="/terms"'), "Footer belum menautkan halaman legal");
+check(index.includes('id="requestRouteLayer"') && index.includes('href="/request"'), "Halaman Request Outfit belum dipisahkan dari beranda");
+check(worker.includes('request: "request-page"') && worker.includes('canonicalUrl(env, "/request")'), "Route dan sitemap Request Outfit belum tersedia");
+check(index.includes('class="member-profile-disclosure"'), "Profil member belum memakai bagian buka/tutup yang ringkas");
 check(about.includes("comootd@gmail.com") && about.includes("instagram.com/comootd.id"), "Kontak resmi belum lengkap");
 check(worker.includes("Strict-Transport-Security"), "Header HSTS belum aktif");
 check(worker.includes("Permissions-Policy"), "Permissions-Policy belum aktif");
 check(worker.includes("APP_ENV") && worker.includes("Disallow: /"), "Proteksi indexing staging belum aktif");
-for (const path of ["/about", "/privacy", "/terms", "/curator-policy", "/community-guidelines", "/affiliate-info"]) {
+for (const path of ["/request", "/about", "/privacy", "/terms", "/curator-policy", "/community-guidelines", "/affiliate-info"]) {
   check(worker.includes(`"${path}"`), `${path} belum masuk sitemap`);
 }
 
@@ -231,6 +234,7 @@ const retentionMigration = read("supabase/migrations/20260831190000_comootd_phas
 const retentionHardening = read("supabase/migrations/20260831191500_phase5_saved_items_security_invoker.sql");
 check(retention.includes("toggleSavedItem") && retention.includes("toggleCuratorFollow") && retention.includes("recordView"), "Fase 5 belum memuat save, follow, dan recently viewed");
 check(retention.includes("createMemberCollection") && appSource.includes('id="memberRetentionPanel"'), "Koleksi member belum terhubung ke profil");
+check(retention.includes("data-retention-open") && appSource.includes("comootd:open-retention-item"), "Item koleksi belum memiliki tombol langsung ke detail");
 check(retentionMigration.includes("enable row level security") && retentionHardening.includes("security invoker") && retentionMigration.includes("set search_path = ''"), "Data retention belum memiliki RLS dan RPC terisolasi");
 check(appSource.includes("memberRetention.score(entry, type)") && appSource.includes("memberRetention.hasSignals()"), "Feed personal belum memakai sinyal aktivitas Fase 5");
 

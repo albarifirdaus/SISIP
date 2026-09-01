@@ -184,7 +184,7 @@
           lookModal: document.getElementById("lookModal"), lookDetail: document.getElementById("lookDetail"), articleModal: document.getElementById("articleModal"), articleDetail: document.getElementById("articleDetail"), productModal: document.getElementById("productModal"), productDetail: document.getElementById("productDetail"),
           authModal: document.getElementById("authModal"), authForm: document.getElementById("authForm"), authEmail: document.getElementById("authEmail"), authPassword: document.getElementById("authPassword"), authFormError: document.getElementById("authFormError"),
           accountButton: document.getElementById("accountButton"), mobileAccountButton: document.getElementById("mobileAccountButton"), memberModal: document.getElementById("memberModal"), memberAuthView: document.getElementById("memberAuthView"), memberProfileView: document.getElementById("memberProfileView"), memberAuthTitle: document.getElementById("memberAuthTitle"), memberAuthCopy: document.getElementById("memberAuthCopy"), memberAuthForm: document.getElementById("memberAuthForm"), memberAuthError: document.getElementById("memberAuthError"), memberGoogleAuthButton: document.getElementById("memberGoogleAuthButton"), memberAuthSwitch: document.getElementById("memberAuthSwitch"), memberResendConfirmation: document.getElementById("memberResendConfirmation"), memberAuthSubmit: document.getElementById("memberAuthSubmit"), memberDisplayNameField: document.getElementById("memberDisplayNameField"), memberDisplayNameInput: document.getElementById("memberDisplayNameInput"), memberPasswordInput: document.getElementById("memberPasswordInput"), memberProfileForm: document.getElementById("memberProfileForm"), memberProfileError: document.getElementById("memberProfileError"), memberRetentionPanel: document.getElementById("memberRetentionPanel"), memberPrivacyPanel: document.getElementById("memberPrivacyPanel"), memberRequestList: document.getElementById("memberRequestList"), memberSignOutButton: document.getElementById("memberSignOutButton"),
-          requestForm: document.getElementById("requestForm"), requestStatus: document.getElementById("requestStatus"), requestSubmitButton: document.getElementById("requestSubmitButton"),
+          requestRouteLayer: document.getElementById("requestRouteLayer"), requestForm: document.getElementById("requestForm"), requestStatus: document.getElementById("requestStatus"), requestSubmitButton: document.getElementById("requestSubmitButton"),
           studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookForm: document.getElementById("lookForm"), lookFormHeading: document.getElementById("lookFormHeading"), lookFormCopy: document.getElementById("lookFormCopy"), lookCoverLabel: document.getElementById("lookCoverLabel"), lookEditActions: document.getElementById("lookEditActions"), cancelLookEditButton: document.getElementById("cancelLookEditButton"), lookSubmitButton: document.getElementById("lookSubmitButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productForm: document.getElementById("productForm"), productFormHeading: document.getElementById("productFormHeading"), productFormCopy: document.getElementById("productFormCopy"), productImageLabel: document.getElementById("productImageLabel"), productEditActions: document.getElementById("productEditActions"), cancelProductEditButton: document.getElementById("cancelProductEditButton"), productSubmitButton: document.getElementById("productSubmitButton"), productFormError: document.getElementById("productFormError"), studioLooksSearch: document.getElementById("studioLooksSearch"), studioLooksSearchMeta: document.getElementById("studioLooksSearchMeta"), studioLooksList: document.getElementById("studioLooksList"), loadMoreStudioLooks: document.getElementById("loadMoreStudioLooks"), studioProductsSearch: document.getElementById("studioProductsSearch"), studioProductsSearchMeta: document.getElementById("studioProductsSearchMeta"), studioProductsList: document.getElementById("studioProductsList"), loadMoreStudioProducts: document.getElementById("loadMoreStudioProducts"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), stylePreviewSlots: document.getElementById("stylePreviewSlots"), stylePreviewStatus: document.getElementById("stylePreviewStatus"), stylePreviewError: document.getElementById("stylePreviewError"), saveStylePreviewsButton: document.getElementById("saveStylePreviewsButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), bulkLookFile: document.getElementById("bulkLookFile"), downloadBulkLookTemplateButton: document.getElementById("downloadBulkLookTemplateButton"), bulkLookImportButton: document.getElementById("bulkLookImportButton"), bulkLookImportStatus: document.getElementById("bulkLookImportStatus"), bulkLookImportPreview: document.getElementById("bulkLookImportPreview"), bulkLookImportPreviewSummary: document.getElementById("bulkLookImportPreviewSummary"), bulkLookImportPreviewList: document.getElementById("bulkLookImportPreviewList"), bulkLookImportError: document.getElementById("bulkLookImportError"), toast: document.getElementById("toast")
         };
         Object.assign(els, {
@@ -1298,6 +1298,27 @@
         function readDirectoryRoute() { return directoryPage.readRoute(); }
         function ensureCatalogueRouteLayer() { return directoryPage.ensureLayer(); }
         function renderDirectoryRoute() { return directoryPage.render(); }
+        function renderRequestRoute() {
+          const active = window.location.pathname.replace(/\/+$/, "") === "/request";
+          if (els.requestRouteLayer) {
+            els.requestRouteLayer.hidden = !active;
+            els.requestRouteLayer.classList.toggle("is-open", active);
+          }
+          document.body.classList.toggle("request-route-open", active);
+          if (!active) return false;
+          renderDirectoryRoute();
+          const title = "Request Outfit — COMOOTD";
+          const description = "Kirim brief agenda, budget, dan arah gaya untuk menerima rekomendasi outfit personal dari COMOOTD.";
+          const canonical = new URL("/request", window.location.origin).href;
+          document.title = title;
+          document.getElementById("pageTitle")?.replaceChildren(title);
+          document.getElementById("canonicalUrl")?.setAttribute("href", canonical);
+          setMetaContent("pageDescription", description); setMetaContent("openGraphType", "website"); setMetaContent("openGraphTitle", title);
+          setMetaContent("openGraphDescription", description); setMetaContent("openGraphUrl", canonical); setMetaContent("twitterCard", "summary");
+          setMetaContent("twitterTitle", title); setMetaContent("twitterDescription", description);
+          setOptionalMeta("openGraphImage", "property", "og:image", ""); setOptionalMeta("twitterImage", "name", "twitter:image", "");
+          return true;
+        }
         function contentEntryForRoute(route) {
           const source = route?.type === "look" ? state.looks : route?.type === "product" ? state.products : state.articles;
           return source?.find((entry) => contentEntitySlug(entry, route?.type).toLowerCase() === route?.slug) || null;
@@ -1366,6 +1387,7 @@
           updateClientMetadata();
         }
         function applyContentRoute({ notify = false } = {}) {
+          if (renderRequestRoute()) { closeContentDialogs(); return; }
           if (renderDirectoryRoute()) { closeContentDialogs(); return; }
           const route = readContentRoute();
           if (!route) { closeContentDialogs(); updateClientMetadata(); return; }
@@ -1898,6 +1920,13 @@
         window.addEventListener("focus", refreshPublicCatalogueWhenActive);
         window.addEventListener("pageshow", refreshPublicCatalogueWhenActive);
         document.addEventListener("visibilitychange", refreshPublicCatalogueWhenActive);
+        window.addEventListener("comootd:open-retention-item", (event) => {
+          const type = String(event.detail?.type || "");
+          const id = String(event.detail?.id || "");
+          if (!id || (type !== "look" && type !== "product")) return;
+          if (els.memberModal.open) els.memberModal.close();
+          if (type === "look") openLook(id); else openProduct(id);
+        });
 
         els.search.addEventListener("input",()=>{ activeStyle="all"; renderStyleControls(); renderLooks(); });
         els.gender.addEventListener("change",renderLooks);
