@@ -364,6 +364,7 @@
       bio: String(row.bio || "").trim(),
       jobTags: controlledStoredList(row.job_tags, CURATOR_PROFILE_TAG_OPTIONS),
       trustLevel: String(row.trust_level || "emerging").trim().toLowerCase(),
+      followerCount: Math.max(0, Number(row.follower_count || 0)),
       avatarPath,
       avatar: publicUrl(avatarPath),
       maxPublishedLooks: Number(row.active_look_limit || 30),
@@ -581,7 +582,7 @@
     const curatorProfilesQuery = (from, to) => {
       let query = db
         .from("curator_profiles")
-        .select("user_id, handle, display_name, bio, job_tags, avatar_path, active_look_limit, is_active, trust_level, created_at")
+        .select("user_id, handle, display_name, bio, job_tags, avatar_path, active_look_limit, is_active, trust_level, follower_count, created_at")
         .order("created_at", { ascending: false })
         .order("user_id", { ascending: true });
       if (!admin) query = query.eq("is_active", true);

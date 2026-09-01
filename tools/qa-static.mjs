@@ -240,6 +240,11 @@ check(!styleNormalizationMigration.includes("E'\\s+'"), "Migration style masih b
 check(styleNormalizationMigration.includes("('Ca ual', 'Casual')") && styleNormalizationMigration.includes("('Japane e', 'Japanese')"), "Data style yang telanjur rusak belum dipulihkan");
 const curatorExperience = read("assets/features/curator-studio.js");
 check(curatorExperience.includes('dataset.archiveConfirmed') && curatorExperience.includes('textContent = "Mengarsipkan…"'), "Arsip curator belum memakai konfirmasi dan status proses yang terlihat");
+const curatorFollowerMigration = read("supabase/migrations/20260901200000_curator_public_follower_counts.sql");
+check(curatorFollowerMigration.includes("follower_count integer not null default 0") && curatorFollowerMigration.includes("comootd_curator_follows_sync_count"), "Penghitung follower publik Curator belum tersedia");
+check(curatorFollowerMigration.includes("security definer") && curatorFollowerMigration.includes("set search_path = ''") && curatorFollowerMigration.includes("revoke all on function private.sync_comootd_curator_follower_count()"), "Sinkronisasi follower Curator belum diisolasi dengan aman");
+check(curatorExperience.includes("curator-card-stats") && curatorExperience.includes("curator-profile-intro") && curatorExperience.includes("curator-icon-button") && curatorExperience.includes("followedCuratorIds"), "Penyegaran kartu, profil, dan follower Curator Tahap 5 belum lengkap");
+check(read("assets/services/supabase.js").includes("follower_count, created_at") && read("assets/services/supabase.js").includes("followerCount: Math.max"), "Jumlah follower belum dimuat dari katalog Curator");
 const retention = read("assets/features/member-retention.js");
 const retentionMigration = read("supabase/migrations/20260831190000_comootd_phase5_member_retention.sql");
 const retentionHardening = read("supabase/migrations/20260831191500_phase5_saved_items_security_invoker.sql");

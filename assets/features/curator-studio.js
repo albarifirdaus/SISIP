@@ -17,6 +17,9 @@
   // submissions keep this as an internal fallback, without making visual tone
   // another decision the curator has to make in the editor.
   const DEFAULT_LOOK_TONE = "carbon";
+  const HEART_ICON = `<svg class="curator-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>`;
+  const SHARE_ICON = `<svg class="curator-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m21 3-7.7 18-3.15-7.15L3 10.7 21 3Z"/><path d="m10.15 13.85 4.35-4.35"/></svg>`;
+  const ARROW_ICON = `<svg class="curator-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
   const SOCIAL_LABELS = {
     instagram: "Instagram",
     tiktok: "TikTok",
@@ -67,6 +70,7 @@
     curator: null,
     application: null,
     liked: new Set(),
+    followedCuratorIds: null,
     studioTab: "looks",
     editingLook: null,
     routeOpen: false,
@@ -247,6 +251,7 @@
       bio: compact(raw.bio || raw.description || ""),
       jobTags: controlledTagList(raw.jobTags ?? raw.job_tags ?? raw.tags, curatorProfileTagOptions(), 5),
       trustLevel: compact(raw.trustLevel ?? raw.trust_level ?? "emerging").toLowerCase(),
+      followerCount: Math.max(0, Number(raw.followerCount ?? raw.follower_count ?? 0) || 0),
       heightCm: optionalMetric(raw.heightCm ?? raw.height_cm ?? bodyMetrics.heightCm ?? bodyMetrics.height_cm ?? bodyMetrics.height, 100, 250),
       weightKg: optionalMetric(raw.weightKg ?? raw.weight_kg ?? bodyMetrics.weightKg ?? bodyMetrics.weight_kg ?? bodyMetrics.weight, 25, 300, 1),
       bodyMetricsPublic: truthyFlag(raw.bodyMetricsPublic ?? raw.body_metrics_public ?? bodyMetrics.public ?? bodyMetrics.isPublic),
@@ -406,17 +411,21 @@
   function curatorCardMarkup(curator, index = 0, directory = false) {
     const cover = cardImageForCurator(curator);
     const looks = curatorLooks(curator);
+    const totalLikes = looks.reduce((total, look) => total + look.popularity, 0);
     const media = cover ? `<div class="curator-card-media"><img src="${esc(publicImage(cover))}" alt="" loading="lazy" /></div>` : "";
     const cardClass = directory ? "curator-directory-card" : "curator-card";
     return `<article class="${cardClass}">
       ${media}
-      <div class="curator-card-top curator-card-top--count"><span class="curator-card-number">${looks.length} CURATION${looks.length === 1 ? "" : "S"}</span></div>
-      <div class="curator-card-person">
-        ${imageMarkup(curator.avatarPath, "", "curator-avatar", curator.displayName)}
-        <div><h3 class="curator-card-name">${esc(curator.displayName)}</h3><p class="curator-card-handle">@${esc(curator.handle)}</p>${trustBadgeMarkup(curator)}</div>
+      <div class="curator-card-top"><span class="curator-card-number">${String(index + 1).padStart(2, "0")} / CURATOR</span>${trustBadgeMarkup(curator)}</div>
+      <div class="curator-card-content">
+        <div class="curator-card-person">
+          ${imageMarkup(curator.avatarPath, "", "curator-avatar", curator.displayName)}
+          <div><h3 class="curator-card-name">${esc(curator.displayName)}</h3><p class="curator-card-handle">@${esc(curator.handle)}</p></div>
+        </div>
+        <p class="curator-card-bio">${esc(curator.bio || "A personal edit of pieces worth repeating.")}</p>
+        ${curator.jobTags.length ? `<div class="curator-card-tags">${curator.jobTags.slice(0, 3).map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>` : ""}
+        <div class="curator-card-stats" aria-label="Statistik ${esc(curator.displayName)}"><span><strong>${looks.length}</strong><small>Looks</small></span><span><strong>${totalLikes}</strong><small>Likes</small></span><span><strong>${curator.followerCount}</strong><small>Followers</small></span></div>
       </div>
-      <p class="curator-card-bio">${esc(curator.bio || "A personal edit of pieces worth repeating.")}</p>
-      ${curator.jobTags.length ? `<div class="curator-card-tags">${curator.jobTags.slice(0, 3).map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>` : ""}
       <a href="${ROUTE_ROOT}/${encodeURIComponent(curator.handle)}" data-curator-route="${esc(curator.handle)}" aria-label="Lihat kurasi ${esc(curator.displayName)}" class="curator-card-link"></a>
     </article>`;
   }
@@ -462,13 +471,14 @@
     return `<article class="curator-look-card image-frame--${imageAspect(look.coverAspect || look.coverImage, "portrait")}">
       ${cover ? `<div class="curator-card-media"><img src="${esc(cover)}" alt="${esc(look.coverAlt || look.title)}" loading="lazy" /></div>` : ""}
       <div class="curator-look-card-top"><span class="eyebrow">${esc(look.gender)}</span><span class="curator-look-card-meta">${esc(humanDate(look.publishedAt))}</span></div>
-      <h3 class="curator-look-card-title">${esc(look.title)}</h3>
-      <p class="curator-look-card-meta">${esc(look.styles.slice(0, 3).join(" · ") || "Curated look")}</p>
-      ${publicBodyMetricsMarkup(look.creator)}
+      <div class="curator-look-card-content"><h3 class="curator-look-card-title">${esc(look.title)}</h3>
+        <p class="curator-look-card-meta">${esc(look.styles.slice(0, 3).join(" · ") || "Curated look")}</p>
+        ${publicBodyMetricsMarkup(look.creator)}
+      </div>
       <div class="curator-look-card-actions">
-        <a href="/looks/${encodeURIComponent(look.slug)}" aria-label="Buka ${esc(look.title)}">Lihat look ↗</a>
-        <button type="button" data-toggle-curator-like="${esc(look.id)}" aria-pressed="${liked ? "true" : "false"}" aria-label="Sukai ${esc(look.title)}">♥ ${look.popularity}</button>
-        <button type="button" data-share-curator-look="${esc(look.id)}" aria-label="Bagikan ${esc(look.title)}">Share</button>
+        <a class="curator-look-open" href="/looks/${encodeURIComponent(look.slug)}" aria-label="Buka ${esc(look.title)}"><span>Lihat look</span>${ARROW_ICON}</a>
+        <button class="curator-icon-button" type="button" data-toggle-curator-like="${esc(look.id)}" aria-pressed="${liked ? "true" : "false"}" aria-label="Sukai ${esc(look.title)}">${HEART_ICON}<span>${look.popularity}</span></button>
+        <button class="curator-icon-button" type="button" data-share-curator-look="${esc(look.id)}" aria-label="Bagikan ${esc(look.title)}" title="Bagikan look">${SHARE_ICON}</button>
       </div>
     </article>`;
   }
@@ -498,14 +508,14 @@
       <section class="curator-profile-hero" aria-labelledby="curatorProfileTitle" data-insight-curator-id="${esc(curator.userId)}">
         <div class="curator-profile-identity">
           ${imageMarkup(curator.avatarPath, `Foto ${curator.displayName}`, "curator-profile-avatar", curator.displayName)}
-          <div><p class="eyebrow" style="color:var(--clay)">COMOOTD CURATOR</p><h1 class="curator-profile-title" id="curatorProfileTitle">${esc(curator.displayName)}</h1><p class="curator-profile-handle">@${esc(curator.handle)}</p></div>
+          <div class="curator-profile-heading"><p class="eyebrow" style="color:var(--clay)">COMOOTD CURATOR</p><h1 class="curator-profile-title" id="curatorProfileTitle">${esc(curator.displayName)}</h1><p class="curator-profile-handle">@${esc(curator.handle)}</p></div>
         </div>
         <div class="curator-profile-side">
-          ${trustBadgeMarkup(curator)}<p class="curator-profile-bio">${esc(curator.bio || "Personal edits, styled with intention.")}</p>
+          <div class="curator-profile-intro">${trustBadgeMarkup(curator)}<p class="curator-profile-bio">${esc(curator.bio || "Personal edits, styled with intention.")}</p></div>
           ${curator.jobTags.length ? `<div class="curator-profile-tags">${curator.jobTags.map((tag) => `<span class="curator-tag">${esc(tag)}</span>`).join("")}</div>` : ""}
           ${publicBodyMetricsMarkup(curator)}
           ${profileSocialMarkup(curator)}
-          <div class="curator-profile-stats"><div class="curator-profile-stat"><strong>${looks.length}</strong><span>Published looks</span></div><div class="curator-profile-stat"><strong>${totalLikes}</strong><span>Community likes</span></div></div>
+          <div class="curator-profile-stats"><div class="curator-profile-stat"><strong>${looks.length}</strong><span>Published looks</span></div><div class="curator-profile-stat"><strong>${totalLikes}</strong><span>Community likes</span></div><div class="curator-profile-stat"><strong>${curator.followerCount}</strong><span>Followers</span></div></div>
         </div>
       </section>
       <section aria-labelledby="curatorLookTitle"><div class="curator-profile-looks-head"><div><p class="eyebrow" style="color:var(--clay)">THE EDIT</p><h2 id="curatorLookTitle">Looks by ${esc(curator.displayName.split(" ")[0])}</h2></div><span class="eyebrow">${looks.length} CURATION${looks.length === 1 ? "" : "S"}</span></div>
@@ -1157,6 +1167,21 @@
     });
     window.addEventListener("comootd:retention-change", (event) => {
       const followed = new Set((event?.detail?.followedCuratorIds || []).map(String));
+      let countChanged = false;
+      if (state.followedCuratorIds) {
+        asArray(state.catalogue.curators).forEach((curator) => {
+          const curatorId = String(curator.userId || curator.user_id || curator.id || "");
+          const wasFollowed = state.followedCuratorIds.has(curatorId);
+          const isFollowed = followed.has(curatorId);
+          if (wasFollowed === isFollowed) return;
+          const nextCount = Math.max(0, Number(curator.followerCount ?? curator.follower_count ?? 0) + (isFollowed ? 1 : -1));
+          curator.followerCount = nextCount;
+          curator.follower_count = nextCount;
+          countChanged = true;
+        });
+      }
+      state.followedCuratorIds = followed;
+      if (countChanged) { renderHome(); renderRoute(); return; }
       document.querySelectorAll("[data-retention-follow]").forEach((button) => {
         const active = followed.has(String(button.dataset.retentionFollow));
         button.classList.toggle("is-followed", active);
