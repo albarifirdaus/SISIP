@@ -9,6 +9,7 @@
   let remote = null;
   let signedIn = false;
   let busy = false;
+  let feedback = "";
 
   function readLocal() {
     try {
@@ -23,6 +24,7 @@
   }
 
   function persist(next) {
+    feedback = "";
     choice = { ...defaultChoice(), ...next, decided:true };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(choice)); } catch { /* browser storage can be unavailable */ }
     renderBanner();
@@ -62,7 +64,7 @@
         <label class="privacy-choice"><span><strong>Riwayat untuk rekomendasi</strong><small>Menggunakan item tersimpan dan baru dilihat untuk menyusun feed. Preferensi style yang kamu isi tetap dapat dipakai.</small></span><input type="checkbox" name="personalization"${choice.activityPersonalizationEnabled ? " checked" : ""}></label>
         <label class="privacy-policy-check"><input type="checkbox" name="privacyAccepted"${acceptedPrivacy ? " checked" : ""}> <span>Saya sudah membaca <a href="/privacy">Kebijakan Privasi</a>.</span></label>
         <label class="privacy-policy-check"><input type="checkbox" name="termsAccepted"${acceptedTerms ? " checked" : ""}> <span>Saya menyetujui <a href="/terms">Ketentuan Penggunaan</a>.</span></label>
-        <p class="privacy-status" data-privacy-status aria-live="polite">${remote ? `Pilihan akun tersimpan · versi ${PRIVACY_VERSION}` : signedIn ? "Simpan pilihan agar berlaku di semua perangkat." : "Masuk untuk menyimpan pilihan di akun."}</p>
+        <p class="privacy-status" data-privacy-status aria-live="polite">${feedback || (remote ? `Pilihan akun tersimpan · versi ${PRIVACY_VERSION}` : signedIn ? "Simpan pilihan agar berlaku di semua perangkat." : "Masuk untuk menyimpan pilihan di akun.")}</p>
         <button class="small-button" type="submit"${busy ? " disabled" : ""}>${busy ? "Menyimpan…" : "Simpan pilihan"}</button>
       </form>
       <div class="privacy-data-actions"><article><h4>Unduh data akun</h4><p>Ekspor profil, preferensi, koleksi, like, request, dan aktivitas akun dalam format JSON.</p><button class="small-button muted" type="button" data-privacy-export${!signedIn || busy ? " disabled" : ""}>Unduh data</button></article><article class="privacy-danger"><h4>Hapus akun</h4><p>Member biasa dapat menghapus akun secara permanen. Akun Curator/Admin diproses manual untuk melindungi konten publik.</p><button class="small-button danger" type="button" data-privacy-open-delete${!signedIn || busy ? " disabled" : ""}>Kelola penghapusan</button></article></div>
@@ -92,18 +94,18 @@
     const analyticsEnabled = form.elements.analytics.checked;
     const activityPersonalizationEnabled = form.elements.personalization.checked;
     if (!form.elements.privacyAccepted.checked || !form.elements.termsAccepted.checked) {
-      status.textContent = "Baca dan centang Kebijakan Privasi serta Ketentuan Penggunaan terlebih dahulu.";
+      feedback = "Baca dan centang Kebijakan Privasi serta Ketentuan Penggunaan terlebih dahulu.";
+      status.textContent = feedback;
       return;
     }
-    busy = true; renderPanel(form.closest("[data-privacy-center]"));
+    feedback = ""; busy = true; renderPanel(form.closest("[data-privacy-center]"));
     try {
       if (signedIn) {
         remote = await window.SISIPCloud.savePrivacyPreferences({ analyticsEnabled, activityPersonalizationEnabled, privacyVersion:PRIVACY_VERSION, termsVersion:TERMS_VERSION });
       }
       persist({ analyticsEnabled, activityPersonalizationEnabled });
     } catch (error) {
-      const current = document.querySelector("[data-privacy-status]");
-      if (current) current.textContent = error?.message || "Pilihan privasi belum dapat disimpan.";
+      feedback = error?.message || "Pilihan privasi belum dapat disimpan.";
     } finally { busy = false; document.querySelectorAll("[data-privacy-center]").forEach(renderPanel); }
   }
 

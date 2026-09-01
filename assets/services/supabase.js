@@ -1043,7 +1043,11 @@
     if (String(confirmation || "").trim().toUpperCase() !== "HAPUS AKUN") throw new Error("Ketik HAPUS AKUN untuk mengonfirmasi.");
     const { data, error } = await getClient().functions.invoke("delete-account", { body:{ confirmation:"HAPUS AKUN" } });
     if (error) {
-      const message = data?.error || error?.context?.error || error.message;
+      let responseBody = null;
+      try {
+        if (typeof error?.context?.clone === "function") responseBody = await error.context.clone().json();
+      } catch { /* non-JSON network error */ }
+      const message = data?.error || responseBody?.error || error.message;
       throw new Error(message || "Akun belum dapat dihapus.");
     }
     if (!data?.deleted) throw new Error(data?.error || "Akun belum dapat dihapus.");
