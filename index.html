@@ -36,6 +36,7 @@
     <link rel="stylesheet" href="/assets/features/member-retention.css" />
     <link rel="stylesheet" href="/assets/features/phase6-moderation.css" />
     <link rel="stylesheet" href="/assets/features/phase7-commerce.css" />
+    <link rel="stylesheet" href="/assets/features/privacy-center.css" />
   </head>
   <body>
     <a class="skip-link" href="#siteMain">Lewati ke konten utama</a>
@@ -368,6 +369,7 @@
             <p class="form-error" id="memberAuthError" role="alert"></p>
             <button class="button" id="memberAuthSubmit" type="submit">Masuk <span aria-hidden="true">↗</span></button>
           </form>
+          <p class="member-help">Dengan membuat atau menggunakan akun, kamu menyetujui <a href="/terms">Ketentuan Penggunaan</a> dan dapat meninjau <a href="/privacy">Kebijakan Privasi</a>. Pilihan data opsional tetap dapat diubah kapan saja.</p>
           <button class="member-auth-switch" id="memberAuthSwitch" type="button">Belum punya akun? Daftar dengan email</button>
           <button class="member-auth-switch" id="memberResendConfirmation" type="button" hidden>Kirim ulang email konfirmasi</button>
         </div>
@@ -395,6 +397,7 @@
             <div class="member-notification-list" id="memberNotificationList"><p class="microcopy">Belum ada notifikasi.</p></div>
           </section>
           <section class="studio-section member-retention-section" id="memberRetentionPanel" aria-label="Koleksi dan aktivitas akun"></section>
+          <section class="studio-section privacy-center-section" id="memberPrivacyPanel" data-privacy-center aria-label="Pusat privasi akun"></section>
           <section class="studio-section" style="margin-top:2rem">
             <h3>Request kamu</h3>
             <p>Setelah COMOOTD menyiapkan jawabannya, look dan produk terkait akan muncul di sini.</p>
@@ -638,6 +641,7 @@
     <script src="/assets/services/supabase.js"></script>
     <script src="/assets/features/authentication.js"></script>
     <script src="/assets/features/look-likes.js"></script>
+    <script src="/assets/features/privacy-center.js"></script>
     <script src="/assets/features/platform-insights.js"></script>
     <script src="/assets/features/member-retention.js"></script>
     <script src="/assets/pages/home.js"></script>

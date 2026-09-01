@@ -45,6 +45,7 @@
 
   async function track(eventType, targetType = "site", targetId = null, dedupeKey = "") {
     const cloud = window.SISIPCloud;
+    if (!window.COMOOTDPrivacy?.allowsAnalytics?.()) return false;
     if (!cloud?.isConfigured?.() || typeof cloud.recordAnalyticsEvent !== "function") return false;
     const key = dedupeKey || `${eventType}:${targetType}:${targetId || "site"}`;
     if (once.has(key)) return false;
@@ -271,6 +272,9 @@
 
   window.COMOOTDInsights = { track };
   void track("page_view", "site", null, `page:${location.pathname}:${location.search}`);
+  window.addEventListener("comootd:privacy-change", () => {
+    if (window.COMOOTDPrivacy?.allowsAnalytics?.()) void track("page_view", "site", null, `consented-page:${location.pathname}:${location.search}`);
+  });
   hydrateDynamicUi();
   new MutationObserver(hydrateDynamicUi).observe(document.documentElement, { childList:true, subtree:true });
 })();

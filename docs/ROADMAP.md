@@ -26,7 +26,7 @@ Pekerjaan bergerak fase demi fase; milestone hanya menjadi checkpoint hasil.
 | 5 | Retention dan personalisasi: save, collection, follow, recently viewed, feed | **Selesai** — state privat, RLS, koleksi member, follow Curator, riwayat, dan ranking feed terverifikasi |
 | 6 | Moderasi dan pengajuan curator | **Selesai** — pengajuan terkontrol, approval admin, trust level, suspensi, dan notifikasi privat terverifikasi |
 | 7 | Link health dan multi-marketplace | **Selesai** — multi-destination, reporting, notifikasi, dashboard, RLS, dan audit production terverifikasi |
-| 8 | Privacy Center, Terms, consent, penghapusan akun, dan keamanan data | Halaman dasar tersedia; fitur privacy center belum dimulai |
+| 8 | Privacy Center, Terms, consent, penghapusan akun, dan keamanan data | **Selesai** — consent opsional, ekspor data, penghapusan member, perlindungan akun terkelola, RLS, dan dokumen kebijakan aktif |
 
 Status "sebagian tersedia" tidak berarti fase tersebut selesai. Implementasi
 lama akan diaudit ketika urutan fase sampai ke sana agar tidak ada pekerjaan
@@ -143,3 +143,23 @@ event moderasi dan hak akses privatnya menggunakan satu sistem yang sama.
 
 Migration production dan tes transaksi RLS/RPC sudah lulus. Frontend dirilis
 melalui quality gate production dan diverifikasi pada desktop serta ponsel.
+
+## Fase 8 — selesai
+
+- Pengunjung memilih antara fungsi esensial saja atau mengizinkan analytics dan
+  riwayat aktivitas untuk rekomendasi. Sebelum pilihan dibuat, keduanya nonaktif.
+- Pengguna yang masuk dapat menyimpan pilihan privasi lintas perangkat dan
+  mencatat versi Privacy Policy serta Terms yang disetujui.
+- Privacy Center tersedia di profil untuk mengubah pilihan, mengunduh salinan
+  data akun dalam JSON, dan mengelola penghapusan akun.
+- Ekspor data berjalan sebagai `security invoker`, mengikuti RLS, dan hanya
+  mengembalikan profil, preferensi, koleksi, like, follows, aktivitas, request,
+  notifikasi, serta data Curator milik pemanggil.
+- Penghapusan member dilakukan oleh Edge Function dengan JWT wajib dan verifikasi
+  pengguna server-side. Service role tidak pernah dikirim ke browser.
+- Akun Curator dan Admin tidak dapat dihapus otomatis karena dapat memiliki
+  konten publik, media, atau link affiliate; prosesnya diarahkan ke tim COMOOTD.
+- Privacy Policy dan Terms menjelaskan analytics berbasis izin, personalisasi,
+  ekspor, retensi, layanan pihak ketiga, dan konsekuensi penghapusan.
+- Migration dan uji transaksi RLS lulus tanpa meninggalkan data uji. Tidak ada
+  API, dependency, upgrade paket, atau layanan berbayar baru.

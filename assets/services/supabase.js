@@ -986,6 +986,70 @@
     return getMemberProfile();
   }
 
+  function mapPrivacyPreferences(row) {
+    if (!row) return null;
+    return {
+      analyticsEnabled:Boolean(row.analytics_enabled),
+      activityPersonalizationEnabled:Boolean(row.activity_personalization_enabled),
+      privacyVersion:String(row.privacy_version || ""),
+      termsVersion:String(row.terms_version || ""),
+      privacyAcknowledgedAt:row.privacy_acknowledged_at || null,
+      termsAcceptedAt:row.terms_accepted_at || null,
+      updatedAt:row.updated_at || null
+    };
+  }
+
+  async function getPrivacyPreferences() {
+    const user = await getCurrentUser();
+    if (!user) return null;
+    const { data, error } = await getClient().from("comootd_privacy_preferences")
+      .select("analytics_enabled,activity_personalization_enabled,privacy_version,terms_version,privacy_acknowledged_at,terms_accepted_at,updated_at")
+      .eq("user_id", user.id).maybeSingle();
+    if (error) throw error;
+    return mapPrivacyPreferences(data);
+  }
+
+  async function savePrivacyPreferences(input) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Masuk terlebih dahulu untuk menyimpan pilihan privasi.");
+    const source = assertObject(input, "Pilihan privasi");
+    const privacyVersion = normalizeUserText(source.privacyVersion, "Versi kebijakan privasi", { required:true, min:1, max:40 });
+    const termsVersion = normalizeUserText(source.termsVersion, "Versi ketentuan", { required:true, min:1, max:40 });
+    const now = new Date().toISOString();
+    const { data, error } = await getClient().from("comootd_privacy_preferences").upsert({
+      user_id:user.id,
+      analytics_enabled:Boolean(source.analyticsEnabled),
+      activity_personalization_enabled:Boolean(source.activityPersonalizationEnabled),
+      privacy_version:privacyVersion,
+      terms_version:termsVersion,
+      privacy_acknowledged_at:now,
+      terms_accepted_at:now,
+      updated_at:now
+    }, { onConflict:"user_id" }).select("analytics_enabled,activity_personalization_enabled,privacy_version,terms_version,privacy_acknowledged_at,terms_accepted_at,updated_at").single();
+    if (error) throw error;
+    return mapPrivacyPreferences(data);
+  }
+
+  async function exportMyData() {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Masuk terlebih dahulu untuk mengunduh data akun.");
+    const { data, error } = await getClient().rpc("export_my_comootd_data");
+    if (error) throw error;
+    return { ...(data || {}), account:{ id:user.id, email:user.email } };
+  }
+
+  async function deleteMyAccount(confirmation) {
+    if (!(await getCurrentUser())) throw new Error("Masuk kembali sebelum menghapus akun.");
+    if (String(confirmation || "").trim().toUpperCase() !== "HAPUS AKUN") throw new Error("Ketik HAPUS AKUN untuk mengonfirmasi.");
+    const { data, error } = await getClient().functions.invoke("delete-account", { body:{ confirmation:"HAPUS AKUN" } });
+    if (error) {
+      const message = data?.error || error?.context?.error || error.message;
+      throw new Error(message || "Akun belum dapat dihapus.");
+    }
+    if (!data?.deleted) throw new Error(data?.error || "Akun belum dapat dihapus.");
+    return true;
+  }
+
   function assertUuid(value, label) {
     const id = String(value || "").trim();
     if (!uuidPattern.test(id)) throw new Error(`${label} belum valid.`);
@@ -2764,6 +2828,10 @@
     signOut,
     getMemberProfile,
     saveMemberProfile,
+    getPrivacyPreferences,
+    savePrivacyPreferences,
+    exportMyData,
+    deleteMyAccount,
     getCuratorProfile,
     isCurator,
     getCuratorApplication,

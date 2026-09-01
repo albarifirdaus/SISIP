@@ -89,6 +89,7 @@
 
     async function recordView(type, id) {
       if (!isSignedIn?.() || !id) return;
+      if (window.COMOOTDPrivacy && !window.COMOOTDPrivacy.allowsActivityPersonalization?.()) return;
       const now = new Date().toISOString();
       state.recentlyViewed = [{ targetType:type, targetId:String(id), viewedAt:now }, ...state.recentlyViewed.filter((item) => !(item.targetType === type && item.targetId === String(id)))].slice(0, 40);
       fireChange();
