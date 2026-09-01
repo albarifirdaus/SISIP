@@ -129,22 +129,22 @@
           <p class="section-description">Mulai dari outfit utuh, telusuri item satu per satu, ikuti sudut pandang kurator, atau pahami alasan di balik setiap styling.</p>
         </div>
         <div class="storefront-grid">
-          <a class="storefront-card storefront-card--lead" href="/looks">
+          <a class="storefront-card storefront-card--lead" href="/looks" data-storefront-visual="looks">
             <span class="storefront-card-number">01 / LOOKS</span>
             <span class="storefront-card-copy"><strong>Find the whole outfit.</strong><small>All looks · By COMOOTD · By Curators</small></span>
             <span class="storefront-card-arrow" aria-hidden="true">↗</span>
           </a>
-          <a class="storefront-card" href="/products">
+          <a class="storefront-card" href="/products" data-storefront-visual="products">
             <span class="storefront-card-number">02 / PRODUCTS</span>
             <span class="storefront-card-copy"><strong>Build it piece by piece.</strong><small>Gender · Category · Price</small></span>
             <span class="storefront-card-arrow" aria-hidden="true">↗</span>
           </a>
-          <a class="storefront-card storefront-card--signal" href="/curators">
+          <a class="storefront-card storefront-card--signal" href="/curators" data-storefront-visual="curators">
             <span class="storefront-card-number">03 / CURATORS</span>
             <span class="storefront-card-copy"><strong>Follow a point of view.</strong><small>Personal edits from real curators</small></span>
             <span class="storefront-card-arrow" aria-hidden="true">↗</span>
           </a>
-          <a class="storefront-card storefront-card--dark" href="/journal">
+          <a class="storefront-card storefront-card--dark" href="/journal" data-storefront-visual="journal">
             <span class="storefront-card-number">04 / JOURNAL</span>
             <span class="storefront-card-copy"><strong>Understand why it works.</strong><small>Guides · Proportion · Color</small></span>
             <span class="storefront-card-arrow" aria-hidden="true">↗</span>
@@ -514,6 +514,14 @@
             <p class="new-series-status" id="newSeriesStatus" aria-live="polite"></p>
             <p class="form-error" id="newSeriesError" role="alert"></p>
             <button class="small-button" id="saveNewSeriesButton" type="button">Simpan carousel</button>
+          </section>
+          <section class="studio-section">
+            <h3>Visual pintu utama</h3>
+            <p>Pilih foto dari konten yang sudah terbit untuk kartu Looks, Products, Curators, dan Journal. Pilih otomatis agar kartu mengikuti katalog terbaru.</p>
+            <div class="storefront-visual-slots" id="storefrontVisualSlots"></div>
+            <p class="new-series-status" id="storefrontVisualStatus" aria-live="polite"></p>
+            <p class="form-error" id="storefrontVisualError" role="alert"></p>
+            <button class="small-button" id="saveStorefrontVisualsButton" type="button">Simpan visual homepage</button>
           </section>
           <section class="studio-section">
             <h3>Style taxonomy</h3>

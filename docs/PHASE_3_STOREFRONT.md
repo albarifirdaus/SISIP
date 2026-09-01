@@ -30,3 +30,14 @@ pengunjung memilih jalur eksplorasi.
 
 Fase 3 tidak menambah vendor, API, database, atau layanan berbayar. Perubahan
 berada di presentation layer dan tidak mengubah data produksi.
+
+## Penyempurnaan visual Tahap 6
+
+- Empat kartu utama dapat memakai foto dari Look, produk, Curator, dan Journal
+  yang sudah terbit.
+- Admin memilih sumber foto dan posisi crop dari panel New Series; pengaturan
+  tersimpan lintas perangkat dengan akses tulis khusus admin.
+- Pilihan **Otomatis** memakai konten terbaru yang memiliki foto, sehingga kartu
+  tidak kosong ketika konten pilihan dihapus atau dinonaktifkan.
+- Tahap ini hanya mereferensikan media katalog yang sudah ada. Tidak ada upload,
+  generator gambar, vendor, atau biaya penyimpanan baru.

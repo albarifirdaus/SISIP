@@ -199,7 +199,11 @@
           productColorOptions: document.getElementById("productColorOptions"),
           productColorCount: document.getElementById("productColorCount"),
           productVariantsInput: document.getElementById("productVariantsInput"),
-          productLinkInput: document.getElementById("productLinkInput")
+          productLinkInput: document.getElementById("productLinkInput"),
+          storefrontVisualSlots: document.getElementById("storefrontVisualSlots"),
+          storefrontVisualStatus: document.getElementById("storefrontVisualStatus"),
+          storefrontVisualError: document.getElementById("storefrontVisualError"),
+          saveStorefrontVisualsButton: document.getElementById("saveStorefrontVisualsButton")
         });
         const notification = window.COMOOTDNotification.create({ element:els.toast });
         const headerNavigation = window.COMOOTDNavigation.create({
@@ -242,21 +246,21 @@
           // fails). Start with an empty cloud catalogue, then hydrate it from
           // Supabase. The sample library remains available only in local mode.
           if (hasCloudConfig) {
-            return { products: [], looks: [], articles: [], curators: [], styleTags: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: true };
+            return { products: [], looks: [], articles: [], curators: [], styleTags: [], storefrontVisuals: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: true };
           }
           try {
             const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES), styleTags: Array.isArray(saved.styleTags) ? saved.styleTags : [], newSeriesSlots: Array.isArray(saved.newSeriesSlots) ? saved.newSeriesSlots : [], newSeriesLookIds: Array.isArray(saved.newSeriesLookIds) ? saved.newSeriesLookIds : [], newSeriesConfigured: typeof saved.newSeriesConfigured === "boolean" ? saved.newSeriesConfigured : Array.isArray(saved.newSeriesLookIds) && saved.newSeriesLookIds.length > 0 };
+            if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES), styleTags: Array.isArray(saved.styleTags) ? saved.styleTags : [], storefrontVisuals: Array.isArray(saved.storefrontVisuals) ? saved.storefrontVisuals : [], newSeriesSlots: Array.isArray(saved.newSeriesSlots) ? saved.newSeriesSlots : [], newSeriesLookIds: Array.isArray(saved.newSeriesLookIds) ? saved.newSeriesLookIds : [], newSeriesConfigured: typeof saved.newSeriesConfigured === "boolean" ? saved.newSeriesConfigured : Array.isArray(saved.newSeriesLookIds) && saved.newSeriesLookIds.length > 0 };
           } catch (error) { console.warn("Unable to load SISIP prototype", error); }
-          return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), styleTags: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false };
+          return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), styleTags: [], storefrontVisuals: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false };
         }
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), styleTags: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false }; resetLookEditor(); resetProductEditor(); saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
+        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), styleTags: [], storefrontVisuals: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false }; resetLookEditor(); resetProductEditor(); saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
         async function refreshCloudState({ admin = false, quiet = false } = {}) {
           if (!cloudEnabled()) return false;
           try {
             const remoteState = await cloud.loadState({ admin });
-            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], styleTags: remoteState.styleTags || [], curators: remoteState.curators || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [], newSeriesConfigured: true };
+            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], styleTags: remoteState.styleTags || [], storefrontVisuals: remoteState.storefrontVisuals || [], curators: remoteState.curators || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [], newSeriesConfigured: true };
             hydrateTaxonomyPickers();
             renderAll();
             applyContentRoute({ notify: true });
@@ -838,6 +842,71 @@
             return `<article class="journal-card">${cover ? `<div class="journal-card-cover ${imageFrameClass(article.coverAspect || article.coverImage, "portrait")}" aria-hidden="true"><img src="${esc(cover)}" alt="" /></div>` : ""}<span class="article-number eyebrow">${esc(articleCategoryLabel(article.category))} / ${esc(article.number)}</span><h3>${esc(article.title)}</h3>${article.excerpt ? `<p class="journal-card-excerpt">${esc(article.excerpt)}</p>` : ""}<button class="text-link" type="button" data-open-article="${esc(article.id)}">Baca catatan ↗</button></article>`;
           }).join("") : `<div class="empty-state"><h3>Journal segera hadir.</h3><p>Catatan fashion berikutnya sedang disiapkan.</p></div>`;
         }
+        const STOREFRONT_CARD_LABELS = { looks:"Looks", products:"Products", curators:"Curators", journal:"Journal" };
+        function storefrontSourceId(key, entry) {
+          if (key === "curators") return String(entry?.userId || entry?.id || "");
+          return String(entry?.id || "");
+        }
+        function storefrontSourceLabel(key, entry) {
+          if (!entry) return "konten terbaru";
+          if (key === "products") return entry.name || "Produk COMOOTD";
+          if (key === "curators") return entry.displayName || entry.name || entry.handle || "COMOOTD Curator";
+          return entry.title || "Konten COMOOTD";
+        }
+        function storefrontCandidates(key) {
+          if (key === "looks") return (state.looks || []).filter(isPublishedCatalogueEntry);
+          if (key === "products") return (state.products || []).filter(isPublishedCatalogueEntry);
+          if (key === "curators") return (state.curators || []).filter((entry) => entry?.isActive !== false && storefrontSourceId(key, entry));
+          return (state.articles || []).filter(isPublishedCatalogueEntry);
+        }
+        function storefrontImage(key, entry) {
+          if (!entry) return "";
+          if (key === "looks") return safeImage(entry.coverImage || entry.media?.[0]?.image);
+          if (key === "products") return safeImage(entry.image || entry.variants?.[0]?.image);
+          if (key === "journal") return safeImage(entry.coverImage);
+          const curatorId = storefrontSourceId("curators", entry);
+          const curatorLook = (state.looks || []).find((look) => isPublishedCatalogueEntry(look) && String(look.creatorId || look.creator_id || look.curator?.userId || "") === curatorId && safeImage(look.coverImage));
+          return safeImage(curatorLook?.coverImage || entry.avatar || entry.avatarUrl || "");
+        }
+        function storefrontVisualFor(key) {
+          const setting = (state.storefrontVisuals || []).find((entry) => entry.cardKey === key || entry.card_key === key) || {};
+          const candidates = storefrontCandidates(key);
+          const sourceId = String(setting.sourceId || setting.source_id || "");
+          const selected = candidates.find((entry) => storefrontSourceId(key, entry) === sourceId);
+          const fallback = candidates.find((entry) => storefrontImage(key, entry));
+          const entry = selected && storefrontImage(key, selected) ? selected : fallback;
+          return { entry, image:storefrontImage(key, entry), focalPosition:String(setting.focalPosition || setting.focal_position || "center") };
+        }
+        function renderStorefrontVisuals() {
+          document.querySelectorAll("[data-storefront-visual]").forEach((card) => {
+            const visual = storefrontVisualFor(String(card.dataset.storefrontVisual || ""));
+            card.classList.toggle("has-visual", Boolean(visual.image));
+            if (visual.image) {
+              card.style.setProperty("--storefront-image", `url(${JSON.stringify(visual.image)})`);
+              card.style.setProperty("--storefront-position", visual.focalPosition);
+            } else {
+              card.style.removeProperty("--storefront-image");
+              card.style.removeProperty("--storefront-position");
+            }
+          });
+        }
+        function renderStorefrontVisualStudio() {
+          if (!els.storefrontVisualSlots) return;
+          const focalOptions = [["center","Tengah"],["top","Atas"],["bottom","Bawah"],["left","Kiri"],["right","Kanan"]];
+          const customCount = (state.storefrontVisuals || []).filter((entry) => entry.sourceId || entry.source_id).length;
+          els.storefrontVisualSlots.innerHTML = Object.keys(STOREFRONT_CARD_LABELS).map((key, index) => {
+            const setting = (state.storefrontVisuals || []).find((entry) => entry.cardKey === key || entry.card_key === key) || {};
+            const selectedId = String(setting.sourceId || setting.source_id || "");
+            const focal = String(setting.focalPosition || setting.focal_position || "center");
+            const candidates = storefrontCandidates(key).filter((entry) => storefrontImage(key, entry));
+            const fallback = candidates[0];
+            const options = [`<option value="">Otomatis · ${esc(storefrontSourceLabel(key, fallback))}</option>`, ...candidates.map((entry) => `<option value="${esc(storefrontSourceId(key, entry))}"${storefrontSourceId(key, entry) === selectedId ? " selected" : ""}>${esc(storefrontSourceLabel(key, entry))}</option>`)].join("");
+            const positions = focalOptions.map(([value,label]) => `<option value="${value}"${value === focal ? " selected" : ""}>Crop ${label}</option>`).join("");
+            return `<div class="storefront-visual-slot"><span class="new-series-slot-number">${String(index + 1).padStart(2,"0")}</span><label><span>${esc(STOREFRONT_CARD_LABELS[key])}</span><select data-storefront-source="${key}">${options}</select></label><label><span>Posisi foto</span><select data-storefront-focal="${key}">${positions}</select></label></div>`;
+          }).join("");
+          els.storefrontVisualStatus.textContent = `${customCount} dari 4 kartu memakai pilihan khusus. Kartu otomatis mengikuti konten terbit terbaru.`;
+          els.saveStorefrontVisualsButton.disabled = false;
+        }
         function renderNewSeriesStudio() {
           const candidates = getNewSeriesCandidates();
           const candidateIds = new Set(candidates.map((entry) => entry.id));
@@ -1044,6 +1113,7 @@
           renderVariantSelect();
           renderDraftItems();
           renderNewSeriesStudio();
+          renderStorefrontVisualStudio();
           renderStyleTaxonomyStudio();
           renderStylePreviewStudio();
           renderJournalStudio();
@@ -1239,7 +1309,7 @@
           const removed=[...usedNames].filter((name)=>!nextNames.has(name));
           if(removed.length) throw new Error("Warna yang sudah dipakai look tidak dapat dihapus atau diganti namanya. Edit look terkait terlebih dahulu.");
         }
-        function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderNewSeries(); renderJournal(); renderStudio(); renderPersonalized(); }
+        function renderAll() { renderMoodList(); renderPopular(); renderStyleControls(); renderLooks(); renderNewSeries(); renderJournal(); renderStorefrontVisuals(); renderStudio(); renderPersonalized(); }
 
         function marketplaceFromUrl(value) {
           let parsed;
@@ -1652,6 +1722,34 @@
           } finally {
             els.saveStylePreviewsButton.textContent=label;
             els.saveStylePreviewsButton.disabled=false;
+          }
+        }
+        async function saveStorefrontVisuals() {
+          els.storefrontVisualError.textContent = "";
+          const assignments = Object.keys(STOREFRONT_CARD_LABELS).map((cardKey) => ({
+            cardKey,
+            sourceId:String(els.storefrontVisualSlots.querySelector(`[data-storefront-source="${cardKey}"]`)?.value || "").trim(),
+            focalPosition:String(els.storefrontVisualSlots.querySelector(`[data-storefront-focal="${cardKey}"]`)?.value || "center").trim()
+          }));
+          const label = els.saveStorefrontVisualsButton.textContent;
+          els.saveStorefrontVisualsButton.disabled = true;
+          els.saveStorefrontVisualsButton.textContent = "Menyimpan…";
+          try {
+            if (cloudEnabled()) {
+              if (typeof cloud?.setStorefrontVisuals !== "function") throw new Error("Pengaturan visual homepage belum tersedia pada katalog cloud.");
+              await cloud.setStorefrontVisuals(assignments);
+              await refreshCloudState({ admin:true });
+            } else {
+              state.storefrontVisuals = assignments;
+              saveState();
+              renderAll();
+            }
+            showToast("Visual pintu utama berhasil diperbarui.");
+          } catch (error) {
+            els.storefrontVisualError.textContent = error?.message || "Visual homepage belum dapat disimpan.";
+          } finally {
+            els.saveStorefrontVisualsButton.textContent = label;
+            els.saveStorefrontVisualsButton.disabled = false;
           }
         }
         function addDraftItem() {
@@ -2184,6 +2282,7 @@
         });
         document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.addEventListener("click",()=>switchStudioTab(button.dataset.studioTab)));
         els.saveStylePreviewsButton.addEventListener("click",()=>void saveStylePreviews());
+        els.saveStorefrontVisualsButton.addEventListener("click",()=>void saveStorefrontVisuals());
         document.querySelectorAll("[data-add-journal-block]").forEach((button)=>button.addEventListener("click",()=>{ if(journalDraftBlocks.length>=JOURNAL_BLOCK_LIMIT){els.journalFormError.textContent=`Artikel maksimal memiliki ${JOURNAL_BLOCK_LIMIT} blok.`;return;} journalDraftBlocks.push(makeJournalBlock(button.dataset.addJournalBlock));els.journalFormError.textContent="";renderJournalBlockEditor(); }));
         els.saveNewSeriesButton.addEventListener("click",saveNewSeries);
         els.lookProduct.addEventListener("change",renderVariantSelect);

@@ -72,6 +72,11 @@ for (const asset of [
 ]) check(index.includes(asset), `Referensi aset baru belum terpasang: ${asset}`);
 check(index.includes('class="skip-link"') && index.includes('href="#siteMain"'), "Homepage belum memiliki skip link ke konten utama");
 check(index.includes('class="storefront-grid"'), "Editorial storefront Fase 3 belum tersedia");
+const storefrontVisualMigration = read("supabase/migrations/20260901210000_storefront_visual_controls.sql");
+check(["looks","products","curators","journal"].every((key) => index.includes(`data-storefront-visual="${key}"`)), "Empat kartu storefront belum mendukung visual terkelola");
+check(storefrontVisualMigration.includes("enable row level security") && storefrontVisualMigration.includes('Public reads COMOOTD storefront visuals') && storefrontVisualMigration.includes('COMOOTD admin updates storefront visuals'), "Pengaturan visual storefront belum dilindungi RLS");
+check(storefrontVisualMigration.includes("revoke all on table public.comootd_storefront_visuals") && storefrontVisualMigration.includes("grant update (look_id, product_id, curator_id, article_id, focal_position)"), "Privilege visual storefront belum least-privilege");
+check(appSource.includes("renderStorefrontVisuals") && appSource.includes("saveStorefrontVisuals") && read("assets/services/supabase.js").includes('from("comootd_storefront_visuals")'), "Visual storefront belum terhubung dari katalog ke Studio admin");
 for (const path of ["/looks", "/products", "/curators", "/journal"]) {
   check(index.includes(`class="storefront-card`) && index.includes(`href="${path}"`), `Editorial storefront belum menautkan ${path}`);
 }

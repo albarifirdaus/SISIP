@@ -575,6 +575,10 @@
       .from("new_series_slots")
       .select("slot, look_id")
       .order("slot", { ascending: true });
+    const storefrontVisualsQuery = db
+      .from("comootd_storefront_visuals")
+      .select("card_key,look_id,product_id,curator_id,article_id,focal_position")
+      .order("card_key", { ascending: true });
     const outfitRequestsQuery = admin
       ? (from, to) => db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)
       : null;
@@ -597,11 +601,12 @@
       .order("name", { ascending: true });
     if (!admin) styleTagsQuery = styleTagsQuery.eq("is_active", true);
 
-    const [productRows, lookRows, articleRows, newSeriesSlotRows, outfitRequestRows, curatorRows, styleTagRows] = await Promise.all([
+    const [productRows, lookRows, articleRows, newSeriesSlotRows, storefrontVisualRows, outfitRequestRows, curatorRows, styleTagRows] = await Promise.all([
       queryAllRows(productsQuery),
       queryAllRows(looksQuery),
       queryAllRows(articlesQuery),
       queryRows(newSeriesSlotsQuery),
+      queryRows(storefrontVisualsQuery),
       outfitRequestsQuery ? queryAllRows(outfitRequestsQuery) : Promise.resolve([]),
       queryAllRows(curatorProfilesQuery),
       queryRows(styleTagsQuery)
@@ -648,11 +653,16 @@
       .filter((slot) => slot.lookId)
       .sort((a, b) => a.slot - b.slot)
       .map((slot) => slot.lookId);
+    const storefrontVisuals = (storefrontVisualRows || []).map((row) => ({
+      cardKey: row.card_key,
+      sourceId: row.look_id || row.product_id || row.curator_id || row.article_id || "",
+      focalPosition: row.focal_position || "center"
+    }));
     const requests = admin
       ? outfitRequestRows.map((row) => mapOutfitRequest(row, { productMap, lookMap, includeAdminNote: true }))
       : [];
     const styleTags = (styleTagRows || []).map((row) => ({ id:row.id, name:row.name, isActive:row.is_active !== false, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0), previewLookId:row.preview_look_id || "" }));
-    return { products, looks, articles, curators, styleTags, newSeriesSlots, newSeriesLookIds, requests };
+    return { products, looks, articles, curators, styleTags, storefrontVisuals, newSeriesSlots, newSeriesLookIds, requests };
   }
 
   async function getStyleTags() {
@@ -2793,6 +2803,29 @@
     return data || [];
   }
 
+  async function setStorefrontVisuals(assignments) {
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk mengatur visual homepage.");
+    const columns = { looks:"look_id", products:"product_id", curators:"curator_id", journal:"article_id" };
+    if (!Array.isArray(assignments) || assignments.length !== 4) throw new Error("Empat kartu homepage harus dikirim bersama.");
+    const normalized = assignments.map((assignment) => {
+      const cardKey = String(assignment?.cardKey || assignment?.card_key || "").trim().toLowerCase();
+      const sourceId = String(assignment?.sourceId || assignment?.source_id || "").trim();
+      const focalPosition = String(assignment?.focalPosition || assignment?.focal_position || "center").trim().toLowerCase();
+      if (!columns[cardKey]) throw new Error("Kartu homepage belum valid.");
+      if (sourceId && !uuidPattern.test(sourceId)) throw new Error(`Pilihan visual ${cardKey} belum valid.`);
+      if (!["center", "top", "bottom", "left", "right"].includes(focalPosition)) throw new Error(`Posisi crop ${cardKey} belum valid.`);
+      return { cardKey, sourceId:sourceId || null, focalPosition };
+    });
+    if (new Set(normalized.map((entry) => entry.cardKey)).size !== 4) throw new Error("Setiap kartu homepage hanya boleh diatur sekali.");
+    await Promise.all(normalized.map(async (entry) => {
+      const payload = { look_id:null, product_id:null, curator_id:null, article_id:null, focal_position:entry.focalPosition };
+      payload[columns[entry.cardKey]] = entry.sourceId;
+      const { data, error } = await getClient().from("comootd_storefront_visuals").update(payload).eq("card_key", entry.cardKey).select("card_key").single();
+      if (error) throw error;
+      if (!data?.card_key) throw new Error(`Visual ${entry.cardKey} tidak diperbarui.`);
+    }));
+  }
+
   async function loadLinkHealth({ page = 1, pageSize = 25, query = "", status = "all", marketplace = "all" } = {}) {
     if (!(await getCurrentUser())) throw new Error("Masuk terlebih dahulu untuk melihat inventaris link.");
     const db = getClient();
@@ -2884,6 +2917,7 @@
     deleteArticle,
     setNewSeries,
     setStylePreviews,
+    setStorefrontVisuals,
     recordAnalyticsEvent,
     loadMyAnalytics,
     loadAdminAnalytics,
