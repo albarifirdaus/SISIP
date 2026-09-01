@@ -231,7 +231,7 @@
         });
         const memberRetention = window.COMOOTDMemberRetention.create({
           getState:()=>state, getCloud:()=>cloud, isSignedIn:memberIsSignedIn,
-          requireSignIn:openMemberAccount, notify:showToast, escapeHtml:esc,
+          requireSignIn:openMemberAccount, notify:showToast, escapeHtml:esc, safeImage,
           onChange:()=>{ renderPersonalized(); renderDirectoryRoute(); if (memberIsSignedIn() && !els.memberProfileView.hidden) memberRetention.renderPanel(els.memberRetentionPanel); }
         });
         window.COMOOTDRetentionInstance = memberRetention;

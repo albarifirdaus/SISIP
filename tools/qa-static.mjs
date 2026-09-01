@@ -201,6 +201,26 @@ try {
   });
   await likes.toggle("look-1");
   check(likes.has("look-1") && likedEntry.popularity === 3 && likeUpdated, "Feature look likes gagal menyinkronkan state dan popularity");
+
+  uiContext.document = { addEventListener:() => {}, querySelectorAll:() => [] };
+  uiContext.CustomEvent = class { constructor(type, init) { this.type = type; this.detail = init?.detail; } };
+  uiContext.window.dispatchEvent = () => {};
+  runInNewContext(read("assets/features/member-retention.js"), uiContext, { filename:"assets/features/member-retention.js" });
+  const retentionProducts = Array.from({ length:10 }, (_, index) => ({ id:`product-${index + 1}`, name:`Produk ${index + 1}`, image:`https://example.com/product-${index + 1}.jpg` }));
+  const retentionFeature = uiContext.window.COMOOTDMemberRetention.create({
+    getState:() => ({ products:retentionProducts, looks:[], curators:[] }),
+    getCloud:() => ({ loadMemberRetentionState:async() => ({
+      collections:[{ id:"default", name:"Disimpan", isDefault:true }],
+      savedItems:retentionProducts.map((item) => ({ collectionId:"default", targetType:"product", targetId:item.id })),
+      followedCuratorIds:[], recentlyViewed:[]
+    }) }),
+    isSignedIn:() => true, escapeHtml:(value) => String(value), safeImage:(value) => String(value || "")
+  });
+  await retentionFeature.hydrate();
+  const retentionRoot = { innerHTML:"" };
+  retentionFeature.renderPanel(retentionRoot);
+  check(retentionRoot.innerHTML.includes('<details class="retention-collection" open>') && (retentionRoot.innerHTML.match(/class="retention-item"/g) || []).length === 8, "Koleksi ringkas belum terbuka dengan batas delapan item awal");
+  check(retentionRoot.innerHTML.includes("Lihat 2 lainnya") && retentionRoot.innerHTML.includes('class="retention-item-media"') && retentionRoot.innerHTML.includes('class="retention-icon-button is-danger"'), "Koleksi scalable belum memiliki thumbnail, aksi ikon, atau kontrol lihat lainnya");
 } catch (error) {
   failures.push(`Uji komponen UI gagal: ${error?.message || error}`);
 }

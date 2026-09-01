@@ -2,9 +2,12 @@
   "use strict";
 
   function create(options = {}) {
-    const { getState, getCloud, isSignedIn, requireSignIn, notify, escapeHtml, onChange } = options;
+    const { getState, getCloud, isSignedIn, requireSignIn, notify, escapeHtml, safeImage, onChange } = options;
     const esc = escapeHtml || ((value) => String(value ?? ""));
     const state = { collections:[], savedItems:[], followedCuratorIds:new Set(), recentlyViewed:[], loading:false };
+    const expandedCollections = new Set();
+    const collectionPreviewLimit = 8;
+    let panelRoot = null;
     const cloud = () => getCloud?.();
     const defaultCollection = () => state.collections.find((item) => item.isDefault) || null;
     const savedIn = (type, id, collectionId = defaultCollection()?.id) => state.savedItems.some((item) => item.collectionId === collectionId && item.targetType === type && item.targetId === String(id));
@@ -117,17 +120,40 @@
     }
     function hasSignals() { return Boolean(state.savedItems.length || state.followedCuratorIds.size || state.recentlyViewed.length); }
 
+    const OPEN_ICON = `<svg class="retention-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>`;
+    const PLUS_ICON = `<svg class="retention-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
+    const TRASH_ICON = `<svg class="retention-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>`;
+    const CHEVRON_ICON = `<svg class="retention-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg>`;
+
+    function imageFor(type, id) {
+      const entry = entryFor(type, id);
+      const candidate = type === "look"
+        ? entry?.media?.[0]?.image || entry?.media?.[0]?.url || entry?.media?.[0]?.path || entry?.coverImage || entry?.images?.[0] || entry?.image
+        : entry?.variants?.[0]?.image || entry?.image;
+      return typeof safeImage === "function" ? safeImage(candidate) : String(candidate || "");
+    }
+
     function savedRow(item, collection) {
       const otherCollections = state.collections.filter((candidate) => candidate.id !== collection.id);
-      return `<li class="retention-item"><div><span>${esc(item.targetType === "look" ? "LOOK" : "PRODUK")}</span><strong>${esc(titleFor(item.targetType, item.targetId))}</strong></div><div class="retention-item-actions"><button class="retention-open-button" type="button" data-retention-open="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}">Lihat <span aria-hidden="true">↗</span></button>${otherCollections.length ? `<select aria-label="Pilih koleksi tujuan" data-retention-target-collection>${otherCollections.map((candidate) => `<option value="${esc(candidate.id)}">${esc(candidate.name)}</option>`).join("")}</select><button type="button" data-retention-copy="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}">Tambah</button>` : ""}<button type="button" data-retention-remove="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}" data-retention-collection="${esc(collection.id)}">Hapus</button></div></li>`;
+      const typeLabel = item.targetType === "look" ? "LOOK" : "PRODUK";
+      const title = titleFor(item.targetType, item.targetId);
+      const image = imageFor(item.targetType, item.targetId);
+      const media = image
+        ? `<img src="${esc(image)}" alt="" loading="lazy" decoding="async" />`
+        : `<span aria-hidden="true">${typeLabel.slice(0,1)}</span>`;
+      return `<li class="retention-item"><button class="retention-item-main" type="button" data-retention-open="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}" aria-label="Buka ${esc(title)}"><span class="retention-item-media">${media}</span><span class="retention-item-copy"><span>${typeLabel}</span><strong>${esc(title)}</strong></span>${OPEN_ICON}</button><div class="retention-item-actions${otherCollections.length ? " has-copy" : ""}">${otherCollections.length ? `<select aria-label="Pilih koleksi tujuan" data-retention-target-collection>${otherCollections.map((candidate) => `<option value="${esc(candidate.id)}">${esc(candidate.name)}</option>`).join("")}</select><button class="retention-icon-button" type="button" data-retention-copy="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}" aria-label="Tambahkan ${esc(title)} ke koleksi terpilih" title="Tambah ke koleksi">${PLUS_ICON}</button>` : ""}<button class="retention-icon-button is-danger" type="button" data-retention-remove="${esc(item.targetType)}" data-retention-id="${esc(item.targetId)}" data-retention-collection="${esc(collection.id)}" aria-label="Hapus ${esc(title)} dari ${esc(collection.name)}" title="Hapus dari koleksi">${TRASH_ICON}</button></div></li>`;
     }
 
     function renderPanel(root) {
       if (!root) return;
+      panelRoot = root;
       if (!isSignedIn?.()) { root.innerHTML = ""; return; }
       const collections = state.collections.map((collection) => {
         const items = state.savedItems.filter((item) => item.collectionId === collection.id);
-        return `<article class="retention-collection"><header><div><span class="eyebrow">${collection.isDefault ? "KOLEKSI UTAMA" : "KOLEKSI"}</span><h4>${esc(collection.name)}</h4></div>${collection.isDefault ? "" : `<button type="button" data-retention-delete-collection="${esc(collection.id)}">Hapus</button>`}</header>${items.length ? `<ul>${items.map((item) => savedRow(item, collection)).join("")}</ul>` : `<p>Belum ada item di koleksi ini.</p>`}</article>`;
+        const expanded = expandedCollections.has(collection.id);
+        const visibleItems = expanded ? items : items.slice(0, collectionPreviewLimit);
+        const remaining = Math.max(0, items.length - visibleItems.length);
+        return `<details class="retention-collection"${collection.isDefault ? " open" : ""}><summary><span><span class="eyebrow">${collection.isDefault ? "KOLEKSI UTAMA" : "KOLEKSI"}</span><strong>${esc(collection.name)}</strong></span><span class="retention-collection-meta"><b>${items.length}</b><small>item</small>${CHEVRON_ICON}</span></summary><div class="retention-collection-body">${items.length ? `<ul>${visibleItems.map((item) => savedRow(item, collection)).join("")}</ul>` : `<p class="retention-empty">Belum ada item di koleksi ini.</p>`}${items.length > collectionPreviewLimit ? `<button class="retention-more-button" type="button" data-retention-more="${esc(collection.id)}">${expanded ? "Tampilkan lebih sedikit" : `Lihat ${remaining} lainnya`} <span aria-hidden="true">${expanded ? "↑" : "↓"}</span></button>` : ""}${collection.isDefault ? "" : `<button class="retention-delete-collection" type="button" data-retention-delete-collection="${esc(collection.id)}">Hapus koleksi</button>`}</div></details>`;
       }).join("");
       const followed = [...state.followedCuratorIds].map((id) => titleFor("curator", id));
       const recent = state.recentlyViewed.slice(0, 8).map((item) => `<li><span>${esc(item.targetType.toUpperCase())}</span><strong>${esc(titleFor(item.targetType, item.targetId))}</strong></li>`).join("");
@@ -137,6 +163,8 @@
     document.addEventListener("click", (event) => {
       const open = event.target.closest("[data-retention-open]");
       if (open) { window.dispatchEvent(new CustomEvent("comootd:open-retention-item", { detail:{ type:open.dataset.retentionOpen, id:open.dataset.retentionId } })); return; }
+      const more = event.target.closest("[data-retention-more]");
+      if (more) { const id = more.dataset.retentionMore; if (expandedCollections.has(id)) expandedCollections.delete(id); else expandedCollections.add(id); renderPanel(panelRoot); return; }
       const save = event.target.closest("[data-retention-save]");
       if (save) { event.preventDefault(); event.stopPropagation(); void toggleSave(save.dataset.retentionSave, save.dataset.retentionId); return; }
       const follow = event.target.closest("[data-retention-follow]");
