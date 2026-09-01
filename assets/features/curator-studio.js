@@ -31,7 +31,8 @@
   ];
   const MARKETPLACES = {
     shopee: { label:"Shopee", placeholder:"https://shopee.co.id/..." },
-    tiktok_shop: { label:"TikTok Shop", placeholder:"https://www.tiktok.com/..." }
+    tiktok_shop: { label:"TikTok Shop", placeholder:"https://www.tiktok.com/..." },
+    website: { label:"Website", placeholder:"https://brand.com/product/..." }
   };
   // Keep these in lock-step with the public COMOOTD filter taxonomy. A curator
   // can only publish with the same language that visitors can actually search.
@@ -345,10 +346,12 @@
   function categoryLabel(category) { return PRODUCT_CATEGORIES.find(([value]) => value === category)?.[1] || "Produk"; }
   function marketplaceFromUrl(value) {
     try {
-      const host = new URL(value).hostname.toLowerCase();
+      const parsed = new URL(value);
+      if (parsed.protocol !== "https:" || !parsed.hostname.includes(".")) return "";
+      const host = parsed.hostname.toLowerCase();
       if (host === "shopee.co.id" || host.endsWith(".shopee.co.id") || host === "shope.ee") return "shopee";
       if (host === "tiktok.com" || host.endsWith(".tiktok.com")) return "tiktok_shop";
-      return "";
+      return "website";
     } catch { return ""; }
   }
   function trustBadgeMarkup(curator) {
@@ -616,15 +619,15 @@
       <div class="curator-field"><label>Nama produk</label><input name="referenceName" maxlength="160" value="${esc(reference.name)}" placeholder="Contoh: Linen Relaxed Shirt" required /></div>
       <div class="curator-field"><label>Warna / varian</label><select name="referenceColor"><option value="">Pilih warna</option>${COLOR_OPTIONS.map(([name, hex]) => `<option value="${esc(name)}"${name === selectedColor ? " selected" : ""}>${esc(name)} · ${esc(hex)}</option>`).join("")}</select><span class="curator-color-preview" data-curator-color-preview style="--curator-color:${esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1] || "transparent")}">${selectedColor ? esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1]) : "Opsional"}</span></div>
       <div class="curator-field"><label>Harga referensi</label><input name="referencePrice" type="number" min="1" step="1" inputmode="numeric" value="${reference.price || ""}" placeholder="Contoh: 159000" required /></div>
-      <div class="curator-form-grid curator-field-full"><div class="curator-field"><label>Marketplace</label><select name="referenceMarketplace">${Object.entries(MARKETPLACES).map(([value, option]) => `<option value="${value}"${reference.affiliatePlatform === value ? " selected" : ""}>${esc(option.label)}</option>`).join("")}</select></div><div class="curator-field"><label>Link affiliate</label><input name="referenceUrl" type="url" value="${esc(reference.affiliateUrl)}" placeholder="${esc(MARKETPLACES[reference.affiliatePlatform]?.placeholder || MARKETPLACES.shopee.placeholder)}" required /></div></div>
-      <div class="curator-form-grid curator-field-full curator-secondary-destination"><div class="curator-field"><label>Marketplace kedua (opsional)</label><select name="referenceSecondaryMarketplace"><option value="">Tidak ada</option>${Object.entries(MARKETPLACES).map(([value, option]) => `<option value="${value}"${secondary?.marketplace === value ? " selected" : ""}>${esc(option.label)}</option>`).join("")}</select></div><div class="curator-field"><label>Link kedua</label><input name="referenceSecondaryUrl" type="url" value="${esc(secondary?.affiliateUrl || "")}" placeholder="${esc(MARKETPLACES[secondary?.marketplace]?.placeholder || "Pilih marketplace kedua terlebih dahulu")}" /></div></div>
+      <div class="curator-field curator-field-full"><label>Link tujuan utama</label><input name="referenceUrl" type="url" value="${esc(reference.affiliateUrl)}" placeholder="https://shopee.co.id/... atau https://brand.com/product" required /><p class="curator-file-note">Shopee, TikTok Shop, dan website umum dikenali otomatis.</p></div>
+      <div class="curator-field curator-field-full curator-secondary-destination"><label>Link alternatif (opsional)</label><input name="referenceSecondaryUrl" type="url" value="${esc(secondary?.affiliateUrl || "")}" placeholder="https://shop.tiktok.com/... atau https://brand.com/product" /><p class="curator-file-note">Marketplace otomatis diprioritaskan jika dipasangkan dengan website umum.</p></div>
       <button class="curator-remove-reference" type="button" data-remove-curator-reference aria-label="Hapus produk ${index + 1}">×</button>
     </div>`;
   }
   function lookEditorMarkup(editing = null) {
     const isExistingLook = Boolean(editing?.id);
     const references = editing?.items?.length ? editing.items.slice(0, MAX_REFERENCES) : [{}, {}];
-    return `<section class="curator-studio-panel" data-curator-studio-panel="editor"><p class="eyebrow" style="color:var(--clay)">${isExistingLook ? "EDIT LOOK" : "NEW CURATION"}</p><h3>${isExistingLook ? "Refine this\nlook." : "Build a look\nworth sharing."}</h3><p class="curator-studio-lede">Kamu bisa menerbitkan langsung—tanpa review admin. Tambahkan 2 hingga 5 produk dengan tautan affiliate Shopee atau TikTok Shop milikmu.</p>
+    return `<section class="curator-studio-panel" data-curator-studio-panel="editor"><p class="eyebrow" style="color:var(--clay)">${isExistingLook ? "EDIT LOOK" : "NEW CURATION"}</p><h3>${isExistingLook ? "Refine this\nlook." : "Build a look\nworth sharing."}</h3><p class="curator-studio-lede">Kamu bisa menerbitkan langsung—tanpa review admin. Tambahkan 2 hingga 5 produk dengan link Shopee, TikTok Shop, atau website brand pilihanmu.</p>
       <form class="curator-form" data-curator-look-form data-curator-edit-id="${esc(editing?.id || "")}"><div class="curator-form-grid">
         <div class="curator-field curator-field-full"><label for="curatorLookTitle">Nama mix &amp; match</label><input id="curatorLookTitle" name="title" maxlength="160" value="${esc(editing?.title || "")}" placeholder="Contoh: Monday in Olive" required /></div>
         <div class="curator-field curator-field-full"><label for="curatorLookExcerpt">Deskripsi kurasi (opsional)</label><textarea id="curatorLookExcerpt" name="excerpt" maxlength="240" placeholder="Jelaskan ide, occasion, atau formula styling dalam maksimal 240 karakter.">${esc(editing?.excerpt || "")}</textarea><p class="curator-file-note">Kosongkan jika judul dan visual sudah cukup menjelaskan look.</p></div>
@@ -730,19 +733,24 @@
   }
   function collectLookPayload(form) {
     const references = [...form.querySelectorAll("[data-curator-reference-row]")].map((row) => {
-      const affiliatePlatform = compact(row.querySelector("[name=referenceMarketplace]")?.value || "shopee");
       const affiliateUrl = compact(row.querySelector("[name=referenceUrl]")?.value);
-      const secondaryMarketplace = compact(row.querySelector("[name=referenceSecondaryMarketplace]")?.value);
+      const affiliatePlatform = marketplaceFromUrl(affiliateUrl);
       const secondaryUrl = compact(row.querySelector("[name=referenceSecondaryUrl]")?.value);
-      const marketplaceLinks = [{ marketplace:affiliatePlatform, affiliateUrl, label:MARKETPLACES[affiliatePlatform]?.label || "Marketplace", isPrimary:true }];
-      if (secondaryMarketplace || secondaryUrl) marketplaceLinks.push({ marketplace:secondaryMarketplace, affiliateUrl:secondaryUrl, label:MARKETPLACES[secondaryMarketplace]?.label || "Marketplace", isPrimary:false });
+      let marketplaceLinks = [{ marketplace:affiliatePlatform, affiliateUrl, label:MARKETPLACES[affiliatePlatform]?.label || "Website", isPrimary:true }];
+      if (secondaryUrl) {
+        const secondaryMarketplace=marketplaceFromUrl(secondaryUrl);
+        marketplaceLinks.push({ marketplace:secondaryMarketplace, affiliateUrl:secondaryUrl, label:MARKETPLACES[secondaryMarketplace]?.label || "Website", isPrimary:false });
+        const preferred=marketplaceLinks.findIndex((destination)=>destination.marketplace!=="website");
+        marketplaceLinks=marketplaceLinks.map((destination,index)=>({...destination,isPrimary:index===(preferred>=0?preferred:0)}));
+      }
+      const primary=marketplaceLinks.find((destination)=>destination.isPrimary) || marketplaceLinks[0];
       return {
         category: compact(row.querySelector("[name=referenceCategory]")?.value || "other"),
         name: compact(row.querySelector("[name=referenceName]")?.value),
         colorLabel: compact(row.querySelector("[name=referenceColor]")?.value),
         price: Number(String(row.querySelector("[name=referencePrice]")?.value || "").replace(/[^0-9]/g, "")),
-        affiliatePlatform,
-        affiliateUrl,
+        affiliatePlatform:primary.marketplace,
+        affiliateUrl:primary.affiliateUrl,
         marketplaceLinks
       };
     });
@@ -764,10 +772,9 @@
     if ((payload.galleryFiles || []).some((file) => file.size > 5 * 1024 * 1024)) return "Ukuran setiap foto look maksimal 5 MB.";
     if (payload.items.length < MIN_REFERENCES || payload.items.length > MAX_REFERENCES) return `Tambahkan ${MIN_REFERENCES}–${MAX_REFERENCES} produk ke dalam look.`;
     if (payload.items.some((item) => !item.name || !item.affiliateUrl || !Number.isSafeInteger(item.price) || item.price <= 0)) return "Setiap produk membutuhkan nama, harga, dan link affiliate.";
-    if (payload.items.some((item) => marketplaceFromUrl(item.affiliateUrl) !== item.affiliatePlatform)) return "Pastikan setiap link sesuai dengan marketplace yang dipilih.";
-    if (payload.items.some((item) => item.marketplaceLinks.length > 1 && (!item.marketplaceLinks[1].marketplace || !item.marketplaceLinks[1].affiliateUrl))) return "Lengkapi marketplace dan link tujuan kedua, atau kosongkan keduanya.";
-    if (payload.items.some((item) => item.marketplaceLinks.length > 1 && item.marketplaceLinks[0].marketplace === item.marketplaceLinks[1].marketplace)) return "Marketplace kedua harus berbeda dari marketplace utama.";
-    if (payload.items.some((item) => item.marketplaceLinks.some((link) => marketplaceFromUrl(link.affiliateUrl) !== link.marketplace))) return "Pastikan setiap link tujuan sesuai dengan marketplace yang dipilih.";
+    if (payload.items.some((item) => !item.affiliatePlatform || marketplaceFromUrl(item.affiliateUrl) !== item.affiliatePlatform)) return "Pastikan setiap link tujuan memakai alamat HTTPS publik.";
+    if (payload.items.some((item) => item.marketplaceLinks.length > 1 && item.marketplaceLinks[0].marketplace === item.marketplaceLinks[1].marketplace)) return "Link alternatif harus memakai jenis platform yang berbeda.";
+    if (payload.items.some((item) => item.marketplaceLinks.some((link) => !link.marketplace || marketplaceFromUrl(link.affiliateUrl) !== link.marketplace))) return "Pastikan setiap link tujuan memakai alamat HTTPS publik.";
     return "";
   }
 
@@ -1070,13 +1077,6 @@
     if (look) { event.preventDefault(); submitLook(look); }
   }
   function onChange(event) {
-    const marketplace = event.target.closest('select[name="referenceMarketplace"],select[name="referenceSecondaryMarketplace"]');
-    if (marketplace) {
-      const isSecondary = marketplace.name === "referenceSecondaryMarketplace";
-      const link = marketplace.closest("[data-curator-reference-row]")?.querySelector(isSecondary ? 'input[name="referenceSecondaryUrl"]' : 'input[name="referenceUrl"]');
-      if (link) link.placeholder = marketplace.value ? (MARKETPLACES[marketplace.value]?.placeholder || "https://") : "Pilih marketplace kedua terlebih dahulu";
-      return;
-    }
     const directoryFilter = event.target.closest("[data-curator-directory-filter]");
     if (directoryFilter) {
       curatorFilters[directoryFilter.dataset.curatorDirectoryFilter] = directoryFilter.value;

@@ -128,7 +128,7 @@
         let badge = "";
         try {
           affiliatePlatform = String(row.marketplace || "").trim().toLowerCase() || marketplaceFromUrl(row.affiliate_url);
-          if (!MARKETPLACES[affiliatePlatform]) throw new Error("marketplace harus shopee atau tiktok_shop.");
+          if (!MARKETPLACES[affiliatePlatform]) throw new Error("marketplace harus shopee, tiktok_shop, atau website.");
           affiliateUrl = affiliateUrlFromBulk(row.affiliate_url, affiliatePlatform);
         } catch (error) { problems.push(error.message); }
         try { price = parseBulkPrice(row.price_idr); } catch (error) { problems.push(error.message); }

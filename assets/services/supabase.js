@@ -24,7 +24,8 @@
   const PRODUCT_BADGE_ALIASES = new Map([["populer", "High Rotation"], ["best seller", "High Rotation"], ["terlaris", "High Rotation"], ["termurah", "Best Value"]]);
   const MARKETPLACE_OPTIONS = new Map([
     ["shopee", { label: "Shopee" }],
-    ["tiktok_shop", { label: "TikTok Shop" }]
+    ["tiktok_shop", { label: "TikTok Shop" }],
+    ["website", { label: "Website" }]
   ]);
   // The database column remains `job_tags` for compatibility, but the public
   // experience treats these as one combined fashion-style and personal-profile
@@ -185,19 +186,19 @@
   function marketplaceFromAffiliateUrl(value) {
     let parsed;
     try { parsed = new URL(String(value || "").trim()); }
-    catch { throw new Error("Gunakan link affiliate Shopee atau TikTok Shop yang lengkap."); }
-    if (parsed.protocol !== "https:") throw new Error("Link affiliate harus menggunakan https://.");
+    catch { throw new Error("Gunakan link tujuan yang lengkap."); }
+    if (parsed.protocol !== "https:" || !parsed.hostname.includes(".")) throw new Error("Link tujuan harus berupa alamat HTTPS publik.");
     const host = parsed.hostname.toLowerCase();
     if (host === "shope.ee" || host === "shopee.co.id" || host.endsWith(".shopee.co.id")) return "shopee";
     if (host === "tiktok.com" || host.endsWith(".tiktok.com")) return "tiktok_shop";
-    throw new Error("Saat ini COMOOTD mendukung link affiliate Shopee dan TikTok Shop.");
+    return "website";
   }
 
   function normalizeAffiliateLink(value, expectedMarketplace = "") {
     const raw = String(value || "").trim();
     const marketplace = marketplaceFromAffiliateUrl(raw);
     if (expectedMarketplace && expectedMarketplace !== marketplace) {
-      throw new Error(`Link tidak sesuai marketplace yang dipilih (${MARKETPLACE_OPTIONS.get(expectedMarketplace)?.label || expectedMarketplace}).`);
+      throw new Error(`Link tidak sesuai jenis platform (${MARKETPLACE_OPTIONS.get(expectedMarketplace)?.label || expectedMarketplace}).`);
     }
     return { url: new URL(raw).href, marketplace };
   }
@@ -205,21 +206,31 @@
   function normalizeMarketplaceLinks(value, primaryLink) {
     const fallback = normalizeAffiliateLink(primaryLink?.url, primaryLink?.marketplace);
     const source = Array.isArray(value) && value.length ? value : [{ marketplace:fallback.marketplace, affiliateUrl:fallback.url, isPrimary:true }];
-    if (source.length > 2) throw new Error("Maksimal dua tujuan marketplace untuk satu produk.");
+    if (source.length > 2) throw new Error("Maksimal dua link tujuan untuk satu produk.");
     const seen = new Set();
     const links = source.map((entry, index) => {
       const normalized = normalizeAffiliateLink(entry?.affiliateUrl ?? entry?.affiliate_url ?? entry?.url, String(entry?.marketplace || "").trim().toLowerCase());
-      if (seen.has(normalized.marketplace)) throw new Error("Satu marketplace hanya dapat digunakan sekali.");
+      if (seen.has(normalized.marketplace)) throw new Error("Satu jenis platform hanya dapat digunakan sekali.");
       seen.add(normalized.marketplace);
       return {
         marketplace: normalized.marketplace,
         affiliate_url: normalized.url,
-        label: normalizeUserText(entry?.label, "Label marketplace", { max:60 }) || (normalized.marketplace === "tiktok_shop" ? "TikTok Shop" : "Shopee"),
+        label: normalizeUserText(entry?.label, "Label platform", { max:60 }) || MARKETPLACE_OPTIONS.get(normalized.marketplace)?.label || "Website",
         is_primary: Boolean(entry?.isPrimary ?? entry?.is_primary ?? index === 0)
       };
     });
-    if (links.filter((entry) => entry.is_primary).length !== 1) throw new Error("Pilih tepat satu link marketplace utama.");
-    return links;
+    const selectedPrimary=links.findIndex((entry)=>entry.is_primary&&entry.marketplace!=="website");
+    const firstMarketplace=links.findIndex((entry)=>entry.marketplace!=="website");
+    const preferred=selectedPrimary>=0?selectedPrimary:firstMarketplace>=0?firstMarketplace:Math.max(0,links.findIndex((entry)=>entry.is_primary));
+    return links.map((entry,index)=>({...entry,is_primary:index===preferred}));
+  }
+
+  function prioritizeStoredLinks(value) {
+    const sorted=[...(Array.isArray(value)?value:[])].sort((left,right) => {
+      const platformPriority=Number(left.marketplace==="website")-Number(right.marketplace==="website");
+      return platformPriority || Number(Boolean(right.is_primary))-Number(Boolean(left.is_primary));
+    });
+    return sorted.map((link,index)=>({ id:link.id, marketplace:link.marketplace, affiliateUrl:link.affiliate_url, label:link.label || "", status:link.status || "active", isPrimary:index===0 }));
   }
 
   function mapProduct(row) {
@@ -233,10 +244,7 @@
         image: publicUrl(variant.image_path),
         imageAspect: "square"
       }));
-    const marketplaceLinks = (row.product_marketplace_links || [])
-      .filter((link) => link.status !== "disabled")
-      .sort((left, right) => Number(Boolean(right.is_primary)) - Number(Boolean(left.is_primary)))
-      .map((link) => ({ id:link.id, marketplace:link.marketplace, affiliateUrl:link.affiliate_url, label:link.label || "", status:link.status || "active", isPrimary:Boolean(link.is_primary) }));
+    const marketplaceLinks = prioritizeStoredLinks((row.product_marketplace_links || []).filter((link) => link.status !== "disabled"));
     const primaryLink = marketplaceLinks.find((link) => link.isPrimary) || marketplaceLinks[0] || null;
 
     return {
@@ -282,10 +290,7 @@
     const referenceItems = (row.look_curation_items || [])
       .sort((a, b) => Number(a.position || 0) - Number(b.position || 0))
       .map((item) => {
-        const marketplaceLinks = (item.curator_item_marketplace_links || [])
-          .filter((link) => link.status !== "disabled")
-          .sort((left, right) => Number(Boolean(right.is_primary)) - Number(Boolean(left.is_primary)))
-          .map((link) => ({ id:link.id, marketplace:link.marketplace, affiliateUrl:link.affiliate_url, label:link.label || "", status:link.status || "active", isPrimary:Boolean(link.is_primary) }));
+        const marketplaceLinks = prioritizeStoredLinks((item.curator_item_marketplace_links || []).filter((link) => link.status !== "disabled"));
         const primaryLink = marketplaceLinks.find((link) => link.isPrimary) || marketplaceLinks[0] || null;
         return {
         id: item.id,
@@ -1855,7 +1860,7 @@
       if (priceError) throw priceError;
       const { data:itemRows, error:itemRowsError } = await db.from("look_curation_items").select("id,position").eq("look_id", id).order("position", { ascending:true });
       if (itemRowsError) throw itemRowsError;
-      if ((itemRows || []).length !== normalized.items.length) throw new Error("Tujuan marketplace belum dapat dipasangkan ke semua item look.");
+      if ((itemRows || []).length !== normalized.items.length) throw new Error("Link tujuan belum dapat dipasangkan ke semua item look.");
       for (let index=0; index<normalized.items.length; index+=1) {
         await setMarketplaceLinks("curator_item", itemRows[index].id, normalized.items[index].marketplaceLinks);
       }

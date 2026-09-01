@@ -217,16 +217,23 @@ check(linkInventoryMigration.includes("grant execute on function public.get_como
 check(read("assets/services/supabase.js").includes('rpc("get_comootd_link_inventory"') && !read("assets/services/supabase.js").includes("requireUser()") && insights.includes("data-link-inventory-query") && insights.includes("data-link-page"), "Inventaris link belum memakai pencarian dan pagination server-side dengan pemeriksaan akun yang valid");
 
 const marketplaceMigration = read("supabase/migrations/20260831090000_comootd_multi_marketplace.sql");
+const generalWebsiteMigration = read("supabase/migrations/20260901190000_support_general_website_links.sql");
 check(marketplaceMigration.includes("private.comootd_marketplace_for_url"), "Validasi marketplace di database belum tersedia");
 check(marketplaceMigration.includes("tiktok_shop") && marketplaceMigration.includes("shopee"), "Marketplace Shopee dan TikTok Shop belum sama-sama didukung");
 check(marketplaceMigration.includes("products_affiliate_url_marketplace_check") && marketplaceMigration.includes("look_curation_items_affiliate_url_marketplace_check"), "Konsistensi URL marketplace belum dikunci constraint");
 check(marketplaceMigration.includes("save_contributor_look_v2") && marketplaceMigration.includes("update_comootd_product"), "RPC kompatibilitas multi-marketplace belum tersedia");
 check(read("assets/services/supabase.js").includes('rpc("save_contributor_look_v2"') && read("assets/services/supabase.js").includes('rpc("update_comootd_product"'), "Adapter belum memakai RPC multi-marketplace");
+check(generalWebsiteMigration.includes("'website'") && generalWebsiteMigration.includes("security invoker"), "Dukungan website umum atau kontrak keamanan Tahap 4 belum lengkap");
+check(generalWebsiteMigration.includes("p_marketplace in ('shopee', 'tiktok_shop', 'website')") && generalWebsiteMigration.includes("products_affiliate_url_marketplace_check"), "Filter inventaris atau constraint link website umum belum tersedia");
+check(!generalWebsiteMigration.includes("grant execute on function private.comootd_marketplace_for_url"), "Helper deteksi link internal tidak boleh diekspos langsung ke pengguna");
+check(appSource.includes("website: { label:\"Website\"") && appSource.includes("dikenali otomatis") && !index.includes('id="productMarketplaceInput"'), "Form produk belum mendeteksi Shopee, TikTok Shop, dan website umum secara otomatis");
+check(read("assets/features/curator-studio.js").includes('website: { label:\"Website\"') && !read("assets/features/curator-studio.js").includes('name="referenceMarketplace"'), "Editor Curator belum mendukung link website umum otomatis");
+check(insights.includes('<option value="website"') && insights.includes("Semua platform"), "Inventaris link belum dapat difilter untuk website umum");
 check(appSource.includes('href="/styles/${esc(slugify(activeTag.name))}"'), "Explore style belum menautkan SEO landing page");
 check(homeStyle.includes("background:var(--clay)") && !homeStyle.includes("background:var(--signal)"), "Tombol landing style belum memiliki warna kontras yang valid");
 check(appSource.includes('candidatePool(state.looks, "look")') && appSource.includes('gender === preference.genderTarget || gender === "unisex"'), "Feed personal belum menyaring kandidat berdasarkan profil member");
 check(worker.includes('type:"style-directory"') && worker.includes("comootd_style_tags") && worker.includes("sitemap-(looks|products|journal|curators|styles)"), "Style landing page atau sitemap style belum lengkap");
-check(appSource.includes('value="tiktok_shop"') && appSource.includes('data-directory-filter="marketplace"'), "Input dan filter TikTok Shop belum tersedia");
+check(appSource.includes('data-directory-filter="marketplace"') && insights.includes('<option value="tiktok_shop"'), "Filter TikTok Shop belum tersedia");
 const styleNormalizationMigration = read("supabase/migrations/20260831103000_fix_style_taxonomy_whitespace_normalization.sql");
 check(styleNormalizationMigration.includes("'[[:space:]]+'"), "Normalisasi style harus memakai kelas whitespace POSIX");
 check(!styleNormalizationMigration.includes("E'\\s+'"), "Migration style masih berisiko menghapus huruf s");

@@ -15,7 +15,8 @@
         const PRODUCT_BADGE_OPTIONS = ["", "COMOOTD Pick", "High Rotation", "Wardrobe Staple", "New In", "Trending", "Best Value", "Limited"];
         const MARKETPLACES = {
           shopee: { label:"Shopee", placeholder:"https://shopee.co.id/..." },
-          tiktok_shop: { label:"TikTok Shop", placeholder:"https://shop.tiktok.com/..." }
+          tiktok_shop: { label:"TikTok Shop", placeholder:"https://shop.tiktok.com/..." },
+          website: { label:"Website", placeholder:"https://brand.com/product/..." }
         };
         const PRODUCT_CATEGORIES = { top:"Atasan", bottom:"Bawahan", outerwear:"Outerwear", dress:"Dress / Set", footwear:"Sepatu", bag:"Tas", accessory:"Aksesori", hijab:"Hijab", jewelry:"Perhiasan", other:"Lainnya" };
         const ARTICLE_CATEGORIES = {
@@ -198,7 +199,6 @@
           productColorOptions: document.getElementById("productColorOptions"),
           productColorCount: document.getElementById("productColorCount"),
           productVariantsInput: document.getElementById("productVariantsInput"),
-          productMarketplaceInput: document.getElementById("productMarketplaceInput"),
           productLinkInput: document.getElementById("productLinkInput")
         });
         const notification = window.COMOOTDNotification.create({ element:els.toast });
@@ -1180,7 +1180,7 @@
           els.productForm.reset();
           setTaxonomyValues(els.productForm,"productStyles",[]);
           els.productFormHeading.textContent="Tambah produk";
-          els.productFormCopy.textContent="Satu produk dapat memiliki tujuan Shopee dan TikTok Shop. Link pertama menjadi tujuan utama.";
+          els.productFormCopy.textContent="Tempel link tujuan. Shopee, TikTok Shop, dan website umum dikenali otomatis.";
           els.productImageLabel.textContent="Upload foto produk (opsional)";
           els.productSubmitButton.textContent="Simpan produk";
           els.productEditActions.hidden=true;
@@ -1196,10 +1196,8 @@
           els.productForm.elements.badge.value=item.badge||"";
           els.productForm.elements.genderTarget.value=item.genderTarget||"unisex";
           els.productForm.elements.category.value=item.category||"other";
-          els.productForm.elements.marketplace.value=marketplaceOf(item);
           els.productForm.elements.link.value=item.affiliateUrl||"";
           const secondary=marketplaceLinksOf(item).find((link)=>!link.isPrimary)||marketplaceLinksOf(item)[1]||null;
-          els.productForm.elements.secondaryMarketplace.value=secondary?.marketplace||"";
           els.productForm.elements.secondaryLink.value=secondary?.affiliateUrl||"";
           setTaxonomyValues(els.productForm,"productStyles",item.styles||[]);
           const variantSelect=els.productForm.elements.variants;
@@ -1246,26 +1244,28 @@
         function marketplaceFromUrl(value) {
           let parsed;
           try { parsed = new URL(String(value || "").trim()); }
-          catch { throw new Error("Gunakan link affiliate Shopee atau TikTok Shop yang lengkap."); }
-          if (parsed.protocol !== "https:") throw new Error("Link affiliate harus menggunakan https://.");
+          catch { throw new Error("Gunakan link tujuan yang lengkap."); }
+          if (parsed.protocol !== "https:" || !parsed.hostname.includes(".")) throw new Error("Link tujuan harus berupa alamat HTTPS publik.");
           const host = parsed.hostname.toLowerCase();
           if (host === "shope.ee" || host === "shopee.co.id" || host.endsWith(".shopee.co.id")) return "shopee";
           if (host === "tiktok.com" || host.endsWith(".tiktok.com")) return "tiktok_shop";
-          throw new Error("Saat ini COMOOTD mendukung link affiliate Shopee dan TikTok Shop.");
+          return "website";
         }
         function affiliateUrl(value, expectedMarketplace = "") {
           const marketplace = marketplaceFromUrl(value);
-          if (expectedMarketplace && marketplace !== expectedMarketplace) throw new Error(`Link tidak sesuai marketplace yang dipilih (${MARKETPLACES[expectedMarketplace]?.label || expectedMarketplace}).`);
+          if (expectedMarketplace && marketplace !== expectedMarketplace) throw new Error(`Link tidak sesuai jenis platform (${MARKETPLACES[expectedMarketplace]?.label || expectedMarketplace}).`);
           return new URL(String(value).trim()).href;
         }
-        function marketplaceOf(item) { try { return item?.affiliatePlatform || marketplaceFromUrl(item?.affiliateUrl); } catch { return "shopee"; } }
-        function marketplaceLabel(item) { return MARKETPLACES[marketplaceOf(item)]?.label || "Marketplace"; }
+        function marketplaceOf(item) { try { return item?.affiliatePlatform || marketplaceFromUrl(item?.affiliateUrl); } catch { return "website"; } }
+        function marketplaceLabel(item) { return MARKETPLACES[marketplaceOf(item)]?.label || "Website"; }
         function marketplaceLinksOf(item) {
           const links=Array.isArray(item?.marketplaceLinks)?item.marketplaceLinks.filter((link)=>link?.affiliateUrl&&link.status!=="disabled"):[];
-          return links.length?links:[item?.affiliateUrl?{id:"",marketplace:marketplaceOf(item),affiliateUrl:item.affiliateUrl,label:marketplaceLabel(item),status:item.linkStatus||"active",isPrimary:true}:null].filter(Boolean);
+          const available=links.length?links:[item?.affiliateUrl?{id:"",marketplace:marketplaceOf(item),affiliateUrl:item.affiliateUrl,label:marketplaceLabel(item),status:item.linkStatus||"active",isPrimary:true}:null].filter(Boolean);
+          const prioritized=[...available].sort((left,right)=>Number(left.marketplace==="website")-Number(right.marketplace==="website"));
+          return prioritized.map((link,index)=>({...link,isPrimary:index===0}));
         }
         function marketplaceDestinationsMarkup(item,{contextLook="",reportType="product_link",className="marketplace-destination"}={}) {
-          return `<div class="marketplace-destinations">${marketplaceLinksOf(item).map((link,index)=>`<a class="${className}${link.isPrimary||index===0?" is-primary":""}${link.status==="reported"?" is-reported":""}" href="${esc(safeUrl(link.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="${item?.type==="reference"?"curator_item":"product"}" data-insight-id="${esc(item.id)}"${contextLook?` data-insight-context-look="${esc(contextLook)}"`:""} data-report-target="${esc(link.id?reportType:(item?.type==="reference"?"curator_item":"product"))}" data-report-id="${esc(link.id||item.id)}">${esc(link.label||MARKETPLACES[link.marketplace]?.label||"Marketplace")} ↗</a>`).join("")}</div>`;
+          return `<div class="marketplace-destinations">${marketplaceLinksOf(item).map((link,index)=>`<a class="${className}${link.isPrimary||index===0?" is-primary":""}${link.status==="reported"?" is-reported":""}" href="${esc(safeUrl(link.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="${item?.type==="reference"?"curator_item":"product"}" data-insight-id="${esc(item.id)}"${contextLook?` data-insight-context-look="${esc(contextLook)}"`:""} data-report-target="${esc(link.id?reportType:(item?.type==="reference"?"curator_item":"product"))}" data-report-id="${esc(link.id||item.id)}">${esc(link.label||MARKETPLACES[link.marketplace]?.label||"Website")} ↗</a>`).join("")}</div>`;
         }
         function safeUrl(value) { try { return affiliateUrl(value); } catch { return "#"; } }
         let contentRouteSyncing = false;
@@ -2383,9 +2383,6 @@
         });
         els.downloadBulkTemplateButton.addEventListener("click", downloadBulkTemplate);
         els.bulkProductFile.addEventListener("change", () => { void inspectBulkProductFile(); });
-        els.productMarketplaceInput?.addEventListener("change", () => {
-          els.productLinkInput.placeholder=MARKETPLACES[els.productMarketplaceInput.value]?.placeholder || "https://";
-        });
         els.bulkImportButton.addEventListener("click", async (event) => {
           if (!cloudEnabled()) { els.bulkImportError.textContent = "Import banyak hanya tersedia setelah Supabase cloud aktif."; return; }
           if (!bulkImportGroups.length || bulkImportErrors.length) return;
@@ -2521,17 +2518,19 @@
           const variantSelect=productForm.elements.variants;
           const parsedVariants=parseVariants([...variantSelect.selectedOptions].map((option)=>option.value).join(","));
           const variants=editId?reconcileProductVariantIds(parsedVariants,existingProduct):parsedVariants;
-          const marketplace=String(form.get("marketplace")||"shopee");
-          const secondaryMarketplace=String(form.get("secondaryMarketplace")||"");
           const secondaryRaw=String(form.get("secondaryLink")||"").trim();
-          let link, imageUrl, marketplaceLinks;
+          let link, marketplace, imageUrl, marketplaceLinks;
           try {
-            link=affiliateUrl(form.get("link"),marketplace); imageUrl=normalizeBulkImageUrl(form.get("imageUrl"));
-            marketplaceLinks=[{marketplace,affiliateUrl:link,isPrimary:true,label:MARKETPLACES[marketplace]?.label||"Marketplace"}];
-            if(secondaryMarketplace||secondaryRaw){
-              if(!secondaryMarketplace||!secondaryRaw) throw new Error("Lengkapi marketplace dan link tujuan kedua.");
-              if(secondaryMarketplace===marketplace) throw new Error("Marketplace kedua harus berbeda dari link utama.");
-              marketplaceLinks.push({marketplace:secondaryMarketplace,affiliateUrl:affiliateUrl(secondaryRaw,secondaryMarketplace),isPrimary:false,label:MARKETPLACES[secondaryMarketplace]?.label||"Marketplace"});
+            link=affiliateUrl(form.get("link")); marketplace=marketplaceFromUrl(link); imageUrl=normalizeBulkImageUrl(form.get("imageUrl"));
+            marketplaceLinks=[{marketplace,affiliateUrl:link,isPrimary:true,label:MARKETPLACES[marketplace]?.label||"Website"}];
+            if(secondaryRaw){
+              const secondaryLink=affiliateUrl(secondaryRaw); const secondaryMarketplace=marketplaceFromUrl(secondaryLink);
+              if(secondaryMarketplace===marketplace) throw new Error("Link kedua harus memakai jenis platform yang berbeda.");
+              marketplaceLinks.push({marketplace:secondaryMarketplace,affiliateUrl:secondaryLink,isPrimary:false,label:MARKETPLACES[secondaryMarketplace]?.label||"Website"});
+              const preferred=marketplaceLinks.findIndex((destination)=>destination.marketplace!=="website");
+              marketplaceLinks=marketplaceLinks.map((destination,index)=>({...destination,isPrimary:index===(preferred>=0?preferred:0)}));
+              const primary=marketplaceLinks.find((destination)=>destination.isPrimary);
+              link=primary.affiliateUrl; marketplace=primary.marketplace;
             }
           } catch(error) { els.productFormError.textContent=error.message; return; }
           if(!title || !price || variants.length===0){els.productFormError.textContent="Nama, harga, link, dan minimal satu varian warna wajib diisi.";return;}
