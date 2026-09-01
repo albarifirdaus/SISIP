@@ -214,7 +214,7 @@ check(insights.includes("ATTRIBUTION_KEY") && insights.includes("data-campaign-b
 check(appSource.includes('data-insight-context-look="${esc(contextLook)}"') && appSource.includes("contextLook:entry.id"), "Klik produk dari detail Look belum diatribusikan ke Look dan curator");
 check(linkInventoryMigration.includes("get_comootd_link_inventory") && linkInventoryMigration.includes("security invoker") && linkInventoryMigration.includes("set search_path = ''"), "RPC inventaris link belum memakai kontrak keamanan yang benar");
 check(linkInventoryMigration.includes("grant execute on function public.get_comootd_link_inventory") && linkInventoryMigration.includes("l.creator_id = (select auth.uid())"), "Inventaris link belum dibatasi untuk admin dan Curator pemilik");
-check(read("assets/services/supabase.js").includes('rpc("get_comootd_link_inventory"') && insights.includes("data-link-inventory-query") && insights.includes("data-link-page"), "Inventaris link belum memakai pencarian dan pagination server-side");
+check(read("assets/services/supabase.js").includes('rpc("get_comootd_link_inventory"') && !read("assets/services/supabase.js").includes("requireUser()") && insights.includes("data-link-inventory-query") && insights.includes("data-link-page"), "Inventaris link belum memakai pencarian dan pagination server-side dengan pemeriksaan akun yang valid");
 
 const marketplaceMigration = read("supabase/migrations/20260831090000_comootd_multi_marketplace.sql");
 check(marketplaceMigration.includes("private.comootd_marketplace_for_url"), "Validasi marketplace di database belum tersedia");

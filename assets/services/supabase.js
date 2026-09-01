@@ -2788,7 +2788,7 @@
   }
 
   async function loadLinkHealth({ page = 1, pageSize = 25, query = "", status = "all", marketplace = "all" } = {}) {
-    await requireUser();
+    if (!(await getCurrentUser())) throw new Error("Masuk terlebih dahulu untuk melihat inventaris link.");
     const db = getClient();
     const requests = [
       db.from("comootd_link_reports").select("id,reporter_id,owner_id,target_type,target_id,reason,message,status,created_at,updated_at").eq("status", "open").order("created_at", { ascending:false }).limit(100),
