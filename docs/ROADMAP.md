@@ -25,7 +25,7 @@ Pekerjaan bergerak fase demi fase; milestone hanya menjadi checkpoint hasil.
 | 4 | Analytics, attribution, dashboard curator dan admin | **Selesai** — event production, attribution sesi, UTM builder, tren, dashboard role-scoped, dan leaderboard internal terverifikasi |
 | 5 | Retention dan personalisasi: save, collection, follow, recently viewed, feed | **Selesai** — state privat, RLS, koleksi member, follow Curator, riwayat, dan ranking feed terverifikasi |
 | 6 | Moderasi dan pengajuan curator | **Selesai** — pengajuan terkontrol, approval admin, trust level, suspensi, dan notifikasi privat terverifikasi |
-| 7 | Link health dan multi-marketplace | Sebagian fondasi sudah tersedia; audit formal menunggu fase sebelumnya |
+| 7 | Link health dan multi-marketplace | **Selesai** — multi-destination, reporting, notifikasi, dashboard, RLS, dan audit production terverifikasi |
 | 8 | Privacy Center, Terms, consent, penghapusan akun, dan keamanan data | Halaman dasar tersedia; fitur privacy center belum dimulai |
 
 Status "sebagian tersedia" tidak berarti fase tersebut selesai. Implementasi
@@ -120,3 +120,26 @@ event moderasi dan hak akses privatnya menggunakan satu sistem yang sama.
 - Tes transaksi member → admin → member untuk submit, approval, aktivasi,
   notifikasi, mark-as-read, withdraw, serta rollback berhasil.
 - Tidak ada layanan, API, dependency, atau resource berbayar baru.
+
+## Fase 7 — selesai
+
+- Produk admin dan setiap produk referensi Curator dapat memiliki satu tujuan
+  utama serta satu tujuan tambahan: Shopee dan TikTok Shop.
+- Detail produk dan detail Look menampilkan semua tujuan marketplace aktif
+  tanpa menggandakan produk di katalog.
+- Pengunjung yang sudah masuk dapat melaporkan link spesifik sebagai rusak,
+  produk berbeda, stok habis, harga berbeda, tidak aman, atau alasan lain.
+- Laporan masuk ke pemilik Look Curator atau seluruh admin untuk produk katalog.
+  Notifikasi privat mengarahkan mereka ke dashboard penanganan.
+- Dashboard Analytics menampilkan jumlah link aktif, perlu diperiksa, dan
+  dinonaktifkan, inventaris tujuan, laporan terbuka, serta riwayat tindakan.
+- Pemilik/admin dapat mengganti URL, menonaktifkan tujuan, menyelesaikan, atau
+  mengabaikan laporan melalui shortcut yang sama.
+- Tiga tabel baru memakai RLS dan privilege eksplisit. Operasi perubahan hanya
+  melalui RPC tervalidasi; URL harus cocok dengan marketplace yang dipilih.
+- Kolom link lama tetap menjadi compatibility layer untuk tujuan utama agar
+  halaman dan data lama tidak terputus ketika migrasi diterapkan.
+- Tidak ada API scraping, extension, dependency, atau layanan berbayar baru.
+
+Migration production dan tes transaksi RLS/RPC sudah lulus. Frontend dirilis
+melalui quality gate production dan diverifikasi pada desktop serta ponsel.

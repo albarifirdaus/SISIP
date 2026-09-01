@@ -207,7 +207,7 @@ check(insights.includes("sessionStorage") && !insights.includes("localStorage"),
 check(appSource.includes('data-studio-tab="insights"'), "Tab Insights admin belum tersedia");
 check(analyticsHardening.includes("p_event_type='product_click'") && analyticsHardening.includes("'campaigns'") && analyticsHardening.includes("'mediums'"), "Kontrak event dan agregasi attribution Fase 4 belum lengkap");
 check(insights.includes("ATTRIBUTION_KEY") && insights.includes("data-campaign-builder") && insights.includes("trendMarkup"), "Attribution sesi, UTM builder, atau tren dashboard Fase 4 belum tersedia");
-check(appSource.includes('data-insight-context-look="${esc(entry.id)}"'), "Klik produk dari detail Look belum diatribusikan ke Look dan curator");
+check(appSource.includes('data-insight-context-look="${esc(contextLook)}"') && appSource.includes("contextLook:entry.id"), "Klik produk dari detail Look belum diatribusikan ke Look dan curator");
 
 const marketplaceMigration = read("supabase/migrations/20260831090000_comootd_multi_marketplace.sql");
 check(marketplaceMigration.includes("private.comootd_marketplace_for_url"), "Validasi marketplace di database belum tersedia");

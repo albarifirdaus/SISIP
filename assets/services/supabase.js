@@ -202,6 +202,26 @@
     return { url: new URL(raw).href, marketplace };
   }
 
+  function normalizeMarketplaceLinks(value, primaryLink) {
+    const fallback = normalizeAffiliateLink(primaryLink?.url, primaryLink?.marketplace);
+    const source = Array.isArray(value) && value.length ? value : [{ marketplace:fallback.marketplace, affiliateUrl:fallback.url, isPrimary:true }];
+    if (source.length > 2) throw new Error("Maksimal dua tujuan marketplace untuk satu produk.");
+    const seen = new Set();
+    const links = source.map((entry, index) => {
+      const normalized = normalizeAffiliateLink(entry?.affiliateUrl ?? entry?.affiliate_url ?? entry?.url, String(entry?.marketplace || "").trim().toLowerCase());
+      if (seen.has(normalized.marketplace)) throw new Error("Satu marketplace hanya dapat digunakan sekali.");
+      seen.add(normalized.marketplace);
+      return {
+        marketplace: normalized.marketplace,
+        affiliate_url: normalized.url,
+        label: normalizeUserText(entry?.label, "Label marketplace", { max:60 }) || (normalized.marketplace === "tiktok_shop" ? "TikTok Shop" : "Shopee"),
+        is_primary: Boolean(entry?.isPrimary ?? entry?.is_primary ?? index === 0)
+      };
+    });
+    if (links.filter((entry) => entry.is_primary).length !== 1) throw new Error("Pilih tepat satu link marketplace utama.");
+    return links;
+  }
+
   function mapProduct(row) {
     const variants = (row.product_variants || [])
       .filter((variant) => variant.is_active !== false)
@@ -213,6 +233,11 @@
         image: publicUrl(variant.image_path),
         imageAspect: "square"
       }));
+    const marketplaceLinks = (row.product_marketplace_links || [])
+      .filter((link) => link.status !== "disabled")
+      .sort((left, right) => Number(Boolean(right.is_primary)) - Number(Boolean(left.is_primary)))
+      .map((link) => ({ id:link.id, marketplace:link.marketplace, affiliateUrl:link.affiliate_url, label:link.label || "", status:link.status || "active", isPrimary:Boolean(link.is_primary) }));
+    const primaryLink = marketplaceLinks.find((link) => link.isPrimary) || marketplaceLinks[0] || null;
 
     return {
       id: row.id,
@@ -221,9 +246,10 @@
       price: Number(row.price_idr || 0),
       badge: controlledStoredList(row.badges, PRODUCT_BADGE_OPTIONS, PRODUCT_BADGE_ALIASES)[0] || "",
       styles: storedStyleTags(row.style_tags),
-      affiliateUrl: row.link_status === "disabled" ? "" : row.affiliate_url,
-      affiliatePlatform: row.affiliate_platform || "shopee",
+      affiliateUrl: primaryLink?.affiliateUrl || (row.link_status === "disabled" ? "" : row.affiliate_url),
+      affiliatePlatform: primaryLink?.marketplace || row.affiliate_platform || "shopee",
       linkStatus: row.link_status || "active",
+      marketplaceLinks,
       artBg: "#D8D0C6",
       artInk: variants[0]?.hex || "#242220",
       image: publicUrl(row.cover_image_path),
@@ -255,7 +281,13 @@
     // library. Their look owns the small, direct set of Shopee references.
     const referenceItems = (row.look_curation_items || [])
       .sort((a, b) => Number(a.position || 0) - Number(b.position || 0))
-      .map((item) => ({
+      .map((item) => {
+        const marketplaceLinks = (item.curator_item_marketplace_links || [])
+          .filter((link) => link.status !== "disabled")
+          .sort((left, right) => Number(Boolean(right.is_primary)) - Number(Boolean(left.is_primary)))
+          .map((link) => ({ id:link.id, marketplace:link.marketplace, affiliateUrl:link.affiliate_url, label:link.label || "", status:link.status || "active", isPrimary:Boolean(link.is_primary) }));
+        const primaryLink = marketplaceLinks.find((link) => link.isPrimary) || marketplaceLinks[0] || null;
+        return {
         id: item.id,
         type: "reference",
         category: item.category || "other",
@@ -265,10 +297,11 @@
         variantName: item.color_variant || "Warna pilihan",
         colorLabel: item.color_variant || "",
         price: Number(item.price_idr || 0),
-        affiliateUrl: item.link_status === "disabled" ? "" : (item.affiliate_url || ""),
-        affiliatePlatform: item.affiliate_platform || "shopee",
-        linkStatus: item.link_status || "active"
-      }))
+        affiliateUrl: primaryLink?.affiliateUrl || (item.link_status === "disabled" ? "" : (item.affiliate_url || "")),
+        affiliatePlatform: primaryLink?.marketplace || item.affiliate_platform || "shopee",
+        linkStatus: item.link_status || "active",
+        marketplaceLinks
+      }; })
       .filter((item) => Boolean(item.name));
     const creatorId = row.creator_id || "";
 
@@ -500,8 +533,8 @@
 
     if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka Studio.");
 
-    const productSelect = "id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, is_available, link_status, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
-    const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, is_available, link_status))), look_curation_items(id, position, category, name, color_variant, price_idr, affiliate_platform, affiliate_url, link_status)";
+    const productSelect = "id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, is_available, link_status, product_marketplace_links(id,marketplace,affiliate_url,label,status,is_primary), product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
+    const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, is_available, link_status, product_marketplace_links(id,marketplace,affiliate_url,label,status,is_primary)))), look_curation_items(id, position, category, name, color_variant, price_idr, affiliate_platform, affiliate_url, link_status, curator_item_marketplace_links(id,marketplace,affiliate_url,label,status,is_primary))";
     const articleSelect = "id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)";
     const productsQuery = (from, to) => {
       let query = db
@@ -1436,12 +1469,13 @@
       const colorLabel = normalizeUserText(raw?.colorLabel ?? raw?.color_label, `Warna item ke-${index + 1}`, { max: 80 });
       const affiliatePlatform = String(raw?.affiliatePlatform ?? raw?.affiliate_platform ?? "").trim().toLowerCase();
       const affiliate = normalizeAffiliateLink(raw?.affiliateUrl ?? raw?.affiliate_url ?? raw?.url, affiliatePlatform);
+      const marketplaceLinks = normalizeMarketplaceLinks(raw?.marketplaceLinks ?? raw?.marketplace_links, { marketplace:affiliate.marketplace, url:affiliate.url });
       const price = Number(raw?.price ?? raw?.priceIdr ?? raw?.price_idr);
       if (!Number.isSafeInteger(price) || price <= 0) throw new Error(`Harga item ke-${index + 1} harus berupa angka IDR lebih dari nol.`);
       const key = `${name.toLowerCase()}|${affiliate.url}`;
       if (duplicateKeys.has(key)) throw new Error("Item yang sama tidak perlu ditambahkan dua kali.");
       duplicateKeys.add(key);
-      return { category, name, color_variant: colorLabel || null, price_idr: price, affiliate_url: affiliate.url, affiliate_platform: affiliate.marketplace };
+      return { category, name, color_variant: colorLabel || null, price_idr: price, affiliate_url: affiliate.url, affiliate_platform: affiliate.marketplace, marketplaceLinks };
     });
   }
 
@@ -1691,6 +1725,21 @@
     }
   }
 
+  async function setMarketplaceLinks(targetType, targetId, links) {
+    const id = assertUuid(targetId, "Target marketplace");
+    const first = Array.isArray(links) ? links[0] : null;
+    const prepared = normalizeMarketplaceLinks(links, {
+      marketplace:first?.marketplace,
+      url:first?.affiliateUrl ?? first?.affiliate_url ?? first?.url
+    });
+    const { error } = await getClient().rpc("set_comootd_marketplace_links", {
+      p_target_type: targetType,
+      p_target_id: id,
+      p_links: prepared
+    });
+    if (error) throw error;
+  }
+
   async function saveCuratorLook(input, lookId = "") {
     const normalized = normalizeCuratorLookInput(input);
     const current = await getCuratorProfile();
@@ -1736,6 +1785,12 @@
         p_prices: normalized.items.map((item) => item.price_idr)
       });
       if (priceError) throw priceError;
+      const { data:itemRows, error:itemRowsError } = await db.from("look_curation_items").select("id,position").eq("look_id", id).order("position", { ascending:true });
+      if (itemRowsError) throw itemRowsError;
+      if ((itemRows || []).length !== normalized.items.length) throw new Error("Tujuan marketplace belum dapat dipasangkan ke semua item look.");
+      for (let index=0; index<normalized.items.length; index+=1) {
+        await setMarketplaceLinks("curator_item", itemRows[index].id, normalized.items[index].marketplaceLinks);
+      }
       await replaceLookGallery(db, id, galleryResult.media, { shouldWrite: galleryResult.hasExplicitGallery || galleryResult.hasChanges });
       if (galleryResult.hasExplicitGallery || galleryResult.hasChanges) {
         const previousPaths = [...(existing.look_media || []).map((item) => item.image_path), existing.cover_image_path].filter(Boolean);
@@ -1917,7 +1972,7 @@
     throw new Error("Gender produk harus pria, wanita, atau unisex.");
   }
 
-  function normalizeProductPayload({ title, price, badge, styles, link, marketplace, variants, imageUrl, genderTarget, category, importKey }) {
+  function normalizeProductPayload({ title, price, badge, styles, link, marketplace, marketplaceLinks, variants, imageUrl, genderTarget, category, importKey }) {
     const name = String(title || "").trim();
     const amount = Number(price);
     const preparedVariants = Array.isArray(variants) ? variants.map((variant) => {
@@ -1936,6 +1991,7 @@
     if (!preparedVariants.length) throw new Error("Produk memerlukan minimal satu varian warna.");
 
     const affiliate = normalizeAffiliateLink(link, String(marketplace || "").trim().toLowerCase());
+    const destinations = normalizeMarketplaceLinks(marketplaceLinks, { marketplace:affiliate.marketplace, url:affiliate.url });
     return {
       title: name,
       price: amount,
@@ -1943,6 +1999,7 @@
       styles: normalizeStyleTags(styles, { max: 3, label: "Tag style produk" }),
       link: affiliate.url,
       marketplace: affiliate.marketplace,
+      marketplaceLinks: destinations,
       variants: preparedVariants,
       imageUrl: assertImageUrl(imageUrl),
       genderTarget: normalizeGenderTarget(genderTarget),
@@ -1960,9 +2017,9 @@
     return new Map((data || []).map((variant) => [variant.label, variant.image_path || ""]));
   }
 
-  async function saveProduct({ title, price, badge, styles, link, marketplace, variants, imageFile, imageUrl, imageAspect, genderTarget, category, importKey }) {
+  async function saveProduct({ title, price, badge, styles, link, marketplace, marketplaceLinks, variants, imageFile, imageUrl, imageAspect, genderTarget, category, importKey }) {
     const db = getClient();
-    const payload = normalizeProductPayload({ title, price, badge, styles, link, marketplace, variants, imageUrl, genderTarget, category, importKey });
+    const payload = normalizeProductPayload({ title, price, badge, styles, link, marketplace, marketplaceLinks, variants, imageUrl, genderTarget, category, importKey });
     payload.styles = await ensureStyleTags(db, payload.styles);
     let existing = null;
     if (payload.importKey) {
@@ -2049,6 +2106,7 @@
           .eq("id", product.id);
         if (publishError) throw publishError;
       }
+      await setMarketplaceLinks("product", product.id, payload.marketplaceLinks);
       return { id: product.id, created };
     } catch (error) {
       if (created) {
@@ -2111,6 +2169,7 @@
       if (error) throw error;
       const { error: categoryError } = await db.from("products").update({ category: payload.category }).eq("id", productId);
       if (categoryError) throw categoryError;
+      await setMarketplaceLinks("product", productId, payload.marketplaceLinks);
 
       const oldCoverIsStillUsed = variants.some((variant) => variant.image_path === existing.cover_image_path);
       if (nextCoverPath !== existing.cover_image_path && !oldCoverIsStillUsed) {
@@ -2660,6 +2719,23 @@
     return data || [];
   }
 
+  async function loadLinkHealth() {
+    const admin = await isAdmin();
+    const db = getClient();
+    const user = await getCurrentUser();
+    const requests = [
+      db.from("comootd_link_reports").select("id,reporter_id,owner_id,target_type,target_id,reason,message,status,created_at,updated_at").order("created_at", { ascending:false }),
+      db.from("curator_item_marketplace_links").select("id,curator_item_id,marketplace,affiliate_url,label,status,is_primary,updated_at,look_curation_items(name,look_id,looks(title,slug,creator_id))").order("updated_at", { ascending:false }),
+      db.from("comootd_marketplace_link_history").select("id,target_type,link_id,owner_id,actor_id,action,marketplace,previous_url,next_url,created_at").order("created_at", { ascending:false }).limit(40)
+    ];
+    if (admin) requests.push(db.from("product_marketplace_links").select("id,product_id,marketplace,affiliate_url,label,status,is_primary,updated_at,products(name,slug)").order("updated_at", { ascending:false }));
+    const results = await Promise.all(requests);
+    const failed = results.find((result) => result.error);
+    if (failed?.error) throw failed.error;
+    const curatorLinks = admin ? (results[1].data || []) : (results[1].data || []).filter((link) => String(link.look_curation_items?.looks?.creator_id || "") === String(user?.id || ""));
+    return { reports:results[0].data || [], curatorLinks, history:results[2].data || [], productLinks:admin ? (results[3].data || []) : [] };
+  }
+
   async function resolveLinkReport(reportId, action, replacementUrl = "") {
     const { error } = await getClient().rpc("resolve_comootd_link_report", {
       p_report_id: String(reportId || ""),
@@ -2732,7 +2808,9 @@
     loadAdminAnalytics,
     reportLink,
     loadLinkReports,
+    loadLinkHealth,
     resolveLinkReport,
+    setMarketplaceLinks,
     publicUrl
   };
 })();

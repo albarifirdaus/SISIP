@@ -255,14 +255,30 @@
     };
   }
   function normaliseReference(raw = {}) {
+    const rawLinks = asArray(raw.marketplaceLinks || raw.marketplace_links)
+      .map((link) => ({
+        id: String(link?.id || ""),
+        marketplace: compact(link?.marketplace || link?.affiliatePlatform || link?.affiliate_platform || ""),
+        affiliateUrl: compact(link?.affiliateUrl || link?.affiliate_url || link?.url || ""),
+        label: compact(link?.label || ""),
+        status: compact(link?.status || "active"),
+        isPrimary: Boolean(link?.isPrimary ?? link?.is_primary)
+      }))
+      .filter((link) => link.marketplace && link.affiliateUrl && link.status !== "disabled")
+      .sort((left, right) => Number(right.isPrimary) - Number(left.isPrimary));
+    const legacyPlatform = compact(raw.affiliatePlatform || raw.affiliate_platform || "shopee");
+    const legacyUrl = compact(raw.affiliateUrl || raw.affiliate_url || raw.url || raw.link || "");
+    const marketplaceLinks = rawLinks.length ? rawLinks : (legacyUrl ? [{ id:"", marketplace:legacyPlatform, affiliateUrl:legacyUrl, label:"", status:"active", isPrimary:true }] : []);
+    const primaryLink = marketplaceLinks.find((link) => link.isPrimary) || marketplaceLinks[0] || { marketplace:legacyPlatform, affiliateUrl:legacyUrl };
     return {
       id: raw.id || "",
       category: compact(raw.category || raw.category_label || "other") || "other",
       name: compact(raw.name || raw.productName || raw.product_name || raw.label || ""),
       colorLabel: compact(raw.colorLabel || raw.color_label || raw.variantName || raw.variant_name || ""),
       price: Number(raw.price ?? raw.priceIdr ?? raw.price_idr ?? 0) || 0,
-      affiliatePlatform: compact(raw.affiliatePlatform || raw.affiliate_platform || "shopee"),
-      affiliateUrl: compact(raw.affiliateUrl || raw.affiliate_url || raw.url || raw.link || "")
+      affiliatePlatform: primaryLink.marketplace || "shopee",
+      affiliateUrl: primaryLink.affiliateUrl || "",
+      marketplaceLinks
     };
   }
   function normaliseLook(raw = {}) {
@@ -593,6 +609,7 @@
   }
   function productReferenceMarkup(item = {}, index = 0) {
     const reference = normaliseReference(item);
+    const secondary = reference.marketplaceLinks.find((link) => !link.isPrimary) || reference.marketplaceLinks[1] || null;
     const selectedColor = COLOR_OPTIONS.some(([name]) => name.toLowerCase() === reference.colorLabel.toLowerCase()) ? reference.colorLabel : "";
     return `<div class="curator-product-reference" data-curator-reference-row>
       <div class="curator-field"><label>Kategori</label><select name="referenceCategory">${PRODUCT_CATEGORIES.map(([value, label]) => `<option value="${value}"${reference.category === value ? " selected" : ""}>${esc(label)}</option>`).join("")}</select></div>
@@ -600,6 +617,7 @@
       <div class="curator-field"><label>Warna / varian</label><select name="referenceColor"><option value="">Pilih warna</option>${COLOR_OPTIONS.map(([name, hex]) => `<option value="${esc(name)}"${name === selectedColor ? " selected" : ""}>${esc(name)} · ${esc(hex)}</option>`).join("")}</select><span class="curator-color-preview" data-curator-color-preview style="--curator-color:${esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1] || "transparent")}">${selectedColor ? esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1]) : "Opsional"}</span></div>
       <div class="curator-field"><label>Harga referensi</label><input name="referencePrice" type="number" min="1" step="1" inputmode="numeric" value="${reference.price || ""}" placeholder="Contoh: 159000" required /></div>
       <div class="curator-form-grid curator-field-full"><div class="curator-field"><label>Marketplace</label><select name="referenceMarketplace">${Object.entries(MARKETPLACES).map(([value, option]) => `<option value="${value}"${reference.affiliatePlatform === value ? " selected" : ""}>${esc(option.label)}</option>`).join("")}</select></div><div class="curator-field"><label>Link affiliate</label><input name="referenceUrl" type="url" value="${esc(reference.affiliateUrl)}" placeholder="${esc(MARKETPLACES[reference.affiliatePlatform]?.placeholder || MARKETPLACES.shopee.placeholder)}" required /></div></div>
+      <div class="curator-form-grid curator-field-full curator-secondary-destination"><div class="curator-field"><label>Marketplace kedua (opsional)</label><select name="referenceSecondaryMarketplace"><option value="">Tidak ada</option>${Object.entries(MARKETPLACES).map(([value, option]) => `<option value="${value}"${secondary?.marketplace === value ? " selected" : ""}>${esc(option.label)}</option>`).join("")}</select></div><div class="curator-field"><label>Link kedua</label><input name="referenceSecondaryUrl" type="url" value="${esc(secondary?.affiliateUrl || "")}" placeholder="${esc(MARKETPLACES[secondary?.marketplace]?.placeholder || "Pilih marketplace kedua terlebih dahulu")}" /></div></div>
       <button class="curator-remove-reference" type="button" data-remove-curator-reference aria-label="Hapus produk ${index + 1}">×</button>
     </div>`;
   }
@@ -711,14 +729,23 @@
     };
   }
   function collectLookPayload(form) {
-    const references = [...form.querySelectorAll("[data-curator-reference-row]")].map((row) => ({
-      category: compact(row.querySelector("[name=referenceCategory]")?.value || "other"),
-      name: compact(row.querySelector("[name=referenceName]")?.value),
-      colorLabel: compact(row.querySelector("[name=referenceColor]")?.value),
-      price: Number(String(row.querySelector("[name=referencePrice]")?.value || "").replace(/[^0-9]/g, "")),
-      affiliatePlatform: compact(row.querySelector("[name=referenceMarketplace]")?.value || "shopee"),
-      affiliateUrl: compact(row.querySelector("[name=referenceUrl]")?.value)
-    }));
+    const references = [...form.querySelectorAll("[data-curator-reference-row]")].map((row) => {
+      const affiliatePlatform = compact(row.querySelector("[name=referenceMarketplace]")?.value || "shopee");
+      const affiliateUrl = compact(row.querySelector("[name=referenceUrl]")?.value);
+      const secondaryMarketplace = compact(row.querySelector("[name=referenceSecondaryMarketplace]")?.value);
+      const secondaryUrl = compact(row.querySelector("[name=referenceSecondaryUrl]")?.value);
+      const marketplaceLinks = [{ marketplace:affiliatePlatform, affiliateUrl, label:MARKETPLACES[affiliatePlatform]?.label || "Marketplace", isPrimary:true }];
+      if (secondaryMarketplace || secondaryUrl) marketplaceLinks.push({ marketplace:secondaryMarketplace, affiliateUrl:secondaryUrl, label:MARKETPLACES[secondaryMarketplace]?.label || "Marketplace", isPrimary:false });
+      return {
+        category: compact(row.querySelector("[name=referenceCategory]")?.value || "other"),
+        name: compact(row.querySelector("[name=referenceName]")?.value),
+        colorLabel: compact(row.querySelector("[name=referenceColor]")?.value),
+        price: Number(String(row.querySelector("[name=referencePrice]")?.value || "").replace(/[^0-9]/g, "")),
+        affiliatePlatform,
+        affiliateUrl,
+        marketplaceLinks
+      };
+    });
     const galleryPayload = collectGalleryPayload(form);
     return {
       title: compact(form.elements.title?.value),
@@ -738,6 +765,9 @@
     if (payload.items.length < MIN_REFERENCES || payload.items.length > MAX_REFERENCES) return `Tambahkan ${MIN_REFERENCES}–${MAX_REFERENCES} produk ke dalam look.`;
     if (payload.items.some((item) => !item.name || !item.affiliateUrl || !Number.isSafeInteger(item.price) || item.price <= 0)) return "Setiap produk membutuhkan nama, harga, dan link affiliate.";
     if (payload.items.some((item) => marketplaceFromUrl(item.affiliateUrl) !== item.affiliatePlatform)) return "Pastikan setiap link sesuai dengan marketplace yang dipilih.";
+    if (payload.items.some((item) => item.marketplaceLinks.length > 1 && (!item.marketplaceLinks[1].marketplace || !item.marketplaceLinks[1].affiliateUrl))) return "Lengkapi marketplace dan link tujuan kedua, atau kosongkan keduanya.";
+    if (payload.items.some((item) => item.marketplaceLinks.length > 1 && item.marketplaceLinks[0].marketplace === item.marketplaceLinks[1].marketplace)) return "Marketplace kedua harus berbeda dari marketplace utama.";
+    if (payload.items.some((item) => item.marketplaceLinks.some((link) => marketplaceFromUrl(link.affiliateUrl) !== link.marketplace))) return "Pastikan setiap link tujuan sesuai dengan marketplace yang dipilih.";
     return "";
   }
 
@@ -1040,10 +1070,11 @@
     if (look) { event.preventDefault(); submitLook(look); }
   }
   function onChange(event) {
-    const marketplace = event.target.closest('select[name="referenceMarketplace"]');
+    const marketplace = event.target.closest('select[name="referenceMarketplace"],select[name="referenceSecondaryMarketplace"]');
     if (marketplace) {
-      const link = marketplace.closest("[data-curator-reference-row]")?.querySelector('input[name="referenceUrl"]');
-      if (link) link.placeholder = MARKETPLACES[marketplace.value]?.placeholder || "https://";
+      const isSecondary = marketplace.name === "referenceSecondaryMarketplace";
+      const link = marketplace.closest("[data-curator-reference-row]")?.querySelector(isSecondary ? 'input[name="referenceSecondaryUrl"]' : 'input[name="referenceUrl"]');
+      if (link) link.placeholder = marketplace.value ? (MARKETPLACES[marketplace.value]?.placeholder || "https://") : "Pilih marketplace kedua terlebih dahulu";
       return;
     }
     const directoryFilter = event.target.closest("[data-curator-directory-filter]");

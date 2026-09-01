@@ -107,10 +107,35 @@
     input.value = value; input.style.cssText = "position:fixed;left:-9999px;opacity:0"; document.body.append(input); input.select(); document.execCommand("copy"); input.remove();
   }
 
-  function reportsMarkup(reports) {
-    const open = (Array.isArray(reports) ? reports : []).filter((report) => report.status === "open");
+  function linkHealthRows(health) {
+    return [...(health?.productLinks || []).map((link) => ({ ...link, targetType:"product_link", title:link.products?.name || "Produk COMOOTD", context:link.products?.slug || "" })), ...(health?.curatorLinks || []).map((link) => ({ ...link, targetType:"curator_link", title:link.look_curation_items?.name || "Produk dalam look", context:link.look_curation_items?.looks?.title || "" }))];
+  }
+
+  function linkHealthLookup(health) {
+    const lookup = new Map();
+    linkHealthRows(health).forEach((link) => {
+      lookup.set(`${link.targetType}:${link.id}`, link);
+      if (link.product_id) lookup.set(`product:${link.product_id}`, link);
+      if (link.curator_item_id) lookup.set(`curator_item:${link.curator_item_id}`, link);
+    });
+    return lookup;
+  }
+
+  function reportsMarkup(health) {
+    const open = (Array.isArray(health?.reports) ? health.reports : []).filter((report) => report.status === "open");
     if (!open.length) return `<div class="insights-empty">Tidak ada laporan tautan yang perlu ditangani.</div>`;
-    return `<div class="insights-report-list">${open.map((report) => `<article class="insights-report" data-report-row="${escapeHtml(report.id)}"><strong>${escapeHtml(report.reason.replaceAll("_", " "))}</strong><p class="microcopy">${escapeHtml(report.target_type)} · ${escapeHtml(report.target_id.slice(0, 8))}</p>${report.message ? `<p>${escapeHtml(report.message)}</p>` : ""}<input type="url" data-report-url placeholder="Link pengganti (untuk Update)" /><div class="insights-report-actions"><button type="button" data-link-action="updated" data-report-id="${escapeHtml(report.id)}">Update link</button><button type="button" data-link-action="disabled" data-report-id="${escapeHtml(report.id)}">Nonaktifkan</button><button type="button" data-link-action="resolved" data-report-id="${escapeHtml(report.id)}">Selesai</button><button type="button" data-link-action="dismissed" data-report-id="${escapeHtml(report.id)}">Abaikan</button></div></article>`).join("")}</div>`;
+    const lookup = linkHealthLookup(health);
+    return `<div class="insights-report-list">${open.map((report) => { const link=lookup.get(`${report.target_type}:${report.target_id}`); return `<article class="insights-report" data-report-row="${escapeHtml(report.id)}"><strong>${escapeHtml(report.reason.replaceAll("_", " "))}</strong><p class="microcopy">${escapeHtml(link?.title || report.target_type)}${link?.context ? ` · ${escapeHtml(link.context)}` : ""}${link?.marketplace ? ` · ${escapeHtml(link.marketplace.replace("_", " "))}` : ""}</p>${link?.affiliate_url ? `<code>${escapeHtml(link.affiliate_url)}</code>` : ""}${report.message ? `<p>${escapeHtml(report.message)}</p>` : ""}<input type="url" data-report-url placeholder="Link pengganti (untuk Update)" /><div class="insights-report-actions"><button type="button" data-link-action="updated" data-report-id="${escapeHtml(report.id)}">Update link</button><button type="button" data-link-action="disabled" data-report-id="${escapeHtml(report.id)}">Nonaktifkan</button><button type="button" data-link-action="resolved" data-report-id="${escapeHtml(report.id)}">Selesai</button><button type="button" data-link-action="dismissed" data-report-id="${escapeHtml(report.id)}">Abaikan</button></div></article>`; }).join("")}</div>`;
+  }
+
+  function linkHealthMarkup(health) {
+    const links = linkHealthRows(health);
+    const counts = { active:0, reported:0, disabled:0 };
+    links.forEach((link) => { counts[link.status] = (counts[link.status] || 0) + 1; });
+    const inventory = links.length ? `<div class="insights-link-inventory">${links.map((link) => `<article class="insights-link-row"><div><strong>${escapeHtml(link.title)}</strong><p>${escapeHtml(link.context || (link.targetType === "product_link" ? "Katalog produk" : "Look Curator"))} · ${escapeHtml(String(link.marketplace || "marketplace").replace("_", " "))}${link.is_primary ? " · utama" : ""}</p><code>${escapeHtml(link.affiliate_url)}</code></div><span class="insights-link-state is-${escapeHtml(link.status || "active")}">${escapeHtml(link.status || "active")}</span></article>`).join("")}</div>` : `<div class="insights-empty">Belum ada tujuan marketplace yang dapat dikelola.</div>`;
+    const history = (health?.history || []).slice(0, 12);
+    const historyMarkup = history.length ? `<ul class="insights-history">${history.map((item) => `<li><strong>${escapeHtml(String(item.action || "updated").replace("_", " "))}</strong><span>${escapeHtml(String(item.marketplace || "marketplace").replace("_", " "))}</span><small>${escapeHtml(new Intl.DateTimeFormat("id-ID", { dateStyle:"medium", timeStyle:"short" }).format(new Date(item.created_at)))}</small></li>`).join("")}</ul>` : `<div class="insights-empty">Belum ada riwayat perubahan link.</div>`;
+    return `<div class="insights-link-health-summary"><div><strong>${number(counts.active)}</strong><span>Link aktif</span></div><div><strong>${number(counts.reported)}</strong><span>Perlu diperiksa</span></div><div><strong>${number(counts.disabled)}</strong><span>Dinonaktifkan</span></div></div><h5>Inventaris link</h5>${inventory}<h5>Riwayat terbaru</h5>${historyMarkup}`;
   }
 
   async function hydrateDashboard(root, force = false) {
@@ -125,9 +150,9 @@
     root.dataset.loading = "true";
     const days = Number(root.querySelector("[data-insights-days]")?.value || root.dataset.days || 30);
     try {
-      const [analytics, reports] = await Promise.all([
+      const [analytics, health] = await Promise.all([
         role === "admin" ? cloud.loadAdminAnalytics(days) : cloud.loadMyAnalytics(days),
-        cloud.loadLinkReports()
+        typeof cloud.loadLinkHealth === "function" ? cloud.loadLinkHealth() : cloud.loadLinkReports().then((reports) => ({ reports, curatorLinks:[], productLinks:[], history:[] }))
       ]);
       const totals = analytics?.totals || {};
       const kpis = role === "admin"
@@ -136,7 +161,7 @@
       const primaryRows = role === "admin" ? analytics.topCurators : analytics.topLooks;
       const primaryLabel = role === "admin" ? "display_name" : "title";
       const primaryValue = role === "admin" ? "events" : "views";
-      root.innerHTML = `<div class="insights-dashboard"><div class="insights-toolbar"><label>Periode<select data-insights-days><option value="7"${days===7?" selected":""}>7 hari</option><option value="30"${days===30?" selected":""}>30 hari</option><option value="90"${days===90?" selected":""}>90 hari</option></select></label><button class="small-button muted" type="button" data-refresh-insights>Refresh</button></div><div class="insights-kpis">${kpis.map(([label,value]) => `<div class="insights-kpi"><strong>${number(value)}</strong><span>${escapeHtml(label)}</span></div>`).join("")}</div><section class="insights-card"><h4>Tren harian</h4>${trendMarkup(analytics.daily,role)}</section><div class="insights-grid"><section class="insights-card"><h4>${role === "admin" ? "Curator dengan traffic tertinggi" : "Look paling banyak dilihat"}</h4>${barsMarkup(primaryRows,primaryLabel,primaryValue,"clicks","klik produk")}</section><section class="insights-card"><h4>Sumber traffic</h4>${barsMarkup(analytics.sources,"source","events")}</section></div><div class="insights-grid"><section class="insights-card"><h4>Campaign teratas</h4>${barsMarkup(analytics.campaigns,"campaign","events")}</section><section class="insights-card"><h4>Medium</h4>${barsMarkup(analytics.mediums,"medium","events")}</section></div>${campaignBuilderMarkup()}<section class="insights-card"><h4>Laporan tautan</h4>${reportsMarkup(reports)}</section></div>`;
+      root.innerHTML = `<div class="insights-dashboard"><div class="insights-toolbar"><label>Periode<select data-insights-days><option value="7"${days===7?" selected":""}>7 hari</option><option value="30"${days===30?" selected":""}>30 hari</option><option value="90"${days===90?" selected":""}>90 hari</option></select></label><button class="small-button muted" type="button" data-refresh-insights>Refresh</button></div><div class="insights-kpis">${kpis.map(([label,value]) => `<div class="insights-kpi"><strong>${number(value)}</strong><span>${escapeHtml(label)}</span></div>`).join("")}</div><section class="insights-card"><h4>Tren harian</h4>${trendMarkup(analytics.daily,role)}</section><div class="insights-grid"><section class="insights-card"><h4>${role === "admin" ? "Curator dengan traffic tertinggi" : "Look paling banyak dilihat"}</h4>${barsMarkup(primaryRows,primaryLabel,primaryValue,"clicks","klik produk")}</section><section class="insights-card"><h4>Sumber traffic</h4>${barsMarkup(analytics.sources,"source","events")}</section></div><div class="insights-grid"><section class="insights-card"><h4>Campaign teratas</h4>${barsMarkup(analytics.campaigns,"campaign","events")}</section><section class="insights-card"><h4>Medium</h4>${barsMarkup(analytics.mediums,"medium","events")}</section></div>${campaignBuilderMarkup()}<section class="insights-card"><h4>Kesehatan link marketplace</h4>${linkHealthMarkup(health)}</section><section class="insights-card"><h4>Laporan tautan</h4>${reportsMarkup(health)}</section></div>`;
       root.dataset.loaded = "true";
       root.dataset.days = String(days);
     } catch (error) {
@@ -158,15 +183,17 @@
 
   function injectReportButtons() {
     document.querySelectorAll(".look-item a[data-insight-target][data-insight-id],.product-detail a[data-insight-target][data-insight-id]").forEach((link) => {
-      if (link.dataset.reportInjected || !link.dataset.insightId) return;
+      const targetType = link.dataset.reportTarget || link.dataset.insightTarget;
+      const targetId = link.dataset.reportId || link.dataset.insightId;
+      if (link.dataset.reportInjected || !targetId) return;
       link.dataset.reportInjected = "true";
       const button = document.createElement("button");
       button.type = "button";
       button.className = "link-report-button";
       button.textContent = "Laporkan link";
       button.dataset.reportLink = "true";
-      button.dataset.reportTarget = link.dataset.insightTarget;
-      button.dataset.reportId = link.dataset.insightId;
+      button.dataset.reportTarget = targetType;
+      button.dataset.reportId = targetId;
       link.insertAdjacentElement("afterend", button);
     });
   }

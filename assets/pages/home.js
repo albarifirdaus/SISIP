@@ -1179,7 +1179,7 @@
           els.productForm.reset();
           setTaxonomyValues(els.productForm,"productStyles",[]);
           els.productFormHeading.textContent="Tambah produk";
-          els.productFormCopy.textContent="Satu produk induk dapat memiliki beberapa pilihan warna tetapi tetap menggunakan satu affiliate link.";
+          els.productFormCopy.textContent="Satu produk dapat memiliki tujuan Shopee dan TikTok Shop. Link pertama menjadi tujuan utama.";
           els.productImageLabel.textContent="Upload foto produk (opsional)";
           els.productSubmitButton.textContent="Simpan produk";
           els.productEditActions.hidden=true;
@@ -1197,6 +1197,9 @@
           els.productForm.elements.category.value=item.category||"other";
           els.productForm.elements.marketplace.value=marketplaceOf(item);
           els.productForm.elements.link.value=item.affiliateUrl||"";
+          const secondary=marketplaceLinksOf(item).find((link)=>!link.isPrimary)||marketplaceLinksOf(item)[1]||null;
+          els.productForm.elements.secondaryMarketplace.value=secondary?.marketplace||"";
+          els.productForm.elements.secondaryLink.value=secondary?.affiliateUrl||"";
           setTaxonomyValues(els.productForm,"productStyles",item.styles||[]);
           const variantSelect=els.productForm.elements.variants;
           [...variantSelect.querySelectorAll("[data-legacy-color]")].forEach((option)=>option.remove());
@@ -1256,6 +1259,13 @@
         }
         function marketplaceOf(item) { try { return item?.affiliatePlatform || marketplaceFromUrl(item?.affiliateUrl); } catch { return "shopee"; } }
         function marketplaceLabel(item) { return MARKETPLACES[marketplaceOf(item)]?.label || "Marketplace"; }
+        function marketplaceLinksOf(item) {
+          const links=Array.isArray(item?.marketplaceLinks)?item.marketplaceLinks.filter((link)=>link?.affiliateUrl&&link.status!=="disabled"):[];
+          return links.length?links:[item?.affiliateUrl?{id:"",marketplace:marketplaceOf(item),affiliateUrl:item.affiliateUrl,label:marketplaceLabel(item),status:item.linkStatus||"active",isPrimary:true}:null].filter(Boolean);
+        }
+        function marketplaceDestinationsMarkup(item,{contextLook="",reportType="product_link",className="marketplace-destination"}={}) {
+          return `<div class="marketplace-destinations">${marketplaceLinksOf(item).map((link,index)=>`<a class="${className}${link.isPrimary||index===0?" is-primary":""}${link.status==="reported"?" is-reported":""}" href="${esc(safeUrl(link.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="${item?.type==="reference"?"curator_item":"product"}" data-insight-id="${esc(item.id)}"${contextLook?` data-insight-context-look="${esc(contextLook)}"`:""} data-report-target="${esc(link.id?reportType:(item?.type==="reference"?"curator_item":"product"))}" data-report-id="${esc(link.id||item.id)}">${esc(link.label||MARKETPLACES[link.marketplace]?.label||"Marketplace")} ↗</a>`).join("")}</div>`;
+        }
         function safeUrl(value) { try { return affiliateUrl(value); } catch { return "#"; } }
         let contentRouteSyncing = false;
         function contentRouteSegment(type) { return type === "look" ? "looks" : type === "product" ? "products" : "journal"; }
@@ -1378,12 +1388,12 @@
           closeContentDialogs(els.lookModal);
           const itemsHtml = entry.items.map((item)=>{
             if (!item?.productId) {
-              const itemAction=item.affiliateUrl?`<a class="item-link" href="${esc(safeUrl(item.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="curator_item" data-insight-id="${esc(item.id||"")}" data-insight-context-look="${esc(entry.id)}">${esc(marketplaceLabel(item))} ↗</a>`:`<span class="item-link" aria-disabled="true">Link nonaktif</span>`;
+              const itemAction=item.affiliateUrl?marketplaceDestinationsMarkup(item,{contextLook:entry.id,reportType:"curator_link",className:"marketplace-destination"}):`<span class="item-link" aria-disabled="true">Link nonaktif</span>`;
               return `<li class="look-item"><div class="look-item-art" aria-hidden="true" style="display:grid;place-items:center;background:var(--paper-deep);color:var(--clay-dark)"><span class="meta">${esc(String(item.category||"item").slice(0,4))}</span></div><div><p class="look-item-title">${esc(item.name||"Item pilihan")}</p><div class="look-item-info"><span>${esc(item.colorLabel||item.variantName||"Warna pilihan")}</span><span>·</span><span>${Number(item.price)>0?money(item.price):"Harga belum dicantumkan"}</span></div></div>${itemAction}</li>`;
             }
             const productItem=getProduct(item.productId); if (!productItem) return "";
             const variant=getVariant(productItem,item.variantName);
-            return `<li class="look-item"><button class="look-item-art product-card-open" type="button" data-open-product="${esc(productItem.id)}" aria-label="Buka detail ${esc(productItem.name)}">${productArt(productItem,variant,true)}</button><div><button class="look-item-title" type="button" data-open-product="${esc(productItem.id)}">${esc(productItem.name)}</button><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div><a class="item-link" href="${esc(safeUrl(productItem.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(productItem.id)}" data-insight-context-look="${esc(entry.id)}">${esc(marketplaceLabel(productItem))} ↗</a></li>`;
+            return `<li class="look-item"><button class="look-item-art product-card-open" type="button" data-open-product="${esc(productItem.id)}" aria-label="Buka detail ${esc(productItem.name)}">${productArt(productItem,variant,true)}</button><div><button class="look-item-title" type="button" data-open-product="${esc(productItem.id)}">${esc(productItem.name)}</button><div class="look-item-info"><span class="swatch" style="--swatch:${esc(variant?.hex||"#ccc")}"></span><span>${esc(variant?.name||"Warna pilihan")}</span><span>·</span><span>${money(productItem.price)}</span></div></div>${marketplaceDestinationsMarkup(productItem,{contextLook:entry.id,reportType:"product_link",className:"marketplace-destination"})}</li>`;
           }).join("");
           const curatorName = entry.curator?.displayName || entry.curator?.name || "";
           const curatorHandle = entry.curator?.handle || "";
@@ -1403,7 +1413,7 @@
           const gender = ({ pria:"Pria", wanita:"Wanita", unisex:"Uniseks" })[String(entry.genderTarget || "").toLowerCase()] || "Uniseks";
           const relatedLooks=state.looks.filter((look)=>look.items?.some((item)=>item.productId===entry.id)).slice(0,4);
           const relatedLooksMarkup=relatedLooks.length ? `<section class="product-related-looks"><h3>Dipakai dalam kurasi</h3><div class="product-related-look-list">${relatedLooks.map((look)=>`<button class="product-related-look" type="button" data-open-product-look="${esc(look.id)}">${lookVisual(look)}<span class="product-related-look-copy"><span>${esc(lookAttribution(look))}</span><strong>${esc(look.title)}</strong></span></button>`).join("")}</div></section>` : "";
-          els.productDetail.innerHTML = `<div class="product-detail"><div>${productArt(entry, selectedVariant)}</div><div><p class="eyebrow" style="color:var(--clay)">COMOOTD / ${esc(gender)}</p><h2>${esc(entry.name)}</h2>${entry.badge ? `<p class="eyebrow" style="color:var(--taupe)">${esc(entry.badge)}</p>` : ""}<p class="product-detail-price">${money(entry.price)}</p><div class="look-card-tags">${(entry.styles || []).map((style) => `<span class="tag">${esc(style)}</span>`).join("")}</div>${variants ? `<div class="product-variant-options" aria-label="Pilih warna">${variants}</div>` : ""}<div class="detail-actions"><a class="button" href="${esc(safeUrl(entry.affiliateUrl))}" target="_blank" rel="sponsored noopener" data-insight-target="product" data-insight-id="${esc(entry.id)}">Lihat di ${esc(marketplaceLabel(entry))} ↗</a>${memberRetention.saveButton("product",entry.id)}<button class="button-outline" type="button" data-share-product="${esc(entry.id)}" data-share-variant="${esc(selectedVariant?.id || "")}">Bagikan</button></div><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di marketplace.</p>${relatedLooksMarkup}</div></div>`;
+          els.productDetail.innerHTML = `<div class="product-detail"><div>${productArt(entry, selectedVariant)}</div><div><p class="eyebrow" style="color:var(--clay)">COMOOTD / ${esc(gender)}</p><h2>${esc(entry.name)}</h2>${entry.badge ? `<p class="eyebrow" style="color:var(--taupe)">${esc(entry.badge)}</p>` : ""}<p class="product-detail-price">${money(entry.price)}</p><div class="look-card-tags">${(entry.styles || []).map((style) => `<span class="tag">${esc(style)}</span>`).join("")}</div>${variants ? `<div class="product-variant-options" aria-label="Pilih warna">${variants}</div>` : ""}<div class="detail-actions">${marketplaceDestinationsMarkup(entry,{reportType:"product_link"})}${memberRetention.saveButton("product",entry.id)}<button class="button-outline" type="button" data-share-product="${esc(entry.id)}" data-share-variant="${esc(selectedVariant?.id || "")}">Bagikan</button></div><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di marketplace.</p>${relatedLooksMarkup}</div></div>`;
           if (!els.productModal.open) els.productModal.showModal();
         }
         function articlePlainText(blocks) {
@@ -2496,8 +2506,18 @@
           const parsedVariants=parseVariants([...variantSelect.selectedOptions].map((option)=>option.value).join(","));
           const variants=editId?reconcileProductVariantIds(parsedVariants,existingProduct):parsedVariants;
           const marketplace=String(form.get("marketplace")||"shopee");
-          let link, imageUrl;
-          try { link=affiliateUrl(form.get("link"),marketplace); imageUrl=normalizeBulkImageUrl(form.get("imageUrl")); } catch(error) { els.productFormError.textContent=error.message; return; }
+          const secondaryMarketplace=String(form.get("secondaryMarketplace")||"");
+          const secondaryRaw=String(form.get("secondaryLink")||"").trim();
+          let link, imageUrl, marketplaceLinks;
+          try {
+            link=affiliateUrl(form.get("link"),marketplace); imageUrl=normalizeBulkImageUrl(form.get("imageUrl"));
+            marketplaceLinks=[{marketplace,affiliateUrl:link,isPrimary:true,label:MARKETPLACES[marketplace]?.label||"Marketplace"}];
+            if(secondaryMarketplace||secondaryRaw){
+              if(!secondaryMarketplace||!secondaryRaw) throw new Error("Lengkapi marketplace dan link tujuan kedua.");
+              if(secondaryMarketplace===marketplace) throw new Error("Marketplace kedua harus berbeda dari link utama.");
+              marketplaceLinks.push({marketplace:secondaryMarketplace,affiliateUrl:affiliateUrl(secondaryRaw,secondaryMarketplace),isPrimary:false,label:MARKETPLACES[secondaryMarketplace]?.label||"Marketplace"});
+            }
+          } catch(error) { els.productFormError.textContent=error.message; return; }
           if(!title || !price || variants.length===0){els.productFormError.textContent="Nama, harga, link, dan minimal satu varian warna wajib diisi.";return;}
           try {
             const badge=String(form.get("badge")||"").trim();
@@ -2508,8 +2528,8 @@
             const imageFile=preparedImageFile(productImageInput);
             const imageAspect=selectedImageAspect(productImageInput,"square");
             if(cloudEnabled()) {
-              if(editId) await cloud.updateProduct(editId,{ title, price, badge, styles, genderTarget, category, marketplace, link, variants, imageUrl, imageFile, imageAspect });
-              else await cloud.createProduct({ title, price, badge, styles, genderTarget, category, marketplace, link, variants, imageUrl, imageFile, imageAspect });
+              if(editId) await cloud.updateProduct(editId,{ title, price, badge, styles, genderTarget, category, marketplace, link, marketplaceLinks, variants, imageUrl, imageFile, imageAspect });
+              else await cloud.createProduct({ title, price, badge, styles, genderTarget, category, marketplace, link, marketplaceLinks, variants, imageUrl, imageFile, imageAspect });
               resetProductEditor();
               await refreshCloudState({admin:true});
               switchStudioTab("products");
@@ -2522,11 +2542,11 @@
             const suppliedImage=Boolean(imageUrl || uploadedImage);
             const localVariants=variants.map((variant)=>{const previous=existingProduct?.variants?.find((candidate)=>candidate.id===variant.id);return {...(previous||{}),id:variant.id||uid("variant"),name:variant.name,hex:variant.hex,image:suppliedImage ? image : previous?.image||image};});
             if(editId) {
-              Object.assign(existingProduct,{name:title,price,badge,styles,genderTarget,category,affiliatePlatform:marketplace,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect:imageFile || imageUrl ? imageAspect : existingProduct.imageAspect,variants:localVariants});
+              Object.assign(existingProduct,{name:title,price,badge,styles,genderTarget,category,affiliatePlatform:marketplace,affiliateUrl:link,marketplaceLinks,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect:imageFile || imageUrl ? imageAspect : existingProduct.imageAspect,variants:localVariants});
               saveState();resetProductEditor();renderAll();switchStudioTab("products");showToast("Produk berhasil diperbarui di prototype.");
               return;
             }
-            const created={id:uid("product"),name:title,price,badge,styles,genderTarget,category,affiliatePlatform:marketplace,affiliateUrl:link,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect,variants:localVariants};
+            const created={id:uid("product"),name:title,price,badge,styles,genderTarget,category,affiliatePlatform:marketplace,affiliateUrl:link,marketplaceLinks,artBg:blendHex(variants[0].hex,"#e7e1da",.62),artInk:variants[0].hex,image,imageAspect,variants:localVariants};
             state.products.push(created);saveState();resetProductEditor();renderAll();switchStudioTab("products");showToast("Produk baru tersimpan di browser ini.");
           } catch(error){els.productFormError.textContent=error.message||"Produk belum dapat disimpan.";}
         });
