@@ -37,13 +37,10 @@
     <link rel="stylesheet" href="/assets/features/phase6-moderation.css" />
     <link rel="stylesheet" href="/assets/features/phase7-commerce.css" />
     <link rel="stylesheet" href="/assets/features/privacy-center.css" />
+    <link rel="stylesheet" href="/assets/styles/ui-polish.css" />
   </head>
   <body>
     <a class="skip-link" href="#siteMain">Lewati ke konten utama</a>
-    <div class="utility-bar" aria-label="Informasi COMOOTD">
-      <span>Kurasi Fashion Catalogue · Indonesia</span>
-    </div>
-
     <header class="site-header">
       <div class="header-inner">
         <a class="brand" href="#home" aria-label="COMOOTD, kembali ke beranda">
@@ -108,7 +105,6 @@
         </div>
         <div class="hero-visual" id="newSeriesCarousel" role="region" aria-roledescription="carousel" aria-label="COMOOTD New Series">
           <div class="hero-gridlines"></div>
-          <p class="hero-label eyebrow">COMOOTD / NEW SERIES</p>
           <div class="new-series-stage" id="newSeriesStage" aria-live="off"></div>
           <div class="new-series-controls" aria-label="Kontrol New Series">
             <button class="new-series-arrow" id="newSeriesPrev" type="button" aria-label="Look sebelumnya">←</button>
@@ -278,8 +274,11 @@
       </section>
 
       <section class="section about-section" id="about" aria-labelledby="aboutTitle">
-        <div>
+        <div class="about-intro">
+          <p class="eyebrow">COMOOTD / OUR POINT OF VIEW</p>
           <h2 id="aboutTitle">ONE OUTFIT.<br /><em>INFINITE</em> POSSIBILITIES.</h2>
+        </div>
+        <div class="about-details">
           <p class="about-copy">COMOOTD lahir dari keresahan <em>fashion paralysis</em>—saat lemari penuh, tapi bingung mau pakai apa. Kami mengurasi dan membedah kombinasi <em>outfit</em> secara manual agar kamu bisa berbusana secara efisien, fungsional, dan tetap berkarakter.</p>
           <div class="about-points">
             <div><span class="meta">01</span><strong>Fluid &amp; Inclusive</strong><p>Pilihan gaya tanpa batasan kaku. Express yourself freely.</p></div>
@@ -467,15 +466,6 @@
             <div class="library-search"><label for="studioLooksSearch">Cari look</label><input id="studioLooksSearch" type="search" autocomplete="off" placeholder="Cari judul, tag, gender, produk, atau warna…" /><p class="library-search-meta" id="studioLooksSearchMeta" aria-live="polite"></p></div>
             <div class="studio-list" id="studioLooksList"></div>
             <button class="small-button muted library-more" id="loadMoreStudioLooks" type="button" hidden>Muat 100 look lagi</button>
-          </section>
-          <section class="studio-section" id="sampleControls">
-            <h3>Kontrol sample</h3>
-            <div class="reset-row"><button class="small-button muted" type="button" id="resetSampleButton">Reset 12 look contoh</button><button class="small-button danger" type="button" id="clearLooksButton">Hapus semua look</button></div>
-          </section>
-          <section class="studio-section" id="cloudSampleControls" hidden>
-            <h3>Mulai dengan 12 sample</h3>
-            <p>Tambahkan seluruh look contoh dan library produknya ke cloud. Semua sample tetap bisa dihapus nanti dari Studio.</p>
-            <button class="small-button muted" id="importSampleButton" type="button">Impor 12 sample ke cloud</button>
           </section>
         </div>
 

@@ -3,6 +3,7 @@
 
         const { slugify, clone, esc, safeImage, imageAspect, imageFrameClass, money, uid } = window.COMOOTDCore;
         const STORAGE_KEY = "sisip-prototype-v1";
+        const SHARE_ICON = `<svg class="social-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m21 3-7.7 18-3.15-7.15L3 10.7 21 3Z"/><path d="m10.15 13.85 4.35-4.35"/></svg>`;
         const TONES = {
           carbon: { bg: "#393430", accent: "#a9553c", garment: "#171614", bottom: "#292522", figure: "#d7c6b7", skin: "#9a6a52", skinDark: "#825542", hair: "#1b1816", label: "#f7f3ed", light: false },
           clay: { bg: "#b9674e", accent: "#e5d3c0", garment: "#3a2924", bottom: "#28211e", figure: "#ead8c7", skin: "#a66e50", skinDark: "#8a543e", hair: "#37221b", label: "#fff9f0", light: false },
@@ -273,8 +274,6 @@
           els.studioModeNote.textContent = cloudMode
             ? "Perubahan di Studio disimpan ke database cloud COMOOTD. Hanya akun admin yang bisa mengelola katalog; data cloud tidak di-reset dari prototype ini."
             : "Semua perubahan di panel ini tersimpan di browser perangkatmu saja. Ini sengaja dibuat supaya sample look dapat ditambah, dihapus, dan di-reset tanpa memengaruhi file asli.";
-          els.sampleControls.hidden = cloudMode;
-          els.cloudSampleControls.hidden = !cloudMode;
           els.logoutStudioButton.hidden = !(cloudMode && cloudAdmin);
           updateBulkImportButtons();
         }
@@ -728,7 +727,7 @@
           const configuredLook = eligible.find((look) => look.id === activeTag?.previewLookId);
           const preview = configuredLook || [...eligible].sort((a,b) => Number(b.popularity || 0) - Number(a.popularity || 0) || Number(b.createdOrder || 0) - Number(a.createdOrder || 0))[0] || getNewSeriesCandidates()[0];
           const previewMarkup = preview
-            ? `<div class="mood-preview"><button class="mood-preview-button" type="button" data-open-look="${esc(preview.id)}" aria-label="Buka preview ${esc(activeTag.name)}: ${esc(preview.title)}"><span class="mood-preview-visual">${lookVisual(preview)}</span><span class="mood-preview-overlay"><span class="mood-preview-meta">${esc(lookAttribution(preview))} / ${esc(activeTag.name)}</span><strong>${esc(preview.title)}</strong><span class="mood-preview-meta">${esc(preview.gender)} · ${esc(preview.styles.slice(0,2).join(" / ") || activeTag.name)}</span><span class="mood-preview-open">Buka look ↗</span></span></button><a class="mood-style-link" href="/styles/${esc(slugify(activeTag.name))}">Semua ${esc(activeTag.name)} ↗</a></div>`
+            ? `<div class="mood-preview"><button class="mood-preview-button" type="button" data-open-look="${esc(preview.id)}" aria-label="Buka preview ${esc(activeTag.name)}: ${esc(preview.title)}"><span class="mood-preview-visual">${lookVisual(preview)}</span><span class="mood-preview-overlay"><span class="mood-preview-meta">${esc(lookAttribution(preview))} / ${esc(activeTag.name)}</span><strong>${esc(preview.title)}</strong><span class="mood-preview-meta">${esc(preview.gender)} · ${esc(preview.styles.slice(0,2).join(" / ") || activeTag.name)}</span><span class="mood-preview-open">Buka look ↗</span></span></button><a class="mood-style-link" href="/styles/${esc(slugify(activeTag.name))}"><span>Semua ${esc(activeTag.name)}</span><span aria-hidden="true">↗</span></a></div>`
             : `<div class="mood-preview"><div class="new-series-empty"><p>Preview ${esc(activeTag?.name || "style")} akan hadir setelah look dipublikasikan.</p></div></div>`;
           const buttons = moods.map((mood, index) => `<button class="mood-button${mood.name === activeMoodStyle ? " is-active" : ""}" type="button" data-mood-style="${esc(mood.name)}" aria-pressed="${String(mood.name === activeMoodStyle)}"><strong>${esc(mood.name)}</strong><span>${String(index+1).padStart(2,"0")} ↘</span></button>`).join("");
           els.moodList.innerHTML = `${previewMarkup}<div class="mood-options" style="--mood-count:${moods.length}">${buttons}</div>`;
@@ -1400,7 +1399,7 @@
           const curatorName = entry.curator?.displayName || entry.curator?.name || "";
           const curatorHandle = entry.curator?.handle || "";
           const curatorLine = curatorName ? `<p class="eyebrow" style="color:var(--taupe);margin:.5rem 0 0">CURATED BY ${esc(curatorName)}${curatorHandle ? ` / @${esc(curatorHandle)}` : ""}</p>` : "";
-          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}${curatorMetricsMarkup(entry)}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div>${entry.excerpt ? `<p class="detail-description">${esc(entry.excerpt)}</p>` : ""}</div><div class="detail-actions">${lookLikeButton(entry)}${memberRetention.saveButton("look",entry.id)}<button class="button-outline" type="button" data-share-look="${esc(entry.id)}">Bagikan look ↗</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di marketplace.</p></div></div>`;
+          els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}${curatorMetricsMarkup(entry)}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div>${entry.excerpt ? `<p class="detail-description">${esc(entry.excerpt)}</p>` : ""}</div><div class="detail-actions">${lookLikeButton(entry)}${memberRetention.saveButton("look",entry.id)}<button class="button-outline icon-action" type="button" data-share-look="${esc(entry.id)}" aria-label="Bagikan look ${esc(entry.title)}" title="Bagikan look">${SHARE_ICON}</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di marketplace.</p></div></div>`;
           if (!els.lookModal.open) els.lookModal.showModal();
         }
         function openProduct(id, { navigate = true, variantId = "", replace = false } = {}) {
@@ -2352,22 +2351,6 @@
             if(cloudEnabled()) { if(typeof cloud?.deleteArticle!=="function") throw new Error("Fitur hapus artikel belum termuat. Muat ulang halaman lalu coba lagi."); const result=await cloud.deleteArticle(article.id); await refreshCloudState({admin:true}); showToast(result?.mediaCleanupWarning ? "Artikel sudah dihapus; satu file media perlu dibersihkan ulang nanti." : "Artikel dihapus dari cloud."); return; }
             state.articles=state.articles.filter((item)=>item.id!==article.id);saveState();renderAll();showToast("Artikel dihapus dari prototype.");
           } catch(error) { showToast(error.message||"Artikel belum dapat dihapus."); }
-        });
-        document.getElementById("resetSampleButton").addEventListener("click",()=>{if(cloudEnabled()){showToast("Data cloud tidak di-reset dari prototype.");return;}if(confirm("Kembalikan seluruh data ke 12 look contoh awal? Perubahan lokal akan terganti."))resetState();});
-        document.getElementById("clearLooksButton").addEventListener("click",()=>{if(cloudEnabled()){showToast("Data cloud tidak dihapus massal dari prototype.");return;}if(confirm("Hapus seluruh look dari browser ini? Product library tetap ada.")){state.looks=[];state.newSeriesLookIds=[];lookDraftItems=[];saveState();renderAll();showToast("Semua look prototype telah dihapus.");}});
-        els.importSampleButton.addEventListener("click",async(event)=>{
-          if(!cloudEnabled())return;
-          if(!confirm("Impor 12 look dan produk contoh ke cloud? Sample yang sama akan diperbarui; data contoh ini tetap dapat dihapus nanti."))return;
-          const button=event.currentTarget;
-          const originalLabel=button.textContent;
-          button.disabled=true;
-          button.textContent="Mengimpor sample…";
-          try {
-            const result=await cloud.importDemoCatalogue({products:clone(SEED_PRODUCTS),looks:clone(SEED_LOOKS)});
-            await refreshCloudState({admin:true});
-            showToast(`${result.lookCount} look dan ${result.productCount} produk sample tersimpan ke cloud.`);
-          } catch(error) { showToast(error.message||"Sample belum dapat diimpor."); }
-          finally { button.disabled=false; button.textContent=originalLabel; }
         });
         els.downloadBulkTemplateButton.addEventListener("click", downloadBulkTemplate);
         els.bulkProductFile.addEventListener("change", () => { void inspectBulkProductFile(); });

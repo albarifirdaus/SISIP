@@ -24,9 +24,7 @@
         button.classList.toggle("is-saved", active);
         button.setAttribute("aria-pressed", String(active));
         button.setAttribute("aria-label", active ? "Hapus dari koleksi Disimpan" : "Simpan ke koleksi");
-        const icon = button.querySelector("span:first-child");
         const label = button.querySelector("span:last-child:not(:first-child)");
-        if (icon) icon.textContent = active ? "◆" : "◇";
         if (label) label.textContent = active ? "Tersimpan" : "Simpan";
       });
       onChange?.();
@@ -59,7 +57,7 @@
 
     function saveButton(type, id, compact = false) {
       const saved = savedIn(type, String(id));
-      return `<button class="retention-save-button${saved ? " is-saved" : ""}${compact ? " is-compact" : ""}" type="button" data-retention-save="${esc(type)}" data-retention-id="${esc(id)}" aria-label="${saved ? "Hapus dari koleksi Disimpan" : "Simpan ke koleksi"}" aria-pressed="${saved}"><span aria-hidden="true">${saved ? "◆" : "◇"}</span>${compact ? "" : `<span>${saved ? "Tersimpan" : "Simpan"}</span>`}</button>`;
+      return `<button class="retention-save-button${saved ? " is-saved" : ""}${compact ? " is-compact" : ""}" type="button" data-retention-save="${esc(type)}" data-retention-id="${esc(id)}" aria-label="${saved ? "Hapus dari koleksi Disimpan" : "Simpan ke koleksi"}" aria-pressed="${saved}"><svg class="social-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 17l-5.5 3.5v-17Z"/></svg>${compact ? "" : `<span>${saved ? "Tersimpan" : "Simpan"}</span>`}</button>`;
     }
 
     function followButton(curatorId) {
