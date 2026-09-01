@@ -838,11 +838,11 @@
     const existing = document.getElementById("curatorMemberPrompt");
     if (!state.user || state.curator?.isActive) { existing?.remove(); return; }
     if (existing) return;
-    const prompt = document.createElement("div");
+    const prompt = document.createElement("details");
     prompt.id = "curatorMemberPrompt";
     prompt.className = "curator-callout";
     const pending = state.application?.status === "submitted";
-    prompt.innerHTML = `<p><strong>${pending ? "Pengajuan Curator sedang ditinjau." : "Sudah punya sudut pandang sendiri?"}</strong><br />${pending ? "Kami akan mengirim update ke notifikasi akunmu setelah tim mengambil keputusan." : "Ajukan profil Curator untuk membagikan look dan tautan marketplace setelah disetujui tim COMOOTD."}</p><button class="button-outline" type="button" data-open-curator-onboard>${pending ? "Lihat pengajuan" : "Ajukan jadi Curator"} ↗</button>`;
+    prompt.innerHTML = `<summary><span><strong>${pending ? "Pengajuan Curator sedang ditinjau" : "Punya sudut pandang fashion sendiri?"}</strong><small>${pending ? "Pantau proses pengajuanmu" : "Buka ruang untuk berkarya di COMOOTD"}</small></span><span aria-hidden="true">+</span></summary><div class="curator-callout-body"><p>${pending ? "Kami akan mengirim update ke notifikasi akunmu setelah tim mengambil keputusan." : "Ajukan profil Curator untuk membagikan look dan tautan marketplace setelah disetujui tim COMOOTD."}</p><button class="button-outline" type="button" data-open-curator-onboard>${pending ? "Lihat pengajuan" : "Ajukan jadi Curator"} ↗</button></div>`;
     profile.prepend(prompt);
   }
   function updateLookPopularity(id, amount) {

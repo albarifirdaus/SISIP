@@ -220,6 +220,31 @@ body.request-route-open { overflow: hidden; }
 .request-route-form .request-note { margin: 1rem 0; }
 
 .member-profile-sections { display: grid; gap: .65rem; margin-top: 1.5rem; }
+.curator-callout {
+  display: block;
+  margin-bottom: 1rem;
+  padding: 0;
+  border-radius: var(--radius);
+  background: var(--clay);
+}
+.curator-callout > summary {
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .9rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+.curator-callout > summary::-webkit-details-marker { display: none; }
+.curator-callout > summary > span:first-child { display: grid; gap: .2rem; }
+.curator-callout > summary small { color: rgba(17,17,17,.67); font-size: .7rem; }
+.curator-callout > summary > span:last-child { font-size: 1.35rem; transition: transform .18s ease; }
+.curator-callout[open] > summary { border-bottom: 1px solid rgba(17,17,17,.2); }
+.curator-callout[open] > summary > span:last-child { transform: rotate(45deg); }
+.curator-callout-body { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem; }
+.curator-callout-body p { margin: 0; }
 .member-profile-disclosure { border: 1px solid var(--line); border-radius: var(--radius); background: #f7f7f7; }
 .member-profile-disclosure > summary {
   min-height: 68px;
@@ -263,4 +288,5 @@ body.request-route-open { overflow: hidden; }
   .member-profile-head { padding-right: 2.5rem; }
   .member-profile-head h2 { font-size: clamp(2.2rem,11vw,3.3rem); }
   .member-profile-disclosure > summary { min-height: 64px; }
+  .curator-callout-body { align-items: stretch; flex-direction: column; }
 }
