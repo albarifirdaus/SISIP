@@ -38,11 +38,20 @@
 .look-like-button.is-compact .social-action-icon { width: 18px; height: 18px; }
 
 .retention-save-button {
+  width: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+  gap: 0;
+  border-radius: 999px;
+  background: transparent;
   transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
 }
-.retention-save-button:hover { border-color: var(--ink); transform: translateY(-1px); }
-.retention-save-button .social-action-icon { width: 20px; height: 20px; }
+.retention-save-button:hover { color: var(--white); border-color: var(--ink); background: var(--ink); transform: translateY(-1px); }
+.retention-save-button .social-action-icon { width: 18px; height: 18px; }
 .retention-save-button.is-saved .social-action-icon { fill: currentColor; }
+.retention-save-button:focus-visible,
+.look-like-button:focus-visible { outline: 2px solid var(--clay); outline-offset: 2px; }
 
 .icon-action {
   width: 42px;

@@ -713,7 +713,7 @@
           const styles = entry.styles?.slice(0,2).join(" / ") || "Kurasi COMOOTD";
           const count = String(newSeriesIndex + 1).padStart(2,"0") + " / " + String(entries.length).padStart(2,"0");
           els.newSeriesStage.innerHTML = `<button class="new-series-slide" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka look ${esc(entry.title)}"><span class="new-series-visual">${lookVisual(entry)}</span><span class="new-series-overlay"><span class="new-series-count meta">${count}</span><strong>${esc(entry.title)}</strong><span class="new-series-meta">${esc(entry.gender)} · ${esc(styles)}</span><span class="new-series-open">Buka look ↗</span></span></button>`;
-          els.newSeriesDots.innerHTML = `${entries.map((item,index) => `<button class="new-series-dot ${index === newSeriesIndex ? "is-active" : ""}" type="button" data-new-series-index="${index}" aria-label="Tampilkan look ${index + 1}: ${esc(item.title)}" aria-current="${index === newSeriesIndex ? "true" : "false"}"></button>`).join("")}${lookLikeButton(entry,true)}`;
+          els.newSeriesDots.innerHTML = entries.map((item,index) => `<button class="new-series-dot ${index === newSeriesIndex ? "is-active" : ""}" type="button" data-new-series-index="${index}" aria-label="Tampilkan look ${index + 1}: ${esc(item.title)}" aria-current="${index === newSeriesIndex ? "true" : "false"}"></button>`).join("");
           const canMove = entries.length > 1;
           els.newSeriesPrev.disabled = !canMove;
           els.newSeriesNext.disabled = !canMove;
@@ -2033,7 +2033,7 @@
         els.newSeriesStage.addEventListener("click",(event)=>{ const button=event.target.closest("[data-open-look]"); if(button) openLook(button.dataset.openLook); });
         els.newSeriesPrev.addEventListener("click",()=>moveNewSeries(-1));
         els.newSeriesNext.addEventListener("click",()=>moveNewSeries(1));
-        els.newSeriesDots.addEventListener("click",(event)=>{ const like=event.target.closest("[data-toggle-main-like]"); if(like){event.preventDefault();void toggleMainLookLike(like.dataset.toggleMainLike);return;} const button=event.target.closest("[data-new-series-index]"); if(!button)return; newSeriesIndex=Number(button.dataset.newSeriesIndex)||0; renderNewSeries(); });
+        els.newSeriesDots.addEventListener("click",(event)=>{ const button=event.target.closest("[data-new-series-index]"); if(!button)return; newSeriesIndex=Number(button.dataset.newSeriesIndex)||0; renderNewSeries(); });
         els.newSeriesCarousel.addEventListener("pointerenter",stopNewSeriesAutoplay);
         els.newSeriesCarousel.addEventListener("pointerleave",startNewSeriesAutoplay);
         els.lookGrid.addEventListener("click",(event)=>{ const like=event.target.closest("[data-toggle-main-like]"); if(like){event.preventDefault();void toggleMainLookLike(like.dataset.toggleMainLike);return;} const button=event.target.closest("[data-open-look]"); if(button) openLook(button.dataset.openLook); const clear=event.target.closest("#clearFilterButton"); if(clear){ els.search.value="";els.gender.value="all";els.style.value="all";activeStyle="all";renderStyleControls();renderLooks(); } });

@@ -12,7 +12,8 @@
     function button(entry, compact = false) {
       const liked = likedIds.has(entry.id);
       const label = liked ? "Disukai" : "Sukai look";
-      return `<button class="look-like-button${liked ? " is-liked" : ""}${compact ? " is-compact" : ""}" type="button" data-toggle-main-like="${esc(entry.id)}" aria-pressed="${String(liked)}" aria-label="${label} ${esc(entry.title)}"><svg class="social-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"/></svg><span>${entry.popularity || 0}</span></button>`;
+      const accessibleLabel = `${label} ${esc(entry.title)}`;
+      return `<button class="look-like-button${liked ? " is-liked" : ""}${compact ? " is-compact" : ""}" type="button" data-toggle-main-like="${esc(entry.id)}" aria-pressed="${String(liked)}" aria-label="${accessibleLabel}" title="${accessibleLabel}"><svg class="social-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"/></svg><span>${entry.popularity || 0}</span></button>`;
     }
 
     async function toggle(lookId) {
