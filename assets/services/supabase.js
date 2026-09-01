@@ -2787,21 +2787,24 @@
     return data || [];
   }
 
-  async function loadLinkHealth() {
-    const admin = await isAdmin();
+  async function loadLinkHealth({ page = 1, pageSize = 25, query = "", status = "all", marketplace = "all" } = {}) {
+    await requireUser();
     const db = getClient();
-    const user = await getCurrentUser();
     const requests = [
-      db.from("comootd_link_reports").select("id,reporter_id,owner_id,target_type,target_id,reason,message,status,created_at,updated_at").order("created_at", { ascending:false }),
-      db.from("curator_item_marketplace_links").select("id,curator_item_id,marketplace,affiliate_url,label,status,is_primary,updated_at,look_curation_items(name,look_id,looks(title,slug,creator_id))").order("updated_at", { ascending:false }),
-      db.from("comootd_marketplace_link_history").select("id,target_type,link_id,owner_id,actor_id,action,marketplace,previous_url,next_url,created_at").order("created_at", { ascending:false }).limit(40)
+      db.from("comootd_link_reports").select("id,reporter_id,owner_id,target_type,target_id,reason,message,status,created_at,updated_at").eq("status", "open").order("created_at", { ascending:false }).limit(100),
+      db.from("comootd_marketplace_link_history").select("id,target_type,link_id,owner_id,actor_id,action,marketplace,previous_url,next_url,created_at").order("created_at", { ascending:false }).limit(20),
+      db.rpc("get_comootd_link_inventory", {
+        p_page:Math.max(1, Number(page) || 1),
+        p_page_size:Math.min(50, Math.max(10, Number(pageSize) || 25)),
+        p_query:String(query || "").trim().slice(0, 160),
+        p_status:String(status || "all"),
+        p_marketplace:String(marketplace || "all")
+      })
     ];
-    if (admin) requests.push(db.from("product_marketplace_links").select("id,product_id,marketplace,affiliate_url,label,status,is_primary,updated_at,products(name,slug)").order("updated_at", { ascending:false }));
     const results = await Promise.all(requests);
     const failed = results.find((result) => result.error);
     if (failed?.error) throw failed.error;
-    const curatorLinks = admin ? (results[1].data || []) : (results[1].data || []).filter((link) => String(link.look_curation_items?.looks?.creator_id || "") === String(user?.id || ""));
-    return { reports:results[0].data || [], curatorLinks, history:results[2].data || [], productLinks:admin ? (results[3].data || []) : [] };
+    return { reports:results[0].data || [], history:results[1].data || [], inventory:results[2].data || { rows:[], total:0, page:1, pageSize:25, counts:{} } };
   }
 
   async function resolveLinkReport(reportId, action, replacementUrl = "") {

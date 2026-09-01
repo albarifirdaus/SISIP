@@ -4,6 +4,7 @@
   const SESSION_KEY = "comootd-analytics-session";
   const ATTRIBUTION_KEY = "comootd-analytics-attribution";
   const once = new Set();
+  let inventorySearchTimer = 0;
 
   function sessionId() {
     try {
@@ -109,6 +110,9 @@
   }
 
   function linkHealthRows(health) {
+    if (Array.isArray(health?.inventory?.rows)) {
+      return health.inventory.rows.map((link) => ({ ...link, targetType:link.targetType || link.target_type }));
+    }
     return [...(health?.productLinks || []).map((link) => ({ ...link, targetType:"product_link", title:link.products?.name || "Produk COMOOTD", context:link.products?.slug || "" })), ...(health?.curatorLinks || []).map((link) => ({ ...link, targetType:"curator_link", title:link.look_curation_items?.name || "Produk dalam look", context:link.look_curation_items?.looks?.title || "" }))];
   }
 
@@ -131,16 +135,30 @@
 
   function linkHealthMarkup(health) {
     const links = linkHealthRows(health);
-    const counts = { active:0, reported:0, disabled:0 };
-    links.forEach((link) => { counts[link.status] = (counts[link.status] || 0) + 1; });
+    const inventoryState = health?.inventory || {};
+    const counts = inventoryState.counts || { active:0, reported:0, disabled:0 };
+    if (!inventoryState.counts) links.forEach((link) => { counts[link.status] = (counts[link.status] || 0) + 1; });
+    const page = Math.max(1, Number(inventoryState.page || 1));
+    const pageSize = Math.max(1, Number(inventoryState.pageSize || 25));
+    const total = Math.max(0, Number(inventoryState.total ?? links.length));
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const query = String(inventoryState.query || "");
+    const status = String(inventoryState.status || "all");
+    const marketplace = String(inventoryState.marketplace || "all");
     const inventory = links.length ? `<div class="insights-link-inventory">${links.map((link) => `<article class="insights-link-row"><div><strong>${escapeHtml(link.title)}</strong><p>${escapeHtml(link.context || (link.targetType === "product_link" ? "Katalog produk" : "Look Curator"))} · ${escapeHtml(String(link.marketplace || "marketplace").replace("_", " "))}${link.is_primary ? " · utama" : ""}</p><code>${escapeHtml(link.affiliate_url)}</code></div><span class="insights-link-state is-${escapeHtml(link.status || "active")}">${escapeHtml(link.status || "active")}</span></article>`).join("")}</div>` : `<div class="insights-empty">Belum ada tujuan marketplace yang dapat dikelola.</div>`;
     const history = (health?.history || []).slice(0, 12);
     const historyMarkup = history.length ? `<ul class="insights-history">${history.map((item) => `<li><strong>${escapeHtml(String(item.action || "updated").replace("_", " "))}</strong><span>${escapeHtml(String(item.marketplace || "marketplace").replace("_", " "))}</span><small>${escapeHtml(new Intl.DateTimeFormat("id-ID", { dateStyle:"medium", timeStyle:"short" }).format(new Date(item.created_at)))}</small></li>`).join("")}</ul>` : `<div class="insights-empty">Belum ada riwayat perubahan link.</div>`;
-    return `<div class="insights-link-health-summary"><div><strong>${number(counts.active)}</strong><span>Link aktif</span></div><div><strong>${number(counts.reported)}</strong><span>Perlu diperiksa</span></div><div><strong>${number(counts.disabled)}</strong><span>Dinonaktifkan</span></div></div><h5>Inventaris link</h5>${inventory}<h5>Riwayat terbaru</h5>${historyMarkup}`;
+    const inventoryOpen = inventoryState.open ? " open" : "";
+    const historyOpen = inventoryState.historyOpen ? " open" : "";
+    return `<div class="insights-link-health-summary"><div><strong>${number(counts.active)}</strong><span>Link aktif</span></div><div><strong>${number(counts.reported)}</strong><span>Perlu diperiksa</span></div><div><strong>${number(counts.disabled)}</strong><span>Dinonaktifkan</span></div></div><details class="insights-inventory-panel" data-link-inventory-disclosure${inventoryOpen}><summary><span><strong>Inventaris link</strong><small>${number(total)} hasil · ${number(pageSize)} per halaman</small></span><span aria-hidden="true">+</span></summary><div class="insights-inventory-body"><div class="insights-inventory-toolbar"><label class="is-search"><span>Cari link</span><input type="search" data-link-inventory-query value="${escapeHtml(query)}" placeholder="Nama produk, look, atau URL" /></label><label><span>Status</span><select data-link-inventory-filter="status"><option value="all">Semua status</option><option value="active"${status === "active" ? " selected" : ""}>Aktif</option><option value="reported"${status === "reported" ? " selected" : ""}>Perlu diperiksa</option><option value="disabled"${status === "disabled" ? " selected" : ""}>Dinonaktifkan</option></select></label><label><span>Platform</span><select data-link-inventory-filter="marketplace"><option value="all">Semua platform</option><option value="shopee"${marketplace === "shopee" ? " selected" : ""}>Shopee</option><option value="tiktok_shop"${marketplace === "tiktok_shop" ? " selected" : ""}>TikTok Shop</option></select></label></div>${inventory}<nav class="insights-inventory-pagination" aria-label="Halaman inventaris link"><button type="button" data-link-page="${Math.max(1,page-1)}"${page <= 1 ? " disabled" : ""}>← Sebelumnya</button><span>Halaman ${number(page)} / ${number(totalPages)}</span><button type="button" data-link-page="${Math.min(totalPages,page+1)}"${page >= totalPages ? " disabled" : ""}>Berikutnya →</button></nav></div></details><details class="insights-inventory-panel is-history" data-link-history-disclosure${historyOpen}><summary><span><strong>Riwayat terbaru</strong><small>${number(history.length)} perubahan terakhir</small></span><span aria-hidden="true">+</span></summary><div class="insights-inventory-body">${historyMarkup}</div></details>`;
   }
 
   async function hydrateDashboard(root, force = false) {
-    if (!root || (root.dataset.loaded === "true" && !force) || root.dataset.loading === "true") return;
+    if (!root || (root.dataset.loaded === "true" && !force)) return;
+    if (root.dataset.loading === "true") {
+      if (force) root.dataset.refreshPending="true";
+      return;
+    }
     const cloud = window.SISIPCloud;
     const role = root.dataset.insightsDashboard;
     if (!cloud?.isConfigured?.()) {
@@ -150,11 +168,18 @@
     }
     root.dataset.loading = "true";
     const days = Number(root.querySelector("[data-insights-days]")?.value || root.dataset.days || 30);
+    const inventoryOptions = {
+      page:Number(root.dataset.linkPage || 1), pageSize:25,
+      query:String(root.dataset.linkQuery || ""),
+      status:String(root.dataset.linkStatus || "all"),
+      marketplace:String(root.dataset.linkMarketplace || "all")
+    };
     try {
       const [analytics, health] = await Promise.all([
         role === "admin" ? cloud.loadAdminAnalytics(days) : cloud.loadMyAnalytics(days),
-        typeof cloud.loadLinkHealth === "function" ? cloud.loadLinkHealth() : cloud.loadLinkReports().then((reports) => ({ reports, curatorLinks:[], productLinks:[], history:[] }))
+        typeof cloud.loadLinkHealth === "function" ? cloud.loadLinkHealth(inventoryOptions) : cloud.loadLinkReports().then((reports) => ({ reports, curatorLinks:[], productLinks:[], history:[] }))
       ]);
+      if (health?.inventory) Object.assign(health.inventory, inventoryOptions, { open:root.dataset.linkInventoryOpen === "true", historyOpen:root.dataset.linkHistoryOpen === "true" });
       const totals = analytics?.totals || {};
       const kpis = role === "admin"
         ? [["Page views",totals.pageViews],["Look views",totals.lookViews],["Product clicks",totals.productClicks],["Shares",totals.shares],["Unique sessions",totals.uniqueSessions]]
@@ -168,7 +193,14 @@
     } catch (error) {
       root.dataset.loaded = "true";
       root.innerHTML = `<div class="insights-empty">Analytics belum tersedia di environment ini. Pastikan migration Fase 4 sudah diterapkan.<br><small>${escapeHtml(error?.message || "")}</small></div>`;
-    } finally { root.dataset.loading = "false"; }
+    } finally {
+      root.dataset.loading="false";
+      if (root.dataset.refreshPending === "true") {
+        root.dataset.refreshPending="false";
+        root.dataset.loaded="false";
+        void hydrateDashboard(root,true);
+      }
+    }
   }
 
   function ensureReportDialog() {
@@ -230,6 +262,15 @@
     if (event.target.closest("[data-close-link-report]")) ensureReportDialog().close();
     const refresh = event.target.closest("[data-refresh-insights]");
     if (refresh) { const root=refresh.closest("[data-insights-dashboard]"); if(root){root.dataset.loaded="false";void hydrateDashboard(root,true);} }
+    const pageButton = event.target.closest("[data-link-page]");
+    if (pageButton && !pageButton.disabled) {
+      const root=pageButton.closest("[data-insights-dashboard]");
+      if (root) {
+        root.dataset.linkPage=pageButton.dataset.linkPage || "1";
+        root.dataset.loaded="false";
+        void hydrateDashboard(root,true);
+      }
+    }
     const action = event.target.closest("[data-link-action]");
     if (action) {
       const root=action.closest("[data-insights-dashboard]");
@@ -247,10 +288,46 @@
 
   document.addEventListener("change", (event) => {
     const range = event.target.closest("[data-insights-days]");
-    if (!range) return;
-    const root=range.closest("[data-insights-dashboard]");
-    root.dataset.days=range.value; root.dataset.loaded="false"; void hydrateDashboard(root,true);
+    if (range) {
+      const root=range.closest("[data-insights-dashboard]");
+      root.dataset.days=range.value; root.dataset.loaded="false"; void hydrateDashboard(root,true);
+      return;
+    }
+    const filter = event.target.closest("[data-link-inventory-filter]");
+    if (filter) {
+      const root=filter.closest("[data-insights-dashboard]");
+      if (!root) return;
+      if (filter.dataset.linkInventoryFilter === "status") root.dataset.linkStatus=filter.value;
+      if (filter.dataset.linkInventoryFilter === "marketplace") root.dataset.linkMarketplace=filter.value;
+      root.dataset.linkPage="1";
+      root.dataset.loaded="false";
+      void hydrateDashboard(root,true);
+    }
   });
+
+  document.addEventListener("input", (event) => {
+    const query=event.target.closest("[data-link-inventory-query]");
+    if (!query) return;
+    const root=query.closest("[data-insights-dashboard]");
+    if (!root) return;
+    clearTimeout(inventorySearchTimer);
+    inventorySearchTimer=setTimeout(() => {
+      root.dataset.linkQuery=query.value;
+      root.dataset.linkPage="1";
+      root.dataset.loaded="false";
+      void hydrateDashboard(root,true);
+    }, 320);
+  });
+
+  document.addEventListener("toggle", (event) => {
+    const inventory=event.target.closest?.("[data-link-inventory-disclosure]");
+    const history=event.target.closest?.("[data-link-history-disclosure]");
+    const details=inventory || history;
+    const root=details?.closest("[data-insights-dashboard]");
+    if (!root) return;
+    if (inventory) root.dataset.linkInventoryOpen=String(inventory.open);
+    if (history) root.dataset.linkHistoryOpen=String(history.open);
+  }, true);
 
   document.addEventListener("submit", async (event) => {
     const campaignForm=event.target.closest("[data-campaign-builder]");
