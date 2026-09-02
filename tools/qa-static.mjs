@@ -72,6 +72,7 @@ for (const asset of [
 ]) check(index.includes(asset), `Referensi aset baru belum terpasang: ${asset}`);
 check(index.includes('class="skip-link"') && index.includes('href="#siteMain"'), "Homepage belum memiliki skip link ke konten utama");
 check(index.includes('class="storefront-grid"'), "Editorial storefront Fase 3 belum tersedia");
+check(index.includes('storefront-card--dark storefront-card--wide') && read("assets/pages/home-storefront.css").includes(".storefront-card--wide { grid-column:1 / -1;"), "Kartu Journal desktop belum menutup ruang kosong storefront");
 const storefrontVisualMigration = read("supabase/migrations/20260901210000_storefront_visual_controls.sql");
 const storefrontUploadMigration = read("supabase/migrations/20260902070000_storefront_custom_uploads.sql");
 check(["looks","products","curators","journal"].every((key) => index.includes(`data-storefront-visual="${key}"`)), "Empat kartu storefront belum mendukung visual terkelola");

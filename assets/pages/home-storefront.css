@@ -66,6 +66,7 @@
 .storefront-card--lead { grid-row:span 2; min-height:521px; background:var(--white); }
 .storefront-card--signal { background:var(--clay); }
 .storefront-card--dark { color:var(--white); background:var(--ink); }
+.storefront-card--wide { grid-column:1 / -1; min-height:360px; }
 .storefront-card.has-visual {
   color:var(--white);
   background-color:var(--ink);
@@ -90,6 +91,7 @@
   text-wrap:balance;
 }
 .storefront-card:not(.storefront-card--lead) .storefront-card-copy strong { font-size:clamp(1.75rem,2.8vw,3.25rem); }
+.storefront-card--wide .storefront-card-copy strong { max-width:15ch; font-size:clamp(2.4rem,4.5vw,5rem); }
 .storefront-card-copy small {
   color:inherit;
   font:500 .68rem/1.45 var(--mono);
@@ -136,6 +138,7 @@
   .storefront-heading .section-description { justify-self:start; }
   .storefront-grid { grid-auto-rows:minmax(230px,auto); }
   .storefront-card--lead { min-height:461px; }
+  .storefront-card--wide { grid-column:auto; min-height:0; }
 }
 
 @media (max-width:760px) {
