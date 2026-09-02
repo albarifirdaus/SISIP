@@ -577,7 +577,7 @@
       .order("slot", { ascending: true });
     const storefrontVisualsQuery = db
       .from("comootd_storefront_visuals")
-      .select("card_key,look_id,product_id,curator_id,article_id,focal_position")
+      .select("card_key,look_id,product_id,curator_id,article_id,custom_image_path,focal_position")
       .order("card_key", { ascending: true });
     const outfitRequestsQuery = admin
       ? (from, to) => db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)
@@ -656,6 +656,8 @@
     const storefrontVisuals = (storefrontVisualRows || []).map((row) => ({
       cardKey: row.card_key,
       sourceId: row.look_id || row.product_id || row.curator_id || row.article_id || "",
+      customImagePath: row.custom_image_path || "",
+      customImage: publicUrl(row.custom_image_path),
       focalPosition: row.focal_position || "center"
     }));
     const requests = admin
@@ -2810,20 +2812,58 @@
     const normalized = assignments.map((assignment) => {
       const cardKey = String(assignment?.cardKey || assignment?.card_key || "").trim().toLowerCase();
       const sourceId = String(assignment?.sourceId || assignment?.source_id || "").trim();
+      const mode = String(assignment?.mode || (assignment?.imageFile ? "custom" : "catalogue")).trim().toLowerCase();
       const focalPosition = String(assignment?.focalPosition || assignment?.focal_position || "center").trim().toLowerCase();
       if (!columns[cardKey]) throw new Error("Kartu homepage belum valid.");
+      if (!["catalogue", "custom"].includes(mode)) throw new Error(`Sumber visual ${cardKey} belum valid.`);
       if (sourceId && !uuidPattern.test(sourceId)) throw new Error(`Pilihan visual ${cardKey} belum valid.`);
       if (!["center", "top", "bottom", "left", "right"].includes(focalPosition)) throw new Error(`Posisi crop ${cardKey} belum valid.`);
-      return { cardKey, sourceId:sourceId || null, focalPosition };
+      return { cardKey, sourceId:mode === "catalogue" ? (sourceId || null) : null, mode, imageFile:assignment?.imageFile || null, focalPosition };
     });
     if (new Set(normalized.map((entry) => entry.cardKey)).size !== 4) throw new Error("Setiap kartu homepage hanya boleh diatur sekali.");
-    await Promise.all(normalized.map(async (entry) => {
-      const payload = { look_id:null, product_id:null, curator_id:null, article_id:null, focal_position:entry.focalPosition };
-      payload[columns[entry.cardKey]] = entry.sourceId;
-      const { data, error } = await getClient().from("comootd_storefront_visuals").update(payload).eq("card_key", entry.cardKey).select("card_key").single();
-      if (error) throw error;
-      if (!data?.card_key) throw new Error(`Visual ${entry.cardKey} tidak diperbarui.`);
-    }));
+    const db = getClient();
+    const { data:currentRows, error:currentError } = await db.from("comootd_storefront_visuals").select("card_key,custom_image_path");
+    if (currentError) throw currentError;
+    const currentPaths = new Map((currentRows || []).map((row) => [row.card_key, row.custom_image_path || ""]));
+    const uploadedPaths = [];
+    const obsoletePaths = [];
+    const preparedEntries = [];
+    try {
+      for (const entry of normalized) {
+        let customImagePath = entry.mode === "custom" ? (currentPaths.get(entry.cardKey) || "") : "";
+        if (entry.mode === "custom" && !entry.imageFile && !customImagePath) throw new Error(`Pilih file desain untuk kartu ${entry.cardKey}.`);
+        if (entry.imageFile) {
+          if (!/^image\/(jpeg|png|webp)$/.test(entry.imageFile.type || "")) throw new Error("Gunakan desain JPEG, PNG, atau WebP.");
+          if (entry.imageFile.size > 2 * 1024 * 1024) throw new Error("Ukuran desain homepage maksimal 2 MB per kartu.");
+          customImagePath = `storefront/${entry.cardKey}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extensionFor(entry.imageFile)}`;
+          const { error:uploadError } = await db.storage.from(bucket).upload(customImagePath, entry.imageFile, { cacheControl:"31536000", upsert:false, contentType:entry.imageFile.type });
+          if (uploadError) throw uploadError;
+          uploadedPaths.push(customImagePath);
+        }
+        preparedEntries.push({ ...entry, customImagePath });
+      }
+      await Promise.all(preparedEntries.map(async (entry) => {
+        const payload = { look_id:null, product_id:null, curator_id:null, article_id:null, custom_image_path:entry.customImagePath || null, focal_position:entry.focalPosition };
+        payload[columns[entry.cardKey]] = entry.sourceId;
+        const { data, error } = await db.from("comootd_storefront_visuals").update(payload).eq("card_key", entry.cardKey).select("card_key").single();
+        if (error) throw error;
+        if (!data?.card_key) throw new Error(`Visual ${entry.cardKey} tidak diperbarui.`);
+        const oldPath = currentPaths.get(entry.cardKey) || "";
+        if (oldPath && oldPath !== entry.customImagePath) obsoletePaths.push(oldPath);
+      }));
+    } catch (error) {
+      if (uploadedPaths.length) {
+        const { data:referencedRows } = await db.from("comootd_storefront_visuals").select("custom_image_path").in("custom_image_path", uploadedPaths);
+        const referenced = new Set((referencedRows || []).map((row) => row.custom_image_path).filter(Boolean));
+        const orphaned = uploadedPaths.filter((path) => !referenced.has(path));
+        if (orphaned.length) await db.storage.from(bucket).remove(orphaned);
+      }
+      throw error;
+    }
+    if (obsoletePaths.length) {
+      const { error:cleanupError } = await db.storage.from(bucket).remove(obsoletePaths);
+      if (cleanupError) console.warn("Desain homepage lama belum dapat dibersihkan dari Storage.", cleanupError);
+    }
   }
 
   async function loadLinkHealth({ page = 1, pageSize = 25, query = "", status = "all", marketplace = "all" } = {}) {

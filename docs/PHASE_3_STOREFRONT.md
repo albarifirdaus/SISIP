@@ -41,3 +41,14 @@ berada di presentation layer dan tidak mengubah data produksi.
   tidak kosong ketika konten pilihan dihapus atau dinonaktifkan.
 - Tahap ini hanya mereferensikan media katalog yang sudah ada. Tidak ada upload,
   generator gambar, vendor, atau biaya penyimpanan baru.
+
+## Upload desain sendiri Tahap 5
+
+- Admin dapat memilih **Upload desain sendiri** untuk masing-masing kartu Looks,
+  Products, Curators, dan Journal.
+- File dibatasi ke JPEG, PNG, atau WebP dengan ukuran maksimal 2 MB per kartu.
+- Desain memakai bucket media COMOOTD yang sudah tersedia, tanpa vendor atau
+  paket berbayar baru, tetapi tetap memakai kuota penyimpanan proyek.
+- Mengganti atau melepas desain akan membersihkan file lama agar penggunaan
+  Storage tidak terus bertambah.
+- Pilihan otomatis dan foto dari katalog tetap tersedia sebagai alternatif.

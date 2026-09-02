@@ -73,10 +73,15 @@ for (const asset of [
 check(index.includes('class="skip-link"') && index.includes('href="#siteMain"'), "Homepage belum memiliki skip link ke konten utama");
 check(index.includes('class="storefront-grid"'), "Editorial storefront Fase 3 belum tersedia");
 const storefrontVisualMigration = read("supabase/migrations/20260901210000_storefront_visual_controls.sql");
+const storefrontUploadMigration = read("supabase/migrations/20260902070000_storefront_custom_uploads.sql");
 check(["looks","products","curators","journal"].every((key) => index.includes(`data-storefront-visual="${key}"`)), "Empat kartu storefront belum mendukung visual terkelola");
 check(storefrontVisualMigration.includes("enable row level security") && storefrontVisualMigration.includes('Public reads COMOOTD storefront visuals') && storefrontVisualMigration.includes('COMOOTD admin updates storefront visuals'), "Pengaturan visual storefront belum dilindungi RLS");
 check(storefrontVisualMigration.includes("revoke all on table public.comootd_storefront_visuals") && storefrontVisualMigration.includes("grant update (look_id, product_id, curator_id, article_id, focal_position)"), "Privilege visual storefront belum least-privilege");
 check(appSource.includes("renderStorefrontVisuals") && appSource.includes("saveStorefrontVisuals") && read("assets/services/supabase.js").includes('from("comootd_storefront_visuals")'), "Visual storefront belum terhubung dari katalog ke Studio admin");
+check(storefrontUploadMigration.includes("custom_image_path") && storefrontUploadMigration.includes("COMOOTD admin uploads storefront media") && storefrontUploadMigration.includes("private.is_sisip_admin"), "Upload desain storefront belum memiliki kolom dan policy Storage admin");
+check(storefrontUploadMigration.includes("grant update (look_id, product_id, curator_id, article_id, custom_image_path, focal_position)"), "Privilege desain storefront belum membatasi kolom update");
+check(homeScript.includes('data-storefront-file=') && homeScript.includes('value="__custom__"') && homeScript.includes("maks. 2 MB"), "Studio belum menyediakan upload desain sendiri yang dibatasi");
+check(read("assets/services/supabase.js").includes("storefront/${entry.cardKey}/") && read("assets/services/supabase.js").includes("2 * 1024 * 1024") && read("assets/services/supabase.js").includes('cacheControl:"31536000"') && read("assets/services/supabase.js").includes("obsoletePaths"), "Upload, cache, batas ukuran, atau pembersihan desain storefront belum lengkap");
 for (const path of ["/looks", "/products", "/curators", "/journal"]) {
   check(index.includes(`class="storefront-card`) && index.includes(`href="${path}"`), `Editorial storefront belum menautkan ${path}`);
 }

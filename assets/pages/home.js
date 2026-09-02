@@ -914,6 +914,8 @@
         }
         function storefrontVisualFor(key) {
           const setting = (state.storefrontVisuals || []).find((entry) => entry.cardKey === key || entry.card_key === key) || {};
+          const customImage = safeImage(setting.customImage || setting.custom_image || "");
+          if (customImage) return { entry:null, image:customImage, focalPosition:String(setting.focalPosition || setting.focal_position || "center") };
           const candidates = storefrontCandidates(key);
           const sourceId = String(setting.sourceId || setting.source_id || "");
           const selected = candidates.find((entry) => storefrontSourceId(key, entry) === sourceId);
@@ -937,18 +939,20 @@
         function renderStorefrontVisualStudio() {
           if (!els.storefrontVisualSlots) return;
           const focalOptions = [["center","Tengah"],["top","Atas"],["bottom","Bawah"],["left","Kiri"],["right","Kanan"]];
-          const customCount = (state.storefrontVisuals || []).filter((entry) => entry.sourceId || entry.source_id).length;
+          const customCount = (state.storefrontVisuals || []).filter((entry) => entry.sourceId || entry.source_id || entry.customImagePath || entry.custom_image_path).length;
           els.storefrontVisualSlots.innerHTML = Object.keys(STOREFRONT_CARD_LABELS).map((key, index) => {
             const setting = (state.storefrontVisuals || []).find((entry) => entry.cardKey === key || entry.card_key === key) || {};
             const selectedId = String(setting.sourceId || setting.source_id || "");
+            const customImagePath = String(setting.customImagePath || setting.custom_image_path || "");
+            const customImage = safeImage(setting.customImage || setting.custom_image || "");
             const focal = String(setting.focalPosition || setting.focal_position || "center");
             const candidates = storefrontCandidates(key).filter((entry) => storefrontImage(key, entry));
             const fallback = candidates[0];
-            const options = [`<option value="">Otomatis · ${esc(storefrontSourceLabel(key, fallback))}</option>`, ...candidates.map((entry) => `<option value="${esc(storefrontSourceId(key, entry))}"${storefrontSourceId(key, entry) === selectedId ? " selected" : ""}>${esc(storefrontSourceLabel(key, entry))}</option>`)].join("");
+            const options = [`<option value=""${!selectedId && !customImagePath ? " selected" : ""}>Otomatis · ${esc(storefrontSourceLabel(key, fallback))}</option>`, `<option value="__custom__"${customImagePath ? " selected" : ""}>Upload desain sendiri</option>`, ...candidates.map((entry) => `<option value="${esc(storefrontSourceId(key, entry))}"${!customImagePath && storefrontSourceId(key, entry) === selectedId ? " selected" : ""}>${esc(storefrontSourceLabel(key, entry))}</option>`)].join("");
             const positions = focalOptions.map(([value,label]) => `<option value="${value}"${value === focal ? " selected" : ""}>Crop ${label}</option>`).join("");
-            return `<div class="storefront-visual-slot"><span class="new-series-slot-number">${String(index + 1).padStart(2,"0")}</span><label><span>${esc(STOREFRONT_CARD_LABELS[key])}</span><select data-storefront-source="${key}">${options}</select></label><label><span>Posisi foto</span><select data-storefront-focal="${key}">${positions}</select></label></div>`;
+            return `<div class="storefront-visual-slot" data-storefront-slot="${key}" data-storefront-current="${esc(customImagePath)}"><span class="new-series-slot-number">${String(index + 1).padStart(2,"0")}</span><label><span>${esc(STOREFRONT_CARD_LABELS[key])}</span><select data-storefront-source="${key}">${options}</select></label><label><span>Posisi foto</span><select data-storefront-focal="${key}">${positions}</select></label><label class="storefront-upload-field"><span>Desain sendiri</span><input type="file" accept="image/jpeg,image/png,image/webp" data-storefront-file="${key}" /><small>${customImagePath ? "Desain aktif tersimpan · pilih file untuk mengganti" : "JPEG, PNG, atau WebP · maks. 2 MB"}</small></label>${customImage ? `<img class="storefront-upload-preview" src="${esc(customImage)}" alt="Preview desain kartu ${esc(STOREFRONT_CARD_LABELS[key])}" />` : ""}</div>`;
           }).join("");
-          els.storefrontVisualStatus.textContent = `${customCount} dari 4 kartu memakai pilihan khusus. Kartu otomatis mengikuti konten terbit terbaru.`;
+          els.storefrontVisualStatus.textContent = `${customCount} dari 4 kartu memakai visual khusus. Upload desain memakai Storage COMOOTD yang sudah tersedia.`;
           els.saveStorefrontVisualsButton.disabled = false;
         }
         function renderNewSeriesStudio() {
@@ -1770,11 +1774,20 @@
         }
         async function saveStorefrontVisuals() {
           els.storefrontVisualError.textContent = "";
-          const assignments = Object.keys(STOREFRONT_CARD_LABELS).map((cardKey) => ({
-            cardKey,
-            sourceId:String(els.storefrontVisualSlots.querySelector(`[data-storefront-source="${cardKey}"]`)?.value || "").trim(),
-            focalPosition:String(els.storefrontVisualSlots.querySelector(`[data-storefront-focal="${cardKey}"]`)?.value || "center").trim()
-          }));
+          const assignments = Object.keys(STOREFRONT_CARD_LABELS).map((cardKey) => {
+            const slot = els.storefrontVisualSlots.querySelector(`[data-storefront-slot="${cardKey}"]`);
+            const sourceValue = String(slot?.querySelector(`[data-storefront-source="${cardKey}"]`)?.value || "").trim();
+            const imageFile = slot?.querySelector(`[data-storefront-file="${cardKey}"]`)?.files?.[0] || null;
+            const mode = sourceValue === "__custom__" || imageFile ? "custom" : "catalogue";
+            return {
+              cardKey,
+              mode,
+              sourceId:mode === "catalogue" ? sourceValue : "",
+              customImagePath:String(slot?.dataset.storefrontCurrent || "").trim(),
+              imageFile,
+              focalPosition:String(slot?.querySelector(`[data-storefront-focal="${cardKey}"]`)?.value || "center").trim()
+            };
+          });
           const label = els.saveStorefrontVisualsButton.textContent;
           els.saveStorefrontVisualsButton.disabled = true;
           els.saveStorefrontVisualsButton.textContent = "Menyimpan…";
@@ -1784,7 +1797,13 @@
               await cloud.setStorefrontVisuals(assignments);
               await refreshCloudState({ admin:true });
             } else {
-              state.storefrontVisuals = assignments;
+              state.storefrontVisuals = assignments.map((assignment) => ({
+                cardKey:assignment.cardKey,
+                sourceId:assignment.sourceId,
+                customImagePath:assignment.mode === "custom" ? assignment.customImagePath : "",
+                customImage:assignment.mode === "custom" ? (assignment.imageFile ? URL.createObjectURL(assignment.imageFile) : storefrontVisualFor(assignment.cardKey).image) : "",
+                focalPosition:assignment.focalPosition
+              }));
               saveState();
               renderAll();
             }
@@ -2339,6 +2358,13 @@
         document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.addEventListener("click",()=>switchStudioTab(button.dataset.studioTab)));
         els.saveStylePreviewsButton.addEventListener("click",()=>void saveStylePreviews());
         els.saveStorefrontVisualsButton.addEventListener("click",()=>void saveStorefrontVisuals());
+        els.storefrontVisualSlots.addEventListener("change",(event)=>{
+          const input=event.target.closest("[data-storefront-file]");
+          if(!input?.files?.length)return;
+          const key=String(input.dataset.storefrontFile||"");
+          const source=els.storefrontVisualSlots.querySelector(`[data-storefront-source="${key}"]`);
+          if(source)source.value="__custom__";
+        });
         document.querySelectorAll("[data-add-journal-block]").forEach((button)=>button.addEventListener("click",()=>{ if(journalDraftBlocks.length>=JOURNAL_BLOCK_LIMIT){els.journalFormError.textContent=`Artikel maksimal memiliki ${JOURNAL_BLOCK_LIMIT} blok.`;return;} journalDraftBlocks.push(makeJournalBlock(button.dataset.addJournalBlock));els.journalFormError.textContent="";renderJournalBlockEditor(); }));
         els.saveNewSeriesButton.addEventListener("click",saveNewSeries);
         els.lookProduct.addEventListener("change",renderVariantSelect);
