@@ -277,7 +277,9 @@ check(curatorFollowerMigration.includes("security definer") && curatorFollowerMi
 check(curatorExperience.includes("curator-card-stats") && curatorExperience.includes("curator-profile-intro") && curatorExperience.includes("curator-icon-button") && curatorExperience.includes("followedCuratorIds"), "Penyegaran kartu, profil, dan follower Curator Tahap 5 belum lengkap");
 check(index.includes('data-discovery-carousel="products"') && index.includes('data-discovery-carousel="journal"') && curatorExperience.includes('data-discovery-carousel="curators"'), "Rail eksplorasi Products, Curators, dan Journal belum lengkap");
 check(homeScript.includes("syncDiscoveryRails") && homeScript.includes("moveDiscoveryRail") && /event\.key\s*===\s*"ArrowLeft"/.test(homeScript) && /event\.key\s*!==\s*"ArrowRight"/.test(homeScript), "Rail eksplorasi belum mendukung sinkronisasi tombol dan keyboard");
-check(/scroll-snap-type:\s*x mandatory/.test(read("assets/styles/ui-polish.css")), "Rail eksplorasi belum memiliki scroll snap");
+const uiPolish = read("assets/styles/ui-polish.css");
+check(/scroll-snap-type:\s*x mandatory/.test(uiPolish), "Rail eksplorasi belum memiliki scroll snap");
+check(uiPolish.includes(".look-card-footer .catalogue-card-actions") && uiPolish.includes("grid-template-columns: 56px 44px") && uiPolish.includes("grid-template-columns: 50px 40px"), "Posisi aksi like dan simpan pada kartu look belum konsisten");
 check(homeScript.includes("Minimalist\", \"Techwear\", \"Whimsy\", \"Workwear\", \"Clean\", \"Casual") && /\.slice\(0,\s*6\)/.test(homeScript), "Explore style belum mengisi enam pilihan");
 check(/\.slice\(0,\s*12\)/.test(homeScript) && /\.slice\(0,\s*12\)/.test(curatorExperience), "Konten rail belum dibatasi untuk menjaga performa beranda");
 check(curatorStyle.includes("grid-template-columns:repeat(5,minmax(0,1fr))") && curatorStyle.includes("grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem"), "Grid look Curator belum memakai lima kolom desktop dan dua kolom ponsel");
