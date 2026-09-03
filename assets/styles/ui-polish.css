@@ -337,6 +337,9 @@
 body.catalogue-route-open,
 body.curator-route-open,
 body.request-route-open {
+  position: fixed;
+  inset: 0;
+  width: 100%;
   overflow: hidden;
   overscroll-behavior: none;
 }
