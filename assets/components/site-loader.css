@@ -2,6 +2,15 @@
   overflow: hidden !important;
 }
 
+.skip-site-loader .site-loader {
+  display: none !important;
+}
+
+.skip-site-loader body.site-loading {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
 .site-loader {
   position: fixed;
   z-index: 10000;
@@ -9,7 +18,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: #f8f6f2;
+  background: #e8e8e8;
   opacity: 1;
   visibility: visible;
   transition: opacity 320ms cubic-bezier(.4, 0, .2, 1), visibility 0s linear 320ms;

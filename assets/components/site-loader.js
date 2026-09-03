@@ -4,6 +4,12 @@
   const FADE_TIME = 320;
   const loader = document.getElementById("siteLoader");
 
+  if (document.documentElement.classList.contains("skip-site-loader")) {
+    document.body.classList.remove("site-loading");
+    loader?.remove();
+    return;
+  }
+
   if (!loader) {
     document.body.classList.remove("site-loading");
     return;
