@@ -31,25 +31,25 @@
     <link rel="stylesheet" href="/assets/features/curator-studio.css?v=20260902-4" />
     <link rel="stylesheet" href="/assets/pages/home.css" />
     <link rel="stylesheet" href="/assets/styles/architectural-redesign.css" />
-    <link rel="stylesheet" href="/assets/pages/home-storefront.css?v=20260902-6" />
+    <link rel="stylesheet" href="/assets/pages/home-storefront.css?v=20260903-1" />
     <link rel="stylesheet" href="/assets/features/platform-insights.css" />
     <link rel="stylesheet" href="/assets/features/member-retention.css" />
     <link rel="stylesheet" href="/assets/features/phase6-moderation.css" />
     <link rel="stylesheet" href="/assets/features/phase7-commerce.css" />
     <link rel="stylesheet" href="/assets/features/privacy-center.css" />
-    <link rel="stylesheet" href="/assets/styles/ui-polish.css?v=20260902-1" />
+    <link rel="stylesheet" href="/assets/styles/ui-polish.css?v=20260903-1" />
   </head>
   <body>
     <a class="skip-link" href="#siteMain">Lewati ke konten utama</a>
     <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="#home" aria-label="COMOOTD, kembali ke beranda">
+        <a class="brand" href="/" aria-label="COMOOTD, kembali ke beranda">
           <img class="brand-wordmark" src="/assets/branding/comootd-wordmark-sisip-v1.png" width="2172" height="724" alt="" decoding="async" />
         </a>
         <nav class="desktop-nav" aria-label="Navigasi utama">
           <a href="/looks">Looks</a>
           <a href="/products">Products</a>
-          <a href="#styles">Styles</a>
+          <a href="/#styles">Styles</a>
           <a href="/curators">Curators</a>
           <a href="/journal">Journal</a>
           <a href="/request">Request</a>
@@ -78,7 +78,7 @@
           <a href="/journal"><span>04</span>Journal</a>
         </div>
         <div class="mobile-nav-secondary">
-          <a href="#styles">Styles</a>
+          <a href="/#styles">Styles</a>
           <a href="/request">Request outfit</a>
           <a href="/about">Tentang COMOOTD</a>
         </div>
@@ -103,7 +103,7 @@
             <div class="hero-count meta"><strong id="heroLookCount">12</strong>look dikurasi</div>
           </div>
         </div>
-        <div class="hero-visual" id="newSeriesCarousel" role="region" aria-roledescription="carousel" aria-label="COMOOTD New Series">
+        <div class="hero-visual" id="newSeriesCarousel" role="region" aria-roledescription="carousel" aria-label="COMOOTD highlights">
           <div class="hero-gridlines"></div>
           <div class="new-series-stage" id="newSeriesStage" aria-live="off"></div>
           <div class="new-series-controls" aria-label="Kontrol New Series">
@@ -198,7 +198,14 @@
           <div class="active-filter" id="styleChips" aria-label="Filter style cepat"></div>
           <span class="result-count microcopy" id="resultCount">12 look ditemukan</span>
         </div>
-        <div class="look-grid" id="lookGrid" aria-live="polite"></div>
+        <div class="discovery-rail-shell" data-discovery-carousel="looks">
+          <div class="discovery-rail-controls" aria-label="Navigasi look populer">
+            <span class="eyebrow" data-discovery-status aria-live="polite">01 / 01</span>
+            <button type="button" data-discovery-move="-1" aria-label="Look sebelumnya">←</button>
+            <button type="button" data-discovery-move="1" aria-label="Look berikutnya">→</button>
+          </div>
+          <div class="look-grid discovery-rail" id="lookGrid" tabindex="0" role="region" aria-label="Look populer yang dapat digeser" aria-live="polite"></div>
+        </div>
       </section>
 
       <section class="section" aria-labelledby="popularTitle">
@@ -530,6 +537,21 @@
             <button class="small-button" id="saveNewSeriesButton" type="button">Simpan carousel</button>
           </section>
           <section class="studio-section">
+            <h3>Banner campaign</h3>
+            <p>Upload satu banner opsional untuk ikut tampil di carousel utama. Saat dinonaktifkan, beranda hanya menampilkan New Series seperti biasa.</p>
+            <form class="campaign-banner-form" id="campaignBannerForm">
+              <label class="campaign-banner-toggle"><input id="campaignBannerEnabled" type="checkbox" /><span>Tampilkan banner di carousel</span></label>
+              <label><span>Desain banner</span><input id="campaignBannerFile" type="file" accept="image/jpeg,image/png,image/webp" /><small id="campaignBannerFileNote">JPEG, PNG, atau WebP · maks. 5 MB · rasio lebar disarankan</small></label>
+              <label><span>Tujuan saat banner diklik</span><input id="campaignBannerLink" type="text" maxlength="500" placeholder="/looks atau https://..." /></label>
+              <label><span>Deskripsi gambar</span><input id="campaignBannerAlt" type="text" maxlength="240" placeholder="Contoh: Campaign Ramadan COMOOTD" /></label>
+              <label><span>Posisi foto</span><select id="campaignBannerFocal"><option value="center">Crop Tengah</option><option value="top">Crop Atas</option><option value="bottom">Crop Bawah</option><option value="left">Crop Kiri</option><option value="right">Crop Kanan</option></select></label>
+              <img class="campaign-banner-preview" id="campaignBannerPreview" alt="Preview banner campaign" hidden />
+              <p class="new-series-status" id="campaignBannerStatus" aria-live="polite"></p>
+              <p class="form-error" id="campaignBannerError" role="alert"></p>
+              <button class="small-button" id="saveCampaignBannerButton" type="submit">Simpan banner campaign</button>
+            </form>
+          </section>
+          <section class="studio-section">
             <h3>Visual pintu utama</h3>
             <p>Pilih foto dari konten yang sudah terbit untuk kartu Looks, Products, Curators, dan Journal. Pilih otomatis agar kartu mengikuti katalog terbaru.</p>
             <div class="storefront-visual-slots" id="storefrontVisualSlots"></div>
@@ -687,13 +709,13 @@
     <script src="/assets/admin/bulk-import.js"></script>
     <script src="/assets/components/catalog-media.js"></script>
     <script src="/config.js"></script>
-    <script src="/assets/services/supabase.js?v=20260902-5"></script>
+    <script src="/assets/services/supabase.js?v=20260903-1"></script>
     <script src="/assets/features/authentication.js"></script>
     <script src="/assets/features/look-likes.js"></script>
     <script src="/assets/features/privacy-center.js"></script>
     <script src="/assets/features/platform-insights.js"></script>
     <script src="/assets/features/member-retention.js"></script>
-    <script src="/assets/pages/home.js?v=20260902-5"></script>
+    <script src="/assets/pages/home.js?v=20260903-1"></script>
     <script src="/assets/features/curator-studio.js"></script>
   </body>
 </html>

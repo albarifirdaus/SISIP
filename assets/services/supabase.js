@@ -579,6 +579,18 @@
       .from("comootd_storefront_visuals")
       .select("card_key,look_id,product_id,curator_id,article_id,custom_image_path,focal_position")
       .order("card_key", { ascending: true });
+    const campaignBannerQuery = db
+      .from("comootd_storefront_visuals")
+      .select("card_key,custom_image_path,focal_position,campaign_link,campaign_alt_text,campaign_enabled")
+      .eq("card_key", "campaign")
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn("Campaign banner settings are not available yet", error.message || error);
+          return null;
+        }
+        return data || null;
+      });
     const outfitRequestsQuery = admin
       ? (from, to) => db.from("outfit_requests").select(adminOutfitRequestSelect).order("created_at", { ascending: false }).order("id", { ascending: true }).range(from, to)
       : null;
@@ -601,12 +613,13 @@
       .order("name", { ascending: true });
     if (!admin) styleTagsQuery = styleTagsQuery.eq("is_active", true);
 
-    const [productRows, lookRows, articleRows, newSeriesSlotRows, storefrontVisualRows, outfitRequestRows, curatorRows, styleTagRows] = await Promise.all([
+    const [productRows, lookRows, articleRows, newSeriesSlotRows, storefrontVisualRows, campaignBannerRow, outfitRequestRows, curatorRows, styleTagRows] = await Promise.all([
       queryAllRows(productsQuery),
       queryAllRows(looksQuery),
       queryAllRows(articlesQuery),
       queryRows(newSeriesSlotsQuery),
       queryRows(storefrontVisualsQuery),
+      campaignBannerQuery,
       outfitRequestsQuery ? queryAllRows(outfitRequestsQuery) : Promise.resolve([]),
       queryAllRows(curatorProfilesQuery),
       queryRows(styleTagsQuery)
@@ -660,11 +673,19 @@
       customImage: publicUrl(row.custom_image_path),
       focalPosition: row.focal_position || "center"
     }));
+    const campaignBanner = campaignBannerRow ? {
+      enabled:Boolean(campaignBannerRow.campaign_enabled),
+      imagePath:campaignBannerRow.custom_image_path || "",
+      image:publicUrl(campaignBannerRow.custom_image_path),
+      link:campaignBannerRow.campaign_link || "/looks",
+      alt:campaignBannerRow.campaign_alt_text || "",
+      focalPosition:campaignBannerRow.focal_position || "center"
+    } : {};
     const requests = admin
       ? outfitRequestRows.map((row) => mapOutfitRequest(row, { productMap, lookMap, includeAdminNote: true }))
       : [];
     const styleTags = (styleTagRows || []).map((row) => ({ id:row.id, name:row.name, isActive:row.is_active !== false, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0), previewLookId:row.preview_look_id || "" }));
-    return { products, looks, articles, curators, styleTags, storefrontVisuals, newSeriesSlots, newSeriesLookIds, requests };
+    return { products, looks, articles, curators, styleTags, storefrontVisuals, campaignBanner, newSeriesSlots, newSeriesLookIds, requests };
   }
 
   async function getStyleTags() {
@@ -2866,6 +2887,59 @@
     }
   }
 
+  async function setCampaignBanner({ enabled = false, link = "/looks", alt = "", focalPosition = "center", imageFile = null } = {}) {
+    if (!(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk mengatur banner campaign.");
+    const destination = String(link || "").trim() || "/looks";
+    const altText = String(alt || "").trim().slice(0, 240);
+    const focal = String(focalPosition || "center").trim().toLowerCase();
+    if (!/^\/(?!\/)/.test(destination) && !/^https:\/\//i.test(destination)) throw new Error("Tujuan campaign harus berupa path internal atau alamat HTTPS.");
+    if (destination.length > 500) throw new Error("Tujuan campaign terlalu panjang.");
+    if (!["center", "top", "bottom", "left", "right"].includes(focal)) throw new Error("Posisi crop banner belum valid.");
+    if (imageFile && !/^image\/(jpeg|png|webp)$/.test(imageFile.type || "")) throw new Error("Gunakan banner JPEG, PNG, atau WebP.");
+    if (imageFile && imageFile.size > 5 * 1024 * 1024) throw new Error("Ukuran banner campaign maksimal 5 MB.");
+
+    const db = getClient();
+    const { data:current, error:currentError } = await db.from("comootd_storefront_visuals")
+      .select("card_key,custom_image_path")
+      .eq("card_key", "campaign")
+      .single();
+    if (currentError) throw currentError;
+    let imagePath = current?.custom_image_path || "";
+    let uploadedPath = "";
+    if (enabled && !imageFile && !imagePath) throw new Error("Pilih gambar sebelum mengaktifkan banner campaign.");
+    if (enabled && !altText) throw new Error("Tambahkan deskripsi gambar banner.");
+    try {
+      if (imageFile) {
+        uploadedPath = `storefront/campaign/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extensionFor(imageFile)}`;
+        const { error:uploadError } = await db.storage.from(bucket).upload(uploadedPath, imageFile, { cacheControl:"31536000", upsert:false, contentType:imageFile.type });
+        if (uploadError) throw uploadError;
+        imagePath = uploadedPath;
+      }
+      const payload = {
+        look_id:null,
+        product_id:null,
+        curator_id:null,
+        article_id:null,
+        custom_image_path:imagePath || null,
+        focal_position:focal,
+        campaign_link:destination,
+        campaign_alt_text:altText || null,
+        campaign_enabled:Boolean(enabled)
+      };
+      const { data, error } = await db.from("comootd_storefront_visuals").update(payload).eq("card_key", "campaign").select("card_key").single();
+      if (error) throw error;
+      if (!data?.card_key) throw new Error("Banner campaign tidak diperbarui.");
+    } catch (error) {
+      if (uploadedPath) await db.storage.from(bucket).remove([uploadedPath]);
+      throw error;
+    }
+    const oldPath = current?.custom_image_path || "";
+    if (oldPath && oldPath !== imagePath) {
+      const { error:cleanupError } = await db.storage.from(bucket).remove([oldPath]);
+      if (cleanupError) console.warn("Banner campaign lama belum dapat dibersihkan dari Storage.", cleanupError);
+    }
+  }
+
   async function loadLinkHealth({ page = 1, pageSize = 25, query = "", status = "all", marketplace = "all" } = {}) {
     if (!(await getCurrentUser())) throw new Error("Masuk terlebih dahulu untuk melihat inventaris link.");
     const db = getClient();
@@ -2958,6 +3032,7 @@
     setNewSeries,
     setStylePreviews,
     setStorefrontVisuals,
+    setCampaignBanner,
     recordAnalyticsEvent,
     loadMyAnalytics,
     loadAdminAnalytics,

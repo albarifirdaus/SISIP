@@ -75,6 +75,7 @@ check(index.includes('class="storefront-grid"'), "Editorial storefront Fase 3 be
 check(index.includes('storefront-card--dark storefront-card--wide') && read("assets/pages/home-storefront.css").includes(".storefront-card--wide { grid-column:1 / -1;"), "Kartu Journal desktop belum menutup ruang kosong storefront");
 const storefrontVisualMigration = read("supabase/migrations/20260901210000_storefront_visual_controls.sql");
 const storefrontUploadMigration = read("supabase/migrations/20260902070000_storefront_custom_uploads.sql");
+const campaignBannerMigration = read("supabase/migrations/20260903070000_homepage_campaign_banner.sql");
 check(["looks","products","curators","journal"].every((key) => index.includes(`data-storefront-visual="${key}"`)), "Empat kartu storefront belum mendukung visual terkelola");
 check(storefrontVisualMigration.includes("enable row level security") && storefrontVisualMigration.includes('Public reads COMOOTD storefront visuals') && storefrontVisualMigration.includes('COMOOTD admin updates storefront visuals'), "Pengaturan visual storefront belum dilindungi RLS");
 check(storefrontVisualMigration.includes("revoke all on table public.comootd_storefront_visuals") && storefrontVisualMigration.includes("grant update (look_id, product_id, curator_id, article_id, focal_position)"), "Privilege visual storefront belum least-privilege");
@@ -83,6 +84,9 @@ check(storefrontUploadMigration.includes("custom_image_path") && storefrontUploa
 check(storefrontUploadMigration.includes("grant update (look_id, product_id, curator_id, article_id, custom_image_path, focal_position)"), "Privilege desain storefront belum membatasi kolom update");
 check(homeScript.includes('data-storefront-file=') && homeScript.includes('value="__custom__"') && homeScript.includes("maks. 2 MB"), "Studio belum menyediakan upload desain sendiri yang dibatasi");
 check(read("assets/services/supabase.js").includes("storefront/${entry.cardKey}/") && read("assets/services/supabase.js").includes("2 * 1024 * 1024") && read("assets/services/supabase.js").includes('cacheControl:"31536000"') && read("assets/services/supabase.js").includes("obsoletePaths"), "Upload, cache, batas ukuran, atau pembersihan desain storefront belum lengkap");
+check(index.includes('id="campaignBannerForm"') && homeScript.includes("getHeroSlides") && homeScript.includes("saveCampaignBanner"), "Banner campaign belum terhubung dari Studio ke carousel utama");
+check(campaignBannerMigration.includes("'campaign'") && campaignBannerMigration.includes("campaign_enabled") && campaignBannerMigration.includes("private.is_sisip_admin()"), "Banner campaign belum memiliki konfigurasi dan policy Storage admin");
+check(read("assets/services/supabase.js").includes("storefront/campaign/") && read("assets/services/supabase.js").includes("5 * 1024 * 1024") && read("assets/services/supabase.js").includes("setCampaignBanner"), "Upload banner campaign belum dibatasi atau belum terhubung ke cloud");
 for (const path of ["/looks", "/products", "/curators", "/journal"]) {
   check(index.includes(`class="storefront-card`) && index.includes(`href="${path}"`), `Editorial storefront belum menautkan ${path}`);
 }
@@ -276,10 +280,11 @@ const curatorFollowerMigration = read("supabase/migrations/20260901200000_curato
 check(curatorFollowerMigration.includes("follower_count integer not null default 0") && curatorFollowerMigration.includes("comootd_curator_follows_sync_count"), "Penghitung follower publik Curator belum tersedia");
 check(curatorFollowerMigration.includes("security definer") && curatorFollowerMigration.includes("set search_path = ''") && curatorFollowerMigration.includes("revoke all on function private.sync_comootd_curator_follower_count()"), "Sinkronisasi follower Curator belum diisolasi dengan aman");
 check(curatorExperience.includes("curator-card-stats") && curatorExperience.includes("curator-profile-intro") && curatorExperience.includes("curator-icon-button") && curatorExperience.includes("followedCuratorIds"), "Penyegaran kartu, profil, dan follower Curator Tahap 5 belum lengkap");
-check(index.includes('data-discovery-carousel="products"') && index.includes('data-discovery-carousel="journal"') && curatorExperience.includes('data-discovery-carousel="curators"'), "Rail eksplorasi Products, Curators, dan Journal belum lengkap");
+check(index.includes('data-discovery-carousel="looks"') && index.includes('data-discovery-carousel="products"') && index.includes('data-discovery-carousel="journal"') && curatorExperience.includes('data-discovery-carousel="curators"'), "Rail eksplorasi Looks, Products, Curators, dan Journal belum lengkap");
 check(homeScript.includes("syncDiscoveryRails") && homeScript.includes("moveDiscoveryRail") && /event\.key\s*===\s*"ArrowLeft"/.test(homeScript) && /event\.key\s*!==\s*"ArrowRight"/.test(homeScript), "Rail eksplorasi belum mendukung sinkronisasi tombol dan keyboard");
 const uiPolish = read("assets/styles/ui-polish.css");
 check(/scroll-snap-type:\s*x mandatory/.test(uiPolish), "Rail eksplorasi belum memiliki scroll snap");
+check(uiPolish.includes(".catalogue-route-layer,") && uiPolish.includes(".curator-route-layer,") && uiPolish.includes(".request-route-layer { top: 72px; }") && uiPolish.includes(".site-header { z-index: 200; }"), "Header utama belum dipertahankan di atas seluruh route katalog");
 check(uiPolish.includes(".look-card-footer .catalogue-card-actions") && uiPolish.includes("grid-template-columns: 56px 44px") && uiPolish.includes("grid-template-columns: 50px 40px"), "Posisi aksi like dan simpan pada kartu look belum konsisten");
 check(homeScript.includes("Minimalist\", \"Techwear\", \"Whimsy\", \"Workwear\", \"Clean\", \"Casual") && /\.slice\(0,\s*6\)/.test(homeScript), "Explore style belum mengisi enam pilihan");
 check(/\.slice\(0,\s*12\)/.test(homeScript) && /\.slice\(0,\s*12\)/.test(curatorExperience), "Konten rail belum dibatasi untuk menjaga performa beranda");

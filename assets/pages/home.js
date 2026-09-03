@@ -203,7 +203,18 @@
           storefrontVisualSlots: document.getElementById("storefrontVisualSlots"),
           storefrontVisualStatus: document.getElementById("storefrontVisualStatus"),
           storefrontVisualError: document.getElementById("storefrontVisualError"),
-          saveStorefrontVisualsButton: document.getElementById("saveStorefrontVisualsButton")
+          saveStorefrontVisualsButton: document.getElementById("saveStorefrontVisualsButton"),
+          campaignBannerForm: document.getElementById("campaignBannerForm"),
+          campaignBannerEnabled: document.getElementById("campaignBannerEnabled"),
+          campaignBannerFile: document.getElementById("campaignBannerFile"),
+          campaignBannerFileNote: document.getElementById("campaignBannerFileNote"),
+          campaignBannerLink: document.getElementById("campaignBannerLink"),
+          campaignBannerAlt: document.getElementById("campaignBannerAlt"),
+          campaignBannerFocal: document.getElementById("campaignBannerFocal"),
+          campaignBannerPreview: document.getElementById("campaignBannerPreview"),
+          campaignBannerStatus: document.getElementById("campaignBannerStatus"),
+          campaignBannerError: document.getElementById("campaignBannerError"),
+          saveCampaignBannerButton: document.getElementById("saveCampaignBannerButton")
         });
         const notification = window.COMOOTDNotification.create({ element:els.toast });
         const headerNavigation = window.COMOOTDNavigation.create({
@@ -246,21 +257,21 @@
           // fails). Start with an empty cloud catalogue, then hydrate it from
           // Supabase. The sample library remains available only in local mode.
           if (hasCloudConfig) {
-            return { products: [], looks: [], articles: [], curators: [], styleTags: [], storefrontVisuals: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: true };
+            return { products: [], looks: [], articles: [], curators: [], styleTags: [], storefrontVisuals: [], campaignBanner: {}, newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: true };
           }
           try {
             const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES), styleTags: Array.isArray(saved.styleTags) ? saved.styleTags : [], storefrontVisuals: Array.isArray(saved.storefrontVisuals) ? saved.storefrontVisuals : [], newSeriesSlots: Array.isArray(saved.newSeriesSlots) ? saved.newSeriesSlots : [], newSeriesLookIds: Array.isArray(saved.newSeriesLookIds) ? saved.newSeriesLookIds : [], newSeriesConfigured: typeof saved.newSeriesConfigured === "boolean" ? saved.newSeriesConfigured : Array.isArray(saved.newSeriesLookIds) && saved.newSeriesLookIds.length > 0 };
+            if (saved && Array.isArray(saved.products) && Array.isArray(saved.looks)) return { ...saved, articles: Array.isArray(saved.articles) ? saved.articles : clone(ARTICLES), styleTags: Array.isArray(saved.styleTags) ? saved.styleTags : [], storefrontVisuals: Array.isArray(saved.storefrontVisuals) ? saved.storefrontVisuals : [], campaignBanner:saved.campaignBanner && typeof saved.campaignBanner === "object" ? saved.campaignBanner : {}, newSeriesSlots: Array.isArray(saved.newSeriesSlots) ? saved.newSeriesSlots : [], newSeriesLookIds: Array.isArray(saved.newSeriesLookIds) ? saved.newSeriesLookIds : [], newSeriesConfigured: typeof saved.newSeriesConfigured === "boolean" ? saved.newSeriesConfigured : Array.isArray(saved.newSeriesLookIds) && saved.newSeriesLookIds.length > 0 };
           } catch (error) { console.warn("Unable to load SISIP prototype", error); }
-          return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), styleTags: [], storefrontVisuals: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false };
+          return { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), styleTags: [], storefrontVisuals: [], campaignBanner: {}, newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false };
         }
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), styleTags: [], storefrontVisuals: [], newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false }; resetLookEditor(); resetProductEditor(); saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
+        function resetState() { state = { products: clone(SEED_PRODUCTS), looks: clone(SEED_LOOKS), articles: clone(ARTICLES), styleTags: [], storefrontVisuals: [], campaignBanner: {}, newSeriesSlots: [], newSeriesLookIds: [], newSeriesConfigured: false }; resetLookEditor(); resetProductEditor(); saveState(); renderAll(); showToast("12 look contoh dan product library berhasil dipulihkan."); }
         async function refreshCloudState({ admin = false, quiet = false } = {}) {
           if (!cloudEnabled()) return false;
           try {
             const remoteState = await cloud.loadState({ admin });
-            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], styleTags: remoteState.styleTags || [], storefrontVisuals: remoteState.storefrontVisuals || [], curators: remoteState.curators || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [], newSeriesConfigured: true };
+            state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], styleTags: remoteState.styleTags || [], storefrontVisuals: remoteState.storefrontVisuals || [], campaignBanner:remoteState.campaignBanner || {}, curators: remoteState.curators || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [], newSeriesConfigured: true };
             hydrateTaxonomyPickers();
             renderAll();
             applyContentRoute({ notify: true });
@@ -682,6 +693,21 @@
           const lookMap = new Map(state.looks.map((entry) => [entry.id, entry]));
           return getNewSeriesLookIds().map((id) => lookMap.get(id)).filter(Boolean);
         }
+        function campaignBannerHref(value) {
+          const input = String(value || "").trim();
+          if (/^\/(?!\/)/.test(input) || /^https:\/\//i.test(input)) return input;
+          return "/looks";
+        }
+        function campaignBannerImage(value) {
+          const input = String(value || "");
+          return safeImage(input) || (/^blob:/i.test(input) ? input : "");
+        }
+        function getHeroSlides() {
+          const campaign = state.campaignBanner || {};
+          const slides = getNewSeriesLooks().map((entry) => ({ kind:"look", entry }));
+          if (campaign.enabled && campaignBannerImage(campaign.image)) slides.unshift({ kind:"campaign", entry:campaign });
+          return slides;
+        }
         function stopNewSeriesAutoplay() {
           if (newSeriesTimer) clearInterval(newSeriesTimer);
           newSeriesTimer = undefined;
@@ -689,17 +715,17 @@
         function startNewSeriesAutoplay() {
           stopNewSeriesAutoplay();
           const reducedMotion = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-          if (typeof window.matchMedia !== "function" || reducedMotion || getNewSeriesLooks().length < 2) return;
+          if (typeof window.matchMedia !== "function" || reducedMotion || getHeroSlides().length < 2) return;
           newSeriesTimer = setInterval(() => moveNewSeries(1), 6200);
         }
         function moveNewSeries(direction) {
-          const entries = getNewSeriesLooks();
+          const entries = getHeroSlides();
           if (entries.length < 2) return;
           newSeriesIndex = (newSeriesIndex + direction + entries.length) % entries.length;
           renderNewSeries();
         }
         function renderNewSeries() {
-          const entries = getNewSeriesLooks();
+          const entries = getHeroSlides();
           stopNewSeriesAutoplay();
           if (!entries.length) {
             els.newSeriesStage.innerHTML = `<div class="new-series-empty"><p>New Series akan hadir setelah look pertama dipublikasikan.</p></div>`;
@@ -709,11 +735,17 @@
             return;
           }
           newSeriesIndex = Math.min(Math.max(newSeriesIndex, 0), entries.length - 1);
-          const entry = entries[newSeriesIndex];
-          const styles = entry.styles?.slice(0,2).join(" / ") || "Kurasi COMOOTD";
+          const slide = entries[newSeriesIndex];
           const count = String(newSeriesIndex + 1).padStart(2,"0") + " / " + String(entries.length).padStart(2,"0");
-          els.newSeriesStage.innerHTML = `<button class="new-series-slide" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka look ${esc(entry.title)}"><span class="new-series-visual">${lookVisual(entry)}</span><span class="new-series-overlay"><span class="new-series-count meta">${count}</span><strong>${esc(entry.title)}</strong><span class="new-series-meta">${esc(entry.gender)} · ${esc(styles)}</span><span class="new-series-open">Buka look ↗</span></span></button>`;
-          els.newSeriesDots.innerHTML = entries.map((item,index) => `<button class="new-series-dot ${index === newSeriesIndex ? "is-active" : ""}" type="button" data-new-series-index="${index}" aria-label="Tampilkan look ${index + 1}: ${esc(item.title)}" aria-current="${index === newSeriesIndex ? "true" : "false"}"></button>`).join("");
+          if (slide.kind === "campaign") {
+            const campaign = slide.entry;
+            els.newSeriesStage.innerHTML = `<a class="new-series-slide new-series-slide--campaign" href="${esc(campaignBannerHref(campaign.link))}" aria-label="${esc(campaign.alt || "Buka campaign COMOOTD")}" style="--campaign-position:${esc(campaign.focalPosition || "center")}"><span class="new-series-visual"><img src="${esc(campaignBannerImage(campaign.image))}" alt="${esc(campaign.alt || "Campaign COMOOTD")}" /></span><span class="new-series-campaign-label">Campaign · ${count}</span><span class="new-series-campaign-open">Explore ↗</span></a>`;
+          } else {
+            const entry = slide.entry;
+            const styles = entry.styles?.slice(0,2).join(" / ") || "Kurasi COMOOTD";
+            els.newSeriesStage.innerHTML = `<button class="new-series-slide" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka look ${esc(entry.title)}"><span class="new-series-visual">${lookVisual(entry)}</span><span class="new-series-overlay"><span class="new-series-count meta">${count}</span><strong>${esc(entry.title)}</strong><span class="new-series-meta">${esc(entry.gender)} · ${esc(styles)}</span><span class="new-series-open">Buka look ↗</span></span></button>`;
+          }
+          els.newSeriesDots.innerHTML = entries.map((item,index) => `<button class="new-series-dot ${index === newSeriesIndex ? "is-active" : ""}" type="button" data-new-series-index="${index}" aria-label="Tampilkan ${item.kind === "campaign" ? "banner campaign" : `look ${index + 1}: ${esc(item.entry.title)}`}" aria-current="${index === newSeriesIndex ? "true" : "false"}"></button>`).join("");
           const canMove = entries.length > 1;
           els.newSeriesPrev.disabled = !canMove;
           els.newSeriesNext.disabled = !canMove;
@@ -813,14 +845,16 @@
           await lookLikes.toggle(lookId);
         }
         function renderLooks() {
-          const entries = [...state.looks].sort((a,b)=>Number(b.popularity||0)-Number(a.popularity||0)||Number(b.createdOrder||0)-Number(a.createdOrder||0)).slice(0,4);
+          const entries = [...state.looks].sort((a,b)=>Number(b.popularity||0)-Number(a.popularity||0)||Number(b.createdOrder||0)-Number(a.createdOrder||0)).slice(0,12);
           els.heroCount.textContent = state.looks.length;
           els.resultCount.textContent = `${state.looks.length} look tersedia`;
           if (!entries.length) {
             els.lookGrid.innerHTML = `<div class="empty-state"><h3>Kurasi sedang disiapkan.</h3><p>Look pilihan COMOOTD akan segera tampil di sini.</p></div>`;
+            window.COMOOTDSyncDiscoveryRails();
             return;
           }
           els.lookGrid.innerHTML = entries.map((entry) => `<article class="look-card"><button class="look-card-image" type="button" data-open-look="${esc(entry.id)}" aria-label="Buka detail ${esc(entry.title)}">${lookVisual(entry)}</button><div class="look-card-body"><div class="look-card-meta"><span class="eyebrow">${esc(lookAttribution(entry))}</span><span class="meta">${esc(entry.gender)}</span></div><h3 class="look-card-title">${esc(entry.title)}</h3>${curatorMetricsMarkup(entry,true)}<div class="look-card-footer"><div class="look-card-tags">${entry.styles.slice(0,3).map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} items</span></div><div class="catalogue-card-actions">${lookLikeButton(entry,true)}${memberRetention.saveButton("look",entry.id,true)}</div></div></div></article>`).join("");
+          window.COMOOTDSyncDiscoveryRails();
         }
         function articleCategoryLabel(category) { return ARTICLE_CATEGORIES[category] || ARTICLE_CATEGORIES.editorial; }
         function makeJournalBlock(type) {
@@ -954,6 +988,24 @@
           }).join("");
           els.storefrontVisualStatus.textContent = `${customCount} dari 4 kartu memakai visual khusus. Upload desain memakai Storage COMOOTD yang sudah tersedia.`;
           els.saveStorefrontVisualsButton.disabled = false;
+        }
+        function renderCampaignBannerStudio() {
+          if (!els.campaignBannerForm) return;
+          const campaign = state.campaignBanner || {};
+          els.campaignBannerEnabled.checked = Boolean(campaign.enabled);
+          els.campaignBannerLink.value = campaign.link || "/looks";
+          els.campaignBannerAlt.value = campaign.alt || "";
+          els.campaignBannerFocal.value = ["center","top","bottom","left","right"].includes(campaign.focalPosition) ? campaign.focalPosition : "center";
+          const image = campaignBannerImage(campaign.image);
+          els.campaignBannerPreview.hidden = !image;
+          if (image) els.campaignBannerPreview.src = image;
+          else els.campaignBannerPreview.removeAttribute("src");
+          els.campaignBannerFileNote.textContent = campaign.imagePath
+            ? "Banner aktif tersimpan · pilih file untuk mengganti · maks. 5 MB"
+            : "JPEG, PNG, atau WebP · maks. 5 MB · rasio lebar disarankan";
+          els.campaignBannerStatus.textContent = image
+            ? (campaign.enabled ? "Banner sedang tampil sebagai slide pertama." : "Banner tersimpan tetapi sedang dinonaktifkan.")
+            : "Belum ada banner campaign tersimpan.";
         }
         function renderNewSeriesStudio() {
           const candidates = getNewSeriesCandidates();
@@ -1161,6 +1213,7 @@
           renderVariantSelect();
           renderDraftItems();
           renderNewSeriesStudio();
+          renderCampaignBannerStudio();
           renderStorefrontVisualStudio();
           renderStyleTaxonomyStudio();
           renderStylePreviewStudio();
@@ -1739,6 +1792,56 @@
           } finally {
             els.saveNewSeriesButton.textContent = buttonLabel;
             els.saveNewSeriesButton.disabled = false;
+          }
+        }
+        async function saveCampaignBanner(event) {
+          event?.preventDefault();
+          els.campaignBannerError.textContent = "";
+          const current = state.campaignBanner || {};
+          const imageFile = els.campaignBannerFile.files?.[0] || null;
+          const enabled = els.campaignBannerEnabled.checked;
+          const link = String(els.campaignBannerLink.value || "").trim() || "/looks";
+          const alt = String(els.campaignBannerAlt.value || "").trim();
+          const focalPosition = String(els.campaignBannerFocal.value || "center");
+          if (!/^\/(?!\/)/.test(link) && !/^https:\/\//i.test(link)) {
+            els.campaignBannerError.textContent = "Gunakan path internal seperti /looks atau alamat HTTPS lengkap.";
+            return;
+          }
+          if (enabled && !imageFile && !campaignBannerImage(current.image)) {
+            els.campaignBannerError.textContent = "Pilih gambar sebelum mengaktifkan banner campaign.";
+            return;
+          }
+          if (enabled && !alt) {
+            els.campaignBannerError.textContent = "Tambahkan deskripsi gambar agar banner tetap aksesibel.";
+            return;
+          }
+          const label = els.saveCampaignBannerButton.textContent;
+          els.saveCampaignBannerButton.disabled = true;
+          els.saveCampaignBannerButton.textContent = "Menyimpan…";
+          try {
+            if (cloudEnabled()) {
+              if (typeof cloud?.setCampaignBanner !== "function") throw new Error("Pengaturan banner campaign belum tersedia pada katalog cloud.");
+              await cloud.setCampaignBanner({ enabled, link, alt, focalPosition, imageFile });
+              await refreshCloudState({ admin:true });
+            } else {
+              state.campaignBanner = {
+                enabled,
+                link,
+                alt,
+                focalPosition,
+                imagePath:current.imagePath || "",
+                image:imageFile ? URL.createObjectURL(imageFile) : (current.image || "")
+              };
+              saveState();
+              newSeriesIndex = 0;
+              renderAll();
+            }
+            showToast(enabled ? "Banner campaign aktif di carousel utama." : "Banner campaign disimpan dalam keadaan nonaktif.");
+          } catch (error) {
+            els.campaignBannerError.textContent = error?.message || "Banner campaign belum dapat disimpan.";
+          } finally {
+            els.saveCampaignBannerButton.textContent = label;
+            els.saveCampaignBannerButton.disabled = false;
           }
         }
         async function saveStylePreviews() {
@@ -2356,6 +2459,14 @@
           }
         });
         document.querySelectorAll("[data-studio-tab]").forEach((button)=>button.addEventListener("click",()=>switchStudioTab(button.dataset.studioTab)));
+        els.campaignBannerForm.addEventListener("submit",saveCampaignBanner);
+        els.campaignBannerFile.addEventListener("change",()=>{
+          const file = els.campaignBannerFile.files?.[0];
+          if (!file) return;
+          els.campaignBannerPreview.src = URL.createObjectURL(file);
+          els.campaignBannerPreview.hidden = false;
+          els.campaignBannerFileNote.textContent = `Siap diupload: ${file.name}`;
+        });
         els.saveStylePreviewsButton.addEventListener("click",()=>void saveStylePreviews());
         els.saveStorefrontVisualsButton.addEventListener("click",()=>void saveStorefrontVisuals());
         els.storefrontVisualSlots.addEventListener("change",(event)=>{
