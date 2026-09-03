@@ -1,0 +1,73 @@
+.site-loading {
+  overflow: hidden !important;
+}
+
+.site-loader {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #f8f6f2;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 560ms cubic-bezier(.4, 0, .2, 1), visibility 0s linear 560ms;
+}
+
+.site-loader.is-leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.site-loader-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f8f6f2;
+}
+
+.site-loader-fallback {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: #f8f6f2;
+}
+
+.site-loader.has-video-error .site-loader-fallback {
+  display: grid;
+}
+
+.site-loader-fallback img {
+  width: clamp(72px, 12vw, 132px);
+  height: auto;
+}
+
+.site-loader-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-loader {
+    transition-duration: 180ms;
+  }
+
+  .site-loader-video {
+    display: none;
+  }
+
+  .site-loader-fallback {
+    display: grid;
+  }
+}

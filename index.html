@@ -38,8 +38,25 @@
     <link rel="stylesheet" href="/assets/features/phase7-commerce.css" />
     <link rel="stylesheet" href="/assets/features/privacy-center.css" />
     <link rel="stylesheet" href="/assets/styles/ui-polish.css?v=20260903-3" />
+    <link rel="stylesheet" href="/assets/components/site-loader.css?v=20260903-1" />
   </head>
-  <body>
+  <body class="site-loading">
+    <div class="site-loader" id="siteLoader" role="status" aria-label="Memuat COMOOTD">
+      <video
+        class="site-loader-video"
+        id="siteLoaderVideo"
+        src="/assets/branding/comootd-logo-loading-v1.mp4"
+        autoplay
+        muted
+        playsinline
+        preload="auto"
+        aria-hidden="true"
+      ></video>
+      <span class="site-loader-fallback" aria-hidden="true">
+        <img src="/assets/branding/comootd-tab-icon-v1.svg" alt="" />
+      </span>
+      <span class="site-loader-status">Memuat COMOOTD</span>
+    </div>
     <a class="skip-link" href="#siteMain">Lewati ke konten utama</a>
     <header class="site-header">
       <div class="header-inner">
@@ -699,6 +716,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="/assets/vendor/supabase-2.112.4.min.js"></script>
+    <script src="/assets/components/site-loader.js?v=20260903-1"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="/assets/components/image-cropper.js"></script>
     <script src="/assets/core/utils.js"></script>
