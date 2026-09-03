@@ -284,7 +284,8 @@ check(index.includes('data-discovery-carousel="looks"') && index.includes('data-
 check(homeScript.includes("syncDiscoveryRails") && homeScript.includes("moveDiscoveryRail") && /event\.key\s*===\s*"ArrowLeft"/.test(homeScript) && /event\.key\s*!==\s*"ArrowRight"/.test(homeScript), "Rail eksplorasi belum mendukung sinkronisasi tombol dan keyboard");
 const uiPolish = read("assets/styles/ui-polish.css");
 check(/scroll-snap-type:\s*x mandatory/.test(uiPolish), "Rail eksplorasi belum memiliki scroll snap");
-check(uiPolish.includes(".catalogue-route-layer,") && uiPolish.includes(".curator-route-layer,") && uiPolish.includes(".request-route-layer { top: 72px; }") && uiPolish.includes(".site-header { z-index: 200; }"), "Header utama belum dipertahankan di atas seluruh route katalog");
+check(uiPolish.includes(".catalogue-route-layer,") && uiPolish.includes(".curator-route-layer,") && /\.request-route-layer\s*\{\s*top:\s*72px;/.test(uiPolish) && uiPolish.includes(".site-header { z-index: 200; }"), "Header utama belum dipertahankan di atas seluruh route katalog");
+check(uiPolish.includes(":root:has(body.catalogue-route-open)") && uiPolish.includes(":root:has(body.curator-route-open)") && uiPolish.includes(":root:has(body.request-route-open)") && /overscroll-behavior-y:\s*contain/.test(uiPolish), "Route penuh masih dapat meneruskan scroll ke beranda di belakangnya");
 check(uiPolish.includes(".look-card-footer .catalogue-card-actions") && uiPolish.includes("grid-template-columns: 56px 44px") && uiPolish.includes("grid-template-columns: 50px 40px"), "Posisi aksi like dan simpan pada kartu look belum konsisten");
 check(homeScript.includes("Minimalist\", \"Techwear\", \"Whimsy\", \"Workwear\", \"Clean\", \"Casual") && /\.slice\(0,\s*6\)/.test(homeScript), "Explore style belum mengisi enam pilihan");
 check(/\.slice\(0,\s*12\)/.test(homeScript) && /\.slice\(0,\s*12\)/.test(curatorExperience), "Konten rail belum dibatasi untuk menjaga performa beranda");

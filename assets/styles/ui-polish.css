@@ -322,10 +322,24 @@
 .site-header { z-index: 200; }
 .catalogue-route-layer,
 .curator-route-layer,
-.request-route-layer { top: 72px; }
+.request-route-layer {
+  top: 72px;
+  overscroll-behavior-y: contain;
+}
 .catalogue-route-bar,
 .curator-route-bar,
 .request-route-bar { display: none; }
+
+/* Route layers are real scroll surfaces; never pass boundary scroll to Home. */
+:root:has(body.catalogue-route-open),
+:root:has(body.curator-route-open),
+:root:has(body.request-route-open),
+body.catalogue-route-open,
+body.curator-route-open,
+body.request-route-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 
 .campaign-banner-form { display: grid; gap: .85rem; }
 .campaign-banner-form > label:not(.campaign-banner-toggle) { display: grid; gap: .38rem; color: var(--ink-soft); font: 600 .58rem/1.4 var(--mono); letter-spacing: .04em; text-transform: uppercase; }
