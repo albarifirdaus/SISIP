@@ -1,9 +1,8 @@
 (() => {
-  const DISPLAY_TIME = 6000;
-  const FADE_TIME = 560;
-  const startedAt = performance.now();
+  const MINIMUM_TIME = 900;
+  const MAXIMUM_TIME = 3000;
+  const FADE_TIME = 320;
   const loader = document.getElementById("siteLoader");
-  const video = document.getElementById("siteLoaderVideo");
 
   if (!loader) {
     document.body.classList.remove("site-loading");
@@ -11,17 +10,30 @@
   }
 
   const finish = () => {
+    if (loader.classList.contains("is-leaving")) return;
     loader.classList.add("is-leaving");
     document.body.classList.remove("site-loading");
-    window.setTimeout(() => {
-      video?.pause();
-      loader.remove();
-    }, FADE_TIME);
+    window.setTimeout(() => loader.remove(), FADE_TIME);
   };
 
-  video?.addEventListener("error", () => loader.classList.add("has-video-error"), { once: true });
-  video?.play().catch(() => loader.classList.add("has-video-error"));
+  let minimumElapsed = false;
+  let pageReady = document.readyState !== "loading";
 
-  const remaining = Math.max(0, DISPLAY_TIME - (performance.now() - startedAt));
-  window.setTimeout(finish, remaining);
+  const finishWhenReady = () => {
+    if (minimumElapsed && pageReady) finish();
+  };
+
+  window.setTimeout(() => {
+    minimumElapsed = true;
+    finishWhenReady();
+  }, MINIMUM_TIME);
+
+  if (!pageReady) {
+    document.addEventListener("DOMContentLoaded", () => {
+      pageReady = true;
+      finishWhenReady();
+    }, { once: true });
+  }
+
+  window.setTimeout(finish, MAXIMUM_TIME);
 })();
