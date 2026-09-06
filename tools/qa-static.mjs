@@ -97,6 +97,7 @@ check(index.indexOf('id="lookbook"') < index.indexOf('id="popularTitle"'), "High
 check(index.indexOf('id="journal"') < index.indexOf('id="forYou"'), "Rekomendasi personal harus muncul setelah editorial Journal");
 check(index.includes('href="/privacy"') && index.includes('href="/terms"'), "Footer belum menautkan halaman legal");
 check(index.includes('id="requestRouteLayer"') && index.includes('href="/request"'), "Halaman Request Outfit belum dipisahkan dari beranda");
+check(!index.includes('class="request-route-bar"'), "Halaman Request Outfit masih memiliki header duplikat");
 check(worker.includes('request: "request-page"') && worker.includes('canonicalUrl(env, "/request")'), "Route dan sitemap Request Outfit belum tersedia");
 check(index.includes('class="member-profile-disclosure"'), "Profil member belum memakai bagian buka/tutup yang ringkas");
 check(about.includes("comootd@gmail.com") && about.includes("instagram.com/comootd.id"), "Kontak resmi belum lengkap");

@@ -327,8 +327,7 @@
   overscroll-behavior-y: contain;
 }
 .catalogue-route-bar,
-.curator-route-bar,
-.request-route-bar { display: none; }
+.curator-route-bar { display: none; }
 
 /* Route layers are real scroll surfaces; never pass boundary scroll to Home. */
 :root:has(body.catalogue-route-open),
@@ -449,25 +448,6 @@ body.request-route-open {
   .curator-profile-stat { padding-top: .8rem; }
 }
 body.request-route-open { overflow: hidden; }
-.request-route-bar {
-  position: sticky;
-  z-index: 4;
-  top: 0;
-  min-height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 clamp(1rem,3.2vw,3.2rem);
-  border-bottom: 1px solid var(--line);
-  background: rgba(255,255,255,.94);
-  backdrop-filter: blur(14px);
-}
-.request-route-brand img { width: clamp(132px,10vw,158px); height: auto; }
-.request-route-back {
-  font: 600 .65rem/1 var(--mono);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-}
 .request-route-body {
   width: min(1480px,100%);
   min-height: calc(100dvh - 72px);
@@ -604,7 +584,6 @@ body.request-route-open { overflow: hidden; }
 @media (max-width: 600px) {
   .request-home-cta { width: calc(100% - 16px); margin: 8px auto; padding: 2rem 1.25rem; gap: 1.2rem; }
   .request-home-cta h2 { font-size: clamp(2.2rem,12vw,3.4rem); }
-  .request-route-bar { min-height: 64px; }
   .new-series-campaign-label { top: .85rem; left: .85rem; }
   .new-series-campaign-open { right: .85rem; bottom: 4rem; }
   .request-route-body { padding: 2.3rem .75rem 4rem; gap: 2rem; }
