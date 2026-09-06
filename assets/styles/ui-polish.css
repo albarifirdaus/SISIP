@@ -397,6 +397,12 @@ body.request-route-open {
     overflow: hidden;
     background: var(--white);
   }
+  .curator-profile-hero::before {
+    z-index: 3;
+    width: clamp(118px, 10vw, 154px);
+    background: var(--clay);
+    opacity: 1;
+  }
   .curator-profile-identity {
     align-content: center;
     align-items: center;
@@ -425,7 +431,18 @@ body.request-route-open {
     justify-content: center;
     padding: clamp(2rem, 3.2vw, 3.2rem);
     border-left: 0;
-    background: #f6f5f3;
+    background:
+      linear-gradient(135deg, rgba(251,191,36,.14), transparent 44%),
+      #f8f7f3;
+  }
+  .curator-profile-side::before {
+    position: absolute;
+    top: clamp(2rem, 3.2vw, 3.2rem);
+    bottom: clamp(2rem, 3.2vw, 3.2rem);
+    left: 0;
+    width: 4px;
+    background: var(--clay);
+    content: "";
   }
   .curator-profile-bio { max-width: 30ch; font-size: 1.05rem; }
   .curator-profile-tags { margin-top: .85rem; }
