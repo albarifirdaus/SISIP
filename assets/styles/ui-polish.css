@@ -431,7 +431,7 @@ body.request-route-open {
     justify-content: center;
     padding: clamp(2rem, 3.2vw, 3.2rem);
     border-left: 0;
-    background: rgba(248,246,242,.5);
+    background: #fff;
   }
   .curator-profile-side::before {
     position: absolute;
