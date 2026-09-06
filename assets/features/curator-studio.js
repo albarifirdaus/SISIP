@@ -27,6 +27,13 @@
     youtube: "YouTube",
     website: "Website"
   };
+  const SOCIAL_ICONS = {
+    instagram: `<svg class="curator-social-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="is-filled" cx="17.4" cy="6.6" r="1"/></svg>`,
+    tiktok: `<svg class="curator-social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.2 3v11.2a4.6 4.6 0 1 1-4-4.56"/><path d="M14.2 3c.55 3.05 2.2 4.65 5.2 4.9"/></svg>`,
+    pinterest: `<svg class="curator-social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 21c.8-2.6 1.4-4.4 1.9-7.1-.4-.8-.5-1.8-.2-2.8.4-1.4 1.4-2.3 2.5-2 1 .3 1.3 1.4.9 2.7-.4 1.6-1.1 3.3.4 3.6 1.4.3 2.9-1.5 3.3-3.7.6-3.3-1.9-5.8-5.5-5.8-4 0-6.2 2.9-6.2 5.9 0 1.1.4 2.3 1.3 3.1"/><circle cx="12" cy="12" r="9"/></svg>`,
+    youtube: `<svg class="curator-social-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="4"/><path class="is-filled" d="m10 9 5 3-5 3Z"/></svg>`,
+    website: `<svg class="curator-social-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.5 12h17M12 3c2.2 2.45 3.35 5.45 3.35 9S14.2 18.55 12 21M12 3C9.8 5.45 8.65 8.45 8.65 12S9.8 18.55 12 21"/></svg>`
+  };
   const PRODUCT_CATEGORIES = [
     ["top", "Atasan"], ["bottom", "Bawahan"], ["outerwear", "Outerwear"],
     ["dress", "Dress / Set"], ["footwear", "Sepatu"], ["bag", "Tas"],
@@ -76,6 +83,7 @@
     routeOpen: false,
     refreshVersion: 0,
     initialTitle: document.title,
+    renderedRoutePath: "",
     toastTimer: 0
   };
   const curatorFilters = { q:"", tag:"all", sort:"popular" };
@@ -348,6 +356,7 @@
   }
   function safeHandle(handle) { return compact(handle).toLowerCase().replace(/[^a-z0-9_-]/g, ""); }
   function socialLabel(platform) { return SOCIAL_LABELS[platform] || platform; }
+  function socialIcon(platform) { return SOCIAL_ICONS[platform] || SOCIAL_ICONS.website; }
   function categoryLabel(category) { return PRODUCT_CATEGORIES.find(([value]) => value === category)?.[1] || "Produk"; }
   function marketplaceFromUrl(value) {
     try {
@@ -458,7 +467,7 @@
   function profileSocialMarkup(curator) {
     const socials = curator.socials.filter((social) => /^https:\/\//i.test(social.url));
     const follow = window.COMOOTDRetentionInstance?.followButton?.(curator.userId) || "";
-    return `<div class="curator-socials">${socials.map((social) => `<a href="${esc(social.url)}" target="_blank" rel="noopener noreferrer">${esc(socialLabel(social.platform))} ↗</a>`).join("")}${follow}<button type="button" class="curator-share-button" data-share-curator="${esc(curator.handle)}">Bagikan profil ↗</button></div>`;
+    return `<div class="curator-socials">${socials.map((social) => `<a class="curator-social-link" href="${esc(social.url)}" target="_blank" rel="noopener noreferrer" aria-label="Buka ${esc(socialLabel(social.platform))} ${esc(curator.displayName)}" title="${esc(socialLabel(social.platform))}">${socialIcon(social.platform)}</a>`).join("")}${follow}<button type="button" class="curator-share-button" data-share-curator="${esc(curator.handle)}">Bagikan profil ↗</button></div>`;
   }
   function publicBodyMetricsMarkup(curator) {
     const metrics = [];
@@ -540,6 +549,7 @@
     layer.classList.remove("is-open");
     layer.innerHTML = "";
     state.routeOpen = false;
+    state.renderedRoutePath = "";
     document.body.classList.remove("curator-route-open");
     document.title = state.initialTitle;
     if (navigate && routeInfo().type !== "none") history.pushState({}, "", "/");
@@ -549,6 +559,8 @@
     if (!layer) return;
     const route = routeInfo();
     if (route.type === "none") { closeRoute(); return; }
+    const routePath = location.pathname;
+    const routeChanged = state.renderedRoutePath !== routePath;
     layer.classList.add("is-open");
     state.routeOpen = true;
     document.body.classList.add("curator-route-open");
@@ -561,6 +573,8 @@
       if (curator) void window.COMOOTDRetentionInstance?.recordView?.("curator", curator.userId);
       document.title = curator ? `${curator.displayName} (@${curator.handle}) — COMOOTD` : "Curator tidak ditemukan — COMOOTD";
     }
+    state.renderedRoutePath = routePath;
+    if (routeChanged) window.requestAnimationFrame(() => layer.scrollTo({ top: 0, left: 0, behavior: "auto" }));
     const back = layer.querySelector("[data-close-curator-route]");
     window.setTimeout(() => back?.focus(), 0);
   }
