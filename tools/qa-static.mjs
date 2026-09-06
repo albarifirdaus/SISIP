@@ -44,6 +44,8 @@ const catalogueDirectoryScript = read("assets/pages/catalogue-directory.js");
 const appSource = `${index}\n${homeScript}\n${catalogueDirectoryScript}`;
 const worker = read("_worker.js");
 const about = read("about/index.html");
+const functionRoutes = JSON.parse(read("_routes.json"));
+const staticHeaders = read("_headers");
 
 check(!/COMOOTD\s*\/\s*Prototype/i.test(index), "Label Prototype masih tampil pada footer publik");
 check(!/<style[\s>]/i.test(index), "CSS halaman utama masih tertanam di index.html");
@@ -101,6 +103,8 @@ check(about.includes("comootd@gmail.com") && about.includes("instagram.com/comoo
 check(worker.includes("Strict-Transport-Security"), "Header HSTS belum aktif");
 check(worker.includes("Permissions-Policy"), "Permissions-Policy belum aktif");
 check(worker.includes("APP_ENV") && worker.includes("Disallow: /"), "Proteksi indexing staging belum aktif");
+check(functionRoutes.version === 1 && functionRoutes.include.includes("/*") && functionRoutes.exclude.includes("/assets/*"), "Aset statis belum dikecualikan dari invocation Pages Function");
+check(/^\/assets\/\*$/m.test(staticHeaders) && /Cache-Control:\s*public, max-age=300, must-revalidate/i.test(staticHeaders) && /X-Content-Type-Options:\s*nosniff/i.test(staticHeaders), "Header cache atau keamanan aset statis belum lengkap");
 for (const path of ["/request", "/about", "/privacy", "/terms", "/curator-policy", "/community-guidelines", "/affiliate-info"]) {
   check(worker.includes(`"${path}"`), `${path} belum masuk sitemap`);
 }
