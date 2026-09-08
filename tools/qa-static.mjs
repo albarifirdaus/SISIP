@@ -40,6 +40,12 @@ for (const page of requiredPages) {
 const index = read("index.html");
 const homeScript = read("assets/pages/home.js");
 const homeStyle = read("assets/pages/home.css");
+const lookDetailPolish = read("assets/styles/ui-polish.css");
+check((homeScript.match(/class="look-item-actions"/g) || []).length === 2, "Look referensi dan katalog harus memiliki area aksi terpisah");
+check((homeScript.match(/class="look-item-price"/g) || []).length === 2, "Harga item look harus memiliki baris tersendiri");
+check(homeScript.includes('"Cek harga di toko"'), "Harga kosong harus memiliki petunjuk menuju toko");
+check(lookDetailPolish.includes(".look-detail .look-item-actions { grid-column:1 / -1; }"), "Aksi item harus menggunakan lebar penuh pada ponsel");
+check(lookDetailPolish.includes(".look-detail .link-report-button"), "Tautan laporan harus memiliki gaya sekunder dalam detail look");
 const catalogueDirectoryScript = read("assets/pages/catalogue-directory.js");
 const appSource = `${index}\n${homeScript}\n${catalogueDirectoryScript}`;
 const worker = read("_worker.js");
