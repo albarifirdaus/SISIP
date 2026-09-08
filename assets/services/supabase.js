@@ -379,7 +379,7 @@
     };
   }
 
-  function mapArticle(row, index, productMap, lookMap, curatorMap = new Map()) {
+  function mapArticle(row, index, productMap, lookMap) {
     const blocks = (row.article_blocks || [])
       .sort((a, b) => Number(a.position || 0) - Number(b.position || 0))
       .map((block) => ({
@@ -430,8 +430,6 @@
       coverAlt: row.cover_alt_text || "",
       status: row.status || "draft",
       publishedAt: row.published_at || "",
-      authorId: row.author_id || "",
-      author: row.author_id ? curatorMap.get(row.author_id) || null : null,
       blocks,
       ctas,
       lookCtas: ctas.filter((cta) => cta.type === "look"),
@@ -543,7 +541,7 @@
 
     const productSelect = "id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, is_available, link_status, product_marketplace_links(id,marketplace,affiliate_url,label,status,is_primary), product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
     const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, is_available, link_status, product_marketplace_links(id,marketplace,affiliate_url,label,status,is_primary)))), look_curation_items(id, position, category, name, color_variant, price_idr, affiliate_platform, affiliate_url, link_status, curator_item_marketplace_links(id,marketplace,affiliate_url,label,status,is_primary))";
-    const articleSelect = "id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, author_id, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)";
+    const articleSelect = "id, slug, title, excerpt, body_markdown, cover_image_path, cover_alt_text, style_tags, category, published_at, status, created_at, article_blocks(id, position, block_type, text_content, heading_level, image_path, image_alt_text, caption), article_ctas(id, position, target_type, look_id, product_id, label)";
     const productsQuery = (from, to) => {
       let query = db
         .from("products")
@@ -659,7 +657,7 @@
       : lookRows.filter((row) => !(row.look_curation_items || []).length || curatorMap.has(row.creator_id));
     const looks = visibleLookRows.map((row, index) => mapLook(row, productMap, visibleLookRows.length - index, curatorMap));
     const lookMap = new Map(looks.map((look) => [look.id, look]));
-    const articles = articleRows.map((row, index) => mapArticle(row, index, productMap, lookMap, curatorMap));
+    const articles = articleRows.map((row, index) => mapArticle(row, index, productMap, lookMap));
     const newSeriesSlots = newSeriesSlotRows.map((row) => ({
       slot: Number(row.slot),
       lookId: row.look_id || ""
@@ -2623,7 +2621,7 @@
     return { productCount: sourceProducts.length, lookCount: sourceLooks.length };
   }
 
-  async function createArticle({ title, excerpt, category, styles, coverFile, coverAspect, coverAlt, authorId, blocks, lookCtas, productCtas }) {
+  async function createArticle({ title, excerpt, category, styles, coverFile, coverAspect, coverAlt, blocks, lookCtas, productCtas }) {
     const db = getClient();
     const articleTitle = normalizeArticleText(title, "Judul artikel", { min: 1, max: 180, required: true });
     const articleExcerpt = normalizeArticleText(excerpt, "Ringkasan artikel", { max: 600 });
@@ -2632,19 +2630,7 @@
     const articleBlocks = normalizeArticleBlocks(blocks);
     const articleCtas = normalizeArticleCtas(lookCtas, productCtas);
     const articleCoverAlt = normalizeArticleText(coverAlt, "Alt text cover", { max: 240 });
-    const articleAuthorId = String(authorId || "").trim();
     if (coverFile && !articleCoverAlt) throw new Error("Alt text cover wajib diisi saat mengunggah cover artikel.");
-    if (articleAuthorId && !uuidPattern.test(articleAuthorId)) throw new Error("Curator penulis belum valid.");
-    if (articleAuthorId) {
-      const { data: author, error: authorError } = await db
-        .from("curator_profiles")
-        .select("user_id")
-        .eq("user_id", articleAuthorId)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (authorError) throw authorError;
-      if (!author) throw new Error("Curator penulis sudah tidak aktif atau tidak tersedia.");
-    }
 
     const publishedAt = new Date().toISOString();
     await assertPublishedArticleTargets(db, articleCtas, publishedAt);
@@ -2659,7 +2645,6 @@
         category: articleCategory,
         style_tags: articleStyles,
         cover_alt_text: articleCoverAlt || null,
-        author_id: articleAuthorId || null,
         status: "draft"
       })
       .select("id")
@@ -2724,32 +2709,6 @@
       }
       throw error;
     }
-  }
-
-  async function updateArticleAuthor(id, authorId) {
-    const articleId = String(id || "").trim();
-    const articleAuthorId = String(authorId || "").trim();
-    if (!uuidPattern.test(articleId)) throw new Error("Artikel yang akan diperbarui belum valid.");
-    if (articleAuthorId && !uuidPattern.test(articleAuthorId)) throw new Error("Curator penulis belum valid.");
-    const db = getClient();
-    if (articleAuthorId) {
-      const { data: author, error: authorError } = await db
-        .from("curator_profiles")
-        .select("user_id")
-        .eq("user_id", articleAuthorId)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (authorError) throw authorError;
-      if (!author) throw new Error("Curator penulis sudah tidak aktif atau tidak tersedia.");
-    }
-    const { data, error } = await db
-      .from("articles")
-      .update({ author_id: articleAuthorId || null })
-      .eq("id", articleId)
-      .select("id")
-      .single();
-    if (error) throw error;
-    return data.id;
   }
 
   async function deleteArticle(id) {
@@ -3073,7 +3032,6 @@
     createLook,
     updateLook,
     createArticle,
-    updateArticleAuthor,
     importDemoCatalogue,
     deleteLook,
     deleteProduct,

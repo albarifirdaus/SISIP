@@ -25,7 +25,7 @@ const CONTENT_SPECS = {
   },
   article: {
     table: "articles",
-    select: "id,slug,title,excerpt,body_markdown,cover_image_path,cover_alt_text,category,style_tags,published_at,updated_at,created_at,author_id,article_blocks(position,block_type,text_content,heading_level,image_path,image_alt_text,caption)",
+    select: "id,slug,title,excerpt,body_markdown,cover_image_path,cover_alt_text,category,style_tags,published_at,updated_at,created_at,article_blocks(position,block_type,text_content,heading_level,image_path,image_alt_text,caption),article_ctas(position,target_type,label,look_id,look:looks(id,slug,title,creator_id))",
     title: (row) => `${row.title || "Journal"} — COMOOTD Journal`,
     description: (row) => row.excerpt || "Catatan style dari COMOOTD.",
     type: "article",
@@ -34,6 +34,7 @@ const CONTENT_SPECS = {
 };
 
 const SITE_NAME = "COMOOTD";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SITE_DESCRIPTION = "Kurasi fashion all-gender untuk membantu menemukan look yang terasa tepat dan mudah dipadankan.";
 const SITE_LOCALE = "id_ID";
 const SITEMAP_PAGE_SIZE = 1000;
@@ -329,20 +330,20 @@ async function findLatestPublishedCuratorLook(env, userId) {
   return Array.isArray(rows) ? rows[0] || null : null;
 }
 
-async function findActiveCuratorByUserId(env, userId) {
-  if (!userId) return null;
+async function findActiveCuratorsByUserIds(env, userIds) {
+  const ids = [...new Set((userIds || []).map(String).filter((id) => UUID_PATTERN.test(id)))];
+  if (!ids.length) return new Map();
   const endpoint = new URL("/rest/v1/curator_profiles", String(env.SUPABASE_URL || ""));
   endpoint.searchParams.set("select", "user_id,handle,display_name,bio,job_tags,avatar_path,trust_level,updated_at");
-  endpoint.searchParams.set("user_id", `eq.${userId}`);
+  endpoint.searchParams.set("user_id", `in.(${ids.join(",")})`);
   endpoint.searchParams.set("is_active", "eq.true");
-  endpoint.searchParams.set("limit", "1");
   const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
   const response = await fetch(endpoint, {
     headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" }
   });
-  if (!response.ok) return null;
+  if (!response.ok) return new Map();
   const rows = await response.json();
-  return Array.isArray(rows) ? rows[0] || null : null;
+  return new Map((Array.isArray(rows) ? rows : []).map((row) => [row.user_id, row]));
 }
 
 async function findActiveCurator(env, handle) {
@@ -491,7 +492,30 @@ function articleFallbackBlockMarkup(env, block) {
   return `<p>${escapeHtml(clippedText(content, 4000))}</p>`;
 }
 
-function articleNoscriptFallback(env, row, metadata, articleAuthor = null) {
+function articleRelatedLooks(row) {
+  return (Array.isArray(row?.article_ctas) ? row.article_ctas : [])
+    .filter((cta) => cta?.target_type === "look" && cta?.look?.id && cta?.look?.slug)
+    .sort((a, b) => Number(a?.position || 0) - Number(b?.position || 0));
+}
+
+function relatedLookSchema(env, cta, curatorMap) {
+  const look = cta.look;
+  const curator = curatorMap.get(look.creator_id);
+  const handle = safeCuratorHandle(curator?.handle);
+  const creator = handle ? {
+    "@type": "Person",
+    name: clippedText(curator?.display_name, 80) || handle,
+    url: canonicalUrl(env, `/curators/${encodeURIComponent(handle)}`)
+  } : { "@type": "Organization", "@id": `${siteOrigin(env)}/#organization`, name: SITE_NAME };
+  return {
+    "@type": "CreativeWork",
+    name: clippedText(look.title, 180),
+    url: canonicalUrl(env, `/looks/${encodeURIComponent(look.slug)}`),
+    creator
+  };
+}
+
+function articleNoscriptFallback(env, row, metadata, curatorMap = new Map()) {
   const blocks = Array.isArray(row?.article_blocks) ? [...row.article_blocks] : [];
   const blockMarkup = blocks
     .sort((a, b) => Number(a?.position || 0) - Number(b?.position || 0))
@@ -512,12 +536,9 @@ function articleNoscriptFallback(env, row, metadata, articleAuthor = null) {
   const excerpt = clippedText(row?.excerpt, 500);
   const date = isoTimestamp(row?.published_at);
   const headline = clippedText(row?.title || metadata?.title || "COMOOTD Journal", 180);
-  const authorHandle = safeCuratorHandle(articleAuthor?.handle);
-  const authorName = clippedText(articleAuthor?.display_name, 80) || "COMOOTD Editorial";
-  const authorMarkup = authorHandle
-    ? `<p>Ditulis oleh <a href="${escapeHtml(canonicalUrl(env, `/curators/${encodeURIComponent(authorHandle)}`))}">${escapeHtml(authorName)}</a></p>`
-    : `<p>Ditulis oleh ${escapeHtml(authorName)}</p>`;
-  return `<noscript data-comootd-route-fallback="article"><main id="comootd-journal-fallback"><article><header><p>${escapeHtml(category)}</p><h1>${escapeHtml(headline)}</h1>${excerpt ? `<p>${escapeHtml(excerpt)}</p>` : ""}${authorMarkup}${date ? `<time datetime="${escapeHtml(date)}">${escapeHtml(date.slice(0, 10))}</time>` : ""}${tags.length ? `<ul>${tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join("")}</ul>` : ""}</header>${cover ? `<figure><img src="${escapeHtml(cover)}" alt="${escapeHtml(metadata?.imageAlt || row?.title || "Artikel COMOOTD")}" /></figure>` : ""}<section>${blockMarkup || fallbackMarkup}</section></article></main></noscript>`;
+  const relatedLooks = articleRelatedLooks(row);
+  const relatedMarkup = relatedLooks.length ? `<aside><h2>Looks yang dibahas</h2><ul>${relatedLooks.map((cta) => { const curator=curatorMap.get(cta.look.creator_id); const curatorName=clippedText(curator?.display_name,80)||"COMOOTD"; return `<li><a href="${escapeHtml(canonicalUrl(env, `/looks/${encodeURIComponent(cta.look.slug)}`))}">${escapeHtml(cta.look.title)}</a> — dikurasi oleh ${escapeHtml(curatorName)}</li>`; }).join("")}</ul></aside>` : "";
+  return `<noscript data-comootd-route-fallback="article"><main id="comootd-journal-fallback"><article><header><p>${escapeHtml(category)}</p><h1>${escapeHtml(headline)}</h1>${excerpt ? `<p>${escapeHtml(excerpt)}</p>` : ""}${date ? `<time datetime="${escapeHtml(date)}">${escapeHtml(date.slice(0, 10))}</time>` : ""}${tags.length ? `<ul>${tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join("")}</ul>` : ""}</header>${cover ? `<figure><img src="${escapeHtml(cover)}" alt="${escapeHtml(metadata?.imageAlt || row?.title || "Artikel COMOOTD")}" /></figure>` : ""}<section>${blockMarkup || fallbackMarkup}</section>${relatedMarkup}</article></main></noscript>`;
 }
 
 function injectArticleNoscriptFallback(html, fallback) {
@@ -527,7 +548,7 @@ function injectArticleNoscriptFallback(html, fallback) {
     : `${fallback}${html}`;
 }
 
-function contentMetadata(env, type, row, image, articleAuthor = null) {
+function contentMetadata(env, type, row, image, curatorMap = new Map()) {
   const spec = CONTENT_SPECS[type];
   const segment = type === "look" ? "looks" : type === "product" ? "products" : "journal";
   const canonical = canonicalUrl(env, `/${segment}/${encodeURIComponent(row.slug)}`);
@@ -557,16 +578,6 @@ function contentMetadata(env, type, row, image, articleAuthor = null) {
     pageType = "ArticlePage";
     const publishedTime = isoTimestamp(row.published_at);
     const modifiedTime = isoTimestamp(row.updated_at || row.published_at);
-    const authorHandle = safeCuratorHandle(articleAuthor?.handle);
-    const authorName = clippedText(articleAuthor?.display_name, 80);
-    const author = authorHandle && authorName
-      ? {
-          "@type": "Person",
-          "@id": `${canonicalUrl(env, `/curators/${encodeURIComponent(authorHandle)}`)}#person`,
-          name: authorName,
-          url: canonicalUrl(env, `/curators/${encodeURIComponent(authorHandle)}`)
-        }
-      : { "@type": "Organization", "@id": `${origin}/#organization`, name: SITE_NAME };
     entity = {
       "@type": "BlogPosting",
       "@id": `${canonical}#article`,
@@ -576,13 +587,15 @@ function contentMetadata(env, type, row, image, articleAuthor = null) {
       articleSection: metadata.section,
       keywords: tags.join(", "),
       inLanguage: "id-ID",
-      author,
+      author: { "@type": "Organization", "@id": `${origin}/#organization`, name: SITE_NAME },
       publisher: { "@id": `${origin}/#organization` },
       articleBody: articleText(row)
     };
     if (publishedTime) entity.datePublished = publishedTime;
     if (modifiedTime) entity.dateModified = modifiedTime;
     if (image) entity.image = [image];
+    const mentions = articleRelatedLooks(row).map((cta) => relatedLookSchema(env, cta, curatorMap));
+    if (mentions.length) entity.mentions = mentions;
   } else if (type === "product") {
     pageType = "ItemPage";
     entity = {
@@ -888,13 +901,14 @@ async function renderContentPage(request, env, route) {
         indexable: false
       }, env), { status: 404, headers: responseHeaders({ cacheControl: "no-store", indexable: false }) });
     }
-    const [image, articleAuthor] = await Promise.all([
+    const relatedCuratorIds = route.type === "article" ? articleRelatedLooks(entry).map((cta) => cta.look.creator_id) : [];
+    const [image, curatorMap] = await Promise.all([
       Promise.resolve(storageImageUrl(env, entry.cover_image_path)).then((cover) => cover || (route.type === "product" ? findActiveVariantImage(env, entry.id) : "")),
-      route.type === "article" ? findActiveCuratorByUserId(env, entry.author_id) : Promise.resolve(null)
+      route.type === "article" ? findActiveCuratorsByUserIds(env, relatedCuratorIds) : Promise.resolve(new Map())
     ]);
-    const metadata = contentMetadata(env, route.type, entry, image, articleAuthor);
+    const metadata = contentMetadata(env, route.type, entry, image, curatorMap);
     const page = injectMetadata(shell, metadata, env);
-    return new Response(route.type === "article" ? injectArticleNoscriptFallback(page, articleNoscriptFallback(env, entry, metadata, articleAuthor)) : page, {
+    return new Response(route.type === "article" ? injectArticleNoscriptFallback(page, articleNoscriptFallback(env, entry, metadata, curatorMap)) : page, {
       headers: responseHeaders()
     });
   } catch {
