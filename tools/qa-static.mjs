@@ -100,6 +100,7 @@ check(index.includes('id="requestRouteLayer"') && index.includes('href="/request
 check(!index.includes('class="request-route-bar"'), "Halaman Request Outfit masih memiliki header duplikat");
 check(!index.includes("downloadBulkLookTemplateButton") && !index.includes("downloadBulkTemplateButton") && !index.includes("Excel + dropdown"), "Tombol unduh template import lama masih tampil");
 check(index.includes("Produk 1–5") && index.includes("Varian Warna"), "Instruksi import belum mengikuti format COMOOTD DATABASE");
+check(!read("assets/features/curator-studio.js").includes("curator-card-number"), "Nomor kartu Curator masih dirender di homepage atau directory");
 check(worker.includes('request: "request-page"') && worker.includes('canonicalUrl(env, "/request")'), "Route dan sitemap Request Outfit belum tersedia");
 check(index.includes('class="member-profile-disclosure"'), "Profil member belum memakai bagian buka/tutup yang ringkas");
 check(about.includes("comootd@gmail.com") && about.includes("instagram.com/comootd.id"), "Kontak resmi belum lengkap");

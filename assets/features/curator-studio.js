@@ -425,9 +425,8 @@
     const totalLikes = looks.reduce((total, look) => total + look.popularity, 0);
     const media = cover ? `<div class="curator-card-media"><img src="${esc(publicImage(cover))}" alt="" loading="lazy" /></div>` : "";
     const cardClass = directory ? "curator-directory-card" : "curator-card";
-    const cardTop = directory
-      ? (trustBadgeMarkup(curator, true) ? `<div class="curator-card-top curator-card-top--verified">${trustBadgeMarkup(curator, true)}</div>` : "")
-      : `<div class="curator-card-top"><span class="curator-card-number">${String(index + 1).padStart(2, "0")} / CURATOR</span>${trustBadgeMarkup(curator)}</div>`;
+    const cardBadge = trustBadgeMarkup(curator, true);
+    const cardTop = cardBadge ? `<div class="curator-card-top curator-card-top--verified">${cardBadge}</div>` : "";
     return `<article class="${cardClass}">
       ${media}
       ${cardTop}
