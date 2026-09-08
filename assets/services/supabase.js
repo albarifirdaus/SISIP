@@ -2352,8 +2352,8 @@
     }
     const productVariants = new Set();
     sortedItems.forEach((item) => {
-      if (!item.productKey || !item.variantLabel) throw new Error("product_key dan variant_label wajib diisi untuk setiap item.");
-      const identifier = `${item.productKey}:${item.variantLabel.toLowerCase()}`;
+      if (!item.productKey) throw new Error("product_key wajib diisi untuk setiap item.");
+      const identifier = `${item.productKey}:${(item.variantLabel || "__default__").toLowerCase()}`;
       if (productVariants.has(identifier)) throw new Error("Satu varian produk tidak boleh dipakai dua kali pada look yang sama.");
       productVariants.add(identifier);
     });
@@ -2378,18 +2378,21 @@
     const productsByKey = new Map((productRows || []).map((product) => [String(product.import_key || "").toUpperCase(), product]));
     const productIds = (productRows || []).map((product) => product.id);
     const variantsByReference = new Map();
+    const defaultVariantsByProduct = new Map();
     if (productIds.length) {
       const { data: variantRows, error: variantError } = await db
         .from("product_variants")
-        .select("id,product_id,label,is_active")
+        .select("id,product_id,label,is_active,sort_order")
         .in("product_id", productIds)
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .order("sort_order", { ascending:true });
       if (variantError) throw variantError;
       (variantRows || []).forEach((variant) => {
         const product = (productRows || []).find((candidate) => candidate.id === variant.product_id);
         const key = String(product?.import_key || "").toUpperCase();
         const reference = `${key}:${String(variant.label || "").trim().toLowerCase()}`;
         if (key && !variantsByReference.has(reference)) variantsByReference.set(reference, variant);
+        if (key && !defaultVariantsByProduct.has(key)) defaultVariantsByProduct.set(key, variant);
       });
     }
 
@@ -2402,8 +2405,12 @@
         const variantIds = group.items.map((item) => {
           const product = productsByKey.get(item.productKey);
           if (!product) throw new Error(`Produk dengan product_key ${item.productKey} belum ditemukan. Import produk terlebih dahulu.`);
-          const variant = variantsByReference.get(`${item.productKey}:${item.variantLabel.toLowerCase()}`);
-          if (!variant) throw new Error(`Varian ${item.variantLabel} untuk ${item.productKey} belum ditemukan atau tidak aktif.`);
+          const variant = item.variantLabel
+            ? variantsByReference.get(`${item.productKey}:${item.variantLabel.toLowerCase()}`)
+            : defaultVariantsByProduct.get(item.productKey);
+          if (!variant) throw new Error(item.variantLabel
+            ? `Varian ${item.variantLabel} untuk ${item.productKey} belum ditemukan atau tidak aktif.`
+            : `Produk ${item.productKey} belum memiliki varian aktif.`);
           return variant.id;
         });
         const { error } = await db.rpc("import_sisip_look", {

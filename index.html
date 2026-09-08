@@ -29,7 +29,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/assets/features/curator-studio.css?v=20260902-4" />
+    <link rel="stylesheet" href="/assets/features/curator-studio.css?v=20260908-1" />
     <link rel="stylesheet" href="/assets/pages/home.css" />
     <link rel="stylesheet" href="/assets/styles/architectural-redesign.css" />
     <link rel="stylesheet" href="/assets/pages/home-storefront.css?v=20260903-1" />
@@ -494,11 +494,11 @@
         <div class="studio-panel is-active" id="studioLooksPanel" data-studio-panel="looks">
           <section class="studio-section" id="bulkLookImportSection">
             <h3>Import look banyak</h3>
-            <p>Gunakan CSV atau Excel. Satu baris mewakili satu item; ulangi <code>look_key</code> untuk menyusun satu look berisi 2–5 item.</p>
+            <p>Gunakan tab <strong>Looks</strong> dari COMOOTD DATABASE. Satu baris mewakili satu look dan kolom <strong>Produk 1–5</strong> diisi dengan Kode dari tab Product.</p>
             <div class="form-stack">
               <div class="field"><label for="bulkLookFile">File look (.csv, .xlsx, .xls)</label><input id="bulkLookFile" type="file" accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" /></div>
-              <div class="bulk-import-actions"><button class="small-button muted" id="downloadBulkLookTemplateButton" type="button">Unduh CSV Looks</button><a class="small-button muted" href="./assets/templates/sisip-template-import.xlsx" download>Excel + dropdown</a><button class="small-button" id="bulkLookImportButton" type="button" disabled>Import looks</button></div>
-              <p class="bulk-import-status" id="bulkLookImportStatus">Import produk lebih dulu. Masukkan <code>product_key</code> dan <code>variant_label</code> yang sama dengan produk yang telah diimpor.</p>
+              <div class="bulk-import-actions"><button class="small-button" id="bulkLookImportButton" type="button" disabled>Import looks</button></div>
+              <p class="bulk-import-status" id="bulkLookImportStatus">Import tab Product lebih dulu. Untuk setiap kode produk, warna pertama yang aktif akan dipakai otomatis.</p>
               <details class="bulk-preview" id="bulkLookImportPreview" hidden><summary id="bulkLookImportPreviewSummary">Preview</summary><ul class="bulk-preview-list" id="bulkLookImportPreviewList"></ul></details>
               <p class="form-error" id="bulkLookImportError" role="alert"></p>
             </div>
@@ -646,11 +646,11 @@
         <div class="studio-panel" id="studioProductsPanel" data-studio-panel="products">
           <section class="studio-section" id="bulkImportSection">
             <h3>Import produk banyak</h3>
-            <p>Gunakan CSV atau Excel. Satu baris mewakili satu warna; baris dengan <code>product_key</code> yang sama akan menjadi satu produk dengan satu link affiliate.</p>
+            <p>Gunakan tab <strong>Product</strong> dari COMOOTD DATABASE. Satu baris mewakili satu produk; tulis beberapa warna dalam kolom <strong>Varian Warna</strong> dengan pemisah koma.</p>
             <div class="form-stack">
               <div class="field"><label for="bulkProductFile">File katalog (.csv, .xlsx, .xls)</label><input id="bulkProductFile" type="file" accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" /></div>
-              <div class="bulk-import-actions"><button class="small-button muted" id="downloadBulkTemplateButton" type="button">Unduh CSV Produk</button><a class="small-button muted" href="./assets/templates/sisip-template-import.xlsx" download>Excel + dropdown</a><button class="small-button" id="bulkImportButton" type="button" disabled>Import produk</button></div>
-              <p class="bulk-import-status" id="bulkImportStatus">Template memakai <code>product_key</code> agar upload ulang memperbarui produk yang sama, bukan menduplikasi.</p>
+              <div class="bulk-import-actions"><button class="small-button" id="bulkImportButton" type="button" disabled>Import produk</button></div>
+              <p class="bulk-import-status" id="bulkImportStatus">Kolom Kode menjadi identitas produk. Upload ulang dengan Kode yang sama akan memperbarui produk, bukan menduplikasi.</p>
               <details class="bulk-preview" id="bulkImportPreview" hidden><summary id="bulkImportPreviewSummary">Preview</summary><ul class="bulk-preview-list" id="bulkImportPreviewList"></ul></details>
               <p class="form-error" id="bulkImportError" role="alert"></p>
             </div>
@@ -716,17 +716,17 @@
     <script src="/assets/components/navigation.js"></script>
     <script src="/assets/components/filters.js"></script>
     <script src="/assets/pages/catalogue-directory.js"></script>
-    <script src="/assets/admin/bulk-import.js"></script>
+    <script src="/assets/admin/bulk-import.js?v=20260908-1"></script>
     <script src="/assets/components/catalog-media.js"></script>
     <script src="/config.js"></script>
-    <script src="/assets/services/supabase.js?v=20260903-1"></script>
+    <script src="/assets/services/supabase.js?v=20260908-1"></script>
     <script src="/assets/features/authentication.js"></script>
     <script src="/assets/features/look-likes.js"></script>
     <script src="/assets/features/privacy-center.js"></script>
     <script src="/assets/features/platform-insights.js"></script>
     <script src="/assets/features/member-retention.js"></script>
-    <script src="/assets/pages/home.js?v=20260903-1"></script>
-    <script src="/assets/features/curator-studio.js?v=20260906-1"></script>
+    <script src="/assets/pages/home.js?v=20260908-1"></script>
+    <script src="/assets/features/curator-studio.js?v=20260908-1"></script>
   </body>
 </html>
 

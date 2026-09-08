@@ -39,19 +39,6 @@
         };
         const JOURNAL_BLOCK_LIMIT = 20;
         const JOURNAL_CTA_LIMIT = 3;
-        const BULK_IMPORT_HEADERS = ["product_key", "name", "marketplace", "affiliate_url", "price_idr", "badge", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "gender_target", "category", "cover_image_url", "color_name", "color_hex", "variant_image_url"];
-        const BULK_IMPORT_TEMPLATE_ROWS = [
-          ["OXFORD-001", "Relaxed Oxford Shirt", "shopee", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "top", "https://cdn.contoh.com/oxford-cover.jpg", "Putih", "#F1F0EC", ""],
-          ["OXFORD-001", "Relaxed Oxford Shirt", "shopee", "https://shope.ee/contoh-link", "229000", "COMOOTD Pick", "", "Clean", "Formal", "", "unisex", "top", "https://cdn.contoh.com/oxford-cover.jpg", "Biru kabut", "#AAB7C7", "https://cdn.contoh.com/oxford-biru.jpg"],
-          ["TROUSER-001", "Pleated Straight Trousers", "tiktok_shop", "https://shop.tiktok.com/view/product/contoh", "289000", "", "", "Clean", "Formal", "", "unisex", "bottom", "https://cdn.contoh.com/trouser-cover.jpg", "Charcoal", "#3B3A38", ""],
-          ["LOAFER-001", "Leather Penny Loafers", "shopee", "https://shope.ee/contoh-link", "319000", "High Rotation", "", "Formal", "Clean", "", "unisex", "footwear", "https://cdn.contoh.com/loafer-cover.jpg", "Hitam", "#211F1D", ""]
-        ];
-        const BULK_LOOK_IMPORT_HEADERS = ["look_key", "title", "excerpt", "gender_target", "style_tags", "style_tag_1", "style_tag_2", "style_tag_3", "cover_image_url", "cover_alt_text", "item_position", "product_key", "variant_label"];
-        const BULK_LOOK_IMPORT_TEMPLATE_ROWS = [
-          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "1", "OXFORD-001", "Putih"],
-          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "2", "TROUSER-001", "Charcoal"],
-          ["LEBARAN-CLEAN-01", "Neutral Lebaran", "Layer ringan untuk silaturahmi dengan warna netral.", "unisex", "", "Modest", "Clean", "Formal", "https://cdn.contoh.com/lebaran-cover.jpg", "Look modest bernuansa netral untuk silaturahmi", "3", "LOAFER-001", "Hitam"]
-        ];
         const BULK_IMPORT_MAX_ROWS = 1000;
         const BULK_IMPORT_MAX_PRODUCTS = 200;
         const BULK_LOOK_IMPORT_MAX_ROWS = 1000;
@@ -2023,12 +2010,12 @@
           }
           els.bulkImportStatus.textContent = "Membaca " + file.name + "…";
           try {
-            const rows = matrixToBulkRows(await readBulkMatrix(file, "Produk"));
+            const rows = matrixToBulkRows(await readBulkMatrix(file, ["Product", "Produk"]));
             const result = validateBulkRows(rows);
             bulkImportGroups = result.groups;
             bulkImportErrors = result.errors;
             bulkImportWarnings = result.warnings;
-            els.bulkImportStatus.textContent = bulkImportErrors.length ? "Perbaiki baris yang ditandai, lalu upload ulang file." : file.name + " siap diimpor. Produk dengan product_key sama akan diperbarui.";
+            els.bulkImportStatus.textContent = bulkImportErrors.length ? "Perbaiki baris yang ditandai, lalu upload ulang file." : file.name + " siap diimpor. Produk dengan Kode sama akan diperbarui.";
           } catch (error) {
             bulkImportErrors = [error.message || "File belum dapat dibaca."];
             els.bulkImportStatus.textContent = "File belum dapat diproses.";
@@ -2070,28 +2057,13 @@
             bulkLookImportGroups = result.groups;
             bulkLookImportErrors = result.errors;
             bulkLookImportWarnings = result.warnings;
-            els.bulkLookImportStatus.textContent = bulkLookImportErrors.length ? "Perbaiki baris yang ditandai, lalu upload ulang file." : file.name + " siap diimpor. Upload ulang dengan look_key sama akan memperbarui look yang belum dipakai di New Series, artikel, atau request outfit.";
+            els.bulkLookImportStatus.textContent = bulkLookImportErrors.length ? "Perbaiki baris yang ditandai, lalu upload ulang file." : file.name + " siap diimpor. Upload ulang dengan Kode yang sama akan memperbarui look yang belum dipakai di New Series, artikel, atau request outfit.";
           } catch (error) {
             bulkLookImportErrors = [error.message || "File belum dapat dibaca."];
             els.bulkLookImportStatus.textContent = "File belum dapat diproses.";
           }
           renderBulkLookImportPreview();
         }
-        function downloadBulkCsvTemplate(headers, rows, filename) {
-          const csvCell = (value) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
-          const content = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
-          const blob = new Blob(["\uFEFF" + content], { type: "text/csv;charset=utf-8" });
-          const url = URL.createObjectURL(blob);
-          const anchor = document.createElement("a");
-          anchor.href = url;
-          anchor.download = filename;
-          document.body.appendChild(anchor);
-          anchor.click();
-          anchor.remove();
-          URL.revokeObjectURL(url);
-        }
-        function downloadBulkTemplate() { downloadBulkCsvTemplate(BULK_IMPORT_HEADERS, BULK_IMPORT_TEMPLATE_ROWS, "sisip-template-produk.csv"); }
-        function downloadBulkLookTemplate() { downloadBulkCsvTemplate(BULK_LOOK_IMPORT_HEADERS, BULK_LOOK_IMPORT_TEMPLATE_ROWS, "sisip-template-looks.csv"); }
         function setupImageCropperInputs() {
           const inputs = [
             [document.getElementById("lookCoverInput"), { defaultAspect:"portrait", label:"foto cover look" }],
@@ -2673,13 +2645,12 @@
             state.articles=state.articles.filter((item)=>item.id!==article.id);saveState();renderAll();showToast("Artikel dihapus dari prototype.");
           } catch(error) { showToast(error.message||"Artikel belum dapat dihapus."); }
         });
-        els.downloadBulkTemplateButton.addEventListener("click", downloadBulkTemplate);
         els.bulkProductFile.addEventListener("change", () => { void inspectBulkProductFile(); });
         els.bulkImportButton.addEventListener("click", async (event) => {
           if (!cloudEnabled()) { els.bulkImportError.textContent = "Import banyak hanya tersedia setelah Supabase cloud aktif."; return; }
           if (!bulkImportGroups.length || bulkImportErrors.length) return;
           if (typeof cloud?.importProducts !== "function") { els.bulkImportError.textContent = "Fitur import belum termuat. Muat ulang halaman lalu coba lagi."; return; }
-          if (!confirm("Import " + bulkImportGroups.length + " produk ke cloud? product_key yang sudah ada akan diperbarui; warna yang tidak ada di file tidak akan dihapus.")) return;
+          if (!confirm("Import " + bulkImportGroups.length + " produk ke cloud? Kode yang sudah ada akan diperbarui; warna yang tidak ada di file tidak akan dihapus.")) return;
           const button = event.currentTarget;
           button.disabled = true;
           els.bulkImportError.textContent = "";
@@ -2710,13 +2681,12 @@
             updateBulkImportButtons();
           }
         });
-        els.downloadBulkLookTemplateButton.addEventListener("click", downloadBulkLookTemplate);
         els.bulkLookFile.addEventListener("change", () => { void inspectBulkLookFile(); });
         els.bulkLookImportButton.addEventListener("click", async (event) => {
           if (!cloudEnabled()) { els.bulkLookImportError.textContent = "Import banyak hanya tersedia setelah Supabase cloud aktif."; return; }
           if (!bulkLookImportGroups.length || bulkLookImportErrors.length) return;
           if (typeof cloud?.importLooks !== "function") { els.bulkLookImportError.textContent = "Fitur import look belum termuat. Muat ulang halaman lalu coba lagi."; return; }
-          if (!confirm("Import " + bulkLookImportGroups.length + " look ke cloud? look_key yang sama akan diperbarui selama belum dipakai di New Series, artikel, atau request outfit.")) return;
+          if (!confirm("Import " + bulkLookImportGroups.length + " look ke cloud? Kode yang sama akan diperbarui selama belum dipakai di New Series, artikel, atau request outfit.")) return;
           const button = event.currentTarget;
           button.disabled = true;
           els.bulkLookImportError.textContent = "";

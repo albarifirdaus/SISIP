@@ -98,6 +98,8 @@ check(index.indexOf('id="journal"') < index.indexOf('id="forYou"'), "Rekomendasi
 check(index.includes('href="/privacy"') && index.includes('href="/terms"'), "Footer belum menautkan halaman legal");
 check(index.includes('id="requestRouteLayer"') && index.includes('href="/request"'), "Halaman Request Outfit belum dipisahkan dari beranda");
 check(!index.includes('class="request-route-bar"'), "Halaman Request Outfit masih memiliki header duplikat");
+check(!index.includes("downloadBulkLookTemplateButton") && !index.includes("downloadBulkTemplateButton") && !index.includes("Excel + dropdown"), "Tombol unduh template import lama masih tampil");
+check(index.includes("Produk 1–5") && index.includes("Varian Warna"), "Instruksi import belum mengikuti format COMOOTD DATABASE");
 check(worker.includes('request: "request-page"') && worker.includes('canonicalUrl(env, "/request")'), "Route dan sitemap Request Outfit belum tersedia");
 check(index.includes('class="member-profile-disclosure"'), "Profil member belum memakai bagian buka/tutup yang ringkas");
 check(about.includes("comootd@gmail.com") && about.includes("instagram.com/comootd.id"), "Kontak resmi belum lengkap");
@@ -132,9 +134,12 @@ try {
     BULK_LOOK_IMPORT_MAX_ROWS:10, BULK_LOOK_IMPORT_MAX_LOOKS:10,
     marketplaceFromUrl:()=>"shopee", affiliateUrl:(value)=>String(value)
   });
-  const matrix = bulk.parseCsvMatrix("product_key,name,affiliate_url,price_idr,color_name,style_tag_1,category\nTOP-1,Top,https://shope.ee/example,120000,Putih,Clean,top");
+  const matrix = bulk.parseCsvMatrix("Kode,Kategori,Nama Produk,Harga,Badge,Gender,Link Affiliate,Tag Style,Varian Warna,Link Foto Produk\nTOP 1,Atasan,Top,120000,,Pria,https://shope.ee/example,Clean,Putih|#fff; Hitam|#111111,");
   const result = bulk.validateBulkRows(bulk.matrixToBulkRows(matrix));
-  check(result.errors.length === 0 && result.groups.length === 1, "Modul bulk import gagal memvalidasi template produk yang sah");
+  check(result.errors.length === 0 && result.groups.length === 1 && result.groups[0].key === "TOP-1" && result.groups[0].variants.length === 2 && result.groups[0].category === "top", "Modul bulk import gagal memvalidasi format Product dari COMOOTD DATABASE");
+  const lookMatrix = bulk.parseCsvMatrix("Kode,Series,Nama Look,Gender,Deskripsi Kurasi,Tag Style,Foto Look,Produk 1,Produk 2,Produk 3,Produk 4,Produk 5\nLOOK 1,Clean,Clean Look,Pria,Look harian,Clean,,TOP 1,BOTTOM 1,,,");
+  const lookResult = bulk.validateBulkLookRows(bulk.matrixToBulkLookRows(lookMatrix));
+  check(lookResult.errors.length === 0 && lookResult.groups.length === 1 && lookResult.groups[0].items.length === 2 && lookResult.groups[0].items.every((item) => item.variantLabel === ""), "Modul bulk import gagal memvalidasi format Looks dari COMOOTD DATABASE");
 
   runInNewContext(read("assets/components/catalog-media.js"), moduleContext, { filename:"assets/components/catalog-media.js" });
   const media = moduleContext.window.COMOOTDCatalogMedia.create({

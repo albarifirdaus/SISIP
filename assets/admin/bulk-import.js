@@ -48,8 +48,67 @@
         return row;
       });
     }
-    function matrixToBulkRows(matrix) { return matrixToImportRows(matrix, ["product_key", "name", "affiliate_url", "price_idr", "color_name"]); }
-    function matrixToBulkLookRows(matrix) { return matrixToImportRows(matrix, ["look_key", "title", "gender_target", "item_position", "product_key", "variant_label"]); }
+    function matrixHeaders(matrix) {
+      const firstRow = (matrix || []).find((row) => Array.isArray(row) && row.some((cell) => String(cell ?? "").trim())) || [];
+      return firstRow.map(normalizeBulkHeader);
+    }
+    function normalizeSheetKey(value) {
+      return String(value || "").trim().toUpperCase().replace(/\s+/g, "-");
+    }
+    function parseSheetVariants(value) {
+      return String(value || "")
+        .split(/[;,\n]+/)
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+        .map((entry) => {
+          const match = entry.match(/^(.*?)(?:\s*\|\s*|\s*\(\s*)(#[0-9a-f]{3,6})\s*\)?$/i);
+          return match ? { name:match[1].trim(), hex:match[2] } : { name:entry, hex:"" };
+        });
+    }
+    function matrixToBulkRows(matrix) {
+      const headers = matrixHeaders(matrix);
+      if (!headers.includes("nama_produk")) return matrixToImportRows(matrix, ["product_key", "name", "affiliate_url", "price_idr", "color_name"]);
+      const rows = matrixToImportRows(matrix, ["kode", "kategori", "nama_produk", "harga", "gender", "link_affiliate", "tag_style", "varian_warna", "link_foto_produk"]);
+      return rows.flatMap((row) => {
+        const variants = parseSheetVariants(row.varian_warna);
+        const preparedVariants = variants.length ? variants : [{ name:"", hex:"" }];
+        return preparedVariants.map((variant) => ({
+          rowNumber:row.rowNumber,
+          product_key:normalizeSheetKey(row.kode),
+          name:row.nama_produk,
+          affiliate_url:row.link_affiliate,
+          price_idr:row.harga,
+          badge:row.badge,
+          style_tags:row.tag_style,
+          gender_target:row.gender,
+          category:row.kategori,
+          cover_image_url:row.link_foto_produk,
+          color_name:variant.name,
+          color_hex:variant.hex
+        }));
+      });
+    }
+    function matrixToBulkLookRows(matrix) {
+      const headers = matrixHeaders(matrix);
+      if (!headers.includes("nama_look")) return matrixToImportRows(matrix, ["look_key", "title", "gender_target", "item_position", "product_key", "variant_label"]);
+      const rows = matrixToImportRows(matrix, ["kode", "series", "nama_look", "gender", "deskripsi_kurasi", "tag_style", "foto_look", "produk_1", "produk_2", "produk_3", "produk_4", "produk_5"]);
+      return rows.flatMap((row) => [1, 2, 3, 4, 5]
+        .map((position) => ({ position, productKey:String(row[`produk_${position}`] || "").trim() }))
+        .filter((item) => item.productKey)
+        .map((item) => ({
+          rowNumber:row.rowNumber,
+          look_key:normalizeSheetKey(row.kode),
+          title:row.nama_look,
+          excerpt:row.deskripsi_kurasi,
+          gender_target:row.gender,
+          style_tags:row.tag_style,
+          cover_image_url:row.foto_look,
+          cover_alt_text:row.foto_look ? `Foto look ${String(row.nama_look || "").trim()}` : "",
+          item_position:item.position,
+          product_key:normalizeSheetKey(item.productKey),
+          variant_label:""
+        })));
+    }
     function normalizeBulkImageUrl(value) {
       const raw = String(value || "").trim();
       if (!raw) return "";
@@ -68,30 +127,38 @@
       const gender = String(value || "unisex").trim().toLowerCase();
       if (!gender || gender === "unisex" || gender === "uniseks") return "unisex";
       if (gender === "pria" || gender === "wanita") return gender;
-      throw new Error("gender_target harus pria, wanita, atau unisex.");
+      throw new Error("Gender harus Pria, Wanita, atau Uniseks.");
     }
     function parseBulkPrice(value) {
       const digits = String(value || "").replace(/[^0-9]/g, "");
       const price = Number(digits);
-      if (!Number.isSafeInteger(price) || price <= 0) throw new Error("price_idr harus berupa harga IDR lebih dari nol.");
+      if (!Number.isSafeInteger(price) || price <= 0) throw new Error("Harga harus berupa nominal IDR lebih dari nol.");
       return price;
     }
     const BULK_STYLE_TAGS = new Map([
       ...STYLE_ORDER.map((style) => [style.toLowerCase(), style]),
       ["korea style", "Korean-inspired"], ["korean style", "Korean-inspired"], ["korean inspired", "Korean-inspired"]
     ]);
+    const BULK_STYLE_COMPOSITES = new Map([
+      ["modest casual", ["Modest", "Casual"]],
+      ["smart casual", ["Clean", "Casual", "Formal"]]
+    ]);
     const BULK_PRODUCT_BADGES = new Map([
       ...PRODUCT_BADGE_OPTIONS.slice(1).map((badge) => [badge.toLowerCase(), badge]),
       ["populer", "High Rotation"], ["best seller", "High Rotation"], ["terlaris", "High Rotation"], ["termurah", "Best Value"]
+    ]);
+    const BULK_PRODUCT_CATEGORIES = new Map([
+      ...Object.entries(PRODUCT_CATEGORIES).flatMap(([key, label]) => [[key.toLowerCase(), key], [String(label).toLowerCase(), key]]),
+      ["dress/set", "dress"], ["dress dan set", "dress"], ["sepatu", "footwear"], ["tas", "bag"], ["aksesoris", "accessory"], ["lain-lain", "other"]
     ]);
     function parseBulkTags(row) {
       const values = [row.style_tags, row.style_tag_1, row.style_tag_2, row.style_tag_3]
         .flatMap((value) => String(value || "").split(/[|,;]/))
         .map((tag) => tag.trim())
         .filter(Boolean);
-      const invalid = values.filter((tag) => !BULK_STYLE_TAGS.has(tag.toLowerCase()));
+      const invalid = values.filter((tag) => !BULK_STYLE_TAGS.has(tag.toLowerCase()) && !BULK_STYLE_COMPOSITES.has(tag.toLowerCase()));
       if (invalid.length) throw new Error("Tag style tidak sesuai pilihan COMOOTD: " + [...new Set(invalid)].join(", ") + ".");
-      const tags = [...new Set(values.map((tag) => BULK_STYLE_TAGS.get(tag.toLowerCase())))];
+      const tags = [...new Set(values.flatMap((tag) => BULK_STYLE_COMPOSITES.get(tag.toLowerCase()) || [BULK_STYLE_TAGS.get(tag.toLowerCase())]))];
       if (tags.length > 3) throw new Error("Tag style maksimal 3 pilihan.");
       return tags;
     }
@@ -113,9 +180,9 @@
         const key = String(row.product_key || "").trim().toUpperCase();
         const name = String(row.name || "").trim();
         const colorName = String(row.color_name || "").trim();
-        if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(key)) problems.push("product_key tidak valid.");
-        if (!name) problems.push("name wajib diisi.");
-        if (!colorName) problems.push("color_name wajib diisi.");
+        if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(key)) problems.push("Kode produk tidak valid.");
+        if (!name) problems.push("Nama Produk wajib diisi.");
+        if (!colorName) problems.push("Varian Warna wajib diisi.");
         let affiliateUrl = "";
         let affiliatePlatform = "shopee";
         let price = 0;
@@ -133,8 +200,9 @@
         } catch (error) { problems.push(error.message); }
         try { price = parseBulkPrice(row.price_idr); } catch (error) { problems.push(error.message); }
         try { genderTarget = normalizeBulkGender(row.gender_target); } catch (error) { problems.push(error.message); }
-        category=String(row.category||"other").trim().toLowerCase();
-        if(!Object.prototype.hasOwnProperty.call(PRODUCT_CATEGORIES,category)) problems.push("category tidak sesuai pilihan template.");
+        const categoryInput=String(row.category||"other").trim().toLowerCase();
+        category=BULK_PRODUCT_CATEGORIES.get(categoryInput)||"";
+        if(!category) problems.push("Kategori tidak sesuai pilihan COMOOTD.");
         try { styles = parseBulkTags(row); } catch (error) { problems.push(error.message); }
         try { badge = parseBulkBadge(row.badge); } catch (error) { problems.push(error.message); }
         try { colorHex = normalizeBulkColorHex(row.color_hex) || "#B8AEA1"; if (!String(row.color_hex || "").trim()) warnings.push("Baris " + row.rowNumber + ": color_hex kosong, memakai #B8AEA1."); } catch (error) { problems.push(error.message); }
@@ -187,11 +255,11 @@
         const variantLabel = String(row.variant_label || "").trim();
         const productKey = String(row.product_key || "").trim().toUpperCase();
         const itemPosition = Number(String(row.item_position || "").trim());
-        if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(key)) problems.push("look_key tidak valid.");
-        if (!title || title.length > 160) problems.push("title wajib diisi dan maksimal 160 karakter.");
-        if (excerpt.length > 500) problems.push("excerpt maksimal 500 karakter.");
-        if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(productKey)) problems.push("product_key tidak valid.");
-        if (!variantLabel || variantLabel.length > 80) problems.push("variant_label wajib diisi dan maksimal 80 karakter.");
+        if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(key)) problems.push("Kode look tidak valid.");
+        if (!title || title.length > 160) problems.push("Nama Look wajib diisi dan maksimal 160 karakter.");
+        if (excerpt.length > 500) problems.push("Deskripsi Kurasi maksimal 500 karakter.");
+        if (!/^[A-Z0-9][A-Z0-9_-]{0,79}$/.test(productKey)) problems.push("Kode produk tidak valid.");
+        if (variantLabel.length > 80) problems.push("variant_label maksimal 80 karakter.");
         if (!Number.isInteger(itemPosition) || itemPosition < 1 || itemPosition > 5) problems.push("item_position harus angka 1 sampai 5.");
         let genderTarget = "unisex";
         let styles = [];
@@ -224,7 +292,7 @@
         const sameMetadata = existing.title === candidate.title && existing.excerpt === candidate.excerpt && existing.genderTarget === candidate.genderTarget && existing.styles.join("|") === candidate.styles.join("|") && existing.coverImageUrl === candidate.coverImageUrl && existing.coverAltText === candidate.coverAltText;
         if (!sameMetadata) { errors.push("Baris " + row.rowNumber + ": metadata untuk look_key " + key + " harus sama pada setiap item."); return; }
         if (existing.positions.has(itemPosition)) { errors.push("Baris " + row.rowNumber + ": item_position " + itemPosition + " tercatat dua kali untuk " + key + "."); return; }
-        const variantReference = productKey + ":" + variantLabel.toLowerCase();
+        const variantReference = productKey + ":" + (variantLabel || "__default__").toLowerCase();
         if (existing.variants.has(variantReference)) { errors.push("Baris " + row.rowNumber + ": varian " + variantLabel + " tercatat dua kali untuk " + key + "."); return; }
         existing.positions.add(itemPosition);
         existing.variants.add(variantReference);
@@ -248,7 +316,8 @@
       if (extension === "xlsx" || extension === "xls") {
         if (!window.XLSX || typeof window.XLSX.read !== "function") throw new Error("Parser Excel belum dimuat. Muat ulang halaman atau gunakan CSV.");
         const workbook = window.XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: false });
-        const sheetName = workbook.SheetNames.find((name) => normalizeBulkHeader(name) === normalizeBulkHeader(expectedSheet)) || workbook.SheetNames[0];
+        const expectedSheets = (Array.isArray(expectedSheet) ? expectedSheet : [expectedSheet]).map(normalizeBulkHeader);
+        const sheetName = workbook.SheetNames.find((name) => expectedSheets.includes(normalizeBulkHeader(name))) || workbook.SheetNames[0];
         if (!sheetName) throw new Error("Sheet Excel tidak ditemukan.");
         return window.XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: "", raw: false });
       }

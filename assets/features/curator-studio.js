@@ -368,11 +368,13 @@
       return "website";
     } catch { return ""; }
   }
-  function trustBadgeMarkup(curator) {
+  function trustBadgeMarkup(curator, iconOnly = false) {
     const level = compact(curator?.trustLevel || "emerging").toLowerCase();
-    if (level === "editorial") return `<span class="curator-trust-badge is-editorial">COMOOTD Editorial</span>`;
-    if (level === "verified") return `<span class="curator-trust-badge">Verified Curator</span>`;
-    return "";
+    const label = level === "editorial" ? "COMOOTD Editorial" : level === "verified" ? "Verified Curator" : "";
+    if (!label) return "";
+    if (iconOnly) return `<span class="curator-trust-badge curator-trust-badge--icon ${level === "editorial" ? "is-editorial" : ""}" aria-label="${label}" title="${label}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.75 14.2 5l3.14-.1.82 3.04 2.6 1.77-1.07 2.95 1.07 2.95-2.6 1.77-.82 3.04-3.14-.1L12 22.55l-2.2-2.23-3.14.1-.82-3.04-2.6-1.77 1.07-2.95-1.07-2.95 2.6-1.77.82-3.04L9.8 5 12 2.75Z"/><path d="m8.25 12.35 2.35 2.35 5.15-5.2"/></svg></span>`;
+    if (level === "editorial") return `<span class="curator-trust-badge is-editorial">${label}</span>`;
+    return `<span class="curator-trust-badge">${label}</span>`;
   }
 
   function ensureLayers() {
@@ -423,9 +425,12 @@
     const totalLikes = looks.reduce((total, look) => total + look.popularity, 0);
     const media = cover ? `<div class="curator-card-media"><img src="${esc(publicImage(cover))}" alt="" loading="lazy" /></div>` : "";
     const cardClass = directory ? "curator-directory-card" : "curator-card";
+    const cardTop = directory
+      ? (trustBadgeMarkup(curator, true) ? `<div class="curator-card-top curator-card-top--verified">${trustBadgeMarkup(curator, true)}</div>` : "")
+      : `<div class="curator-card-top"><span class="curator-card-number">${String(index + 1).padStart(2, "0")} / CURATOR</span>${trustBadgeMarkup(curator)}</div>`;
     return `<article class="${cardClass}">
       ${media}
-      <div class="curator-card-top"><span class="curator-card-number">${String(index + 1).padStart(2, "0")} / CURATOR</span>${trustBadgeMarkup(curator)}</div>
+      ${cardTop}
       <div class="curator-card-content">
         <div class="curator-card-person">
           ${imageMarkup(curator.avatarPath, "", "curator-avatar", curator.displayName)}

@@ -56,6 +56,26 @@
 .curator-card:hover .curator-card-media img { transform:scale(1.05); }
 .curator-card-top { position:relative; z-index:2; display:flex; align-items:flex-start; justify-content:space-between; gap:.65rem; margin-bottom:auto; }
 .curator-card-top--count { justify-content:flex-end; }
+.curator-card-top--verified { justify-content:flex-end; }
+.curator-directory-card .curator-card-top .curator-trust-badge--icon {
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  margin:0;
+  padding:0;
+  color:#111;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:50%;
+  background:#ffbe20;
+  box-shadow:0 5px 18px rgba(0,0,0,.22);
+  backdrop-filter:none;
+}
+.curator-directory-card .curator-card-top .curator-trust-badge--icon.is-editorial { color:#fff; background:#111; }
+.curator-directory-card .curator-trust-badge--icon svg { width:20px; height:20px; overflow:visible; }
+.curator-directory-card .curator-trust-badge--icon svg path:first-child { fill:currentColor; stroke:none; }
+.curator-directory-card .curator-trust-badge--icon svg path:last-child { fill:none; stroke:var(--curator-yellow); stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round; }
+.curator-directory-card .curator-trust-badge--icon:not(.is-editorial) svg path:last-child { stroke:#111; }
 .curator-card .eyebrow { color:rgba(248,246,242,.78); }
 .curator-card-number { padding:.34rem .44rem; color:rgba(248,246,242,.86); border:1px solid rgba(248,246,242,.38); background:rgba(23,22,20,.2); backdrop-filter:blur(8px); font-family:var(--mono, monospace); font-size:.56rem; letter-spacing:.06em; }
 .curator-card-content { position:relative; z-index:2; }
