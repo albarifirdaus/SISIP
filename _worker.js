@@ -25,7 +25,7 @@ const CONTENT_SPECS = {
   },
   article: {
     table: "articles",
-    select: "id,slug,title,excerpt,body_markdown,cover_image_path,cover_alt_text,category,style_tags,published_at,updated_at,created_at,article_blocks(position,block_type,text_content,heading_level,image_path,image_alt_text,caption)",
+    select: "id,slug,title,excerpt,body_markdown,cover_image_path,cover_alt_text,category,style_tags,published_at,updated_at,created_at,author_id,article_blocks(position,block_type,text_content,heading_level,image_path,image_alt_text,caption)",
     title: (row) => `${row.title || "Journal"} — COMOOTD Journal`,
     description: (row) => row.excerpt || "Catatan style dari COMOOTD.",
     type: "article",
@@ -329,6 +329,22 @@ async function findLatestPublishedCuratorLook(env, userId) {
   return Array.isArray(rows) ? rows[0] || null : null;
 }
 
+async function findActiveCuratorByUserId(env, userId) {
+  if (!userId) return null;
+  const endpoint = new URL("/rest/v1/curator_profiles", String(env.SUPABASE_URL || ""));
+  endpoint.searchParams.set("select", "user_id,handle,display_name,bio,job_tags,avatar_path,trust_level,updated_at");
+  endpoint.searchParams.set("user_id", `eq.${userId}`);
+  endpoint.searchParams.set("is_active", "eq.true");
+  endpoint.searchParams.set("limit", "1");
+  const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
+  const response = await fetch(endpoint, {
+    headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" }
+  });
+  if (!response.ok) return null;
+  const rows = await response.json();
+  return Array.isArray(rows) ? rows[0] || null : null;
+}
+
 async function findActiveCurator(env, handle) {
   const endpoint = new URL("/rest/v1/curator_profiles", String(env.SUPABASE_URL || ""));
   endpoint.searchParams.set("select", "user_id,handle,display_name,bio,job_tags,avatar_path,updated_at");
@@ -475,7 +491,7 @@ function articleFallbackBlockMarkup(env, block) {
   return `<p>${escapeHtml(clippedText(content, 4000))}</p>`;
 }
 
-function articleNoscriptFallback(env, row, metadata) {
+function articleNoscriptFallback(env, row, metadata, articleAuthor = null) {
   const blocks = Array.isArray(row?.article_blocks) ? [...row.article_blocks] : [];
   const blockMarkup = blocks
     .sort((a, b) => Number(a?.position || 0) - Number(b?.position || 0))
@@ -496,7 +512,12 @@ function articleNoscriptFallback(env, row, metadata) {
   const excerpt = clippedText(row?.excerpt, 500);
   const date = isoTimestamp(row?.published_at);
   const headline = clippedText(row?.title || metadata?.title || "COMOOTD Journal", 180);
-  return `<noscript data-comootd-route-fallback="article"><main id="comootd-journal-fallback"><article><header><p>${escapeHtml(category)}</p><h1>${escapeHtml(headline)}</h1>${excerpt ? `<p>${escapeHtml(excerpt)}</p>` : ""}${date ? `<time datetime="${escapeHtml(date)}">${escapeHtml(date.slice(0, 10))}</time>` : ""}${tags.length ? `<ul>${tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join("")}</ul>` : ""}</header>${cover ? `<figure><img src="${escapeHtml(cover)}" alt="${escapeHtml(metadata?.imageAlt || row?.title || "Artikel COMOOTD")}" /></figure>` : ""}<section>${blockMarkup || fallbackMarkup}</section></article></main></noscript>`;
+  const authorHandle = safeCuratorHandle(articleAuthor?.handle);
+  const authorName = clippedText(articleAuthor?.display_name, 80) || "COMOOTD Editorial";
+  const authorMarkup = authorHandle
+    ? `<p>Ditulis oleh <a href="${escapeHtml(canonicalUrl(env, `/curators/${encodeURIComponent(authorHandle)}`))}">${escapeHtml(authorName)}</a></p>`
+    : `<p>Ditulis oleh ${escapeHtml(authorName)}</p>`;
+  return `<noscript data-comootd-route-fallback="article"><main id="comootd-journal-fallback"><article><header><p>${escapeHtml(category)}</p><h1>${escapeHtml(headline)}</h1>${excerpt ? `<p>${escapeHtml(excerpt)}</p>` : ""}${authorMarkup}${date ? `<time datetime="${escapeHtml(date)}">${escapeHtml(date.slice(0, 10))}</time>` : ""}${tags.length ? `<ul>${tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join("")}</ul>` : ""}</header>${cover ? `<figure><img src="${escapeHtml(cover)}" alt="${escapeHtml(metadata?.imageAlt || row?.title || "Artikel COMOOTD")}" /></figure>` : ""}<section>${blockMarkup || fallbackMarkup}</section></article></main></noscript>`;
 }
 
 function injectArticleNoscriptFallback(html, fallback) {
@@ -506,7 +527,7 @@ function injectArticleNoscriptFallback(html, fallback) {
     : `${fallback}${html}`;
 }
 
-function contentMetadata(env, type, row, image) {
+function contentMetadata(env, type, row, image, articleAuthor = null) {
   const spec = CONTENT_SPECS[type];
   const segment = type === "look" ? "looks" : type === "product" ? "products" : "journal";
   const canonical = canonicalUrl(env, `/${segment}/${encodeURIComponent(row.slug)}`);
@@ -536,6 +557,16 @@ function contentMetadata(env, type, row, image) {
     pageType = "ArticlePage";
     const publishedTime = isoTimestamp(row.published_at);
     const modifiedTime = isoTimestamp(row.updated_at || row.published_at);
+    const authorHandle = safeCuratorHandle(articleAuthor?.handle);
+    const authorName = clippedText(articleAuthor?.display_name, 80);
+    const author = authorHandle && authorName
+      ? {
+          "@type": "Person",
+          "@id": `${canonicalUrl(env, `/curators/${encodeURIComponent(authorHandle)}`)}#person`,
+          name: authorName,
+          url: canonicalUrl(env, `/curators/${encodeURIComponent(authorHandle)}`)
+        }
+      : { "@type": "Organization", "@id": `${origin}/#organization`, name: SITE_NAME };
     entity = {
       "@type": "BlogPosting",
       "@id": `${canonical}#article`,
@@ -545,7 +576,7 @@ function contentMetadata(env, type, row, image) {
       articleSection: metadata.section,
       keywords: tags.join(", "),
       inLanguage: "id-ID",
-      author: { "@type": "Organization", "@id": `${origin}/#organization`, name: SITE_NAME },
+      author,
       publisher: { "@id": `${origin}/#organization` },
       articleBody: articleText(row)
     };
@@ -857,10 +888,13 @@ async function renderContentPage(request, env, route) {
         indexable: false
       }, env), { status: 404, headers: responseHeaders({ cacheControl: "no-store", indexable: false }) });
     }
-    const image = storageImageUrl(env, entry.cover_image_path) || (route.type === "product" ? await findActiveVariantImage(env, entry.id) : "");
-    const metadata = contentMetadata(env, route.type, entry, image);
+    const [image, articleAuthor] = await Promise.all([
+      Promise.resolve(storageImageUrl(env, entry.cover_image_path)).then((cover) => cover || (route.type === "product" ? findActiveVariantImage(env, entry.id) : "")),
+      route.type === "article" ? findActiveCuratorByUserId(env, entry.author_id) : Promise.resolve(null)
+    ]);
+    const metadata = contentMetadata(env, route.type, entry, image, articleAuthor);
     const page = injectMetadata(shell, metadata, env);
-    return new Response(route.type === "article" ? injectArticleNoscriptFallback(page, articleNoscriptFallback(env, entry, metadata)) : page, {
+    return new Response(route.type === "article" ? injectArticleNoscriptFallback(page, articleNoscriptFallback(env, entry, metadata, articleAuthor)) : page, {
       headers: responseHeaders()
     });
   } catch {

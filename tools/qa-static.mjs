@@ -303,6 +303,10 @@ check(/\.slice\(0,\s*12\)/.test(homeScript) && /\.slice\(0,\s*12\)/.test(curator
 check(curatorStyle.includes("grid-template-columns:repeat(5,minmax(0,1fr))") && curatorStyle.includes("grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem"), "Grid look Curator belum memakai lima kolom desktop dan dua kolom ponsel");
 check(curatorStyle.includes(".curator-look-card .curator-profile-metrics { display:none; }") && curatorStyle.includes(".curator-look-card-actions .curator-look-open span"), "Kartu look ponsel belum memiliki informasi dan aksi yang ringkas");
 check(read("assets/services/supabase.js").includes("follower_count, created_at") && read("assets/services/supabase.js").includes("followerCount: Math.max"), "Jumlah follower belum dimuat dari katalog Curator");
+check(index.includes('id="journalAuthorInput"') && appSource.includes("renderJournalAuthorOptions"), "Studio Journal belum menyediakan pilihan Curator penulis");
+check(read("assets/services/supabase.js").includes("author_id: articleAuthorId || null") && read("assets/services/supabase.js").includes("Curator penulis sudah tidak aktif") && read("assets/services/supabase.js").includes("updateArticleAuthor"), "Artikel belum menyimpan, mengganti, atau memvalidasi Curator penulis");
+check(appSource.includes("articleAuthorMarkup") && appSource.includes("DITULIS OLEH") && read("assets/pages/catalogue-directory.js").includes("BY ${esc(authorName)}"), "Identitas penulis belum tampil konsisten di Journal");
+check(worker.includes("findActiveCuratorByUserId") && worker.includes('"@type": "Person"') && worker.includes("articleAuthor"), "SEO artikel belum memetakan Curator sebagai Person author");
 const retention = read("assets/features/member-retention.js");
 const retentionMigration = read("supabase/migrations/20260831190000_comootd_phase5_member_retention.sql");
 const retentionHardening = read("supabase/migrations/20260831191500_phase5_saved_items_security_invoker.sql");
@@ -329,6 +333,14 @@ try {
   globalThis.fetch = async (input) => {
     const url = String(input?.url || input || "");
     if (url.includes("/rest/v1/comootd_style_tags")) return new Response(JSON.stringify([{ name:"Clean", updated_at:"2026-08-31T00:00:00Z" }]), { status:200, headers:{ "content-type":"application/json" } });
+    if (url.includes("/rest/v1/articles")) return new Response(JSON.stringify([{
+      id:"11111111-1111-4111-8111-111111111111", slug:"artikel-curator", title:"Artikel Curator", excerpt:"Panduan singkat.", body_markdown:"Isi artikel.",
+      category:"style-guide", style_tags:["Clean"], published_at:"2026-09-08T00:00:00Z", updated_at:"2026-09-08T00:00:00Z",
+      author_id:"22222222-2222-4222-8222-222222222222", article_blocks:[]
+    }]), { status:200, headers:{ "content-type":"application/json" } });
+    if (url.includes("/rest/v1/curator_profiles")) return new Response(JSON.stringify([{
+      user_id:"22222222-2222-4222-8222-222222222222", handle:"penulis-test", display_name:"Penulis Test", is_active:true
+    }]), { status:200, headers:{ "content-type":"application/json" } });
     return new Response("[]", { status:200, headers:{ "content-type":"application/json", "content-range":"0-0/0" } });
   };
   try {
@@ -342,6 +354,15 @@ try {
     const html = await response.text();
     check(response.status === 200 && html.includes("Clean Style — Outfit &amp; Produk Kurasi Indonesia | COMOOTD"), "Worker gagal merender metadata landing page style");
     check(String(response.headers.get("x-robots-tag") || "").startsWith("noindex, nofollow"), "Landing page staging tidak dilindungi noindex");
+    const articleResponse = await workerModule.default.fetch(new Request("https://preview.comootd.test/journal/artikel-curator"), {
+      SUPABASE_URL:"https://example.supabase.co",
+      SUPABASE_PUBLISHABLE_KEY:"public-test-key",
+      SITE_ORIGIN:"https://preview.comootd.test",
+      APP_ENV:"production",
+      ASSETS:{ fetch:async () => new Response(index, { headers:{ "content-type":"text/html" } }) }
+    });
+    const articleHtml = await articleResponse.text();
+    check(articleResponse.status === 200 && articleHtml.includes('"@type":"Person"') && articleHtml.includes("Penulis Test") && articleHtml.includes("/curators/penulis-test"), "Worker gagal merender Curator sebagai author artikel dan JSON-LD Person");
   } finally { globalThis.fetch = previousFetch; }
 } catch (error) {
   failures.push(`Worker route test gagal: ${error?.message || error}`);

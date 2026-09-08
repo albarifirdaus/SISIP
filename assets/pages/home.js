@@ -176,6 +176,7 @@
           studioDrawer: document.getElementById("studioDrawer"), studioScrim: document.getElementById("studioScrim"), studioModeLabel: document.getElementById("studioModeLabel"), studioModeNote: document.getElementById("studioModeNote"), sampleControls: document.getElementById("sampleControls"), cloudSampleControls: document.getElementById("cloudSampleControls"), importSampleButton: document.getElementById("importSampleButton"), logoutStudioButton: document.getElementById("logoutStudioButton"), lookForm: document.getElementById("lookForm"), lookFormHeading: document.getElementById("lookFormHeading"), lookFormCopy: document.getElementById("lookFormCopy"), lookCoverLabel: document.getElementById("lookCoverLabel"), lookEditActions: document.getElementById("lookEditActions"), cancelLookEditButton: document.getElementById("cancelLookEditButton"), lookSubmitButton: document.getElementById("lookSubmitButton"), lookProduct: document.getElementById("lookProductInput"), lookVariant: document.getElementById("lookVariantInput"), lookDraftItems: document.getElementById("lookDraftItems"), lookFormError: document.getElementById("lookFormError"), productForm: document.getElementById("productForm"), productFormHeading: document.getElementById("productFormHeading"), productFormCopy: document.getElementById("productFormCopy"), productImageLabel: document.getElementById("productImageLabel"), productEditActions: document.getElementById("productEditActions"), cancelProductEditButton: document.getElementById("cancelProductEditButton"), productSubmitButton: document.getElementById("productSubmitButton"), productFormError: document.getElementById("productFormError"), studioLooksSearch: document.getElementById("studioLooksSearch"), studioLooksSearchMeta: document.getElementById("studioLooksSearchMeta"), studioLooksList: document.getElementById("studioLooksList"), loadMoreStudioLooks: document.getElementById("loadMoreStudioLooks"), studioProductsSearch: document.getElementById("studioProductsSearch"), studioProductsSearchMeta: document.getElementById("studioProductsSearchMeta"), studioProductsList: document.getElementById("studioProductsList"), loadMoreStudioProducts: document.getElementById("loadMoreStudioProducts"), studioRequestsList: document.getElementById("studioRequestsList"), journalBlocks: document.getElementById("journalBlocks"), journalLookCtaInput: document.getElementById("journalLookCtaInput"), journalProductCtaInput: document.getElementById("journalProductCtaInput"), addJournalLookCtaButton: document.getElementById("addJournalLookCtaButton"), addJournalProductCtaButton: document.getElementById("addJournalProductCtaButton"), journalLookCtas: document.getElementById("journalLookCtas"), journalProductCtas: document.getElementById("journalProductCtas"), journalForm: document.getElementById("journalForm"), journalFormError: document.getElementById("journalFormError"), studioArticlesList: document.getElementById("studioArticlesList"), newSeriesSlots: document.getElementById("newSeriesSlots"), newSeriesStatus: document.getElementById("newSeriesStatus"), newSeriesError: document.getElementById("newSeriesError"), saveNewSeriesButton: document.getElementById("saveNewSeriesButton"), stylePreviewSlots: document.getElementById("stylePreviewSlots"), stylePreviewStatus: document.getElementById("stylePreviewStatus"), stylePreviewError: document.getElementById("stylePreviewError"), saveStylePreviewsButton: document.getElementById("saveStylePreviewsButton"), bulkProductFile: document.getElementById("bulkProductFile"), downloadBulkTemplateButton: document.getElementById("downloadBulkTemplateButton"), bulkImportButton: document.getElementById("bulkImportButton"), bulkImportStatus: document.getElementById("bulkImportStatus"), bulkImportPreview: document.getElementById("bulkImportPreview"), bulkImportPreviewSummary: document.getElementById("bulkImportPreviewSummary"), bulkImportPreviewList: document.getElementById("bulkImportPreviewList"), bulkImportError: document.getElementById("bulkImportError"), bulkLookFile: document.getElementById("bulkLookFile"), downloadBulkLookTemplateButton: document.getElementById("downloadBulkLookTemplateButton"), bulkLookImportButton: document.getElementById("bulkLookImportButton"), bulkLookImportStatus: document.getElementById("bulkLookImportStatus"), bulkLookImportPreview: document.getElementById("bulkLookImportPreview"), bulkLookImportPreviewSummary: document.getElementById("bulkLookImportPreviewSummary"), bulkLookImportPreviewList: document.getElementById("bulkLookImportPreviewList"), bulkLookImportError: document.getElementById("bulkLookImportError"), toast: document.getElementById("toast")
         };
         Object.assign(els, {
+          journalAuthorInput: document.getElementById("journalAuthorInput"),
           lookGalleryInput: document.getElementById("lookGalleryInput"),
           lookGalleryOrganizer: document.getElementById("lookGalleryOrganizer"),
           styleTaxonomyAddForm: document.getElementById("styleTaxonomyAddForm"),
@@ -899,11 +900,24 @@
           renderJournalCtaList("look");
           renderJournalCtaList("product");
         }
-        function renderJournalStudio() { renderJournalBlockEditor(); renderJournalCuration(); }
+        function journalAuthorOptionMarkup(selectedId = "") {
+          const curatorOptions = (state.curators || [])
+            .filter((curator) => curator?.isActive !== false && curator?.userId)
+            .sort((left, right) => String(left.displayName || left.name || "").localeCompare(String(right.displayName || right.name || ""), "id"));
+          return `<option value=""${selectedId ? "" : " selected"}>COMOOTD Editorial</option>${curatorOptions.map((curator) => `<option value="${esc(curator.userId)}"${curator.userId === selectedId ? " selected" : ""}>${esc(curator.displayName || curator.name || "Curator")} · @${esc(curator.handle || "curator")}</option>`).join("")}`;
+        }
+        function renderJournalAuthorOptions() {
+          if (!els.journalAuthorInput) return;
+          const previous = els.journalAuthorInput.value;
+          els.journalAuthorInput.innerHTML = journalAuthorOptionMarkup(previous);
+          if (Array.from(els.journalAuthorInput.options).some((option) => option.value === previous)) els.journalAuthorInput.value = previous;
+        }
+        function renderJournalStudio() { renderJournalBlockEditor(); renderJournalCuration(); renderJournalAuthorOptions(); }
         function renderJournal() {
           document.getElementById("journalGrid").innerHTML = state.articles.length ? state.articles.slice(0,12).map((article) => {
             const cover = safeImage(article.coverImage);
-            return `<article class="journal-card">${cover ? `<div class="journal-card-cover ${imageFrameClass(article.coverAspect || article.coverImage, "portrait")}" aria-hidden="true"><img src="${esc(cover)}" alt="" /></div>` : ""}<span class="article-number eyebrow">${esc(articleCategoryLabel(article.category))} / ${esc(article.number)}</span><h3>${esc(article.title)}</h3>${article.excerpt ? `<p class="journal-card-excerpt">${esc(article.excerpt)}</p>` : ""}<button class="text-link" type="button" data-open-article="${esc(article.id)}">Baca catatan ↗</button></article>`;
+            const authorName = article.author?.displayName || article.author?.name || "COMOOTD Editorial";
+            return `<article class="journal-card">${cover ? `<div class="journal-card-cover ${imageFrameClass(article.coverAspect || article.coverImage, "portrait")}" aria-hidden="true"><img src="${esc(cover)}" alt="" /></div>` : ""}<span class="article-number eyebrow">${esc(articleCategoryLabel(article.category))} / ${esc(article.number)}</span><h3>${esc(article.title)}</h3><p class="journal-card-author">BY ${esc(authorName)}</p>${article.excerpt ? `<p class="journal-card-excerpt">${esc(article.excerpt)}</p>` : ""}<button class="text-link" type="button" data-open-article="${esc(article.id)}">Baca catatan ↗</button></article>`;
           }).join("") : `<div class="empty-state"><h3>Journal segera hadir.</h3><p>Catatan fashion berikutnya sedang disiapkan.</p></div>`;
           window.COMOOTDSyncDiscoveryRails();
         }
@@ -1209,7 +1223,7 @@
           renderStudioLibraries();
           renderCuratorAdmin();
           renderProductColorPicker();
-          els.studioArticlesList.innerHTML = state.articles.length ? [...state.articles].map((article)=>`<div class="studio-row"><p><strong>${esc(article.title)}</strong><span>${esc(articleCategoryLabel(article.category))} · ${(article.blocks || []).length || "teks"} blok · ${(article.ctas || []).length} CTA</span></p><div class="studio-row-actions"><button class="small-button danger" data-delete-article="${esc(article.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada artikel tersimpan.</p>`;
+          els.studioArticlesList.innerHTML = state.articles.length ? [...state.articles].map((article)=>`<div class="studio-row"><p><strong>${esc(article.title)}</strong><span>${esc(articleCategoryLabel(article.category))} · ${esc(article.author?.displayName || article.author?.name || "COMOOTD Editorial")} · ${(article.blocks || []).length || "teks"} blok · ${(article.ctas || []).length} CTA</span></p><div class="studio-row-actions"><label class="studio-inline-select"><span>Penulis</span><select data-article-author="${esc(article.id)}">${journalAuthorOptionMarkup(article.authorId || "")}</select></label><button class="small-button muted" data-save-article-author="${esc(article.id)}" type="button">Simpan penulis</button><button class="small-button danger" data-delete-article="${esc(article.id)}" type="button">Hapus</button></div></div>`).join("") : `<p class="microcopy" style="color:var(--taupe)">Belum ada artikel tersimpan.</p>`;
         }
         function renderVariantSelect() {
           const chosen = getProduct(els.lookProduct.value) || state.products[0];
@@ -1647,6 +1661,15 @@
           if(!date || Number.isNaN(date.getTime())) return "COMOOTD Journal";
           return new Intl.DateTimeFormat("id-ID",{day:"numeric",month:"long",year:"numeric"}).format(date);
         }
+        function articleAuthorMarkup(article) {
+          const author = article?.author;
+          const name = author?.displayName || author?.name || "COMOOTD Editorial";
+          const handle = String(author?.handle || "").trim();
+          const avatar = safeImage(author?.avatar || author?.avatarPath || "");
+          const initial = String(name || "C").trim().charAt(0).toUpperCase() || "C";
+          const identity = `<span class="article-author-avatar">${avatar ? `<img src="${esc(avatar)}" alt="" />` : esc(initial)}</span><span><small>DITULIS OLEH</small><strong>${esc(name)}</strong>${handle ? `<em>@${esc(handle)}</em>` : ""}</span>`;
+          return handle ? `<a class="article-author" href="/curators/${encodeURIComponent(handle)}" aria-label="Buka profil penulis ${esc(name)}">${identity}<span class="article-author-arrow" aria-hidden="true">↗</span></a>` : `<div class="article-author is-editorial">${identity}</div>`;
+        }
         function openArticle(id, { navigate = true } = {}) {
           const article=state.articles.find((entry)=>entry.id===id); if (!article) return;
           if (navigate) { navigateToContent("article", article); renderDirectoryRoute(); }
@@ -1654,7 +1677,7 @@
           closeContentDialogs(els.articleModal);
           const cover = safeImage(article.coverImage);
           const blocks = Array.isArray(article.blocks) && article.blocks.length ? article.blocks.map(articleBlockMarkup).join("") : String(article.body || article.excerpt || "").split("\n\n").filter(Boolean).map((p)=>`<p class="article-block">${esc(p)}</p>`).join("");
-          els.articleDetail.innerHTML=`<article class="editorial-article"><header class="editorial-article-head"><p class="eyebrow">COMOOTD JOURNAL / ${esc(articleCategoryLabel(article.category))}</p><h2>${esc(article.title)}</h2>${article.excerpt ? `<p class="article-lede">${esc(article.excerpt)}</p>` : ""}<div class="editorial-article-meta"><span>${esc(articlePublishedLabel(article))}</span><span>${articleReadMinutes(article)} menit baca</span><span>${esc((article.styles||[]).slice(0,3).join(" / ") || "Style notes")}</span></div><div class="detail-actions" style="margin:1.35rem 0 0"><button class="button-outline" type="button" data-share-article="${esc(article.id)}">Bagikan artikel ↗</button></div></header><div class="editorial-article-visual">${cover ? `<figure class="article-cover ${imageFrameClass(article.coverAspect || article.coverImage, "portrait")}"><img src="${esc(cover)}" alt="${esc(article.coverAlt || article.title)}" /></figure>` : `<div class="article-cover" aria-hidden="true"></div>`}</div><div class="editorial-article-main"><div class="article-content">${blocks}</div>${articleCurationMarkup(article)}<button class="button-outline" type="button" data-close-article style="margin-top:1.7rem">Tutup artikel</button></div></article>`;
+          els.articleDetail.innerHTML=`<article class="editorial-article"><header class="editorial-article-head"><p class="eyebrow">COMOOTD JOURNAL / ${esc(articleCategoryLabel(article.category))}</p><h2>${esc(article.title)}</h2>${article.excerpt ? `<p class="article-lede">${esc(article.excerpt)}</p>` : ""}<div class="editorial-article-meta"><span>${esc(articlePublishedLabel(article))}</span><span>${articleReadMinutes(article)} menit baca</span><span>${esc((article.styles||[]).slice(0,3).join(" / ") || "Style notes")}</span></div><div class="article-head-actions">${articleAuthorMarkup(article)}<button class="button-outline" type="button" data-share-article="${esc(article.id)}">Bagikan artikel ↗</button></div></header><div class="editorial-article-visual">${cover ? `<figure class="article-cover ${imageFrameClass(article.coverAspect || article.coverImage, "portrait")}"><img src="${esc(cover)}" alt="${esc(article.coverAlt || article.title)}" /></figure>` : `<div class="article-cover" aria-hidden="true"></div>`}</div><div class="editorial-article-main"><div class="article-content">${blocks}</div>${articleCurationMarkup(article)}<button class="button-outline" type="button" data-close-article style="margin-top:1.7rem">Tutup artikel</button></div></article>`;
           if (!els.articleModal.open) els.articleModal.showModal();
         }
         function showToast(message) { notification.show(message); }
@@ -2636,6 +2659,29 @@
           }
         });
         els.studioArticlesList.addEventListener("click",async(event)=>{
+          const saveAuthor=event.target.closest("[data-save-article-author]");
+          if(saveAuthor){
+            const articleId=String(saveAuthor.dataset.saveArticleAuthor||"");
+            const article=state.articles.find((item)=>item.id===articleId);
+            const select=els.studioArticlesList.querySelector(`[data-article-author="${CSS.escape(articleId)}"]`);
+            if(!article||!select)return;
+            const authorId=String(select.value||"");
+            const originalLabel=saveAuthor.textContent;
+            saveAuthor.disabled=true;saveAuthor.textContent="Menyimpan…";
+            try{
+              if(cloudEnabled()){
+                if(typeof cloud?.updateArticleAuthor!=="function")throw new Error("Fitur penulis Journal belum termuat. Muat ulang halaman lalu coba lagi.");
+                await cloud.updateArticleAuthor(articleId,authorId);
+                await refreshCloudState({admin:true});
+              }else{
+                article.authorId=authorId;
+                article.author=(state.curators||[]).find((curator)=>curator.userId===authorId)||null;
+                saveState();renderAll();
+              }
+              showToast("Penulis artikel diperbarui.");
+            }catch(error){showToast(error.message||"Penulis artikel belum dapat disimpan.");saveAuthor.disabled=false;saveAuthor.textContent=originalLabel;}
+            return;
+          }
           const button=event.target.closest("[data-delete-article]");if(!button)return;
           const article=state.articles.find((item)=>item.id===button.dataset.deleteArticle);if(!article)return;
           const location=cloudEnabled()?"cloud COMOOTD":"prototype ini";
@@ -2726,6 +2772,7 @@
           const title=String(form.get("title")||"").trim();
           const excerpt=String(form.get("excerpt")||"").trim();
           const category=String(form.get("category")||"editorial").trim();
+          const authorId=String(form.get("authorId")||"").trim();
           const styles=taxonomyValues(journalForm,"journalStyles");
           const journalCoverInput=document.getElementById("journalCoverInput");
           const coverFile=preparedImageFile(journalCoverInput);
@@ -2743,7 +2790,7 @@
             if(submitButton){submitButton.disabled=true;submitButton.textContent="Mempublikasikan…";}
             if(cloudEnabled()) {
               if(typeof cloud?.createArticle!=="function") throw new Error("Fitur Journal belum termuat. Muat ulang halaman lalu coba lagi.");
-              await cloud.createArticle({title,excerpt,category,styles,coverFile,coverAspect,coverAlt,blocks,lookCtas,productCtas});
+              await cloud.createArticle({title,excerpt,category,styles,coverFile,coverAspect,coverAlt,authorId,blocks,lookCtas,productCtas});
               journalForm.reset();
               setTaxonomyValues(journalForm,"journalStyles",[]);
               resetJournalDraft();
@@ -2760,7 +2807,7 @@
             }
             const localLookCtas=lookCtas.map((cta,index)=>({id:uid("article-cta"),type:"look",lookId:cta.id,label:cta.label,position:index+1,look:state.looks.find((entry)=>entry.id===cta.id)}));
             const localProductCtas=productCtas.map((cta,index)=>({id:uid("article-cta"),type:"product",productId:cta.id,label:cta.label,position:localLookCtas.length+index+1,product:state.products.find((entry)=>entry.id===cta.id)}));
-            const created={id:uid("article"),number:String(state.articles.length+1).padStart(2,"0"),title,excerpt,category,styles,coverImage,coverAspect,coverAlt,body:articlePlainText(localBlocks),blocks:localBlocks,ctas:[...localLookCtas,...localProductCtas],status:"published",publishedAt:new Date().toISOString()};
+            const created={id:uid("article"),number:String(state.articles.length+1).padStart(2,"0"),title,excerpt,category,styles,coverImage,coverAspect,coverAlt,authorId,author:(state.curators||[]).find((curator)=>curator.userId===authorId)||null,body:articlePlainText(localBlocks),blocks:localBlocks,ctas:[...localLookCtas,...localProductCtas],status:"published",publishedAt:new Date().toISOString()};
             state.articles.unshift(created);saveState();journalForm.reset();setTaxonomyValues(journalForm,"journalStyles",[]);resetJournalDraft();renderAll();switchStudioTab("journal");showToast("Artikel Journal tersimpan di browser ini.");
           } catch(error){els.journalFormError.textContent=error.message||"Artikel belum dapat dipublikasikan.";}
           finally {if(submitButton){submitButton.disabled=false;submitButton.textContent=originalLabel;}}

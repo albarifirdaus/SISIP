@@ -30,7 +30,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/features/curator-studio.css?v=20260908-2" />
-    <link rel="stylesheet" href="/assets/pages/home.css" />
+    <link rel="stylesheet" href="/assets/pages/home.css?v=20260908-2" />
     <link rel="stylesheet" href="/assets/styles/architectural-redesign.css" />
     <link rel="stylesheet" href="/assets/pages/home-storefront.css?v=20260903-1" />
     <link rel="stylesheet" href="/assets/features/platform-insights.css" />
@@ -594,6 +594,7 @@
                 <div class="field"><label for="journalTitleInput">Judul artikel</label><input id="journalTitleInput" name="title" maxlength="180" required placeholder="Contoh: 5 formula look untuk undangan siang" /></div>
                 <div class="field"><label for="journalCategoryInput">Jenis artikel</label><select id="journalCategoryInput" name="category"><option value="style-guide">Style guide</option><option value="occasion-guide">Occasion guide</option><option value="trend-watch">Trend watch</option><option value="editorial">Editorial</option><option value="shopping-guide">Shopping guide</option><option value="wardrobe-notes">Wardrobe notes</option></select></div>
               </div>
+              <div class="field"><label for="journalAuthorInput">Penulis / Curator</label><select id="journalAuthorInput" name="authorId"><option value="">COMOOTD Editorial</option></select><p class="microcopy">Pilih curator aktif untuk menampilkan profil penulis pada artikel. Kosongkan untuk artikel resmi COMOOTD.</p></div>
               <div class="field"><label for="journalExcerptInput">Ringkasan</label><textarea id="journalExcerptInput" name="excerpt" maxlength="420" required placeholder="Satu sampai dua kalimat yang mengundang pembaca membuka artikel."></textarea></div>
               <fieldset class="taxonomy-picker" data-taxonomy-picker data-max-tags="3"><legend>Tag style <span data-taxonomy-count>0 / 3</span></legend><div class="taxonomy-options"><label><input type="checkbox" name="journalStyles" value="Clean" /><span>Clean</span></label><label><input type="checkbox" name="journalStyles" value="Casual" /><span>Casual</span></label><label><input type="checkbox" name="journalStyles" value="Formal" /><span>Formal</span></label><label><input type="checkbox" name="journalStyles" value="Streetwear" /><span>Streetwear</span></label><label><input type="checkbox" name="journalStyles" value="Modest" /><span>Modest</span></label><label><input type="checkbox" name="journalStyles" value="Sporty" /><span>Sporty</span></label><label><input type="checkbox" name="journalStyles" value="Vintage" /><span>Vintage</span></label><label><input type="checkbox" name="journalStyles" value="Korean-inspired" /><span>Korean-inspired</span></label><label><input type="checkbox" name="journalStyles" value="Workwear" /><span>Workwear</span></label><label><input type="checkbox" name="journalStyles" value="Party" /><span>Party</span></label></div><div class="taxonomy-custom-add"><input type="text" maxlength="48" data-custom-style-input placeholder="Tambah style kustom" /><button class="small-button muted" type="button" data-add-custom-style>+ Tag</button></div><p class="microcopy">Pilih maksimal tiga tag dari taxonomy yang juga dipakai katalog.</p></fieldset>
               <div class="compact-row">
@@ -715,17 +716,17 @@
     <script src="/assets/components/notification.js"></script>
     <script src="/assets/components/navigation.js"></script>
     <script src="/assets/components/filters.js"></script>
-    <script src="/assets/pages/catalogue-directory.js"></script>
+    <script src="/assets/pages/catalogue-directory.js?v=20260908-1"></script>
     <script src="/assets/admin/bulk-import.js?v=20260908-1"></script>
     <script src="/assets/components/catalog-media.js"></script>
     <script src="/config.js"></script>
-    <script src="/assets/services/supabase.js?v=20260908-1"></script>
+    <script src="/assets/services/supabase.js?v=20260908-2"></script>
     <script src="/assets/features/authentication.js"></script>
     <script src="/assets/features/look-likes.js"></script>
     <script src="/assets/features/privacy-center.js"></script>
     <script src="/assets/features/platform-insights.js"></script>
     <script src="/assets/features/member-retention.js"></script>
-    <script src="/assets/pages/home.js?v=20260908-1"></script>
+    <script src="/assets/pages/home.js?v=20260908-2"></script>
     <script src="/assets/features/curator-studio.js?v=20260908-2"></script>
   </body>
 </html>
