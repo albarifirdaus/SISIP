@@ -9,6 +9,20 @@ const extract = (name) => {
   return match[0];
 };
 const steps = [];
+const libraryField = {hidden:true};
+const variantField = {hidden:true};
+const sourceControl = {value:'comootd'};
+const sourceRow = {querySelector:selector => selector.includes('referenceSource') ? sourceControl : selector.includes('library-field') ? libraryField : variantField};
+const sourceContext = {};
+runInNewContext(`${extract('syncReferenceSource')}; this.sync = syncReferenceSource;`, sourceContext);
+sourceContext.sync(sourceRow);
+assert.equal(libraryField.hidden, false);
+assert.equal(variantField.hidden, false);
+sourceControl.value = 'own';
+sourceContext.sync(sourceRow);
+assert.equal(libraryField.hidden, true);
+assert.equal(variantField.hidden, true);
+assert.match(source, /name="referenceSource"[^]*?<option value="own">Link sendiri<\/option>/);
 let invalid = 0;
 const context = {
   Number, Boolean,

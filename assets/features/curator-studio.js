@@ -648,12 +648,19 @@
       <div><p class="curator-inline-label">Social links</p><div class="curator-social-fields">${Object.entries(SOCIAL_LABELS).map(([platform, label]) => `<div class="curator-field"><label for="curatorSocial${platform}">${esc(label)}</label><input id="curatorSocial${platform}" name="social-${esc(platform)}" type="url" placeholder="https://" value="${esc(socialMap[platform] || "")}" /></div>`).join("")}</div></div>
       <div class="curator-form-actions"><p class="curator-form-status" data-curator-profile-status role="alert"></p><button class="button" type="submit">Simpan profil ↗</button></div></form></section>`;
   }
+  function syncReferenceSource(row) {
+    const own = row.querySelector('[name="referenceSource"]').value !== "comootd";
+    row.querySelector('[data-curator-library-field]').hidden = own;
+    const variant = row.querySelector('[data-library-variant-field]');
+    if (variant) variant.hidden = own;
+  }
   function productReferenceMarkup(item = {}, index = 0) {
     const reference = normaliseReference(item);
     const secondary = reference.marketplaceLinks.find((link) => !link.isPrimary) || reference.marketplaceLinks[1] || null;
     const selectedColor = COLOR_OPTIONS.some(([name]) => name.toLowerCase() === reference.colorLabel.toLowerCase()) ? reference.colorLabel : "";
     return `<div class="curator-product-reference" data-curator-reference-row>
-      <div class="curator-field curator-field-full"><label>Isi dari library produk (opsional)<select data-curator-library-product><option value="">Isi produk sendiri</option>${asArray(state.catalogue.products).map((product) => `<option value="${esc(product.id)}">${esc(product.name)}</option>`).join("")}</select></label><p class="curator-file-note">Menyalin informasi produk, bukan mengubah produk asli. Periksa harga dan tautan sebelum terbit.</p></div>
+      <div class="curator-field curator-field-full"><label>Sumber link produk<select name="referenceSource" data-curator-reference-source><option value="own">Link sendiri</option><option value="comootd">Dari COMOOTD</option></select></label><p class="curator-file-note">Gunakan tautan milikmu atau salin produk dari katalog COMOOTD.</p></div>
+      <div class="curator-field curator-field-full" data-curator-library-field hidden><label>Produk COMOOTD<select name="referenceLibrary" data-curator-library-product><option value="">Pilih produk COMOOTD</option>${asArray(state.catalogue.products).map((product) => `<option value="${esc(product.id)}">${esc(product.name)}</option>`).join("")}</select></label><p class="curator-file-note">Informasi dan link disalin dari katalog. Periksa sebelum terbit; produk asli tidak diubah.</p></div>
       <div class="curator-field"><label>Kategori</label><select name="referenceCategory">${PRODUCT_CATEGORIES.map(([value, label]) => `<option value="${value}"${reference.category === value ? " selected" : ""}>${esc(label)}</option>`).join("")}</select></div>
       <div class="curator-field"><label>Nama produk</label><input name="referenceName" maxlength="160" value="${esc(reference.name)}" placeholder="Contoh: Linen Relaxed Shirt" required /></div>
       <div class="curator-field"><label>Warna / varian</label><select name="referenceColor"><option value="">Pilih warna</option>${COLOR_OPTIONS.map(([name, hex]) => `<option value="${esc(name)}"${name === selectedColor ? " selected" : ""}>${esc(name)} · ${esc(hex)}</option>`).join("")}</select><span class="curator-color-preview" data-curator-color-preview style="--curator-color:${esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1] || "transparent")}">${selectedColor ? esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1]) : "Opsional"}</span></div>
@@ -794,6 +801,7 @@
         const { _draft, ...base } = state.editingLook || {};
         window.COMOOTDLookDrafts.attach(form, { owner:state.user.id, base, draft:_draft, getFile:preparedImageFile, getAspect:selectedImageAspect, row:productReferenceMarkup, restored:(restoredForm) => {
           updateReferenceControls(restoredForm);
+          restoredForm.querySelectorAll('[data-curator-reference-row]').forEach(syncReferenceSource);
           restoredForm.querySelectorAll("[data-curator-choice-picker]").forEach(refreshChoicePicker);
           showLookStep(restoredForm, Math.min(2, Math.max(1, Number(_draft?.step || 1))), false);
         } });
@@ -1282,6 +1290,11 @@
     if (look) { event.preventDefault(); submitLook(look); }
   }
   function onChange(event) {
+    const sourceSelect = event.target.closest("[data-curator-reference-source]");
+    if (sourceSelect) {
+      syncReferenceSource(sourceSelect.closest("[data-curator-reference-row]"));
+      return;
+    }
     const librarySelect = event.target.closest("[data-curator-library-product]");
     if (librarySelect) {
       const product = asArray(state.catalogue.products).find((entry) => String(entry.id) === librarySelect.value);
@@ -1296,7 +1309,7 @@
       field.className = "curator-field curator-field-full";
       field.dataset.libraryVariantField = "";
       field.innerHTML = `<label>Varian dari library<select data-library-variant><option value="">Pilih varian</option>${variants.map((variant) => `<option value="${esc(variant.name)}">${esc(variant.name)}</option>`).join("")}</select></label>`;
-      if (variants.length) row.insertBefore(field, row.children[1]);
+      if (variants.length) row.querySelector('[data-curator-library-field]').after(field);
       row.querySelector('[name="referenceColor"]').value = "";
       row.querySelector('[name="referenceColor"]').dispatchEvent(new Event("change", { bubbles:true }));
       return;
