@@ -85,7 +85,7 @@
     form._draftSession = { owner:options.owner, key:draft?.key || `${options.owner}:${crypto.randomUUID()}`, options, revision:0, dirty:false, queue:Promise.resolve() };
     const note = document.createElement("div");
     note.className = "curator-draft-note";
-    note.innerHTML = '<p data-draft-status role="status" aria-live="polite">Draf otomatis aktif di browser ini.</p><p>Draf belum dipublikasikan, tidak tersinkron ke perangkat lain, dan dapat hilang jika data browser dihapus. Hindari perangkat bersama.</p><button type="button" class="curator-small-button" data-save-look-draft>Simpan draf sekarang</button>';
+    note.innerHTML = '<p data-draft-status role="status" aria-live="polite">Draf otomatis aktif di browser ini.</p><details><summary>Tentang draf di perangkat ini</summary><p>Draf belum dipublikasikan, tidak tersinkron ke perangkat lain, dan dapat hilang jika data browser dihapus. Hindari perangkat bersama.</p></details><button type="button" class="curator-small-button" data-save-look-draft>Simpan draf sekarang</button>';
     form.prepend(note);
     if (draft) {
       const list = form.querySelector("[data-curator-reference-list]");

@@ -717,10 +717,58 @@
       if (label && control && !label.contains(control)) control.setAttribute("aria-label", label.textContent);
     });
   }
+  function referenceSummary(row) {
+    const value = (name) => row.querySelector(`[name="${name}"]`)?.value || "";
+    const name = value("referenceName").trim() || "Produk belum diisi";
+    const price = Number(value("referencePrice"));
+    return { name, detail:[value("referenceColor"), price > 0 ? `Rp ${price.toLocaleString("id-ID")}` : "Harga belum diisi", value("referenceSource") === "comootd" ? "Dari COMOOTD" : "Link sendiri"].filter(Boolean).join(" · ") };
+  }
+  function setReferenceExpanded(row, expanded) {
+    row.querySelector('[data-reference-editor]').hidden = !expanded;
+    const button = row.querySelector('[data-reference-toggle]');
+    button.setAttribute('aria-expanded', String(expanded));
+    button.textContent = expanded ? "Ringkas produk" : "Edit produk";
+    const summary = referenceSummary(row);
+    row.querySelector('[data-reference-title]').textContent = summary.name;
+    row.querySelector('[data-reference-description]').textContent = summary.detail;
+  }
+  function prepareReferenceCard(row) {
+    if (row.querySelector('[data-reference-editor]')) return;
+    const editor = document.createElement('div');
+    editor.className = 'curator-reference-editor';
+    editor.dataset.referenceEditor = '';
+    editor.id = `reference-${crypto.randomUUID()}`;
+    const remove = row.querySelector('[data-remove-curator-reference]');
+    [...row.children].filter((child) => child !== remove).forEach((child) => editor.append(child));
+    const optional = editor.querySelector('.curator-secondary-destination');
+    const details = document.createElement('details');
+    details.className = 'curator-reference-extra curator-field-full';
+    details.innerHTML = '<summary>Info tambahan & link alternatif</summary>';
+    if (optional) details.append(optional);
+    editor.querySelectorAll('.curator-file-note').forEach((note) => { if (!details.contains(note)) details.append(note); });
+    details.open = Boolean(optional?.querySelector('input')?.value);
+    editor.append(details);
+    const done = document.createElement('button');
+    done.type = 'button'; done.className = 'curator-small-button'; done.dataset.referenceDone = '';
+    done.textContent = 'Selesai mengisi produk'; editor.append(done);
+    const header = document.createElement('div');
+    header.className = 'curator-reference-summary';
+    header.innerHTML = `<div><strong data-reference-title></strong><p data-reference-description></p></div><button type="button" class="curator-small-button" data-reference-toggle aria-controls="${editor.id}"></button>`;
+    row.prepend(header, editor);
+    setReferenceExpanded(row, ![...editor.querySelectorAll('input,select')].every((control) => control.checkValidity()));
+  }
+  function revealInvalidControl(control) {
+    const row = control.closest('[data-curator-reference-row]');
+    if (row) setReferenceExpanded(row, true);
+    let ancestor = control.parentElement;
+    while (ancestor) { if (ancestor.tagName === 'DETAILS') ancestor.open = true; ancestor = ancestor.parentElement; }
+    control.reportValidity();
+    control.focus();
+  }
   function validateLookStep(form, step) {
     const section = form.querySelector(`[data-look-step="${step}"]`);
     for (const control of section.querySelectorAll("input,select,textarea")) {
-      if (!control.checkValidity()) { showLookStep(form, step); control.reportValidity(); return false; }
+      if (!control.checkValidity()) { showLookStep(form, step); revealInvalidControl(control); return false; }
     }
     let payload;
     try { payload = collectLookPayload(form); } catch (error) { showLookStep(form, 1); setFormStatus(form.querySelector("[data-curator-look-status]"), error.message); return false; }
@@ -875,6 +923,7 @@
     form?.querySelector("[data-add-curator-reference]")?.toggleAttribute("disabled", count >= MAX_REFERENCES);
     rows.forEach((row) => {
       labelReferenceFields(row);
+      prepareReferenceCard(row);
       const remove = row.querySelector("[data-remove-curator-reference]");
       if (remove) remove.disabled = count <= MIN_REFERENCES;
     });
@@ -1238,6 +1287,18 @@
   }
 
   async function onClick(event) {
+    const toggleReference = event.target.closest('[data-reference-toggle],[data-reference-done]');
+    if (toggleReference) {
+      const row = toggleReference.closest('[data-curator-reference-row]');
+      const editor = row.querySelector('[data-reference-editor]');
+      if (!editor.hidden) {
+        const invalid = [...editor.querySelectorAll('input,select')].find((control) => !control.checkValidity());
+        if (invalid) { revealInvalidControl(invalid); return; }
+      }
+      setReferenceExpanded(row, editor.hidden);
+      row.querySelector('[data-reference-toggle]').focus();
+      return;
+    }
     const activeForm = document.querySelector("#curatorStudioDialog [data-curator-look-form]");
     if (event.target.closest("[data-close-curator-studio],[data-curator-studio-tab],[data-cancel-curator-edit]")) {
       if (!await window.COMOOTDLookDrafts.leave(activeForm)) return;

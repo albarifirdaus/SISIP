@@ -9,6 +9,14 @@ const extract = (name) => {
   return match[0];
 };
 const steps = [];
+const summaryContext = { Number };
+runInNewContext(`${extract('referenceSummary')}; this.summary = referenceSummary;`, summaryContext);
+const summaryValues = {referenceName:'  Kemeja uji  ',referencePrice:'159000',referenceSource:'comootd',referenceColor:'Olive'};
+const summaryRow = {querySelector:selector => ({value:summaryValues[selector.match(/name="(.*?)"/)[1]] || ''})};
+assert.equal(summaryContext.summary(summaryRow).name, 'Kemeja uji');
+assert.match(summaryContext.summary(summaryRow).detail, /Olive.*159.*Dari COMOOTD/);
+assert.ok(source.includes('revealInvalidControl(control)'), 'Collapsed invalid fields must be revealed');
+assert.ok(source.includes('editor.append(child)'), 'Collapsing must move controls, not recreate them');
 const libraryField = {hidden:true};
 const variantField = {hidden:true};
 const sourceControl = {value:'comootd'};
