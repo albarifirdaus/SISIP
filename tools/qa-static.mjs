@@ -198,15 +198,25 @@ try {
 
   runInNewContext(read("assets/pages/catalogue-directory.js"), uiContext, { filename:"assets/pages/catalogue-directory.js" });
   const directoryState = { products:[{ id:"p1", name:"Oxford", price:120000, category:"top", genderTarget:"unisex", styles:["Clean"], variants:[] }], looks:[], articles:[], styleTags:[{ name:"Clean" }] };
+  const directoryWindow = { location:{ pathname:"/products", href:"https://comootd.test/products" } };
   const directory = uiContext.window.COMOOTDCatalogueDirectory.create({
     getState:() => directoryState, esc:(value) => String(value), slugify:(value) => String(value).toLowerCase(), money:(value) => String(value), safeImage:(value) => String(value),
     marketplaces:{ shopee:{ label:"Shopee" } }, productCategories:{ top:"Atasan" }, marketplaceOf:() => "shopee", marketplaceLabel:() => "Shopee",
     lookVisual:() => "", productArt:() => "", lookAttribution:() => "BY COMOOTD", curatorMetricsMarkup:() => "", lookLikeButton:() => "", articleCategoryLabel:() => "Journal",
-    window:{ location:{ pathname:"/products", href:"https://comootd.test/products" } }, document:{}
+    window:directoryWindow, document:{}
   });
   check(directory.readRoute()?.key === "products", "Page directory gagal mengenali route Products");
   directory.setFilter("category", "top");
   check(directory.filteredEntries(directory.readRoute()).length === 1, "Page directory gagal menyaring kategori produk");
+  directory.setFilter("q", "tidak-ada");
+  check(directory.filteredEntries(directory.readRoute()).length === 0, "Pencarian kosong harus menghasilkan nol hasil");
+  directoryWindow.location.pathname = "/looks";
+  directoryState.looks.push({ id:"l1", title:"Clean look", styles:["Clean"] });
+  check(directory.filteredEntries(directory.readRoute()).length === 1, "Filter produk tidak boleh bocor ke katalog look");
+  directoryWindow.location.pathname = "/products";
+  check(directory.filteredEntries(directory.readRoute()).length === 0, "Filter harus dipulihkan saat kembali ke katalog sebelumnya");
+  directory.setFilter("q", "Oxford");
+  check(directory.filteredEntries(directory.readRoute()).length === 1, "Pencarian harus dapat dipulihkan setelah hasil kosong");
 
   runInNewContext(read("assets/features/authentication.js"), uiContext, { filename:"assets/features/authentication.js" });
   const authElements = {

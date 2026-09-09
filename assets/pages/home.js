@@ -1544,6 +1544,7 @@
           return "/";
         }
         function navigateToContent(type, entry, { variantId = "", replace = false } = {}) {
+          if (readDirectoryRoute()) directoryPage.remember();
           const url = contentRouteUrl(type, entry, variantId);
           if (`${window.location.pathname}${window.location.search}` !== `${url.pathname}${url.search}`) {
             window.history[replace ? "replaceState" : "pushState"]({ comootdContent: true, contentReturn: contentReturnPath() }, "", `${url.pathname}${url.search}`);

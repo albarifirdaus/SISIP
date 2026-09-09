@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const commands = [
+  [process.execPath, [resolve(root, "tools/qa-curator-steps.mjs")], "QA langkah kurator"],
+  [process.execPath, [resolve(root, "tools/qa-curator-drafts.mjs")], "QA draf kurator"],
   [process.execPath, [resolve(root, "tools/qa-static.mjs")], "QA aplikasi"],
   ["git", ["diff", "--check"], "Pemeriksaan whitespace Git"]
 ];
@@ -18,4 +20,3 @@ for (const [command, args, label] of commands) {
 }
 
 console.log("Release check lulus: QA aplikasi dan diff Git terverifikasi.");
-

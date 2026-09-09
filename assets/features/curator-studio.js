@@ -162,6 +162,10 @@
     return fallback === "square" ? "square" : "portrait";
   }
   function preparedImageFile(input) {
+    if (!input?.files?.length && input?._draftPhoto?.file) {
+      if (!input._draftPhoto.ready) throw new Error("Lanjutkan crop foto dari draf terlebih dahulu.");
+      return input._draftPhoto.file;
+    }
     if (!input?.files?.length) return null;
     const cropper = window.COMOOTDImageCropper;
     if (!cropper) return input.files[0];
@@ -170,6 +174,7 @@
     return prepared;
   }
   function selectedImageAspect(input, fallback = "portrait") {
+    if (!input?.files?.length && input?._draftPhoto) return imageAspect(input._draftPhoto.aspect, fallback);
     return imageAspect(window.COMOOTDImageCropper?.getAspect?.(input), fallback);
   }
   function bindImageCropper(input, options) {
@@ -391,6 +396,10 @@
       studio.className = "curator-studio-dialog";
       studio.setAttribute("aria-label", "COMOOTD Curator Studio");
       studio.addEventListener("close", () => { state.editingLook = null; });
+      studio.addEventListener("cancel", (event) => {
+        event.preventDefault();
+        void window.COMOOTDLookDrafts.leave(studio.querySelector("[data-curator-look-form]")).then((allowed) => { if (allowed) studio.close(); });
+      });
       document.body.append(studio);
     }
     if (!document.getElementById("curatorOnboardDialog")) {
@@ -644,6 +653,7 @@
     const secondary = reference.marketplaceLinks.find((link) => !link.isPrimary) || reference.marketplaceLinks[1] || null;
     const selectedColor = COLOR_OPTIONS.some(([name]) => name.toLowerCase() === reference.colorLabel.toLowerCase()) ? reference.colorLabel : "";
     return `<div class="curator-product-reference" data-curator-reference-row>
+      <div class="curator-field curator-field-full"><label>Isi dari library produk (opsional)<select data-curator-library-product><option value="">Isi produk sendiri</option>${asArray(state.catalogue.products).map((product) => `<option value="${esc(product.id)}">${esc(product.name)}</option>`).join("")}</select></label><p class="curator-file-note">Menyalin informasi produk, bukan mengubah produk asli. Periksa harga dan tautan sebelum terbit.</p></div>
       <div class="curator-field"><label>Kategori</label><select name="referenceCategory">${PRODUCT_CATEGORIES.map(([value, label]) => `<option value="${value}"${reference.category === value ? " selected" : ""}>${esc(label)}</option>`).join("")}</select></div>
       <div class="curator-field"><label>Nama produk</label><input name="referenceName" maxlength="160" value="${esc(reference.name)}" placeholder="Contoh: Linen Relaxed Shirt" required /></div>
       <div class="curator-field"><label>Warna / varian</label><select name="referenceColor"><option value="">Pilih warna</option>${COLOR_OPTIONS.map(([name, hex]) => `<option value="${esc(name)}"${name === selectedColor ? " selected" : ""}>${esc(name)} · ${esc(hex)}</option>`).join("")}</select><span class="curator-color-preview" data-curator-color-preview style="--curator-color:${esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1] || "transparent")}">${selectedColor ? esc(COLOR_OPTIONS.find(([name]) => name === selectedColor)?.[1]) : "Opsional"}</span></div>
@@ -657,7 +667,7 @@
     const isExistingLook = Boolean(editing?.id);
     const references = editing?.items?.length ? editing.items.slice(0, MAX_REFERENCES) : [{}, {}];
     return `<section class="curator-studio-panel" data-curator-studio-panel="editor"><p class="eyebrow" style="color:var(--clay)">${isExistingLook ? "EDIT LOOK" : "NEW CURATION"}</p><h3>${isExistingLook ? "Refine this\nlook." : "Build a look\nworth sharing."}</h3><p class="curator-studio-lede">Kamu bisa menerbitkan langsung—tanpa review admin. Tambahkan 2 hingga 5 produk dengan link Shopee, TikTok Shop, atau website brand pilihanmu.</p>
-      <form class="curator-form" data-curator-look-form data-curator-edit-id="${esc(editing?.id || "")}"><div class="curator-form-grid">
+      <form class="curator-form" novalidate data-curator-look-form data-curator-edit-id="${esc(editing?.id || "")}"><div class="curator-form-grid">
         <div class="curator-field curator-field-full"><label for="curatorLookTitle">Nama mix &amp; match</label><input id="curatorLookTitle" name="title" maxlength="160" value="${esc(editing?.title || "")}" placeholder="Contoh: Monday in Olive" required /></div>
         <div class="curator-field curator-field-full"><label for="curatorLookExcerpt">Deskripsi kurasi (opsional)</label><textarea id="curatorLookExcerpt" name="excerpt" maxlength="240" placeholder="Jelaskan ide, occasion, atau formula styling dalam maksimal 240 karakter.">${esc(editing?.excerpt || "")}</textarea><p class="curator-file-note">Kosongkan jika judul dan visual sudah cukup menjelaskan look.</p></div>
         <div class="curator-field"><label for="curatorLookGender">Gender</label><select id="curatorLookGender" name="gender"><option value="Uniseks"${editing?.gender === "Uniseks" ? " selected" : ""}>Uniseks</option><option value="Pria"${editing?.gender === "Pria" ? " selected" : ""}>Pria</option><option value="Wanita"${editing?.gender === "Wanita" ? " selected" : ""}>Wanita</option></select></div>
@@ -666,11 +676,85 @@
         <div class="curator-field"><label for="curatorLookGallery2">Foto 2 · Detail (opsional)</label><input id="curatorLookGallery2" name="galleryFile2" type="file" accept="image/jpeg,image/png,image/webp" data-curator-gallery-input data-curator-gallery-slot="2" /><p class="curator-file-note">Tambahkan detail pendukung untuk gallery look.</p></div>
         <div class="curator-field"><label for="curatorLookGallery3">Foto 3 · Detail (opsional)</label><input id="curatorLookGallery3" name="galleryFile3" type="file" accept="image/jpeg,image/png,image/webp" data-curator-gallery-input data-curator-gallery-slot="3" /><p class="curator-file-note">Atur crop foto ini sebelum disimpan.</p></div>
       </div>
-      <div class="curator-reference-head"><h4>Products in this look</h4><span class="curator-reference-count" data-curator-reference-count>${references.length} / ${MAX_REFERENCES}</span></div>
+      <div class="curator-reference-head"><h4>Produk dalam look</h4><span class="curator-reference-count" data-curator-reference-count>${references.length} / ${MAX_REFERENCES}</span></div>
       <div class="curator-reference-list" data-curator-reference-list>${references.map(productReferenceMarkup).join("")}</div>
       <button class="curator-small-button" type="button" data-add-curator-reference${references.length >= MAX_REFERENCES ? " disabled" : ""}>+ Tambah produk</button>
-      <div class="curator-form-actions"><button class="curator-small-button" type="button" data-cancel-curator-edit>Kembali</button><div><p class="curator-form-status" data-curator-look-status role="alert"></p><button class="button" type="submit">${isExistingLook ? "Simpan perubahan" : "Publish look"} ↗</button></div></div>
+      <div class="curator-form-actions"><button class="curator-small-button" type="button" data-cancel-curator-edit>Keluar editor</button><button class="curator-small-button" type="button" data-look-step-back>Kembali</button><div><p class="curator-form-status" data-curator-look-status role="alert"></p><button class="button" type="button" data-look-step-next>Lanjut</button><button class="button" type="submit">${isExistingLook ? "Simpan perubahan" : "Terbitkan look"} ↗</button></div></div>
       </form></section>`;
+  }
+  function initializeLookSteps(form) {
+    if (!form) return;
+    const concept = document.createElement("section");
+    concept.dataset.lookStep = "1";
+    concept.append(form.querySelector(".curator-form-grid"));
+    const products = document.createElement("section");
+    products.dataset.lookStep = "2";
+    [".curator-reference-head", "[data-curator-reference-list]", "[data-add-curator-reference]"].forEach((selector) => products.append(form.querySelector(selector)));
+    const review = document.createElement("section");
+    review.dataset.lookStep = "3";
+    review.className = "curator-look-review";
+    review.setAttribute("aria-label", "Pratinjau look sebelum terbit");
+    const progress = document.createElement("nav");
+    progress.className = "curator-editor-steps";
+    progress.setAttribute("aria-label", "Langkah membuat look");
+    progress.innerHTML = ["Konsep look", "Susun produk", "Tinjau"].map((label, index) => `<button type="button" data-look-step-go="${index + 1}">${index + 1}. ${label}</button>`).join("");
+    form.prepend(progress, concept, products, review);
+    form.querySelectorAll("[data-curator-reference-row]").forEach(labelReferenceFields);
+    updateReferenceControls(form);
+    showLookStep(form, 1, false);
+  }
+  function labelReferenceFields(row) {
+    row.querySelectorAll(".curator-field").forEach((field) => {
+      const label = field.querySelector("label");
+      const control = field.querySelector("input,select");
+      if (label && control && !label.contains(control)) control.setAttribute("aria-label", label.textContent);
+    });
+  }
+  function validateLookStep(form, step) {
+    const section = form.querySelector(`[data-look-step="${step}"]`);
+    for (const control of section.querySelectorAll("input,select,textarea")) {
+      if (!control.checkValidity()) { showLookStep(form, step); control.reportValidity(); return false; }
+    }
+    let payload;
+    try { payload = collectLookPayload(form); } catch (error) { showLookStep(form, 1); setFormStatus(form.querySelector("[data-curator-look-status]"), error.message); return false; }
+    const message = step === 1
+      ? (!payload.styles.length ? "Pilih minimal satu tag style." : (payload.galleryFiles.some((file) => file.size > 5 * 1024 * 1024) ? "Ukuran setiap foto maksimal 5 MB." : ""))
+      : validateLookPayload(payload, Boolean(form.dataset.curatorEditId));
+    if (message) { showLookStep(form, step); setFormStatus(form.querySelector("[data-curator-look-status]"), message); return false; }
+    return true;
+  }
+  function showLookStep(form, step, focus = true) {
+    form.dataset.currentStep = String(step);
+    form.querySelectorAll("[data-look-step]").forEach((section) => { section.hidden = Number(section.dataset.lookStep) !== step; });
+    form.querySelectorAll("[data-look-step-go]").forEach((button) => { if (Number(button.dataset.lookStepGo) === step) button.setAttribute("aria-current", "step"); else button.removeAttribute("aria-current"); });
+    form.querySelector("[data-look-step-back]").hidden = step === 1;
+    form.querySelector("[data-look-step-next]").hidden = step === 3;
+    form.querySelector('[type="submit"]').hidden = step !== 3;
+    setFormStatus(form.querySelector("[data-curator-look-status]"), "");
+    if (step === 3) renderLookReview(form);
+    if (focus) form.querySelector(`[data-look-step-go="${step}"]`).focus();
+  }
+  function goLookStep(form, step) {
+    const current = Number(form.dataset.currentStep || 1);
+    if (step > current) for (let index = 1; index < step; index++) if (!validateLookStep(form, index)) return;
+    showLookStep(form, step);
+  }
+  function renderLookReview(form) {
+    const payload = collectLookPayload(form);
+    const review = form.querySelector('[data-look-step="3"]');
+    review.innerHTML = `<p class="curator-file-note">Pratinjau belum dipublikasikan. Periksa foto, harga, varian, dan tujuan tautan. Isian belum tersimpan jika editor ditutup.</p><div class="curator-review-gallery"></div><h4>${esc(payload.title)}</h4><p>${esc(payload.gender)} · ${esc(payload.styles.join(" · "))}</p>${payload.excerpt ? `<p>${esc(payload.excerpt)}</p>` : ""}<ol>${payload.items.map((item) => `<li><strong>${esc(item.name)}</strong><p>${esc(item.colorLabel || "Tanpa varian")} · Rp ${Number(item.price).toLocaleString("id-ID")}</p>${item.marketplaceLinks.map((link) => `<p class="curator-review-url">${esc(link.label)}: ${esc(link.affiliateUrl)}</p>`).join("")}</li>`).join("")}</ol><p class="curator-file-note">Tautan ditampilkan sebagai teks agar pemeriksaan tidak meninggalkan editor.</p>`;
+    const gallery = review.querySelector(".curator-review-gallery");
+    review.firstElementChild.textContent = "Pratinjau belum dipublikasikan. Periksa foto, harga, varian, dan tautan. Pastikan status draf tersimpan sebelum menutup editor.";
+    payload.gallery.forEach((entry) => {
+      const img = document.createElement("img");
+      img.alt = `Foto ${entry.sortOrder} — ${payload.title}`;
+      gallery.append(img);
+      if (entry.file) {
+        const reader = new FileReader();
+        reader.onload = () => { if (img.isConnected) img.src = reader.result; };
+        reader.readAsDataURL(entry.file);
+      } else img.src = publicImage(entry.path);
+    });
   }
   function studioLibraryMarkup() {
     const looks = ownCuratorLooks().sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt)));
@@ -691,11 +775,29 @@
     const count = publishedOwnLookCount();
     const body = state.editingLook ? lookEditorMarkup(state.editingLook) : (tab === "profile" ? profileEditorMarkup(state.curator) : tab === "analytics" ? studioInsightsMarkup() : studioLibraryMarkup());
     window.requestAnimationFrame(() => {
+      const labels = { looks:"Koleksi look", profile:"Profil", analytics:"Statistik" };
+      dialog.querySelectorAll("[data-curator-studio-tab]").forEach((button) => { button.textContent = labels[button.dataset.curatorStudioTab]; });
+      const library = dialog.querySelector('[data-curator-studio-panel="looks"]');
+      if (library) {
+        library.querySelector("h3").textContent = "Kelola kurasi kamu.";
+        library.querySelector(".curator-studio-lede").textContent = "Buat, edit, atau arsipkan look. Look yang diterbitkan langsung tersedia di profil publik.";
+        renderCuratorChecklist(library);
+      }
+      initializeLookSteps(dialog.querySelector("[data-curator-look-form]"));
       const avatarInput = dialog.querySelector("#curatorAvatarInput");
       bindImageCropper(avatarInput, { defaultAspect:"square", lockedAspect:"square", label:"foto profil" });
       [...dialog.querySelectorAll("[data-curator-gallery-input]")].forEach((input, index) => {
         bindImageCropper(input, { defaultAspect:"portrait", label:index === 0 ? "foto cover look" : `foto look ${index + 1}` });
       });
+      const form = dialog.querySelector("[data-curator-look-form]");
+      if (form) {
+        const { _draft, ...base } = state.editingLook || {};
+        window.COMOOTDLookDrafts.attach(form, { owner:state.user.id, base, draft:_draft, getFile:preparedImageFile, getAspect:selectedImageAspect, row:productReferenceMarkup, restored:(restoredForm) => {
+          updateReferenceControls(restoredForm);
+          restoredForm.querySelectorAll("[data-curator-choice-picker]").forEach(refreshChoicePicker);
+          showLookStep(restoredForm, Math.min(2, Math.max(1, Number(_draft?.step || 1))), false);
+        } });
+      } else if (tab === "looks") void renderDraftList(dialog);
     });
     dialog.innerHTML = `<button class="icon-button curator-studio-close" type="button" data-close-curator-studio aria-label="Tutup Curator Studio">×</button><div class="curator-studio-shell"><aside class="curator-studio-side"><p class="eyebrow">COMOOTD / CURATOR</p><h2>Studio<br />${esc(state.curator.displayName.split(" ")[0])}</h2><div class="curator-studio-quota"><strong>${count} / ${quota}</strong><span>Look aktif di Starter</span></div><nav class="curator-studio-tabs" aria-label="Menu Curator Studio"><button class="curator-studio-tab${tab === "looks" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="looks">Look library</button><button class="curator-studio-tab${tab === "profile" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="profile">Profile</button><button class="curator-studio-tab${tab === "analytics" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="analytics">Analytics</button></nav></aside><div class="curator-studio-main">${body}</div></div>`;
   }
@@ -706,6 +808,51 @@
     renderStudio("looks");
     if (!dialog.open) dialog.showModal();
     window.setTimeout(() => dialog.querySelector("[data-curator-new-look]")?.focus(), 0);
+  }
+  function renderCuratorChecklist(panel) {
+    const key = `comootd-curator-guide:${state.user.id}`;
+    try { if (localStorage.getItem(key) === "hidden") return; } catch {}
+    const profileReady = Boolean(state.curator.displayName && state.curator.jobTags?.length);
+    const hasLook = publishedOwnLookCount() > 0;
+    const guide = document.createElement("section");
+    guide.className = "curator-onboarding-checklist";
+    guide.setAttribute("aria-label", "Panduan kurator baru");
+    guide.innerHTML = `<h4>Mulai sebagai kurator</h4><ol><li><span>${profileReady ? "✓" : "1."} Nama dan tag profil</span><button class="curator-small-button" type="button" data-curator-studio-tab="profile">Lengkapi profil</button></li><li><span>${hasLook ? "✓" : "2."} Terbitkan look pertama</span><button class="curator-small-button" type="button" data-curator-new-look${publishedOwnLookCount() >= (state.curator.maxPublishedLooks || DEFAULT_QUOTA) ? " disabled" : ""}>Buat look</button></li><li><span>3. Periksa tampilan pengunjung</span><a class="curator-small-button" href="/curators/${encodeURIComponent(state.curator.handle)}" target="_blank" rel="noopener">Lihat profil publik ↗</a></li></ol><button type="button" class="curator-small-button" data-dismiss-curator-guide>Sembunyikan panduan</button>`;
+    guide.querySelector("[data-dismiss-curator-guide]").onclick = () => { try { localStorage.setItem(key, "hidden"); } catch {} guide.remove(); };
+    panel.prepend(guide);
+  }
+  async function renderDraftList(dialog) {
+    const owner = state.user?.id;
+    const panel = dialog.querySelector('[data-curator-studio-panel="looks"]');
+    if (!panel || !owner) return;
+    const container = document.createElement("section");
+    container.className = "curator-draft-list";
+    container.innerHTML = '<h4>Draf di perangkat ini</h4><p>Memuat draf…</p>';
+    panel.prepend(container);
+    try {
+      const drafts = await window.COMOOTDLookDrafts.list(owner);
+      if (!container.isConnected || state.user?.id !== owner) return;
+      container.innerHTML = `<h4>Draf di perangkat ini</h4>${drafts.length ? "" : "<p>Belum ada draf tersimpan.</p>"}`;
+      drafts.forEach((draft) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "curator-small-button";
+        button.textContent = `Lanjutkan: ${draft.title} · ${new Date(draft.updatedAt).toLocaleString("id-ID")}`;
+        button.onclick = () => {
+          if (state.user?.id !== owner) return;
+          if (draft.base.id && !ownCuratorLooks().some((look) => look.id === draft.base.id)) { showToast("Look asli sudah tidak tersedia. Draf tidak dapat diterbitkan sebagai perubahan."); return; }
+          state.editingLook = { ...draft.base, _draft:draft };
+          renderStudio("looks");
+        };
+        container.append(button);
+      });
+    } catch {
+      container.innerHTML = '<h4>Draf tidak dapat dibaca</h4><p>Penyimpanan browser mungkin dibatasi. Isian yang belum tersimpan jangan ditutup.</p>';
+      const retry = document.createElement("button");
+      retry.type = "button"; retry.className = "curator-small-button"; retry.textContent = "Coba lagi";
+      retry.onclick = () => { container.remove(); void renderDraftList(dialog); };
+      container.append(retry);
+    }
   }
   function setFormStatus(target, message, success = false) {
     if (!target) return;
@@ -719,6 +866,7 @@
     if (countNode) countNode.textContent = `${count} / ${MAX_REFERENCES}`;
     form?.querySelector("[data-add-curator-reference]")?.toggleAttribute("disabled", count >= MAX_REFERENCES);
     rows.forEach((row) => {
+      labelReferenceFields(row);
       const remove = row.querySelector("[data-remove-curator-reference]");
       if (remove) remove.disabled = count <= MIN_REFERENCES;
     });
@@ -835,6 +983,13 @@
     try {
       const [catalogue, user] = await Promise.all([api.loadState({ admin: false }), getCurrentUser()]);
       if (version !== state.refreshVersion) return;
+      if (state.user?.id && state.user.id !== user?.id) {
+        const previousDialog = document.getElementById("curatorStudioDialog");
+        await window.COMOOTDLookDrafts.save(previousDialog?.querySelector("[data-curator-look-form]"));
+        previousDialog?.close();
+        if (previousDialog) previousDialog.innerHTML = "";
+        state.editingLook = null;
+      }
       state.catalogue = catalogue || { looks: [], curators: [] };
       state.user = user;
       state.curator = null;
@@ -1012,6 +1167,9 @@
     } finally { submit.disabled = false; }
   }
   async function submitLook(form) {
+    if (form._draftSession?.publishing) return;
+    if (Number(form.dataset.currentStep || 1) !== 3) { goLookStep(form, Number(form.dataset.currentStep || 1) + 1); return; }
+    if (!validateLookStep(form, 1) || !validateLookStep(form, 2)) return;
     const api = cloud();
     const status = form.querySelector("[data-curator-look-status]");
     const submit = form.querySelector("[type=submit]");
@@ -1022,16 +1180,20 @@
       if (validation) { setFormStatus(status, validation); return; }
       if (!api || (editId ? typeof api.updateCuratorLook !== "function" : typeof api.createCuratorLook !== "function")) { setFormStatus(status, "Look belum tersambung. Coba lagi sesaat lagi."); return; }
       if (submit) submit.disabled = true;
-      setFormStatus(status, editId ? "Menyimpan perubahan…" : "Menerbitkan look…");
+      if (form._draftSession) form._draftSession.publishing = true;
+      form.inert = true;
+      if (form._draftSession) await window.COMOOTDLookDrafts.save(form);
+      setFormStatus(status, "Mengunggah foto dan menyimpan look… Jangan tutup halaman.");
       if (editId) await api.updateCuratorLook({ id: editId, ...payload });
       else await api.createCuratorLook(payload);
+      try { await window.COMOOTDLookDrafts.finish(form); } catch { showToast("Look terbit, tetapi draf lokal belum dapat dibersihkan. Jangan terbitkan draf yang sama lagi."); }
       state.editingLook = null;
       await refresh({ quiet: false });
       renderStudio("looks");
       showToast(editId ? "Look diperbarui." : "Look langsung diterbitkan.");
     } catch (error) {
       setFormStatus(status, error?.message || "Look belum dapat disimpan.");
-    } finally { if (submit) submit.disabled = false; }
+    } finally { form.inert = false; if (form._draftSession) form._draftSession.publishing = false; if (submit) submit.disabled = false; }
   }
   async function deleteLook(id, trigger) {
     const api = cloud();
@@ -1067,7 +1229,14 @@
     }
   }
 
-  function onClick(event) {
+  async function onClick(event) {
+    const activeForm = document.querySelector("#curatorStudioDialog [data-curator-look-form]");
+    if (event.target.closest("[data-close-curator-studio],[data-curator-studio-tab],[data-cancel-curator-edit]")) {
+      if (!await window.COMOOTDLookDrafts.leave(activeForm)) return;
+    }
+    if (event.target.closest("[data-add-curator-reference],[data-remove-curator-reference],[data-look-step-go],[data-look-step-next],[data-look-step-back]")) {
+      queueMicrotask(() => window.COMOOTDLookDrafts.mark(activeForm));
+    }
     const routeLink = event.target.closest("[data-curator-route]");
     if (routeLink) { event.preventDefault(); goToCurator(routeLink.dataset.curatorRoute); return; }
     if (event.target.closest("[data-curator-directory]")) { event.preventDefault(); goToDirectory(); return; }
@@ -1080,6 +1249,13 @@
     if (withdraw) { withdrawApplication(withdraw); return; }
     if (event.target.closest("[data-close-curator-studio]")) { document.getElementById("curatorStudioDialog")?.close(); return; }
     const studioTab = event.target.closest("[data-curator-studio-tab]");
+    const stepButton = event.target.closest("[data-look-step-go],[data-look-step-next],[data-look-step-back]");
+    if (stepButton) {
+      const form = stepButton.closest("form");
+      const next = stepButton.dataset.lookStepGo ? Number(stepButton.dataset.lookStepGo) : Number(form.dataset.currentStep) + (stepButton.hasAttribute("data-look-step-back") ? -1 : 1);
+      goLookStep(form, next);
+      return;
+    }
     if (studioTab) { state.editingLook = null; renderStudio(studioTab.dataset.curatorStudioTab); return; }
     if (event.target.closest("[data-curator-new-look]")) { state.editingLook = { items: [{}, {}] }; renderStudio("looks"); return; }
     if (event.target.closest("[data-cancel-curator-edit]")) { state.editingLook = null; renderStudio("looks"); return; }
@@ -1106,6 +1282,33 @@
     if (look) { event.preventDefault(); submitLook(look); }
   }
   function onChange(event) {
+    const librarySelect = event.target.closest("[data-curator-library-product]");
+    if (librarySelect) {
+      const product = asArray(state.catalogue.products).find((entry) => String(entry.id) === librarySelect.value);
+      if (!product) return;
+      const row = librarySelect.closest("[data-curator-reference-row]");
+      const reference = normaliseReference(product);
+      const values = { referenceName:reference.name, referenceCategory:reference.category, referencePrice:reference.price || "", referenceUrl:reference.affiliateUrl, referenceSecondaryUrl:reference.marketplaceLinks.find((link) => !link.isPrimary)?.affiliateUrl || "" };
+      Object.entries(values).forEach(([name,value]) => { const control = row.querySelector(`[name="${name}"]`); control.value = value; if (name === "referenceCategory" && !control.value) control.value = "other"; });
+      row.querySelector("[data-library-variant-field]")?.remove();
+      const variants = asArray(product.variants);
+      const field = document.createElement("div");
+      field.className = "curator-field curator-field-full";
+      field.dataset.libraryVariantField = "";
+      field.innerHTML = `<label>Varian dari library<select data-library-variant><option value="">Pilih varian</option>${variants.map((variant) => `<option value="${esc(variant.name)}">${esc(variant.name)}</option>`).join("")}</select></label>`;
+      if (variants.length) row.insertBefore(field, row.children[1]);
+      row.querySelector('[name="referenceColor"]').value = "";
+      row.querySelector('[name="referenceColor"]').dispatchEvent(new Event("change", { bubbles:true }));
+      return;
+    }
+    const variantSelect = event.target.closest("[data-library-variant]");
+    if (variantSelect) {
+      const color = variantSelect.closest("[data-curator-reference-row]").querySelector('[name="referenceColor"]');
+      if (variantSelect.value && ![...color.options].some((option) => option.value === variantSelect.value)) color.add(new Option(variantSelect.value, variantSelect.value));
+      color.value = variantSelect.value;
+      color.dispatchEvent(new Event("change", { bubbles:true }));
+      return;
+    }
     const directoryFilter = event.target.closest("[data-curator-directory-filter]");
     if (directoryFilter) {
       curatorFilters[directoryFilter.dataset.curatorDirectoryFilter] = directoryFilter.value;
@@ -1147,6 +1350,7 @@
     curatorSearchTimer = window.setTimeout(renderRoute, 180);
   }
   function onKeydown(event) {
+    if (document.getElementById("curatorStudioDialog")?.open) return;
     if (event.key === "Escape" && state.routeOpen) {
       event.preventDefault();
       closeRoute({ navigate: true });
@@ -1174,6 +1378,10 @@
     document.addEventListener("change", onChange);
     document.addEventListener("input", onInput);
     document.addEventListener("keydown", onKeydown);
+    ["comootd:image-ready", "comootd:image-clear", "comootd:image-error"].forEach((name) => document.addEventListener(name, (event) => {
+      if (name === "comootd:image-clear") delete event.target._draftPhoto;
+      window.COMOOTDLookDrafts.mark(event.target.closest("[data-curator-look-form]"));
+    }));
     window.addEventListener("popstate", renderRoute);
     window.addEventListener("comootd:like-change", (event) => {
       const detail = event?.detail || {};

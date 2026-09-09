@@ -1,4 +1,31 @@
 /* Community curator experience. Kept separate so the public catalogue stays lightweight. */
+.curator-onboarding-checklist { padding:20px; margin-bottom:20px; background:#fff; border:1px solid var(--line); border-top:4px solid #ffca24; border-radius:10px; }
+.curator-onboarding-checklist h4 { margin:0 0 12px; font-size:20px; }
+.curator-onboarding-checklist ol { list-style:none; padding:0; margin:0 0 12px; }
+.curator-onboarding-checklist li { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:12px 0; border-bottom:1px solid var(--line); font-size:14px; }
+.curator-draft-note, .curator-draft-list { padding:16px; border:1px solid var(--line); border-radius:10px; background:#f4f4f4; margin-bottom:16px; }
+.curator-draft-note p, .curator-draft-list p { font-size:13px; line-height:1.6; margin:0 0 10px; color:#505968; }
+.curator-draft-note [data-draft-status] { font-weight:600; color:#171614; }
+.curator-draft-list button { display:block; margin-top:10px; max-width:100%; white-space:normal; overflow-wrap:anywhere; text-align:left; }
+.curator-form [hidden] { display:none !important; }
+.curator-editor-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.curator-editor-steps button { min-height:48px; padding:10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:#252525; font-size:14px; cursor:pointer; }
+.curator-editor-steps button[aria-current="step"] { background:#ffca24; border-color:#171614; font-weight:700; }
+.curator-form [data-look-step] { min-width:0; }
+.curator-editor-steps button:focus-visible { outline:2px solid #805b00; outline-offset:3px; }
+.curator-look-review { padding:20px; background:#fff; border:1px solid var(--line); border-radius:12px; overflow-wrap:anywhere; }
+.curator-review-gallery { display:flex; gap:10px; overflow:auto; }
+.curator-review-gallery img { width:150px; height:190px; object-fit:contain; background:#e7e7e7; border-radius:8px; }
+.curator-look-review h4 { font-size:24px; margin:16px 0; }
+.curator-look-review li { padding:14px 0; border-bottom:1px solid var(--line); }
+.curator-look-review p { font-size:14px; line-height:1.6; }
+.curator-review-url { color:#505968; overflow-wrap:anywhere; }
+[data-curator-look-form] .curator-form-actions { flex-wrap:wrap; gap:12px; padding-top:16px; border-top:1px solid var(--line); }
+[data-curator-look-form] .curator-field label { font-size:13px; line-height:1.5; }
+@media(max-width:600px) {
+  .curator-editor-steps button { font-size:12px; padding:8px 4px; }
+  .curator-look-review { padding:14px; }
+}
 :root {
   --curator-ink: #171614;
   --curator-paper: #e7e1da;

@@ -1,4 +1,9 @@
 /* COMOOTD interface polish: social actions and editorial refinements. */
+/* The open dialog owns scrolling, not the page behind it. */
+html:has(dialog[open]), body:has(dialog[open]) { overflow:hidden; overscroll-behavior:none; }
+#lookModal[open], #productModal[open], #articleModal[open] { overflow:hidden; overscroll-behavior:none; }
+dialog[open] :is(.modal-shell,.detail-content,.curator-studio-main) { overscroll-behavior:contain; }
+.catalogue-reset { margin:12px 0; min-height:44px; font-size:13px; }
 /* Look details: explicit regions prevent long copy squeezing shopping actions. */
 .look-detail .look-item { grid-template-columns:64px minmax(0,1fr); gap:12px 16px; padding:20px 0; align-items:start; }
 .look-detail .look-item-art { width:64px; height:72px; border-radius:8px; background:var(--paper-deep); }

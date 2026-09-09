@@ -10,7 +10,23 @@
     if (typeof getState !== "function") throw new Error("Catalogue state provider is required.");
     const doc = options.document || window.document;
     const browserWindow = options.window || window;
-    const filters = { q:"", gender:"all", style:"all", sort:"popular", category:"all", price:"all", marketplace:"all" };
+    const defaults = { q:"", gender:"all", style:"all", sort:"popular", category:"all", price:"all", marketplace:"all" };
+    const filters = { ...defaults };
+    const views = new Map();
+    let filterPath = "", renderedPath = "", suspendedPath = "";
+    const path = () => browserWindow.location.pathname.replace(/\/+$/, "") || "/";
+    function syncFilters() {
+      const next = path();
+      if (next === filterPath) return;
+      if (filterPath) views.set(filterPath, { ...views.get(filterPath), filters:{ ...filters } });
+      Object.assign(filters, defaults, views.get(next)?.filters || {});
+      filterPath = next;
+    }
+    function remember() {
+      if (!renderedPath) return;
+      views.set(renderedPath, { ...views.get(renderedPath), filters:{ ...filters }, scroll:ensureLayer().scrollTop });
+      suspendedPath = renderedPath;
+    }
 
     function readRoute() {
       const pathname = browserWindow.location.pathname.replace(/\/+$/, "") || "/";
@@ -66,6 +82,7 @@
     }
 
     function filteredEntries(route) {
+      syncFilters();
       const state = getState();
       let source = route.key === "products" ? [...state.products] : route.key === "journal" ? [...state.articles] : route.key === "comootd" ? state.looks.filter((item) => item.publisherType !== "curator" && !item.curator?.handle) : route.key === "curators" ? state.looks.filter((item) => item.publisherType === "curator" || item.curator?.handle) : [...state.looks];
       if (route.key === "style") source = source.filter((item) => (item.styles || []).some((style) => String(style).toLowerCase() === String(route.styleName).toLowerCase()));
@@ -100,19 +117,45 @@
     function render() {
       const route = readRoute();
       const layer = ensureLayer();
-      if (!route) { layer.classList.remove("is-open"); layer.innerHTML = ""; doc.body.classList.remove("catalogue-route-open"); return false; }
+      if (!route) { if (renderedPath) remember(); renderedPath = ""; layer.classList.remove("is-open"); layer.innerHTML = ""; doc.body.classList.remove("catalogue-route-open"); return false; }
+      const nextPath = path();
+      const scroll = renderedPath === nextPath ? layer.scrollTop : suspendedPath === nextPath ? views.get(nextPath)?.scroll || 0 : 0;
+      const focused = doc.activeElement;
+      const focusedFilter = focused?.getAttribute?.("data-directory-filter");
+      const caret = focusedFilter === "q" ? focused.selectionStart : null;
       const source = filteredEntries(route);
       const content = route.key === "products" ? source.map(productCard).join("") : route.key === "journal" ? source.map(journalCard).join("") : source.map(lookCard).join("");
       const className = route.key === "products" ? "catalogue-product-grid" : route.key === "journal" ? "catalogue-journal-grid" : "catalogue-look-grid";
       const tabs = route.key === "products" ? `<span class="is-active">Products</span>` : route.key === "journal" ? `<span class="is-active">Journal</span>` : `<a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a>${route.key === "style" ? `<span class="is-active">${esc(route.styleName)}</span>` : ""}`;
       layer.innerHTML = `<div class="catalogue-route-shell">${routeBar()}<main class="catalogue-route-body"><div class="catalogue-route-heading"><p>COMOOTD / DIRECTORY</p><h1>${esc(route.title)}</h1><p>${esc(route.deck)}</p></div><nav class="catalogue-route-tabs" aria-label="Pilihan katalog">${tabs}</nav>${filterMarkup(route)}${route.key !== "journal" ? `<p class="catalogue-result-count">${source.length} hasil</p>` : ""}<section class="${className}">${content || `<p class="catalogue-empty">Belum ada konten yang cocok dengan filter ini.</p>`}</section></main></div>`;
       layer.classList.add("is-open"); doc.body.classList.add("catalogue-route-open"); updateMetadata(route);
+      renderedPath = nextPath;
+      suspendedPath = "";
+      layer.scrollTop = scroll;
+      layer.querySelectorAll("[data-directory-filters] label > span").forEach((label) => { if (label.textContent === "Search") label.textContent = "Cari"; if (label.textContent === "Style") label.textContent = "Gaya"; });
+      const empty = layer.querySelector(".catalogue-empty");
+      if (empty) {
+        const activeFilters = Object.keys(defaults).some((key) => filters[key] !== defaults[key]);
+        empty.textContent = activeFilters ? "Tidak ada hasil yang cocok. Coba kata lain atau reset filter." : "Konten sedang disiapkan. Kamu bisa memeriksa kembali nanti.";
+      }
+      if (route.key !== "journal") {
+        const reset = doc.createElement("button");
+        reset.type = "button"; reset.className = "button-outline catalogue-reset"; reset.textContent = "Reset filter";
+        reset.disabled = !Object.keys(defaults).some((key) => filters[key] !== defaults[key]);
+        reset.onclick = () => { Object.assign(filters, defaults); render(); layer.querySelector('[data-directory-filter="q"]')?.focus(); };
+        layer.querySelector("[data-directory-filters]")?.after(reset);
+      }
+      if (focusedFilter) {
+        const control = layer.querySelector(`[data-directory-filter="${focusedFilter}"]`);
+        control?.focus({ preventScroll:true });
+        if (caret !== null) control?.setSelectionRange(caret, caret);
+      }
       return true;
     }
 
-    function setFilter(name, value) { if (Object.prototype.hasOwnProperty.call(filters, name)) filters[name] = String(value || ""); }
+    function setFilter(name, value) { syncFilters(); if (Object.prototype.hasOwnProperty.call(filters, name)) filters[name] = String(value || ""); }
 
-    return { readRoute, ensureLayer, render, setFilter, filteredEntries };
+    return { readRoute, ensureLayer, render, setFilter, filteredEntries, remember };
   }
 
   window.COMOOTDCatalogueDirectory = Object.freeze({ create });
