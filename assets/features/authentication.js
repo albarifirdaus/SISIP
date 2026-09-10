@@ -8,8 +8,8 @@
 
     function render() {
       const signup = mode === "signup";
-      elements.title.textContent = signup ? "Buat profil gayamu." : "Masuk untuk menemukan yang lebih pas.";
-      elements.copy.textContent = signup ? "Daftar dengan email untuk menyimpan preferensi dan menerima kurasi yang lebih relevan." : "Simpan preferensi style, dapatkan urutan look yang lebih relevan, dan kirim request outfit ke COMOOTD Studio.";
+      elements.title.textContent = signup ? "Your style starts here." : "Welcome back.";
+      elements.copy.textContent = signup ? "Buat akun untuk menyimpan look favorit dan mengatur preferensi gayamu." : "Masuk untuk membuka koleksi, mengikuti kurator, dan request outfit sesuai plans-mu.";
       elements.displayNameField.hidden = !signup;
       elements.submit.innerHTML = signup ? `Buat akun <span aria-hidden="true">↗</span>` : `Masuk <span aria-hidden="true">↗</span>`;
       elements.switchButton.textContent = signup ? "Sudah punya akun? Masuk dengan email" : "Belum punya akun? Daftar dengan email";

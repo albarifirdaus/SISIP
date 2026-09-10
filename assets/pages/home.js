@@ -1482,7 +1482,7 @@
           if (!active) return false;
           renderDirectoryRoute();
           const title = "Request Outfit — COMOOTD";
-          const description = "Kirim brief agenda, budget, dan arah gaya untuk menerima rekomendasi outfit personal dari COMOOTD.";
+          const description = "Ada plans, belum ada outfit? Share acara, budget, dan style yang kamu mau untuk request rekomendasi dari COMOOTD.";
           const canonical = new URL("/request", window.location.origin).href;
           document.title = title;
           document.getElementById("pageTitle")?.replaceChildren(title);
@@ -2916,10 +2916,10 @@
             prefillRequestForm();
             memberRequests=await cloud.loadMyOutfitRequests();
             updateMemberUi();
-            els.requestStatus.textContent="Brief sudah masuk ke COMOOTD Studio. Kamu bisa melihat status dan jawabannya dari profil.";
+            els.requestStatus.textContent="Request terkirim. Cek status dan rekomendasi tim COMOOTD dari profilmu.";
             showToast("Request outfit sudah dikirim ke COMOOTD Studio.");
           } catch(error) {
-            els.requestStatus.textContent=error.message||"Request belum dapat dikirim. Coba lagi sesaat lagi.";
+            els.requestStatus.textContent=error.message||"Request belum terkirim. Coba lagi sebentar lagi.";
           } finally {
             button.disabled=false;
             button.innerHTML=originalLabel;

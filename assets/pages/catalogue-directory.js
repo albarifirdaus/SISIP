@@ -31,11 +31,11 @@
     function readRoute() {
       const pathname = browserWindow.location.pathname.replace(/\/+$/, "") || "/";
       const entries = {
-        "/looks": { key:"looks", title:"All Looks", deck:"Kurasi mix-and-match untuk berbagai agenda, style, dan mood." },
-        "/looks/comootd": { key:"comootd", title:"Looks by COMOOTD", deck:"Kurasi editorial dari tim COMOOTD, dibuat untuk dipakai berulang." },
-        "/looks/curators": { key:"curators", title:"Looks by Curators", deck:"Sudut pandang personal dari para curator dan fashion people COMOOTD." },
-        "/products": { key:"products", title:"Products", deck:"Produk pilihan COMOOTD yang siap menjadi bagian dari rotasi wardrobe-mu." },
-        "/journal": { key:"journal", title:"Style Journal", deck:"Catatan praktis tentang proporsi, warna, dan strategi mix-and-match." }
+        "/looks": { key:"looks", title:"All Looks", deck:"Daily plans, different moods. Explore look dari COMOOTD dan para kurator, lengkap dengan detail produknya." },
+        "/looks/comootd": { key:"comootd", title:"Looks by COMOOTD", deck:"The COMOOTD edit. Pilihan look dari tim kami untuk inspirasi mix & match kamu." },
+        "/looks/curators": { key:"curators", title:"Looks by Curators", deck:"Different people, different takes. Temukan look dari kurator dengan style dan sudut pandangnya sendiri." },
+        "/products": { key:"products", title:"Products", deck:"Find your next piece. Explore produk berdasarkan kategori, warna, dan budget." },
+        "/journal": { key:"journal", title:"Style Journal", deck:"A little styling insight. Ide warna, proporsi, dan mix & match untuk look berikutnya." }
       };
       if (entries[pathname]) return entries[pathname];
       const styleMatch = pathname.match(/^\/styles\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
