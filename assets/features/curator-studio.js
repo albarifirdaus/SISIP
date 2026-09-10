@@ -466,7 +466,7 @@
       <div class="section-heading">
         <div>
           <p class="section-number eyebrow">COMOOTD / COMMUNITY CURATION</p>
-          <h2 class="section-title" id="curatorsTitle">Curated by People<br />with <em>Point of View.</em></h2>
+          <h2 class="section-title" id="curatorsTitle">Different Curators.<br /><em>Different Takes.</em></h2>
         </div>
         <div class="section-lead">
           <p class="section-description">Different styles, real points of view. Explore look para kurator dan temukan yang sefrekuensi denganmu.</p>
@@ -518,10 +518,10 @@
     return `<div class="curator-route-shell">${routeBarMarkup()}<main class="curator-route-body">
       <section class="curator-directory-head" aria-labelledby="curatorDirectoryTitle">
         <div><p class="eyebrow" style="color:var(--clay)">COMOOTD / CURATOR DIRECTORY</p><h1 id="curatorDirectoryTitle">Meet the<br /><span>Curators.</span></h1></div>
-        <p class="curator-directory-copy">A growing collective of personal fashion edits. Setiap profil membawa sudut pandang sendiri—dengan tautan affiliate yang dikelola pemilik kurasi.</p>
+        <p class="curator-directory-copy">Different styles, different perspectives. Temukan kurator yang sefrekuensi, explore look mereka, dan follow untuk kembali ke profil favoritmu.</p>
       </section>
-      <div class="curator-directory-filters"><label><span>Search curator</span><input type="search" data-curator-directory-filter="q" value="${esc(curatorFilters.q)}" placeholder="Nama, @handle, bio, atau tag" /></label><label><span>Style / profile</span><select data-curator-directory-filter="tag"><option value="all">Semua tag</option>${tags.map((tag)=>`<option value="${esc(tag)}"${curatorFilters.tag===tag?" selected":""}>${esc(tag)}</option>`).join("")}</select></label><label><span>Urutkan</span><select data-curator-directory-filter="sort"><option value="popular"${curatorFilters.sort==="popular"?" selected":""}>Paling populer</option><option value="newest"${curatorFilters.sort==="newest"?" selected":""}>Terbaru</option><option value="az"${curatorFilters.sort==="az"?" selected":""}>A–Z</option></select></label></div><p class="curator-directory-result">${curators.length} curator ditemukan</p>
-      <section class="curator-directory-grid" aria-label="Daftar Curator">${curators.length ? curators.map((curator, index) => curatorCardMarkup(curator, index, true)).join("") : `<div class="curator-empty">Belum ada curator aktif. Kembali ke beranda untuk menjadi curator pertama.</div>`}</section>
+      <div class="curator-directory-filters"><label><span>Search curator</span><input type="search" data-curator-directory-filter="q" value="${esc(curatorFilters.q)}" placeholder="Nama, @handle, bio, atau tag" /></label><label><span>Style / profile</span><select data-curator-directory-filter="tag"><option value="all">Semua tag</option>${tags.map((tag)=>`<option value="${esc(tag)}"${curatorFilters.tag===tag?" selected":""}>${esc(tag)}</option>`).join("")}</select></label><label><span>Urutkan</span><select data-curator-directory-filter="sort"><option value="popular"${curatorFilters.sort==="popular"?" selected":""}>Paling populer</option><option value="newest"${curatorFilters.sort==="newest"?" selected":""}>Terbaru</option><option value="az"${curatorFilters.sort==="az"?" selected":""}>A–Z</option></select></label></div><p class="curator-directory-result">${curators.length} kurator ditemukan</p>
+      <section class="curator-directory-grid" aria-label="Daftar Curator">${curators.length ? curators.map((curator, index) => curatorCardMarkup(curator, index, true)).join("") : `<div class="curator-empty">${q || curatorFilters.tag !== "all" ? "Tidak ada kurator yang cocok. Coba nama lain atau pilih Semua tag." : "Belum ada kurator aktif. Profil kurator akan tampil di sini setelah disetujui."}</div>`}</section>
     </main></div>`;
   }
   function profileMarkup(curator) {
@@ -547,7 +547,7 @@
     </main></div>`;
   }
   function notFoundMarkup(handle) {
-    return `<div class="curator-route-shell">${routeBarMarkup()}<main class="curator-route-body"><section class="curator-directory-head"><div><p class="eyebrow" style="color:var(--clay)">404 / CURATOR</p><h1>Profile<br /><span>Not Found.</span></h1></div><p class="curator-directory-copy">Kami belum menemukan profil @${esc(handle)}. Mungkin handle-nya berubah atau profilnya belum aktif.</p></section><p style="margin-top:1.4rem"><a class="button" href="${ROUTE_ROOT}" data-curator-directory>Lihat semua curator ↗</a></p></main></div>`;
+    return `<div class="curator-route-shell">${routeBarMarkup()}<main class="curator-route-body"><section class="curator-directory-head"><div><p class="eyebrow" style="color:var(--clay)">404 / CURATOR</p><h1>Profile<br /><span>Not Found.</span></h1></div><p class="curator-directory-copy">Kami belum menemukan profil @${esc(handle)}. Mungkin handle-nya berubah atau profilnya belum aktif.</p></section><p style="margin-top:1.4rem"><a class="button" href="${ROUTE_ROOT}" data-curator-directory>Lihat semua kurator ↗</a></p></main></div>`;
   }
   function routeInfo() {
     const parts = location.pathname.split("/").filter(Boolean);
@@ -607,7 +607,7 @@
   function onboardMarkup() {
     const application = state.application || {};
     if (application.status === "submitted") {
-      return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / APPLICATION RECEIVED</p><h2>We are<br />reviewing it.</h2><div class="curator-application-status"><strong>Pengajuan @${esc(application.requestedHandle)}</strong><span>Dikirim ${esc(humanDate(application.submittedAt))}</span><p>Tim COMOOTD akan menilai orisinalitas, konsistensi point of view, dan kualitas referensi. Hasilnya muncul di notifikasi akunmu.</p></div><p class="curator-onboard-copy">Untuk berkas tambahan, hubungi <a href="mailto:comootd@gmail.com">comootd@gmail.com</a>.</p><button class="button-outline" type="button" data-withdraw-curator-application>Batalkan pengajuan</button></div>`;
+      return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / APPLICATION RECEIVED</p><h2>Application<br />Received.</h2><div class="curator-application-status"><strong>Pengajuan @${esc(application.requestedHandle)}</strong><span>Dikirim ${esc(humanDate(application.submittedAt))}</span><p>Tim COMOOTD akan menilai orisinalitas, konsistensi point of view, dan kualitas referensi. Hasilnya muncul di notifikasi akunmu.</p></div><p class="curator-onboard-copy">Untuk berkas tambahan, hubungi <a href="mailto:comootd@gmail.com">comootd@gmail.com</a>.</p><button class="button-outline" type="button" data-withdraw-curator-application>Batalkan pengajuan</button></div>`;
     }
     const rejected = application.status === "rejected";
     return `<div class="curator-onboard-shell"><button class="icon-button modal-close" type="button" data-close-curator-onboard aria-label="Tutup">×</button><p class="eyebrow" style="color:var(--clay)">COMOOTD / CURATOR APPLICATION</p><h2>Show Your<br />Point of View.</h2><p class="curator-onboard-copy">Akun Curator hanya diaktifkan setelah peninjauan. Kami melihat sudut pandang, konsistensi konten, dan apakah referensimu membantu orang menemukan outfit dengan lebih mudah.</p>${rejected ? `<div class="curator-review-note"><strong>Pengajuan sebelumnya belum disetujui.</strong><p>${esc(application.adminNote || "Perbaiki informasi yang masih kurang, lalu kirim ulang.")}</p></div>` : ""}<form class="curator-form" data-curator-onboard-form>
@@ -815,12 +815,12 @@
     const looks = ownCuratorLooks().sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt)));
     const quota = state.curator?.maxPublishedLooks || DEFAULT_QUOTA;
     const publishDisabled = publishedOwnLookCount() >= quota;
-    return `<section class="curator-studio-panel" data-curator-studio-panel="looks"><p class="eyebrow" style="color:var(--clay)">YOUR LOOK LIBRARY</p><h3>Keep the edit<br />intentional.</h3><p class="curator-studio-lede">Setiap look yang kamu publish akan langsung tampil di profil dan dapat dibagikan ke halaman detailnya.</p><p><button class="button" type="button" data-curator-new-look${publishDisabled ? " disabled title=\"Batas look aktif sudah tercapai\"" : ""}>+ Buat look baru</button></p>
+    return `<section class="curator-studio-panel" data-curator-studio-panel="looks"><p class="eyebrow" style="color:var(--clay)">YOUR LOOK LIBRARY</p><h3>Your Look<br />Library.</h3><p class="curator-studio-lede">Setiap look yang kamu publish akan langsung tampil di profil dan dapat dibagikan ke halaman detailnya.</p><p><button class="button" type="button" data-curator-new-look${publishDisabled ? " disabled title=\"Batas look aktif sudah tercapai\"" : ""}>+ Buat look baru</button></p>
       ${looks.length ? `<div class="curator-studio-library">${looks.map((look) => `<article class="curator-studio-look-row"><div>${publicImage(look.coverImage) ? `<img class="curator-studio-thumb" src="${esc(publicImage(look.coverImage))}" alt="" />` : `<div class="curator-studio-thumb"></div>`}</div><div><h4>${esc(look.title)}</h4><p>${esc(look.status)} · ${esc(humanDate(look.publishedAt))} · ${look.items.length} items</p></div><div class="curator-studio-row-actions"><a class="curator-small-button" href="/looks/${encodeURIComponent(look.slug)}">Lihat ↗</a><button class="curator-small-button" type="button" data-edit-curator-look="${esc(look.id)}">Edit</button><button class="curator-small-button danger" type="button" data-delete-curator-look="${esc(look.id)}">Arsipkan</button></div></article>`).join("")}</div>` : `<div class="curator-studio-placeholder">Your first look starts here. Bagikan satu kombinasi outfit yang paling kamu suka.</div>`}
     </section>`;
   }
   function studioInsightsMarkup() {
-    return `<section class="curator-studio-panel" data-curator-studio-panel="analytics"><p class="eyebrow" style="color:var(--clay)">YOUR PERFORMANCE</p><h3>See what<br />moves people.</h3><p class="curator-studio-lede">Lihat berapa kali kurasimu dibuka, dibagikan, dan mengirim pengunjung ke produk—tanpa menampilkan identitas pengunjung.</p><div data-insights-dashboard="curator"><div class="insights-loading">Memuat statistik kuratormu…</div></div></section>`;
+    return `<section class="curator-studio-panel" data-curator-studio-panel="analytics"><p class="eyebrow" style="color:var(--clay)">YOUR PERFORMANCE</p><h3>Your Looks<br />in Numbers.</h3><p class="curator-studio-lede">Lihat berapa kali kurasimu dibuka, dibagikan, dan mengirim pengunjung ke produk—tanpa menampilkan identitas pengunjung.</p><div data-insights-dashboard="curator"><div class="insights-loading">Memuat statistik kuratormu…</div></div></section>`;
   }
   function renderStudio(tab = state.studioTab) {
     const dialog = document.getElementById("curatorStudioDialog");
