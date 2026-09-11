@@ -13,13 +13,16 @@
     const defaults = { q:"", gender:"all", style:"all", sort:"popular", category:"all", price:"all", marketplace:"all" };
     const filters = { ...defaults };
     const views = new Map();
+    const pager = window.COMOOTDPagination.create(browserWindow);
+    const pages = new Map();
+    let pageError = "", loadingKey = "";
     let filterPath = "", renderedPath = "", suspendedPath = "";
     const path = () => browserWindow.location.pathname.replace(/\/+$/, "") || "/";
     function syncFilters() {
-      const next = path();
+      const next = path() + browserWindow.location.search;
       if (next === filterPath) return;
       if (filterPath) views.set(filterPath, { ...views.get(filterPath), filters:{ ...filters } });
-      Object.assign(filters, defaults, views.get(next)?.filters || {});
+      Object.assign(filters, pager.readFilters(defaults));
       filterPath = next;
     }
     function remember() {
@@ -77,7 +80,7 @@
       const state = getState();
       if (route.key === "journal") return "";
       if (route.key === "products") return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(filters.q)}" placeholder="Cari nama, warna, atau kategori" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${filters.gender === "Pria" ? " selected" : ""}>Pria</option><option value="Wanita"${filters.gender === "Wanita" ? " selected" : ""}>Wanita</option><option value="Uniseks"${filters.gender === "Uniseks" ? " selected" : ""}>Uniseks</option></select></label><label><span>Kategori</span><select data-directory-filter="category"><option value="all">Semua kategori</option>${Object.entries(productCategories).map(([value,label]) => `<option value="${value}"${filters.category === value ? " selected" : ""}>${label}</option>`).join("")}</select></label><label><span>Marketplace</span><select data-directory-filter="marketplace"><option value="all">Semua marketplace</option>${Object.entries(marketplaces).map(([value,item]) => `<option value="${value}"${filters.marketplace === value ? " selected" : ""}>${esc(item.label)}</option>`).join("")}</select></label><label><span>Harga</span><select data-directory-filter="price"><option value="all">Semua harga</option><option value="under100"${filters.price === "under100" ? " selected" : ""}>Di bawah Rp100 ribu</option><option value="100to250"${filters.price === "100to250" ? " selected" : ""}>Rp100–250 ribu</option><option value="250to500"${filters.price === "250to500" ? " selected" : ""}>Rp250–500 ribu</option><option value="over500"${filters.price === "over500" ? " selected" : ""}>Di atas Rp500 ribu</option></select></label></div>`;
-      const styles = [...new Set((route.key === "products" ? state.products : state.looks).flatMap((item) => item.styles || []))].sort();
+      const styles = [...new Set([...(state.styleTags || []).map(item => typeof item === "string" ? item : item.name), ...state.looks.flatMap(item => item.styles || [])])].filter(Boolean).sort();
       return `<div class="catalogue-filter" data-directory-filters><label><span>Search</span><input type="search" data-directory-filter="q" value="${esc(filters.q)}" placeholder="Cari nama, style, warna, atau kurator" /></label><label><span>Gender</span><select data-directory-filter="gender"><option value="all">Semua gender</option><option value="Pria"${filters.gender === "Pria" ? " selected" : ""}>Pria</option><option value="Wanita"${filters.gender === "Wanita" ? " selected" : ""}>Wanita</option><option value="Uniseks"${filters.gender === "Uniseks" ? " selected" : ""}>Uniseks</option></select></label><label><span>Style</span><select data-directory-filter="style"><option value="all">Semua style</option>${styles.map((style) => `<option value="${esc(style)}"${filters.style === style ? " selected" : ""}>${esc(style)}</option>`).join("")}</select></label><label><span>Urutkan</span><select data-directory-filter="sort"><option value="popular"${filters.sort === "popular" ? " selected" : ""}>Paling populer</option><option value="newest"${filters.sort === "newest" ? " selected" : ""}>Terbaru</option><option value="az"${filters.sort === "az" ? " selected" : ""}>A–Z</option></select></label></div>`;
     }
 
@@ -102,9 +105,8 @@
 
     function setMetaContent(id, value) { const node = doc.getElementById(id); if (node) node.setAttribute("content", value); }
     function updateMetadata(route) {
-      const canonical = new URL(browserWindow.location.href);
-      canonical.search = "";
-      const title = `${route.title} — COMOOTD`;
+      const canonical = new URL(pager.canonical());
+      const title = `${route.title} — COMOOTD${pager.page()>1 ? ` · Page ${pager.page()}` : ""}`;
       doc.title = title;
       doc.getElementById("pageTitle")?.replaceChildren(title);
       doc.getElementById("canonicalUrl")?.setAttribute("href", canonical.href);
@@ -114,24 +116,63 @@
       doc.getElementById("openGraphImage")?.remove(); doc.getElementById("twitterImage")?.remove();
     }
 
+    let rendering = false;
     function render() {
+      if(rendering) return Boolean(readRoute());
+      rendering=true;
+      try { return renderView(); } finally { rendering=false; }
+    }
+    function renderView() {
       const route = readRoute();
       const layer = ensureLayer();
       if (!route) { if (renderedPath) remember(); renderedPath = ""; layer.classList.remove("is-open"); layer.innerHTML = ""; doc.body.classList.remove("catalogue-route-open"); return false; }
-      const nextPath = path();
+      syncFilters();
+      const nextPath = path() + browserWindow.location.search;
       const scroll = renderedPath === nextPath ? layer.scrollTop : suspendedPath === nextPath ? views.get(nextPath)?.scroll || 0 : 0;
       const focused = doc.activeElement;
       const focusedFilter = focused?.getAttribute?.("data-directory-filter");
       const caret = focusedFilter === "q" ? focused.selectionStart : null;
-      const source = filteredEntries(route);
+      const paginated = true;
+      const requestKey = JSON.stringify([path(),pager.page(),filters]);
+      let result = pages.get(requestKey);
+      if(result) options.onPage?.(result.catalogue);
+      if (paginated && options.loadPage && !result && loadingKey !== requestKey) {
+        loadingKey = requestKey; pageError = "";
+        options.loadPage(route.key,pager.page(),{ ...filters, ...(route.styleName ? {style:route.styleName} : {}) }).then(value => {
+          pages.set(requestKey,value);
+          if (pages.size>5) pages.delete(pages.keys().next().value);
+          if (JSON.stringify([path(),pager.page(),pager.readFilters(defaults)])!==requestKey) return;
+          options.onPage?.(value.catalogue);
+          if (value.page!==pager.page()) browserWindow.history.replaceState(browserWindow.history.state,"",pager.url(value.page));
+          render();
+        }).catch(error => {
+          if (JSON.stringify([path(),pager.page(),pager.readFilters(defaults)])!==requestKey) return;
+          pageError = "Katalog belum berhasil dimuat. Coba lagi.";
+          console.warn("Directory page failed",error); render();
+        });
+      }
+      const all = paginated && options.loadPage ? [] : filteredEntries(route);
+      if (!result) result = { total:all.length,page:Math.min(pager.page(),Math.max(1,Math.ceil(all.length/24))),pageSize:24,entries:all };
+      const source = paginated ? options.loadPage ? result.entries : all.slice((result.page-1)*24,result.page*24) : all;
       const content = route.key === "products" ? source.map(productCard).join("") : route.key === "journal" ? source.map(journalCard).join("") : source.map(lookCard).join("");
       const className = route.key === "products" ? "catalogue-product-grid" : route.key === "journal" ? "catalogue-journal-grid" : "catalogue-look-grid";
       const tabs = route.key === "products" ? `<span class="is-active">Products</span>` : route.key === "journal" ? `<span class="is-active">Journal</span>` : `<a href="/looks" class="${route.key === "looks" ? "is-active" : ""}">All Looks</a><a href="/looks/comootd" class="${route.key === "comootd" ? "is-active" : ""}">By COMOOTD</a><a href="/looks/curators" class="${route.key === "curators" ? "is-active" : ""}">By Curators</a>${route.key === "style" ? `<span class="is-active">${esc(route.styleName)}</span>` : ""}`;
       layer.innerHTML = `<div class="catalogue-route-shell">${routeBar()}<main class="catalogue-route-body"><div class="catalogue-route-heading"><p>COMOOTD / DIRECTORY</p><h1>${esc(route.title)}</h1><p>${esc(route.deck)}</p></div><nav class="catalogue-route-tabs" aria-label="Pilihan katalog">${tabs}</nav>${filterMarkup(route)}${route.key !== "journal" ? `<p class="catalogue-result-count">${source.length} hasil</p>` : ""}<section class="${className}">${content || `<p class="catalogue-empty">Belum ada konten yang cocok dengan filter ini.</p>`}</section></main></div>`;
       layer.classList.add("is-open"); doc.body.classList.add("catalogue-route-open"); updateMetadata(route);
+      layer.querySelectorAll(`.${className} img`).forEach((img,index)=>{img.loading=index<4?"eager":"lazy";img.decoding="async";});
+      if (paginated) {
+        const count = layer.querySelector(".catalogue-result-count");
+        if (count) count.textContent = result.total ? `${(result.page-1)*result.pageSize+1}–${Math.min(result.page*result.pageSize,result.total)} dari ${result.total} hasil` : "0 hasil";
+        layer.querySelector("main")?.insertAdjacentHTML("beforeend",pager.markup(result.page,result.total,result.pageSize));
+        if (options.loadPage && !pages.has(requestKey)) {
+          const grid = layer.querySelector(`.${className}`);
+          grid.innerHTML = pageError ? '<div class="directory-error" role="alert">Katalog belum berhasil dimuat. <button type="button" data-page-retry>Coba lagi</button></div>' : '<p class="directory-loading" role="status">Memuat katalog…</p>';
+          if (count) count.textContent = "";
+          grid.querySelector("[data-page-retry]")?.addEventListener("click",()=>{loadingKey="";render();});
+        }
+      }
       renderedPath = nextPath;
       suspendedPath = "";
-      layer.scrollTop = scroll;
       layer.querySelectorAll("[data-directory-filters] label > span").forEach((label) => { if (label.textContent === "Search") label.textContent = "Cari"; if (label.textContent === "Style") label.textContent = "Gaya"; });
       const empty = layer.querySelector(".catalogue-empty");
       if (empty) {
@@ -142,7 +183,7 @@
         const reset = doc.createElement("button");
         reset.type = "button"; reset.className = "button-outline catalogue-reset"; reset.textContent = "Reset filter";
         reset.disabled = !Object.keys(defaults).some((key) => filters[key] !== defaults[key]);
-        reset.onclick = () => { Object.assign(filters, defaults); render(); layer.querySelector('[data-directory-filter="q"]')?.focus(); };
+        reset.onclick = () => { Object.assign(filters, defaults); pager.writeFilters(filters,defaults); loadingKey=""; render(); layer.querySelector('[data-directory-filter="q"]')?.focus(); };
         layer.querySelector("[data-directory-filters]")?.after(reset);
       }
       if (focusedFilter) {
@@ -150,10 +191,11 @@
         control?.focus({ preventScroll:true });
         if (caret !== null) control?.setSelectionRange(caret, caret);
       }
+      layer.scrollTop = scroll;
       return true;
     }
 
-    function setFilter(name, value) { syncFilters(); if (Object.prototype.hasOwnProperty.call(filters, name)) filters[name] = String(value || ""); }
+    function setFilter(name, value) { syncFilters(); if (Object.prototype.hasOwnProperty.call(filters, name)) filters[name] = String(value || ""); pager.writeFilters(filters,defaults); }
 
     return { readRoute, ensureLayer, render, setFilter, filteredEntries, remember };
   }

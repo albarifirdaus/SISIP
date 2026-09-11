@@ -533,11 +533,19 @@
   const outfitRequestSelect = "id, requester_id, requester_name, requester_email, gender_target, occasion, style_tags, budget_min_idr, budget_max_idr, preferred_colors, message, status, response_message, responded_at, created_at, updated_at, outfit_request_recommendations(id, position, target_type, look_id, product_id, label)";
   const adminOutfitRequestSelect = `${outfitRequestSelect}, outfit_request_admin_notes(note, created_at, updated_at)`;
 
-  async function loadState({ admin = false } = {}) {
+  async function loadState({ admin = false, selection = null, studio = false } = {}) {
     const db = getClient();
     const now = new Date().toISOString();
 
     if (admin && !(await isAdmin())) throw new Error("Masuk sebagai admin COMOOTD untuk membuka Studio.");
+    const studioUser = studio ? await getCurrentUser() : null;
+    if(studio && !studioUser) throw new Error("Masuk terlebih dahulu untuk membuka Studio.");
+    let initialLookPage=null;
+    if(!admin && !selection && !studio) {
+      const {data,error}=await db.rpc("comootd_directory_page",{p_kind:"looks",p_page:1,p_filters:{sort:"popular"}});
+      if(error) throw error;
+      initialLookPage=data;
+    }
 
     const productSelect = "id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, gender_target, category, status, published_at, sort_order, created_at, is_available, link_status, product_marketplace_links(id,marketplace,affiliate_url,label,status,is_primary), product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order)";
     const lookSelect = "id, slug, title, excerpt, cover_image_path, cover_alt_text, tone, gender_target, style_tags, status, published_at, popularity, sort_order, created_at, creator_id, look_media(id, position, image_path, alt_text), look_items(id, position, product_variants(id, product_id, label, color_name, color_hex, image_path, is_active, sort_order, products(id, slug, name, affiliate_platform, affiliate_url, price_idr, badges, style_tags, cover_image_path, is_available, link_status, product_marketplace_links(id,marketplace,affiliate_url,label,status,is_primary)))), look_curation_items(id, position, category, name, color_variant, price_idr, affiliate_platform, affiliate_url, link_status, curator_item_marketplace_links(id,marketplace,affiliate_url,label,status,is_primary))";
@@ -613,18 +621,52 @@
       .order("name", { ascending: true });
     if (!admin) styleTagsQuery = styleTagsQuery.eq("is_active", true);
 
+    const read = (key, makeQuery, size = 24) => {
+      if (admin) return queryAllRows(makeQuery);
+      if (studio && key === "products") return queryAllRows(makeQuery);
+      if (studio && key === "looks") return queryAllRows((from,to)=>makeQuery(from,to).eq("creator_id",studioUser.id));
+      if (initialLookPage && key === "looks") return initialLookPage.ids.length ? queryRows(makeQuery(0,23).in("id",initialLookPage.ids)) : Promise.resolve([]);
+      if (selection) {
+        const ids = selection[key] || [];
+        return ids.length ? queryRows(makeQuery(0, ids.length - 1).in(key === "curators" ? "user_id" : "id", ids)) : Promise.resolve([]);
+      }
+      return queryRows(makeQuery(0, size - 1));
+    };
     const [productRows, lookRows, articleRows, newSeriesSlotRows, storefrontVisualRows, campaignBannerRow, outfitRequestRows, curatorRows, styleTagRows] = await Promise.all([
-      queryAllRows(productsQuery),
-      queryAllRows(looksQuery),
-      queryAllRows(articlesQuery),
+      read("products", productsQuery),
+      read("looks", looksQuery),
+      read("articles", articlesQuery, 12),
       queryRows(newSeriesSlotsQuery),
       queryRows(storefrontVisualsQuery),
       campaignBannerQuery,
       outfitRequestsQuery ? queryAllRows(outfitRequestsQuery) : Promise.resolve([]),
-      queryAllRows(curatorProfilesQuery),
+      read("curators", curatorProfilesQuery, 12),
       queryRows(styleTagsQuery)
     ]);
 
+    // Hydrate only dependencies of the bounded page, including manually chosen
+    // homepage visuals. Never download the remaining catalogue behind pagination.
+    if (!admin) {
+      const hydrate = async (rows, ids, makeQuery, key = "id") => {
+        const missing = [...new Set(ids.filter(Boolean))].filter(id => !rows.some(row => row[key] === id));
+        for (let start = 0; start < missing.length; start += 100) {
+          const batch = missing.slice(start, start + 100);
+          rows.push(...await queryRows(makeQuery(0, batch.length - 1).in(key, batch)));
+        }
+      };
+      const featured = selection ? [] : storefrontVisualRows;
+      await hydrate(articleRows, featured.map(row => row.article_id), articlesQuery);
+      await hydrate(lookRows, [
+        ...articleRows.flatMap(row => (row.article_ctas || []).map(cta => cta.look_id)),
+        ...featured.map(row => row.look_id), ...(selection ? [] : newSeriesSlotRows.map(row => row.look_id)), ...(selection ? [] : styleTagRows.map(row=>row.preview_look_id))
+      ], looksQuery);
+      await hydrate(productRows, [
+        ...lookRows.flatMap(row => (row.look_items || []).map(item => item.product_variants?.product_id)),
+        ...articleRows.flatMap(row => (row.article_ctas || []).map(cta => cta.product_id)),
+        ...featured.map(row => row.product_id)
+      ], productsQuery);
+      await hydrate(curatorRows, [...lookRows.map(row => row.creator_id), ...featured.map(row => row.curator_id)], curatorProfilesQuery, "user_id");
+    }
     const curatorIds = curatorRows.map((row) => row.user_id).filter(Boolean);
     const [profileRows, socialRows, bodyMetricRows] = await Promise.all([
       // The member `profiles` table deliberately remains private. Public
@@ -646,6 +688,11 @@
     });
     const bodyMetricsByCurator = new Map(bodyMetricRows.map((row) => [row.user_id, row]));
     const curators = curatorRows.map((row) => mapCurator(row, profileMap.get(row.user_id), socialsByContributor.get(row.user_id) || [], bodyMetricsByCurator.get(row.user_id) || null));
+    if (!admin && curatorIds.length) {
+      const {data: summaries,error} = await db.rpc("comootd_curator_summaries",{p_ids:curatorIds.slice(0,100)});
+      if(error) throw error;
+      curators.forEach(curator=>Object.assign(curator,summaries?.[curator.id] || {}));
+    }
     const curatorMap = new Map(curators.map((curator) => [curator.userId, curator]));
 
     const products = productRows.map(mapProduct);
@@ -685,7 +732,31 @@
       ? outfitRequestRows.map((row) => mapOutfitRequest(row, { productMap, lookMap, includeAdminNote: true }))
       : [];
     const styleTags = (styleTagRows || []).map((row) => ({ id:row.id, name:row.name, isActive:row.is_active !== false, isExploreVisible:Boolean(row.is_explore_visible), sortOrder:Number(row.sort_order || 0), previewLookId:row.preview_look_id || "" }));
-    return { products, looks, articles, curators, styleTags, storefrontVisuals, campaignBanner, newSeriesSlots, newSeriesLookIds, requests };
+    return { products, looks, articles, curators, styleTags, storefrontVisuals, campaignBanner, newSeriesSlots, newSeriesLookIds, requests, publicLookCount:initialLookPage?.total };
+  }
+
+  async function loadDirectoryPage(kind, page = 1, filters = {}) {
+    const { data, error } = await getClient().rpc("comootd_directory_page", {
+      p_kind: kind, p_page: Math.max(1, Math.min(2147483647, Math.trunc(Number(page)) || 1)), p_filters: filters
+    });
+    if (error) throw error;
+    const key = kind === "products" ? "products" : kind === "journal" ? "articles" : kind === "directory-curators" ? "curators" : "looks";
+    const catalogue = await loadState({ selection: { [key]: data.ids } });
+    if (key === "curators") catalogue.curators.forEach(curator => Object.assign(curator, data.stats?.[curator.id] || {}));
+    const byId = new Map(catalogue[key].map(entry => [entry.id, entry]));
+    return { ...data, entries: data.ids.map(id => byId.get(id)).filter(Boolean), catalogue };
+  }
+
+  async function loadPublicContent(type, value, { byId = false } = {}) {
+    const table = { look: "looks", product: "products", article: "articles", curator: "curator_profiles" }[type];
+    if (!table) throw new Error("Jenis konten tidak valid.");
+    const idKey = type === "curator" ? "user_id" : "id";
+    let query = getClient().from(table).select(idKey).eq(byId ? idKey : type === "curator" ? "handle" : "slug", value);
+    query = type === "curator" ? query.eq("is_active", true) : query.eq("status", "published").lte("published_at", new Date().toISOString());
+    const { data, error } = await query.maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return loadState({ selection: { [type === "curator" ? "curators" : table]: [data[idKey]] } });
   }
 
   async function getStyleTags() {
@@ -2980,6 +3051,8 @@
     isConfigured: validConfig,
     config,
     loadState,
+    loadDirectoryPage,
+    loadPublicContent,
     getStyleTags,
     ensureStyleTag,
     updateStyleTag,

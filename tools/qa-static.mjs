@@ -196,9 +196,12 @@ try {
   uiContext.window.COMOOTDFilters.renderStyleControls({ styles:["Clean", "Casual"], select, chips, activeStyle:"Casual", escapeHtml:(value) => String(value) });
   check(select.value === "Casual" && chips.innerHTML.includes('data-style="Casual"') && chips.innerHTML.includes("is-active"), "Komponen filters gagal mempertahankan style aktif");
 
+  uiContext.URL=URL;
+  runInNewContext(read("assets/features/directory-pagination.js"), uiContext, { filename:"assets/features/directory-pagination.js" });
   runInNewContext(read("assets/pages/catalogue-directory.js"), uiContext, { filename:"assets/pages/catalogue-directory.js" });
   const directoryState = { products:[{ id:"p1", name:"Oxford", price:120000, category:"top", genderTarget:"unisex", styles:["Clean"], variants:[] }], looks:[], articles:[], styleTags:[{ name:"Clean" }] };
-  const directoryWindow = { location:{ pathname:"/products", href:"https://comootd.test/products" } };
+  const directoryWindow = { location:new URL("https://comootd.test/products") };
+  directoryWindow.history={replaceState:(_state,_title,url)=>{directoryWindow.location=new URL(url,"https://comootd.test");}};
   const directory = uiContext.window.COMOOTDCatalogueDirectory.create({
     getState:() => directoryState, esc:(value) => String(value), slugify:(value) => String(value).toLowerCase(), money:(value) => String(value), safeImage:(value) => String(value),
     marketplaces:{ shopee:{ label:"Shopee" } }, productCategories:{ top:"Atasan" }, marketplaceOf:() => "shopee", marketplaceLabel:() => "Shopee",
@@ -210,10 +213,11 @@ try {
   check(directory.filteredEntries(directory.readRoute()).length === 1, "Page directory gagal menyaring kategori produk");
   directory.setFilter("q", "tidak-ada");
   check(directory.filteredEntries(directory.readRoute()).length === 0, "Pencarian kosong harus menghasilkan nol hasil");
-  directoryWindow.location.pathname = "/looks";
+  const previousDirectory=directoryWindow.location.href;
+  directoryWindow.location=new URL("https://comootd.test/looks");
   directoryState.looks.push({ id:"l1", title:"Clean look", styles:["Clean"] });
   check(directory.filteredEntries(directory.readRoute()).length === 1, "Filter produk tidak boleh bocor ke katalog look");
-  directoryWindow.location.pathname = "/products";
+  directoryWindow.location=new URL(previousDirectory);
   check(directory.filteredEntries(directory.readRoute()).length === 0, "Filter harus dipulihkan saat kembali ke katalog sebelumnya");
   directory.setFilter("q", "Oxford");
   check(directory.filteredEntries(directory.readRoute()).length === 1, "Pencarian harus dapat dipulihkan setelah hasil kosong");
@@ -377,6 +381,15 @@ try {
       ASSETS:{ fetch:async () => new Response(index, { headers:{ "content-type":"text/html" } }) }
     });
     const articleHtml = await articleResponse.text();
+    for(const path of ["/looks","/products","/curators","/curators/penulis-test","/journal","/styles/clean"]) {
+      const paged=await workerModule.default.fetch(new Request(`https://preview.comootd.test${path}?page=2&v=cachebuster`),{
+        SUPABASE_URL:"https://example.supabase.co",SUPABASE_PUBLISHABLE_KEY:"public-test-key",
+        SITE_ORIGIN:"https://preview.comootd.test",APP_ENV:"production",
+        ASSETS:{fetch:async()=>new Response(index,{headers:{"content-type":"text/html"}})}
+      });
+      const pagedHtml=await paged.text();
+      check(paged.status===200 && pagedHtml.includes(`href="https://preview.comootd.test${path}?page=2"`) && /<title\b[^>]*>[^<]*Page 2<\/title>/.test(pagedHtml),`${path}: metadata pagination tidak sesuai`);
+    }
     check(articleResponse.status === 200 && articleHtml.includes('"mentions":[{"@type":"CreativeWork"') && articleHtml.includes("Look Curator") && articleHtml.includes("/looks/look-curator") && articleHtml.includes("/curators/penulis-test"), "Worker gagal merender Looks Curator sebagai relasi artikel dan JSON-LD mentions");
   } finally { globalThis.fetch = previousFetch; }
 } catch (error) {

@@ -761,7 +761,9 @@ async function renderCuratorPage(request, env, route) {
         indexable: false
       }, env), { status: 404, headers: responseHeaders({ cacheControl: "no-store", indexable: false }) });
     }
-    return new Response(injectMetadata(shell, curatorMetadata(env, curator), env), {
+    const metadata=curatorMetadata(env, curator);
+    applyDirectoryPageMetadata(request,metadata);
+    return new Response(injectMetadata(shell, metadata, env), {
       headers: responseHeaders()
     });
   } catch {
@@ -824,11 +826,31 @@ async function renderDirectoryPage(request, env, type) {
     const shell = await getStaticShell(request, env);
     const metadata = directoryMetadata(env, type);
     if (!metadata) return errorPage(request, env, 404);
+    if(type!=="request-page") applyDirectoryPageMetadata(request,metadata);
     return new Response(injectMetadata(shell, metadata, env), {
       headers: responseHeaders()
     });
   } catch {
     return errorPage(request, env, 502);
+  }
+}
+
+function applyDirectoryPageMetadata(request, metadata) {
+  const source=new URL(request.url), canonical=new URL(metadata.canonical);
+  for(const name of ["q","gender","style","sort","category","price","marketplace","tag"]) {
+    const value=source.searchParams.get(name);
+    if(value && value!=="all" && !(name==="sort" && value==="popular")) canonical.searchParams.set(name,value.slice(0,200));
+  }
+  const page=Math.max(1,Math.min(2147483647,Math.trunc(Number(source.searchParams.get("page"))) || 1));
+  if(page>1) canonical.searchParams.set("page",String(page));
+  const previous=metadata.canonical;
+  metadata.canonical=canonical.href;
+  if(page>1) metadata.title=`${metadata.title} · Page ${page}`;
+  // Update the collection node without changing the identity of its entities.
+  for(const node of metadata.jsonLd?.["@graph"] || []) {
+    if(node["@id"]===`${previous}#webpage`) {
+      node["@id"]=`${metadata.canonical}#webpage`; node.url=metadata.canonical; node.name=metadata.title;
+    }
   }
 }
 
@@ -870,6 +892,7 @@ async function renderStyleDirectoryPage(request, env, route) {
       {name:"Looks",url:canonicalUrl(env,"/looks")},
       {name:`${style.name} Style`,url:canonical}
     ]);
+    applyDirectoryPageMetadata(request,metadata);
     return new Response(injectMetadata(shell, metadata, env), {headers:responseHeaders()});
   } catch { return errorPage(request, env, 502); }
 }

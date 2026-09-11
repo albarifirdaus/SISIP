@@ -53,6 +53,14 @@
         state.savedItems = remote.savedItems || [];
         state.followedCuratorIds = new Set((remote.followedCuratorIds || []).map(String));
         state.recentlyViewed = remote.recentlyViewed || [];
+        if(options.onCatalogue && cloud()?.loadState) {
+          const refs=[...state.savedItems,...state.recentlyViewed.slice(0,8),...[...state.followedCuratorIds].map(id=>({targetType:"curator",targetId:id}))];
+          for(let start=0;start<refs.length;start+=60) {
+            const selection={looks:[],products:[],curators:[],articles:[]};
+            refs.slice(start,start+60).forEach(item=>{const key={look:"looks",product:"products",curator:"curators",article:"articles"}[item.targetType];if(key && !entryFor(item.targetType,item.targetId)) selection[key].push(item.targetId);});
+            if(Object.values(selection).some(ids=>ids.length)) options.onCatalogue(await cloud().loadState({selection}));
+          }
+        }
         fireChange();
         return snapshot();
       } finally { state.loading = false; }

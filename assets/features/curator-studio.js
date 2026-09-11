@@ -87,6 +87,47 @@
     toastTimer: 0
   };
   const curatorFilters = { q:"", tag:"all", sort:"popular" };
+  const curatorFilterDefaults = { ...curatorFilters };
+  const directoryPages = new Map(), directoryPending = new Set(), routeScroll = new Map();
+  let directoryResult = null, profileResult = null;
+  const pagination = window.COMOOTDPagination;
+  function mergeCatalogue(catalogue) {
+    if (!catalogue) return;
+    for (const key of ["looks","products","curators","articles"]) {
+      const map = new Map(asArray(state.catalogue[key]).map(entry=>[entry.id || entry.userId,entry]));
+      asArray(catalogue[key]).forEach(entry=>map.set(entry.id || entry.userId,entry));
+      state.catalogue[key]=[...map.values()];
+    }
+    window.dispatchEvent(new CustomEvent("comootd:catalogue-page",{detail:catalogue}));
+  }
+  async function fetchRouteData(route,key) {
+    directoryPending.add(key);
+    try {
+      let result;
+      if (route.type==="directory") result=await cloud().loadDirectoryPage("directory-curators",pagination.page(),{...curatorFilters});
+      else {
+        const catalogue=await cloud().loadPublicContent("curator",route.handle);
+        const curator=catalogue?.curators?.[0];
+        result=curator ? await cloud().loadDirectoryPage("looks",pagination.page(),{creator:curator.userId,sort:"newest"}) : {entries:[],total:0,page:1,pageSize:24,catalogue:{},missing:true};
+        if(curator) result.catalogue.curators=[...result.catalogue.curators.filter(c=>c.id!==curator.id),curator];
+      }
+      directoryPages.set(key,result);
+      if(directoryPages.size>5) directoryPages.delete(directoryPages.keys().next().value);
+    } catch(error) {
+      console.warn("Curator directory load failed",error);
+      directoryPages.set(key,{error:true});
+    } finally {
+      directoryPending.delete(key);
+      if(location.pathname+location.search===key) {
+        const result=directoryPages.get(key);
+        if(result && !result.error && result.page!==pagination.page()) {
+          history.replaceState(history.state,"",pagination.url(result.page));
+          directoryPages.set(location.pathname+location.search,result);
+        }
+        renderRoute();
+      }
+    }
+  }
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;"
@@ -260,6 +301,9 @@
     const handle = compact(raw.handle || raw.username || "").replace(/^@+/, "").toLowerCase();
     return {
       raw,
+      lookCount: raw.lookCount,
+      totalLikes: raw.totalLikes,
+      coverImagePath: raw.coverImagePath,
       userId: String(userId || ""),
       handle,
       displayName,
@@ -355,7 +399,7 @@
   function publishedOwnLookCount() { return ownCuratorLooks().filter((look) => look.status === "published").length; }
   function cardImageForCurator(curator) {
     const latest = curatorLooks(curator).sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt)))[0];
-    return latest?.coverImage || curator.avatarPath || "";
+    return curator.coverImagePath || latest?.coverImage || curator.avatarPath || "";
   }
   function humanDate(value) {
     if (!value) return "Baru diterbitkan";
@@ -434,7 +478,7 @@
   function curatorCardMarkup(curator, index = 0, directory = false) {
     const cover = cardImageForCurator(curator);
     const looks = curatorLooks(curator);
-    const totalLikes = looks.reduce((total, look) => total + look.popularity, 0);
+    const totalLikes = curator.totalLikes ?? looks.reduce((total, look) => total + look.popularity, 0);
     const media = cover ? `<div class="curator-card-media"><img src="${esc(publicImage(cover))}" alt="" loading="lazy" /></div>` : "";
     const cardClass = directory ? "curator-directory-card" : "curator-card";
     const cardBadge = trustBadgeMarkup(curator, true);
@@ -449,7 +493,7 @@
         </div>
         <p class="curator-card-bio">${esc(curator.bio || "A personal edit of pieces worth repeating.")}</p>
         ${curator.jobTags.length ? `<div class="curator-card-tags">${curator.jobTags.slice(0, 3).map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>` : ""}
-        <div class="curator-card-stats" aria-label="Statistik ${esc(curator.displayName)}"><span><strong>${looks.length}</strong><small>Looks</small></span><span><strong>${totalLikes}</strong><small>Likes</small></span><span><strong>${curator.followerCount}</strong><small>Followers</small></span></div>
+        <div class="curator-card-stats" aria-label="Statistik ${esc(curator.displayName)}"><span><strong>${curator.lookCount ?? looks.length}</strong><small>Looks</small></span><span><strong>${totalLikes}</strong><small>Likes</small></span><span><strong>${curator.followerCount}</strong><small>Followers</small></span></div>
       </div>
       <a href="${ROUTE_ROOT}/${encodeURIComponent(curator.handle)}" data-curator-route="${esc(curator.handle)}" aria-label="Lihat kurasi ${esc(curator.displayName)}" class="curator-card-link"></a>
     </article>`;
@@ -486,6 +530,7 @@
     return `<div class="curator-socials">${socials.map((social) => `<a class="curator-social-link" href="${esc(social.url)}" target="_blank" rel="noopener noreferrer" aria-label="Buka ${esc(socialLabel(social.platform))} ${esc(curator.displayName)}" title="${esc(socialLabel(social.platform))}">${socialIcon(social.platform)}</a>`).join("")}${follow}<button type="button" class="curator-share-button" data-share-curator="${esc(curator.handle)}">Bagikan profil ↗</button></div>`;
   }
   function publicBodyMetricsMarkup(curator) {
+    if (!curator) return "";
     const metrics = [];
     if (curator.heightCm !== null && curator.heightCm !== undefined) metrics.push(`Tinggi ${curator.heightCm} cm`);
     if (curator.weightKg !== null && curator.weightKg !== undefined) metrics.push(`Berat ${curator.weightKg} kg`);
@@ -517,7 +562,10 @@
     if (q) curators = curators.filter((curator) => [curator.displayName, curator.handle, curator.bio, ...curator.jobTags].join(" ").toLowerCase().includes(q));
     if (curatorFilters.tag !== "all") curators = curators.filter((curator) => curator.jobTags.includes(curatorFilters.tag));
     curators.sort((a,b)=>curatorFilters.sort === "az" ? a.displayName.localeCompare(b.displayName,"id") : curatorFilters.sort === "newest" ? String(b.raw?.createdAt||b.raw?.created_at||"").localeCompare(String(a.raw?.createdAt||a.raw?.created_at||"")) : curatorLooks(b).reduce((sum,look)=>sum+look.popularity,0)-curatorLooks(a).reduce((sum,look)=>sum+look.popularity,0));
-    const tags=[...new Set(allCurators().flatMap((curator)=>curator.jobTags))].sort();
+    const total=directoryResult?.total ?? curators.length;
+    const current=directoryResult?.page ?? Math.min(pagination.page(),Math.max(1,Math.ceil(total/12)));
+    curators=directoryResult ? directoryResult.entries.map(normaliseCurator) : curators.slice((current-1)*12,current*12);
+    const tags=[...new Set([...activeStyleOptions(),...allCurators().flatMap((curator)=>curator.jobTags)])].sort();
     return `<div class="curator-route-shell">${routeBarMarkup()}<main class="curator-route-body">
       <section class="curator-directory-head" aria-labelledby="curatorDirectoryTitle">
         <div><p class="eyebrow" style="color:var(--clay)">COMOOTD / CURATOR DIRECTORY</p><h1 id="curatorDirectoryTitle">Meet the<br /><span>Curators.</span></h1></div>
@@ -525,11 +573,12 @@
       </section>
       <div class="curator-directory-filters"><label><span>Search curator</span><input type="search" data-curator-directory-filter="q" value="${esc(curatorFilters.q)}" placeholder="Nama, @handle, bio, atau tag" /></label><label><span>Style / profile</span><select data-curator-directory-filter="tag"><option value="all">Semua tag</option>${tags.map((tag)=>`<option value="${esc(tag)}"${curatorFilters.tag===tag?" selected":""}>${esc(tag)}</option>`).join("")}</select></label><label><span>Urutkan</span><select data-curator-directory-filter="sort"><option value="popular"${curatorFilters.sort==="popular"?" selected":""}>Paling populer</option><option value="newest"${curatorFilters.sort==="newest"?" selected":""}>Terbaru</option><option value="az"${curatorFilters.sort==="az"?" selected":""}>A–Z</option></select></label></div><p class="curator-directory-result">${curators.length} kurator ditemukan</p>
       <section class="curator-directory-grid" aria-label="Daftar Curator">${curators.length ? curators.map((curator, index) => curatorCardMarkup(curator, index, true)).join("") : `<div class="curator-empty">${q || curatorFilters.tag !== "all" ? "Tidak ada kurator yang cocok. Coba nama lain atau pilih Semua tag." : "Belum ada kurator aktif. Profil kurator akan tampil di sini setelah disetujui."}</div>`}</section>
+      ${pagination.markup(current,total,12)}
     </main></div>`;
   }
   function profileMarkup(curator) {
-    const looks = curatorLooks(curator).sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt)));
-    const totalLikes = looks.reduce((total, look) => total + look.popularity, 0);
+    const looks = profileResult ? profileResult.entries.map(normaliseLook) : curatorLooks(curator).sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt)));
+    const totalLikes = curator.totalLikes ?? looks.reduce((total, look) => total + look.popularity, 0);
     return `<div class="curator-route-shell">${routeBarMarkup()}<main class="curator-route-body">
       <section class="curator-profile-hero" aria-labelledby="curatorProfileTitle" data-insight-curator-id="${esc(curator.userId)}">
         <div class="curator-profile-identity">
@@ -547,6 +596,7 @@
       <section aria-labelledby="curatorLookTitle"><div class="curator-profile-looks-head"><div><p class="eyebrow" style="color:var(--clay)">THE EDIT</p><h2 id="curatorLookTitle">Looks by ${esc(curator.displayName.split(" ")[0])}</h2></div><span class="eyebrow">${looks.length} CURATION${looks.length === 1 ? "" : "S"}</span></div>
         ${looks.length ? `<div class="curator-look-grid">${looks.map(lookCardMarkup).join("")}</div>` : `<p class="curator-empty">Kurator ini sedang menyusun edit pertamanya. Cek lagi sebentar lagi.</p>`}
       </section>
+      ${profileResult ? pagination.markup(profileResult.page,profileResult.total,24) : ""}
     </main></div>`;
   }
   function notFoundMarkup(handle) {
@@ -570,31 +620,76 @@
     document.title = state.initialTitle;
     if (navigate && routeInfo().type !== "none") history.pushState({}, "", "/");
   }
+  let renderingRoute=false;
   function renderRoute() {
+    if(renderingRoute) return;
+    renderingRoute=true;
+    try { renderRouteView(); } finally {renderingRoute=false;}
+  }
+  function renderRouteView() {
     const layer = document.getElementById("curatorRouteLayer");
     if (!layer) return;
     const route = routeInfo();
     if (route.type === "none") { closeRoute(); return; }
-    const routePath = location.pathname;
+    const routePath = location.pathname+location.search;
+    Object.assign(curatorFilters,pagination.readFilters(curatorFilterDefaults));
+    const focused=document.activeElement, field=focused?.dataset?.curatorDirectoryFilter;
+    const caret=field==="q" ? focused.selectionStart : null;
+    const savedScroll=layer.scrollTop;
+    const remote=typeof cloud()?.loadDirectoryPage==="function";
+    const result=directoryPages.get(routePath);
+    directoryResult=route.type==="directory" && result && !result.error ? result : null;
+    profileResult=route.type!=="directory" && result && !result.error ? result : null;
+    if (remote && !result) {
+      if(!directoryPending.has(routePath)) void fetchRouteData(route,routePath);
+      layer.classList.add("is-open"); document.body.classList.add("curator-route-open");
+      state.routeOpen=true;
+      if(route.type==="directory") {
+        directoryResult={entries:[],total:0,page:1,pageSize:12};
+        layer.innerHTML=directoryMarkup();
+        layer.querySelector(".curator-directory-grid").innerHTML='<p class="directory-loading" role="status">Memuat kurator…</p>';
+        layer.querySelector(".curator-directory-result").textContent="";
+      } else layer.innerHTML='<main class="curator-route-body"><p role="status">Memuat profil…</p></main>';
+      if(field){const input=layer.querySelector(`[data-curator-directory-filter="${field}"]`);input?.focus({preventScroll:true});if(caret!==null) input?.setSelectionRange(caret,caret);}
+      return;
+    }
+    if(result?.error) {
+      layer.innerHTML='<main class="curator-route-body"><p role="alert">Kurator belum berhasil dimuat.</p><button type="button" data-curator-page-retry>Coba lagi</button></main>';
+      layer.querySelector("[data-curator-page-retry]").onclick=()=>{directoryPages.delete(routePath);renderRoute();};
+      return;
+    }
+    if(result) mergeCatalogue(result.catalogue);
     const routeChanged = state.renderedRoutePath !== routePath;
     layer.classList.add("is-open");
     state.routeOpen = true;
     document.body.classList.add("curator-route-open");
     if (route.type === "directory") {
       layer.innerHTML = directoryMarkup();
+      if(directoryResult) layer.querySelector(".curator-directory-result").textContent=`${directoryResult.total} kurator ditemukan · Halaman ${directoryResult.page}`;
       document.title = "Curators — COMOOTD";
     } else {
       const curator = allCurators().find((entry) => entry.handle === route.handle);
       layer.innerHTML = curator ? profileMarkup(curator) : notFoundMarkup(route.handle);
+      if(curator) {
+        const stats=layer.querySelector(".curator-profile-stat strong");
+        if(stats) stats.textContent=curator.lookCount ?? profileResult?.total ?? 0;
+        const count=layer.querySelector(".curator-profile-looks-head > .eyebrow");
+        if(count) count.textContent=`${curator.lookCount ?? profileResult?.total ?? 0} CURATIONS`;
+      }
       if (curator) void window.COMOOTDRetentionInstance?.recordView?.("curator", curator.userId);
       document.title = curator ? `${curator.displayName} (@${curator.handle}) — COMOOTD` : "Curator tidak ditemukan — COMOOTD";
     }
+    if(pagination.page()>1) document.title+=` · Page ${pagination.page()}`;
+    document.getElementById("canonicalUrl")?.setAttribute("href",pagination.canonical());
+    document.getElementById("openGraphUrl")?.setAttribute("content",pagination.canonical());
+    document.getElementById("openGraphTitle")?.setAttribute("content",document.title);
+    document.getElementById("twitterTitle")?.setAttribute("content",document.title);
     state.renderedRoutePath = routePath;
-    if (routeChanged) window.requestAnimationFrame(() => layer.scrollTo({ top: 0, left: 0, behavior: "auto" }));
-    const back = layer.querySelector("[data-close-curator-route]");
-    window.setTimeout(() => back?.focus(), 0);
+    layer.scrollTop=routeChanged ? routeScroll.get(routePath) || 0 : savedScroll;
+    if(field){const input=layer.querySelector(`[data-curator-directory-filter="${field}"]`);input?.focus({preventScroll:true});if(caret!==null) input?.setSelectionRange(caret,caret);}
   }
   function goToCurator(handle) {
+    routeScroll.set(location.pathname+location.search,document.getElementById("curatorRouteLayer")?.scrollTop || 0);
     const safe = safeHandle(handle);
     if (!safe) return;
     history.pushState({}, "", `${ROUTE_ROOT}/${encodeURIComponent(safe)}`);
@@ -860,10 +955,13 @@
     });
     dialog.innerHTML = `<button class="icon-button curator-studio-close" type="button" data-close-curator-studio aria-label="Tutup Curator Studio">×</button><div class="curator-studio-shell"><aside class="curator-studio-side"><p class="eyebrow">COMOOTD / CURATOR</p><h2>Studio<br />${esc(state.curator.displayName.split(" ")[0])}</h2><div class="curator-studio-quota"><strong>${count} / ${quota}</strong><span>Look aktif di Starter</span></div><nav class="curator-studio-tabs" aria-label="Menu Curator Studio"><button class="curator-studio-tab${tab === "looks" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="looks">Look library</button><button class="curator-studio-tab${tab === "profile" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="profile">Profile</button><button class="curator-studio-tab${tab === "analytics" && !state.editingLook ? " is-active" : ""}" type="button" data-curator-studio-tab="analytics">Analytics</button></nav></aside><div class="curator-studio-main">${body}</div></div>`;
   }
-  function openStudio() {
+  async function openStudio() {
     if (!state.user) { showToast("Masuk terlebih dahulu untuk membuka Curator Studio."); openAccount(); return; }
     if (!state.curator?.isActive || !state.curator.handle) { openOnboarding(); return; }
     const dialog = document.getElementById("curatorStudioDialog");
+    const owner=state.user.id;
+    try { const catalogue=await cloud().loadState({studio:true}); if(state.user?.id!==owner) return; mergeCatalogue(catalogue); }
+    catch { showToast("Studio belum berhasil dimuat. Coba lagi."); return; }
     renderStudio("looks");
     if (!dialog.open) dialog.showModal();
     window.setTimeout(() => dialog.querySelector("[data-curator-new-look]")?.focus(), 0);
@@ -1041,7 +1139,7 @@
     }
     const version = ++state.refreshVersion;
     try {
-      const [catalogue, user] = await Promise.all([api.loadState({ admin: false }), getCurrentUser()]);
+      const [catalogue, user] = await Promise.all([api.loadState({ admin: false, studio:Boolean(document.getElementById("curatorStudioDialog")?.open) }), getCurrentUser()]);
       if (version !== state.refreshVersion) return;
       if (state.user?.id && state.user.id !== user?.id) {
         const previousDialog = document.getElementById("curatorStudioDialog");
@@ -1051,6 +1149,7 @@
         state.editingLook = null;
       }
       state.catalogue = catalogue || { looks: [], curators: [] };
+      directoryPages.clear();
       state.user = user;
       state.curator = null;
       state.application = null;
@@ -1290,6 +1389,12 @@
   }
 
   async function onClick(event) {
+    const pageLink=event.target.closest("#curatorRouteLayer [data-directory-page]");
+    if(pageLink){
+      if(event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      history.pushState({},"",pageLink.getAttribute("href")); renderRoute(); return;
+    }
     const toggleReference = event.target.closest('[data-reference-toggle],[data-reference-done]');
     if (toggleReference) {
       const row = toggleReference.closest('[data-curator-reference-row]');
@@ -1389,6 +1494,7 @@
     const directoryFilter = event.target.closest("[data-curator-directory-filter]");
     if (directoryFilter) {
       curatorFilters[directoryFilter.dataset.curatorDirectoryFilter] = directoryFilter.value;
+      pagination.writeFilters(curatorFilters,curatorFilterDefaults);
       renderRoute();
       return;
     }
@@ -1423,6 +1529,7 @@
     const input = event.target.closest('[data-curator-directory-filter="q"]');
     if (!input) return;
     curatorFilters.q = input.value;
+    pagination.writeFilters(curatorFilters,curatorFilterDefaults);
     clearTimeout(curatorSearchTimer);
     curatorSearchTimer = window.setTimeout(renderRoute, 180);
   }

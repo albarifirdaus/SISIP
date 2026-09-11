@@ -228,6 +228,7 @@
           emit:(detail)=>window.dispatchEvent(new CustomEvent("comootd:like-change",{detail}))
         });
         const memberRetention = window.COMOOTDMemberRetention.create({
+          onCatalogue:mergePublicCatalogue,
           getState:()=>state, getCloud:()=>cloud, isSignedIn:memberIsSignedIn,
           requireSignIn:openMemberAccount, notify:showToast, escapeHtml:esc, safeImage,
           onChange:()=>{ renderPersonalized(); renderDirectoryRoute(); if (memberIsSignedIn() && !els.memberProfileView.hidden) memberRetention.renderPanel(els.memberRetentionPanel); }
@@ -259,6 +260,7 @@
           try {
             const remoteState = await cloud.loadState({ admin });
             state = { products: remoteState.products || [], looks: remoteState.looks || [], articles: remoteState.articles || [], styleTags: remoteState.styleTags || [], storefrontVisuals: remoteState.storefrontVisuals || [], campaignBanner:remoteState.campaignBanner || {}, curators: remoteState.curators || [], requests: admin ? (remoteState.requests || []) : [], newSeriesSlots: remoteState.newSeriesSlots || [], newSeriesLookIds: remoteState.newSeriesLookIds || [], newSeriesConfigured: true };
+            state.publicLookCount=remoteState.publicLookCount;
             hydrateTaxonomyPickers();
             renderAll();
             applyContentRoute({ notify: true });
@@ -833,8 +835,8 @@
         }
         function renderLooks() {
           const entries = [...state.looks].sort((a,b)=>Number(b.popularity||0)-Number(a.popularity||0)||Number(b.createdOrder||0)-Number(a.createdOrder||0)).slice(0,12);
-          els.heroCount.textContent = state.looks.length;
-          els.resultCount.textContent = `${state.looks.length} look tersedia`;
+          els.heroCount.textContent = state.publicLookCount ?? state.looks.length;
+          els.resultCount.textContent = `${state.publicLookCount ?? state.looks.length} look tersedia`;
           if (!entries.length) {
             els.lookGrid.innerHTML = `<div class="empty-state"><h3>Kurasi sedang disiapkan.</h3><p>Look pilihan COMOOTD akan segera tampil di sini.</p></div>`;
             window.COMOOTDSyncDiscoveryRails();
@@ -1463,7 +1465,18 @@
             return { type, slug, variantId: type === "product" ? String(new URL(window.location.href).searchParams.get("variant") || "") : "" };
           } catch { return null; }
         }
+        function mergePublicCatalogue(catalogue) {
+          if (!catalogue) return;
+          for (const key of ["products","looks","articles","curators"]) {
+            const merged = new Map((state[key] || []).map(entry => [entry.id || entry.userId,entry]));
+            (catalogue[key] || []).forEach(entry => merged.set(entry.id || entry.userId,entry));
+            state[key] = [...merged.values()];
+          }
+        }
+        window.addEventListener("comootd:catalogue-page",event=>mergePublicCatalogue(event.detail));
         const directoryPage = window.COMOOTDCatalogueDirectory.create({
+          loadPage:cloudEnabled() ? (kind,page,filters)=>cloud.loadDirectoryPage(kind,page,filters) : null,
+          onPage:mergePublicCatalogue,
           getState:()=>state, esc, slugify, money, safeImage,
           marketplaces:MARKETPLACES, productCategories:PRODUCT_CATEGORIES,
           marketplaceOf, marketplaceLabel, lookVisual, productArt, lookAttribution,
@@ -1561,12 +1574,19 @@
           }
           updateClientMetadata();
         }
-        function applyContentRoute({ notify = false } = {}) {
+        async function applyContentRoute({ notify = false } = {}) {
           if (renderRequestRoute()) { closeContentDialogs(); return; }
           if (renderDirectoryRoute()) { closeContentDialogs(); return; }
           const route = readContentRoute();
           if (!route) { closeContentDialogs(); updateClientMetadata(); return; }
-          const entry = contentEntryForRoute(route);
+          let entry = contentEntryForRoute(route);
+          if (!entry && cloudEnabled()) {
+            const routeUrl = location.href;
+            try { mergePublicCatalogue(await cloud.loadPublicContent(route.type,route.slug)); }
+            catch(error) { console.warn("Content load failed",error); if(notify) showToast("Konten belum berhasil dimuat. Coba lagi."); return; }
+            if (location.href!==routeUrl) return;
+            entry = contentEntryForRoute(route);
+          }
           if (!entry) {
             closeContentDialogs();
             if (notify) showToast("Konten ini belum tersedia atau sudah tidak dipublikasikan.");
@@ -1576,8 +1596,12 @@
           else if (route.type === "product") openProduct(entry.id, { navigate: false, variantId: route.variantId });
           else openArticle(entry.id, { navigate: false });
         }
-        function openLook(id, { navigate = true } = {}) {
-          const entry = state.looks.find((lookItem)=>lookItem.id===id);
+        async function openLook(id, { navigate = true } = {}) {
+          let entry = state.looks.find((lookItem)=>lookItem.id===id);
+          if (!entry && cloudEnabled()) {
+            try { mergePublicCatalogue(await cloud.loadPublicContent("look",id,{byId:true})); entry=getLook(id); }
+            catch { showToast("Look belum berhasil dimuat. Coba lagi."); return; }
+          }
           if (!entry) return;
           void memberRetention.recordView("look", entry.id);
           void window.COMOOTDInsights?.track?.("look_view", "look", entry.id, `look:${entry.id}:${location.pathname}`);
@@ -1597,8 +1621,12 @@
           els.lookDetail.innerHTML = `<div class="look-detail"><div class="detail-visual">${lookVisual(entry,true)}</div><div class="detail-content"><div class="detail-heading"><p class="eyebrow" style="color:var(--clay)">${esc(lookAttribution(entry))} / ${esc(entry.gender)}</p><h2>${esc(entry.title)}</h2>${curatorLine}${curatorMetricsMarkup(entry)}<div class="look-card-tags">${entry.styles.map((style)=>`<span class="tag">${esc(style)}</span>`).join("")}<span class="tag">${entry.items.length} item</span></div>${entry.excerpt ? `<p class="detail-description">${esc(entry.excerpt)}</p>` : ""}</div><div class="detail-actions">${lookLikeButton(entry)}${memberRetention.saveButton("look",entry.id)}<button class="button-outline icon-action" type="button" data-share-look="${esc(entry.id)}" aria-label="Bagikan look ${esc(entry.title)}" title="Bagikan look">${SHARE_ICON}</button></div><ol class="item-list" style="list-style:none;padding:0;margin:0">${itemsHtml}</ol><p class="price-note">Harga referensi saat kurasi. Warna, stok, dan harga akhir dapat berubah di marketplace.</p></div></div>`;
           if (!els.lookModal.open) els.lookModal.showModal();
         }
-        function openProduct(id, { navigate = true, variantId = "", replace = false } = {}) {
-          const entry = getProduct(id);
+        async function openProduct(id, { navigate = true, variantId = "", replace = false } = {}) {
+          let entry = getProduct(id);
+          if (!entry && cloudEnabled()) {
+            try { mergePublicCatalogue(await cloud.loadPublicContent("product",id,{byId:true})); entry=getProduct(id); }
+            catch { showToast("Produk belum berhasil dimuat. Coba lagi."); return; }
+          }
           if (!entry) return;
           void memberRetention.recordView("product", entry.id);
           const selectedVariant = entry.variants?.find((variant) => variant.id === variantId) || entry.variants?.[0] || null;
@@ -1662,8 +1690,13 @@
           if(!date || Number.isNaN(date.getTime())) return "COMOOTD Journal";
           return new Intl.DateTimeFormat("id-ID",{day:"numeric",month:"long",year:"numeric"}).format(date);
         }
-        function openArticle(id, { navigate = true } = {}) {
-          const article=state.articles.find((entry)=>entry.id===id); if (!article) return;
+        async function openArticle(id, { navigate = true } = {}) {
+          let article=state.articles.find((entry)=>entry.id===id);
+          if (!article && cloudEnabled()) {
+            try { mergePublicCatalogue(await cloud.loadPublicContent("article",id,{byId:true})); article=state.articles.find(entry=>entry.id===id); }
+            catch { showToast("Artikel belum berhasil dimuat. Coba lagi."); return; }
+          }
+          if (!article) return;
           if (navigate) { navigateToContent("article", article); renderDirectoryRoute(); }
           else updateClientMetadata({ type:"article", slug:contentEntitySlug(article,"article") }, article);
           closeContentDialogs(els.articleModal);
@@ -2197,6 +2230,7 @@
           const product=event.target.closest("[data-open-product]"); if(product){event.preventDefault();openProduct(product.dataset.openProduct);return;}
           const article=event.target.closest("[data-open-article]"); if(article){event.preventDefault();openArticle(article.dataset.openArticle);return;}
           const link=event.target.closest("a[href]"); if(!link) return;
+          if(event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
           const url=new URL(link.href,window.location.origin); if(url.origin!==window.location.origin) return;
           event.preventDefault(); history.pushState({},"",`${url.pathname}${url.search}`); applyContentRoute({notify:true}); ensureCatalogueRouteLayer().scrollTo({top:0,behavior:"auto"});
         });
