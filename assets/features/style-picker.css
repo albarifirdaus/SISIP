@@ -1,0 +1,26 @@
+.curator-choice-list[hidden] { display:none !important; }
+.has-compact-style-picker > .taxonomy-options,
+.has-compact-style-picker > .member-tag-options { display:none !important; }
+.style-picker-summary,.style-picker-active { display:flex; flex-wrap:wrap; gap:8px; }
+.style-picker-summary button,.style-picker-active button { border:1px solid #cdd1d8; border-radius:22px; padding:8px 12px; min-height:44px; background:#fff; color:#151515; font:inherit; font-size:13px; cursor:pointer; }
+.style-picker-dialog { box-sizing:border-box; position:fixed; inset:0; margin:auto; height:fit-content; width:min(520px,calc(100% - 32px)); max-height:85dvh; padding:20px; border:1px solid #cdd1d8; border-radius:16px; color:#151515; background:#f7f8fa; }
+.style-picker-dialog[open] { display:flex; flex-direction:column; gap:12px; overflow:hidden; }
+.style-picker-dialog::backdrop { background:rgba(0,0,0,.48); }
+.style-picker-dialog header { display:flex; align-items:center; justify-content:space-between; }
+.style-picker-dialog h2 { margin:0; font-size:24px; }
+.style-picker-dialog button { min-height:44px; cursor:pointer; font:inherit; }
+.style-picker-dialog header button { width:44px; border:0; background:transparent; font-size:24px; }
+.style-picker-search { display:grid; gap:6px; font-size:13px; }
+.style-picker-search input { box-sizing:border-box; width:100%; padding:12px; font:inherit; font-size:16px; border:1px solid #cdd1d8; border-radius:8px; }
+.style-picker-status { margin:0; font-size:13px; }
+.style-picker-options { overflow-y:auto; overscroll-behavior:contain; min-height:70px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+.style-picker-options button { padding:10px; text-align:left; border:1px solid #d5d7db; border-radius:6px; background:#fff; overflow-wrap:anywhere; font-size:14px; }
+.style-picker-options button[aria-pressed=true] { background:#ffca24; border-color:#151515; }
+.style-picker-options button[aria-pressed=true]::before { content:'✓ '; }
+.style-picker-dialog button:disabled { opacity:.45; cursor:default; }
+.style-picker-dialog button:focus-visible { outline:2px solid #151515; outline-offset:2px; }
+.style-picker-dialog footer { flex-shrink:0; display:flex; gap:8px; flex-wrap:wrap; }
+.style-picker-dialog footer p { width:100%; margin:0; font-size:12px; }
+.style-picker-dialog footer button { flex:1; border:1px solid #cdd1d8; border-radius:8px; background:#fff; }
+.style-picker-dialog footer button:last-child { background:#151515; color:#fff; }
+@media(max-width:600px) { .style-picker-dialog { width:100%; max-width:100%; max-height:85dvh; margin:auto 0 0; border-radius:16px 16px 0 0; padding-bottom:max(16px,env(safe-area-inset-bottom)); } }
