@@ -479,7 +479,7 @@
     const cover = cardImageForCurator(curator);
     const looks = curatorLooks(curator);
     const totalLikes = curator.totalLikes ?? looks.reduce((total, look) => total + look.popularity, 0);
-    const media = cover ? `<div class="curator-card-media"><img src="${esc(publicImage(cover))}" alt="" loading="lazy" /></div>` : "";
+    const media = cover ? `<div class="curator-card-media"><img ${window.COMOOTDImageOptimizer?.attributes(publicImage(cover))||''} src="${esc(publicImage(cover))}" alt="" loading="lazy" /></div>` : "";
     const cardClass = directory ? "curator-directory-card" : "curator-card";
     const cardBadge = trustBadgeMarkup(curator, true);
     const cardTop = cardBadge ? `<div class="curator-card-top curator-card-top--verified">${cardBadge}</div>` : "";
@@ -540,7 +540,7 @@
     const cover = publicImage(look.coverImage);
     const liked = state.liked.has(look.id);
     return `<article class="curator-look-card image-frame--${imageAspect(look.coverAspect || look.coverImage, "portrait")}">
-      ${cover ? `<div class="curator-card-media"><img src="${esc(cover)}" alt="${esc(look.coverAlt || look.title)}" loading="lazy" /></div>` : ""}
+      ${cover ? `<div class="curator-card-media"><img ${window.COMOOTDImageOptimizer?.attributes(cover)||''} src="${esc(cover)}" alt="${esc(look.coverAlt || look.title)}" loading="lazy" /></div>` : ""}
       <div class="curator-look-card-top"><span class="eyebrow">${esc(look.gender)}</span><span class="curator-look-card-meta">${esc(humanDate(look.publishedAt))}</span></div>
       <div class="curator-look-card-content"><h3 class="curator-look-card-title">${esc(look.title)}</h3>
         <p class="curator-look-card-meta">${esc(look.styles.slice(0, 3).join(" · ") || "Curated look")}</p>

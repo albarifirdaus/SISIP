@@ -1388,14 +1388,12 @@
     if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran gambar maksimal 5 MB.");
     const fallbackAspect = folder === "products" ? "square" : "portrait";
     const imageAspect = folder === "products" ? "square" : normalizeImageAspect(aspect, fallbackAspect);
-    const path = `${folder}/${parentId}/${imageAspect}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${extensionFor(file)}`;
-    const { error } = await getClient().storage.from(bucket).upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type
-    });
-    if (error) throw error;
-    return path;
+    const base = `${folder}/${parentId}/${imageAspect}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    return window.COMOOTDImageOptimizer.upload(getClient().storage.from(bucket),base,file,'photo');
+  }
+
+  function removeImages(paths) {
+    return getClient().storage.from(bucket).remove(window.COMOOTDImageOptimizer.paths(paths));
   }
 
   function ownMediaPath(folder, parentId, path) {
@@ -1407,7 +1405,7 @@
   async function removeOwnedMedia(folder, parentId, path) {
     const ownedPath = ownMediaPath(folder, parentId, path);
     if (!ownedPath) return;
-    const { error } = await getClient().storage.from(bucket).remove([ownedPath]);
+    const { error } = await removeImages([ownedPath]);
     if (error) console.warn("Foto lama tidak dapat dibersihkan dari Storage.", error);
   }
 
@@ -1691,17 +1689,11 @@
     if (!user) throw new Error("Masuk terlebih dahulu untuk mengunggah foto.");
     const safeKind = kind === "avatar" ? "avatar" : "looks";
     const imageAspect = normalizeImageAspect(aspect, safeKind === "avatar" ? "square" : "portrait");
-    const suffix = `${imageAspect}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${extensionFor(file)}`;
+    const suffix = `${imageAspect}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const path = safeKind === "avatar"
       ? `curators/${user.id}/avatar/${suffix}`
       : `curators/${user.id}/looks/${ownerId}/${suffix}`;
-    const { error } = await getClient().storage.from(bucket).upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type
-    });
-    if (error) throw error;
-    return path;
+    return window.COMOOTDImageOptimizer.upload(getClient().storage.from(bucket),path,file,safeKind==='avatar'?'avatar':'photo');
   }
 
   async function getCuratorProfile() {
@@ -1893,12 +1885,12 @@
       }
       if (uploadedAvatarPath && current.curator.avatarPath && current.curator.avatarPath !== uploadedAvatarPath) {
         const oldPath = ownedCuratorPath(userId, current.curator.avatarPath);
-        if (oldPath) await getClient().storage.from(bucket).remove([oldPath]);
+        if (oldPath) await removeImages([oldPath]);
       }
       return getCuratorProfile();
     } catch (error) {
       const path = ownedCuratorPath(userId, uploadedAvatarPath);
-      if (path) await getClient().storage.from(bucket).remove([path]);
+      if (path) await removeImages([path]);
       throw error;
     }
   }
@@ -1975,7 +1967,7 @@
         const nextPaths = new Set(galleryResult.media.map((item) => item.image_path));
         await removeLookStoragePaths(previousPaths.filter((path) => !nextPaths.has(path)), async (path) => {
           const ownedPath = ownedCuratorPath(current.user.id, path);
-          if (ownedPath) await getClient().storage.from(bucket).remove([ownedPath]);
+          if (ownedPath) await removeImages([ownedPath]);
         });
       }
       return data || id;
@@ -1983,7 +1975,7 @@
       const cleanupPaths = [...uploadedPaths, ...(error?.uploadedPaths || [])];
       await removeLookStoragePaths(cleanupPaths, async (path) => {
         const ownedPath = ownedCuratorPath(current.user.id, path);
-        if (ownedPath) await getClient().storage.from(bucket).remove([ownedPath]);
+        if (ownedPath) await removeImages([ownedPath]);
       });
       throw error;
     }
@@ -2288,7 +2280,7 @@
       return { id: product.id, created };
     } catch (error) {
       if (created) {
-        if (uploadedImagePath) await getClient().storage.from(bucket).remove([uploadedImagePath]);
+        if (uploadedImagePath) await removeImages([uploadedImagePath]);
         await db.from("product_variants").delete().eq("product_id", product.id);
         await db.from("products").delete().eq("id", product.id);
       }
@@ -2776,7 +2768,7 @@
     } catch (error) {
       const { error: deleteError } = await db.from("articles").delete().eq("id", article.id);
       if (!deleteError && uploadedPaths.length) {
-        await getClient().storage.from(bucket).remove(ownArticleStoragePaths(article.id, uploadedPaths));
+        await removeImages(ownArticleStoragePaths(article.id, uploadedPaths));
       }
       throw error;
     }
@@ -2800,7 +2792,7 @@
       ...(article?.article_blocks || []).map((block) => block.image_path)
     ]);
     if (paths.length) {
-      const { error: storageError } = await getClient().storage.from(bucket).remove(paths);
+      const { error: storageError } = await removeImages(paths);
       if (storageError) return { deleted: true, mediaCleanupWarning: true };
     }
     return { deleted: true, mediaCleanupWarning: false };
@@ -2934,9 +2926,7 @@
         if (entry.imageFile) {
           if (!/^image\/(jpeg|png|webp)$/.test(entry.imageFile.type || "")) throw new Error("Gunakan desain JPEG, PNG, atau WebP.");
           if (entry.imageFile.size > 2 * 1024 * 1024) throw new Error("Ukuran desain homepage maksimal 2 MB per kartu.");
-          customImagePath = `storefront/${entry.cardKey}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extensionFor(entry.imageFile)}`;
-          const { error:uploadError } = await db.storage.from(bucket).upload(customImagePath, entry.imageFile, { cacheControl:"31536000", upsert:false, contentType:entry.imageFile.type });
-          if (uploadError) throw uploadError;
+          customImagePath = await window.COMOOTDImageOptimizer.upload(db.storage.from(bucket),`storefront/${entry.cardKey}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,entry.imageFile,'banner',2*1024*1024);
           uploadedPaths.push(customImagePath);
         }
         preparedEntries.push({ ...entry, customImagePath });
@@ -2955,12 +2945,12 @@
         const { data:referencedRows } = await db.from("comootd_storefront_visuals").select("custom_image_path").in("custom_image_path", uploadedPaths);
         const referenced = new Set((referencedRows || []).map((row) => row.custom_image_path).filter(Boolean));
         const orphaned = uploadedPaths.filter((path) => !referenced.has(path));
-        if (orphaned.length) await db.storage.from(bucket).remove(orphaned);
+        if (orphaned.length) await removeImages(orphaned);
       }
       throw error;
     }
     if (obsoletePaths.length) {
-      const { error:cleanupError } = await db.storage.from(bucket).remove(obsoletePaths);
+      const { error:cleanupError } = await removeImages(obsoletePaths);
       if (cleanupError) console.warn("Desain homepage lama belum dapat dibersihkan dari Storage.", cleanupError);
     }
   }
@@ -2988,9 +2978,7 @@
     if (enabled && !altText) throw new Error("Tambahkan deskripsi gambar banner.");
     try {
       if (imageFile) {
-        uploadedPath = `storefront/campaign/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extensionFor(imageFile)}`;
-        const { error:uploadError } = await db.storage.from(bucket).upload(uploadedPath, imageFile, { cacheControl:"31536000", upsert:false, contentType:imageFile.type });
-        if (uploadError) throw uploadError;
+        uploadedPath = await window.COMOOTDImageOptimizer.upload(db.storage.from(bucket),`storefront/campaign/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,imageFile,'banner');
         imagePath = uploadedPath;
       }
       const payload = {
@@ -3008,12 +2996,12 @@
       if (error) throw error;
       if (!data?.card_key) throw new Error("Banner campaign tidak diperbarui.");
     } catch (error) {
-      if (uploadedPath) await db.storage.from(bucket).remove([uploadedPath]);
+      if (uploadedPath) await removeImages([uploadedPath]);
       throw error;
     }
     const oldPath = current?.custom_image_path || "";
     if (oldPath && oldPath !== imagePath) {
-      const { error:cleanupError } = await db.storage.from(bucket).remove([oldPath]);
+      const { error:cleanupError } = await removeImages([oldPath]);
       if (cleanupError) console.warn("Banner campaign lama belum dapat dibersihkan dari Storage.", cleanupError);
     }
   }

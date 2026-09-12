@@ -2,10 +2,10 @@
   "use strict";
 
   function create({ safeImage, esc, tones: TONES, lookAttribution }) {
-    function productArt(productItem, variant, small = false) {
+    function productArt(productItem, variant, small = false, detail = false) {
       const img = safeImage(variant?.image || productItem?.image);
       const frame = "image-frame--square";
-      if (img) return `<div class="product-art ${frame} ${small ? "is-small" : ""}"><img src="${esc(img)}" alt="${esc(`${productItem?.name || "Produk"} ${variant?.name || ""}`.trim())}" /></div>`;
+      if (img) return `<div class="product-art ${frame} ${small ? "is-small" : ""}"><img ${detail?'':window.COMOOTDImageOptimizer?.attributes(img,small?'120px':undefined)||''} src="${esc(img)}" alt="${esc(`${productItem?.name || "Produk"} ${variant?.name || ""}`.trim())}" /></div>`;
       const bg = variant?.hex ? blendHex(variant.hex, "#e7e1da", .55) : productItem?.artBg || "#d5ccc3";
       const ink = variant?.hex || productItem?.artInk || "#242220";
       return `<div class="product-art ${frame} ${small ? "is-small" : ""}" style="--product-bg:${esc(bg)};--product-ink:${esc(ink)}"><span class="product-code meta">${esc(productItem?.category || "COMOOTD")}</span><span class="garment"></span></div>`;
@@ -27,8 +27,8 @@
       const media=lookMediaEntries(lookItem);
       if (media.length) {
         const primary=media[0];
-        const support=media.slice(1).map((entry)=>`<img src="${esc(entry.image)}" alt="${esc(entry.alt || `Foto look ${lookItem.title}`)}" loading="lazy" />`).join("");
-        return `<div class="look-media-collage" data-count="${media.length}" aria-label="${esc(`Galeri ${lookItem.title || "look"}`)}"><img class="look-media-collage__primary" src="${esc(primary.image)}" alt="${esc(primary.alt || `Foto look ${lookItem.title}`)}" />${support ? `<span class="look-media-collage__support">${support}</span>` : ""}</div>`;
+        const support=media.slice(1).map((entry)=>`<img ${detail?'':window.COMOOTDImageOptimizer?.attributes(entry.image)||''} src="${esc(entry.image)}" alt="${esc(entry.alt || `Foto look ${lookItem.title}`)}" loading="lazy" />`).join("");
+        return `<div class="look-media-collage" data-count="${media.length}" aria-label="${esc(`Galeri ${lookItem.title || "look"}`)}"><img class="look-media-collage__primary" ${detail?'':window.COMOOTDImageOptimizer?.attributes(primary.image)||''} src="${esc(primary.image)}" alt="${esc(primary.alt || `Foto look ${lookItem.title}`)}" />${support ? `<span class="look-media-collage__support">${support}</span>` : ""}</div>`;
       }
       const tone = TONES[lookItem.tone] || TONES.carbon;
       return `<div class="look-art ${lookItem.createdOrder % 2 === 0 ? "flip" : ""} ${tone.light ? "light" : ""}" style="--art-bg:${tone.bg};--art-accent:${tone.accent};--garment:${tone.garment};--bottom:${tone.bottom};--figure:${tone.figure};--skin:${tone.skin};--skin-dark:${tone.skinDark};--hair:${tone.hair};--art-label:${tone.label};">

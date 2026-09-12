@@ -332,6 +332,7 @@
     } else if (allowedAspects.length === 1) {
       lockedAspect = allowedAspects[0];
     }
+    input.dataset.imageCropperBound = "true";
     var state = {
       input: input,
       options: settings,
@@ -829,11 +830,10 @@
       var preset = PRESETS[session.aspect];
       var crop = sourceCrop(session);
       var canvas = document.createElement("canvas");
-      canvas.width = preset.width;
-      canvas.height = preset.height;
-      var context = canvas.getContext("2d", { alpha: false });
-      context.fillStyle = "#ffffff";
-      context.fillRect(0, 0, preset.width, preset.height);
+      var scale = Math.min(1, crop.width / preset.width, crop.height / preset.height);
+      canvas.width = Math.max(1, Math.round(preset.width * scale));
+      canvas.height = Math.max(1, Math.round(preset.height * scale));
+      var context = canvas.getContext("2d");
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
       context.drawImage(
@@ -844,9 +844,14 @@
         crop.height,
         0,
         0,
-        preset.width,
-        preset.height
+        canvas.width,
+        canvas.height
       );
+      if (window.COMOOTDImageOptimizer) {
+        window.COMOOTDImageOptimizer.fromCanvas(canvas, session.file, window.COMOOTDImageOptimizer.presetForInput(session.state.input))
+          .then(function (result) { canvas.width = canvas.height = 1; resolve(result.detail); }, reject);
+        return;
+      }
       canvas.toBlob(
         function (blob) {
           if (!blob) {
@@ -890,7 +895,7 @@
         displayPreparedPreview(session.state);
         setStatus(
           session.state,
-          "Foto siap · " + PRESETS[session.aspect].label + " · " + String(PRESETS[session.aspect].width) + " × " + String(PRESETS[session.aspect].height),
+          "Foto siap · " + PRESETS[session.aspect].label + " · " + (window.COMOOTDImageOptimizer ? window.COMOOTDImageOptimizer.summary(file) : String(PRESETS[session.aspect].width) + " × " + String(PRESETS[session.aspect].height)),
           "ready"
         );
         closeSession(session, true);
